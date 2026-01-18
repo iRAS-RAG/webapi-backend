@@ -16,17 +16,13 @@ namespace IRasRag.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddApiServices(builder.Configuration);
             builder.Services.AddApplicationServices();
-            builder.Services.AddInfrastructureServices(builder.Configuration);
+            builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
+            app.UseSwagger();
+            app.UseSwaggerUI();
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseCors("CorsPolicy");
             app.UseHttpsRedirection();
