@@ -24,6 +24,7 @@ namespace IRasRag.API
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
             app.UseCors("CorsPolicy");
             app.UseHttpsRedirection();
             app.UseRateLimiter();
