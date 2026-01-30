@@ -16,12 +16,16 @@ namespace IRasRag.Infrastructure.Data.Seeds
             new SensorType
             {
                 Id = TemperatureSensorTypeId,
-                Name = "Nhiệt độ"
+                Name = "Nhiệt độ nước",
+                MeasureType = "Nhiệt độ",
+                UnitOfMeasure = "Độ C"
             },
             new SensorType
             {
                 Id = PhSensorTypeId,
-                Name = "Độ pH"
+                Name = "Độ pH",
+                MeasureType = "Tính axit",
+                UnitOfMeasure = "pH"
             }
             };
     }

@@ -14,7 +14,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
             {
                 Id = TankAId,
                 FarmId = FarmSeed.DefaultFarmId,
-                Name = "Bể nuôi số 1"
+                Name = "Bể nuôi số 1",
+                TopicCode = "tank/001",
             }
             };
     }
