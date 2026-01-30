@@ -11,8 +11,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.ConfigureTimestamps();
-            builder.HasIndex(r => r.Name).IsUnique();
+
             builder.HasData(RoleSeed.Roles);
+
         }
     }
 }

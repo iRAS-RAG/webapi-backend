@@ -1,0 +1,22 @@
+﻿using IRasRag.Domain.Entities;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore;
+
+namespace IRasRag.Infrastructure.Data.Configurations
+{
+    public class CameraConfiguration : IEntityTypeConfiguration<Camera>
+    {
+        public void Configure(EntityTypeBuilder<Camera> builder)
+        {
+            builder.ConfigureTimestamps();
+
+            builder.HasQueryFilter(c => !c.IsDeleted);
+
+            builder
+                .HasOne(c => c.Farm)
+                .WithMany(f => f.Cameras)
+                .HasForeignKey(c => c.FarmId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}
