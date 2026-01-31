@@ -1,5 +1,5 @@
-﻿using IRasRag.Domain.Common;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {

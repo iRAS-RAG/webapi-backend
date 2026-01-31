@@ -5,6 +5,6 @@
         ACTIVE,
         HARVESTED,
         TERMINATED,
-        PAUSED
+        PAUSED,
     }
 }

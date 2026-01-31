@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -40,8 +40,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(a => a.SensorTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Property(a => a.Status)
-                .HasConversion<string>();
+            builder.Property(a => a.Status).HasConversion<string>();
 
             // Filter alerts by tank
             builder.HasIndex(a => new { a.FishTankId, a.Status });

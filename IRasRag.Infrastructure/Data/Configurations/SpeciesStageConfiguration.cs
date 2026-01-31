@@ -1,7 +1,7 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
 using IRasRag.Infrastructure.Data.Seeds;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -30,8 +30,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // One config per species/stage combination
-            builder.HasIndex(ssc => new { ssc.SpeciesId, ssc.GrowthStageId })
-                .IsUnique();
+            builder.HasIndex(ssc => new { ssc.SpeciesId, ssc.GrowthStageId }).IsUnique();
 
             builder.HasData(SpeciesStageConfigSeed.SpeciesStageConfigs);
         }

@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -16,14 +16,13 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(sl => sl.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-            builder.Property(sl => sl.DataJson)
+            builder
+                .Property(sl => sl.DataJson)
                 .IsRequired()
                 .HasColumnType("jsonb")
                 .HasDefaultValue("{}");
 
-            builder.Property(sl => sl.Data)
-                .HasColumnType("double precision");
+            builder.Property(sl => sl.Data).HasColumnType("double precision");
 
             // Get sensor readings over time
             builder.HasIndex(sl => new { sl.SensorId, sl.CreatedAt });

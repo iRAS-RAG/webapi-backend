@@ -5,6 +5,6 @@
         OPEN,
         ACKNOWLEDGED,
         RESOLVED,
-        DISMISSED
+        DISMISSED,
     }
 }

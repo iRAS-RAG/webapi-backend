@@ -14,28 +14,27 @@ namespace IRasRag.Infrastructure.Data.Seeds
             DateTimeKind.Utc
         );
 
-        public static readonly Guid AdminRoleId =
-            Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
+        public static readonly Guid AdminRoleId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000001"
+        );
 
-        public static readonly Guid UserRoleId =
-            Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+        public static readonly Guid UserRoleId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
 
         public static List<Role> Roles =>
             new()
             {
-            new Role
-            {
-                Id = AdminRoleId,
-                Name = "Admin",
-                CreatedAt = SeedTimestamp
-            },
-            new Role
-            {
-                Id = UserRoleId,
-                Name = "User",
-                CreatedAt = SeedTimestamp
-            }
+                new Role
+                {
+                    Id = AdminRoleId,
+                    Name = "Admin",
+                    CreatedAt = SeedTimestamp,
+                },
+                new Role
+                {
+                    Id = UserRoleId,
+                    Name = "User",
+                    CreatedAt = SeedTimestamp,
+                },
             };
     }
-
 }

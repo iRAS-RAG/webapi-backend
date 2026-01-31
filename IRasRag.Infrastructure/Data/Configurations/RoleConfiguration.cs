@@ -3,7 +3,6 @@ using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-
 namespace IRasRag.Infrastructure.Data.Configurations
 {
     public class RoleConfiguration : IEntityTypeConfiguration<Role>
@@ -13,7 +12,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.ConfigureTimestamps();
 
             builder.HasData(RoleSeed.Roles);
-
         }
     }
 }

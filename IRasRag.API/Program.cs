@@ -1,7 +1,7 @@
 using IRasRag.API.DI;
-using IRasRag.Infrastructure.DI;
-using IRasRag.Application.DI;
 using IRasRag.API.Middlewares;
+using IRasRag.Application.DI;
+using IRasRag.Infrastructure.DI;
 
 namespace IRasRag.API
 {

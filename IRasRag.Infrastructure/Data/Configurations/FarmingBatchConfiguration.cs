@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -10,9 +10,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         {
             builder.ConfigureTimestamps();
 
-            builder.Property(fb => fb.Status)
-                .HasConversion<string>()
-                .HasMaxLength(20);
+            builder.Property(fb => fb.Status).HasConversion<string>().HasMaxLength(20);
 
             builder
                 .HasOne(fb => fb.FishTank)
