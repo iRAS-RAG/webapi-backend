@@ -13,7 +13,12 @@ namespace IRasRag.Application.DI
 
         public static void AddServices(this IServiceCollection services)
         {
+            services.AddAutoMapper(typeof(DependencyInjection).Assembly);
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IGrowthStageService, GrowthStageService>();
+            services.AddScoped<ISpeciesStageConfigService, SpeciesStageConfigService>();
+            services.AddScoped<ISpeciesThresholdService, SpeciesThresholdService>();
         }
+
     }
 }

@@ -10,6 +10,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<GrowthStage> builder)
         {
             builder.ConfigureTimestamps();
+            builder.HasIndex(gs => gs.Name).IsUnique();
 
             builder.HasData(GrowthStageSeed.GrowthStages);
         }

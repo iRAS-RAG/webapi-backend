@@ -1,5 +1,5 @@
 ﻿using IRasRag.Application.Common.Models;
-using IRasRag.Application.DTOs.Auth;
+using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
