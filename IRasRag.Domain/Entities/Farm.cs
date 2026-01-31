@@ -1,0 +1,32 @@
+﻿using IRasRag.Domain.Common;
+using System.ComponentModel.DataAnnotations;
+
+namespace IRasRag.Domain.Entities
+{
+    public class Farm : BaseEntity
+    {
+        [Required]
+        [MaxLength(255)]
+        public string Name { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string Address { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string PhoneNumber { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string Email { get; set; }
+
+        [Required]
+        public bool IsDeleted { get; set; } = false;
+
+        // Navigation properties
+        public ICollection<FishTank> FishTanks { get; set; }
+        public ICollection<Camera> Cameras { get; set; }
+        public ICollection<UserFarm> UserFarms { get; set; }
+    }
+}

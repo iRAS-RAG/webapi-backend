@@ -1,5 +1,6 @@
 ﻿using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Models;
+using IRasRag.Domain.Enums;
 using IRasRag.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -17,19 +18,28 @@ namespace IRasRag.Infrastructure.Repositories
             _dbSet = _context.Set<T>();
         }
 
+        protected IQueryable<T> Query(QueryType type = QueryType.ActiveOnly)
+        {
+            return type == QueryType.IncludeDeleted
+                ? _dbSet.IgnoreQueryFilters()
+                : _dbSet;
+        }
+
         public async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
         }
 
-        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, QueryType type = QueryType.ActiveOnly)
         {
-            return await _dbSet.AnyAsync(predicate);
+            return await Query(type).AnyAsync(predicate);
         }
 
-        public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+        public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, QueryType type = QueryType.ActiveOnly)
         {
-            return await (_dbSet as IQueryable<T>).CountAsync(predicate ?? (_ => true));
+            return predicate == null
+                ? await Query(type).CountAsync()
+                : await Query(type).CountAsync(predicate);
         }
 
         public void DeleteAsync(T entity)
@@ -37,24 +47,24 @@ namespace IRasRag.Infrastructure.Repositories
             _dbSet.Remove(entity);
         }
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate, QueryType type = QueryType.ActiveOnly)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
+            return await Query(type).Where(predicate).ToListAsync();
         }
 
-        public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, QueryType type = QueryType.ActiveOnly)
         {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
+            return await Query(type).FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly)
         {
-            return await _dbSet.ToListAsync();
+            return await Query(type).ToListAsync();
         }
 
-        public async Task<T?> GetByIdAsync(Guid id)
+        public async Task<T?> GetByIdAsync(Guid id, QueryType type = QueryType.ActiveOnly)
         {
-            return await _dbSet.FindAsync(id);
+            return await Query(type).FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
         }
 
         public async Task<PaginatedResult<T>> GetPaginatedResult(IQueryable<T> query, int pageNumber, int pageSize)

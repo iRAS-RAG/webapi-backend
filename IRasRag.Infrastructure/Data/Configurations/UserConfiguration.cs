@@ -10,12 +10,18 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.ConfigureTimestamps();
+
+            builder.HasQueryFilter(u => !u.IsDeleted);
+
             builder
                 .HasOne(u => u.Role)
                 .WithMany()
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(u => u.UserName).IsUnique();
+            builder.HasIndex(u => u.Email).IsUnique();
+
             builder.HasData(UserSeed.Users);
         }
     }
