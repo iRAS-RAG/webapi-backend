@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {

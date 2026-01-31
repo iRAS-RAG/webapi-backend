@@ -1,7 +1,7 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
 using IRasRag.Infrastructure.Data.Seeds;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -17,7 +17,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(uf => uf.FarmId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(uf => uf.User)
+            builder
+                .HasOne(uf => uf.User)
                 .WithMany(u => u.UserFarms)
                 .HasForeignKey(uf => uf.UserId)
                 .OnDelete(DeleteBehavior.Restrict);

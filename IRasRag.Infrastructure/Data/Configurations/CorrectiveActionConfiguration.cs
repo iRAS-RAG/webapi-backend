@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -15,7 +15,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .WithMany(a => a.CorrectiveActions)
                 .HasForeignKey(ca => ca.AlertId)
                 .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

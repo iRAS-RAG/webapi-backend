@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -29,7 +29,13 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Unique constraint: one threshold config per species/stage/sensor combo
-            builder.HasIndex(st => new { st.SpeciesId, st.GrowthStageId, st.SensorTypeId })
+            builder
+                .HasIndex(st => new
+                {
+                    st.SpeciesId,
+                    st.GrowthStageId,
+                    st.SensorTypeId,
+                })
                 .IsUnique();
         }
     }

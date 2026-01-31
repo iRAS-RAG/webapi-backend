@@ -3,6 +3,6 @@
     public enum QueryType
     {
         ActiveOnly,
-        IncludeDeleted
+        IncludeDeleted,
     }
 }

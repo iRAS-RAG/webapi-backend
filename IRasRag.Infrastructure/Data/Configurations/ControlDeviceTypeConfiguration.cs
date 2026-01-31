@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -9,7 +9,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<ControlDeviceType> builder)
         {
             builder.ConfigureTimestamps();
-
         }
     }
 }

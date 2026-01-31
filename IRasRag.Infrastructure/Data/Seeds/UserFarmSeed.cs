@@ -11,9 +11,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = Guid.Parse("44444444-0001-0001-0001-000000000001"),
                     UserId = UserSeed.UserId,
-                    FarmId = FarmSeed.DefaultFarmId
-                }
+                    FarmId = FarmSeed.DefaultFarmId,
+                },
             };
-
     }
 }

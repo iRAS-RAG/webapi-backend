@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -24,11 +24,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(j => j.SensorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            builder.Property(j => j.StartTime)
-                .HasColumnType("time");
+            builder.Property(j => j.StartTime).HasColumnType("time");
 
-            builder.Property(j => j.EndTime)
-                .HasColumnType("time");
+            builder.Property(j => j.EndTime).HasColumnType("time");
 
             builder.HasIndex(j => j.SensorId);
         }

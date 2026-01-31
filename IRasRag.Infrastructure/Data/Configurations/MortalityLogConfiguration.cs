@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using IRasRag.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using IRasRag.Domain.Entities;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -15,7 +15,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .WithMany(fb => fb.MortalityLogs)
                 .HasForeignKey(ml => ml.BatchId)
                 .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

@@ -7,7 +7,7 @@ namespace IRasRag.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase 
+    public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
         private readonly ILogger<AuthController> _logger;
@@ -32,7 +32,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred during login for user: {UserName}", request.UserName);
+                _logger.LogError(
+                    ex,
+                    "An error occurred during login for user: {UserName}",
+                    request.UserName
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -51,7 +55,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred during registration for user: {UserName}", request.UserName);
+                _logger.LogError(
+                    ex,
+                    "An error occurred during registration for user: {UserName}",
+                    request.UserName
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

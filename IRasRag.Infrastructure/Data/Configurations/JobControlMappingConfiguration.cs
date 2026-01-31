@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
 {
@@ -22,8 +22,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(jcm => jcm.ControlDeviceId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Property(jcm => jcm.TriggerCondition)
-                .HasConversion<string>();
+            builder.Property(jcm => jcm.TriggerCondition).HasConversion<string>();
 
             builder.HasIndex(jcm => new { jcm.JobId, jcm.ControlDeviceId }).IsUnique();
         }

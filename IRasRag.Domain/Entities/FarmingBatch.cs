@@ -1,6 +1,6 @@
-﻿using IRasRag.Domain.Common;
+﻿using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Common;
 using IRasRag.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace IRasRag.Domain.Entities
 {
