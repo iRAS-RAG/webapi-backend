@@ -1,4 +1,4 @@
-﻿using IRasRag.Application.Common.Interfaces;
+﻿using IRasRag.Application.Common.Interfaces.Auth;
 
 namespace IRasRag.Infrastructure.Services
 {

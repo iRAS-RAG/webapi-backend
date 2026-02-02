@@ -1,4 +1,4 @@
-﻿namespace IRasRag.Application.Common.Interfaces
+﻿namespace IRasRag.Application.Common.Interfaces.Auth
 {
     public interface IPasswordHasher
     {

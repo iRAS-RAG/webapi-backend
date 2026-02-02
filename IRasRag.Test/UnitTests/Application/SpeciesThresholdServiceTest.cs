@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using AutoMapper;
 using FluentAssertions;
-using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;

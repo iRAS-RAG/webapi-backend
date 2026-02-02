@@ -2,7 +2,8 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -11,12 +12,10 @@ namespace IRasRag.Infrastructure.Services
 {
     public class JwtService : IJwtService
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly JwtSettings _jwtSettings;
 
-        public JwtService(IUnitOfWork unitOfWork, IOptions<JwtSettings> jwtOptions)
+        public JwtService(IOptions<JwtSettings> jwtOptions)
         {
-            _unitOfWork = unitOfWork;
             _jwtSettings = jwtOptions.Value;
         }
 

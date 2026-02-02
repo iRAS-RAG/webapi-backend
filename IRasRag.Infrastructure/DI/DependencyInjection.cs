@@ -1,5 +1,5 @@
-﻿using IRasRag.Application.Common.Interfaces;
-using IRasRag.Application.Common.Settings;
+﻿using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services;
