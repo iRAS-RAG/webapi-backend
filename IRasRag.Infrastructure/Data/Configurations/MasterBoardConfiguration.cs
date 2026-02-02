@@ -9,6 +9,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<MasterBoard> builder)
         {
             builder.ConfigureTimestamps();
+            builder.ConfigureSoftDelete();
 
             builder.HasQueryFilter(mb => !mb.IsDeleted);
 

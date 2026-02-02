@@ -10,6 +10,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.ConfigureTimestamps();
+            builder.ConfigureSoftDelete();
 
             builder.HasQueryFilter(u => !u.IsDeleted);
 

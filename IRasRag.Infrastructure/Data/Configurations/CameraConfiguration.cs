@@ -9,6 +9,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Camera> builder)
         {
             builder.ConfigureTimestamps();
+            builder.ConfigureSoftDelete();
 
             builder.HasQueryFilter(c => !c.IsDeleted);
 

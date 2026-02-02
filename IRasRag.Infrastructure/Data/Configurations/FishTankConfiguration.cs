@@ -10,6 +10,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<FishTank> builder)
         {
             builder.ConfigureTimestamps();
+            builder.ConfigureSoftDelete();
 
             builder.HasQueryFilter(ft => !ft.IsDeleted);
 

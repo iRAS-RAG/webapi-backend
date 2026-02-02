@@ -9,6 +9,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<ControlDevice> builder)
         {
             builder.ConfigureTimestamps();
+            builder.ConfigureSoftDelete();
 
             builder.HasQueryFilter(cd => !cd.IsDeleted);
 
