@@ -1,12 +1,12 @@
 ﻿using IRasRag.Application.Common.Models;
-using IRasRag.Application.DTOs.Auth;
+using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;

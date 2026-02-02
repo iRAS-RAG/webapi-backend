@@ -1,6 +1,5 @@
 ﻿using IRasRag.Application.Common.Interfaces;
 using IRasRag.Domain.Common;
-using IRasRag.Infrastructure.Data;
 using IRasRag.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 

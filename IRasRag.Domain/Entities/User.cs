@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class User : BaseEntity
+    public class User : BaseEntity, ISoftDeletable
     {
         [Required]
         public Guid RoleId { get; set; }
@@ -30,6 +30,9 @@ namespace IRasRag.Domain.Entities
         public ICollection<UserFarm> UserFarms { get; set; }
 
         public bool IsVerified { get; set; } = false;
+
+        [Required]
         public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
     }
 }

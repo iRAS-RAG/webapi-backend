@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class ControlDevice : BaseEntity
+    public class ControlDevice : BaseEntity, ISoftDeletable
     {
         [Required]
         [MaxLength(255)]
@@ -31,6 +31,7 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public MasterBoard MasterBoard { get; set; }

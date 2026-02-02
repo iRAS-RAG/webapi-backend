@@ -12,8 +12,6 @@
                 var clientKey = context.Request.Headers["x-api-key"].FirstOrDefault();
                 var serverKey = config.GetValue<string>("ApiKey");
 
-                _logger.LogInformation($"Server key: {serverKey}");
-
                 if (string.IsNullOrEmpty(serverKey))
                 {
                     _logger.LogError("API key is not configured.");
@@ -23,7 +21,6 @@
 
                 if (clientKey == null || clientKey != serverKey)
                 {
-                    _logger.LogInformation($"client key: {clientKey}");
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     await context.Response.WriteAsJsonAsync(
                         new { error = "Không có quyền truy cập." }

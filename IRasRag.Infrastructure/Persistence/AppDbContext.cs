@@ -1,9 +1,10 @@
 ﻿using IRasRag.Domain.Common;
 using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace IRasRag.Infrastructure.Data
+namespace IRasRag.Infrastructure.Persistence
 {
     public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
@@ -71,47 +72,47 @@ namespace IRasRag.Infrastructure.Data
             // ====================================
 
             // User and Auth
-            modelBuilder.ApplyConfiguration(new Configurations.UserConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.RoleConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.RefreshTokenConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.VerificationConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.UserFarmConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new RoleConfiguration());
+            modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
+            modelBuilder.ApplyConfiguration(new VerificationConfiguration());
+            modelBuilder.ApplyConfiguration(new UserFarmConfiguration());
 
             // Farm
-            modelBuilder.ApplyConfiguration(new Configurations.FarmConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.FishTankConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.CameraConfiguration());
+            modelBuilder.ApplyConfiguration(new FarmConfiguration());
+            modelBuilder.ApplyConfiguration(new FishTankConfiguration());
+            modelBuilder.ApplyConfiguration(new CameraConfiguration());
 
             // Production
-            modelBuilder.ApplyConfiguration(new Configurations.FarmingBatchConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.FeedingLogConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SpeciesConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.GrowthStageConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SpeciesThresholdConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.MortalityLogConfiguration());
+            modelBuilder.ApplyConfiguration(new FarmingBatchConfiguration());
+            modelBuilder.ApplyConfiguration(new FeedingLogConfiguration());
+            modelBuilder.ApplyConfiguration(new SpeciesConfiguration());
+            modelBuilder.ApplyConfiguration(new GrowthStageConfiguration());
+            modelBuilder.ApplyConfiguration(new SpeciesThresholdConfiguration());
+            modelBuilder.ApplyConfiguration(new MortalityLogConfiguration());
 
             // Feeding Configuration
-            modelBuilder.ApplyConfiguration(new Configurations.FeedTypeConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SpeciesStageConfigConfiguration());
+            modelBuilder.ApplyConfiguration(new FeedTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new SpeciesStageConfigConfiguration());
 
             // Hardware
-            modelBuilder.ApplyConfiguration(new Configurations.MasterBoardConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SensorConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SensorTypeConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.SensorLogConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.ControlDeviceTypeConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.ControlDeviceConfiguration());
+            modelBuilder.ApplyConfiguration(new MasterBoardConfiguration());
+            modelBuilder.ApplyConfiguration(new SensorConfiguration());
+            modelBuilder.ApplyConfiguration(new SensorTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new SensorLogConfiguration());
+            modelBuilder.ApplyConfiguration(new ControlDeviceTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new ControlDeviceConfiguration());
 
             // Automated Job
-            modelBuilder.ApplyConfiguration(new Configurations.JobConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.JobTypeConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.JobControlMappingConfiguration());
+            modelBuilder.ApplyConfiguration(new JobConfiguration());
+            modelBuilder.ApplyConfiguration(new JobTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new JobControlMappingConfiguration());
 
             // Advisory & Alerts
-            modelBuilder.ApplyConfiguration(new Configurations.AlertConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.CorrectiveActionConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.DocumentConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.RecommendationConfiguration());
+            modelBuilder.ApplyConfiguration(new AlertConfiguration());
+            modelBuilder.ApplyConfiguration(new CorrectiveActionConfiguration());
+            modelBuilder.ApplyConfiguration(new DocumentConfiguration());
+            modelBuilder.ApplyConfiguration(new RecommendationConfiguration());
 
             // ====================================
             // Global Value Converters
@@ -126,7 +127,9 @@ namespace IRasRag.Infrastructure.Data
             var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
                 v =>
                     v.HasValue
-                        ? (v.Value.Kind == DateTimeKind.Utc ? v.Value : v.Value.ToUniversalTime())
+                        ? v.Value.Kind == DateTimeKind.Utc
+                            ? v.Value
+                            : v.Value.ToUniversalTime()
                         : v,
                 v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v
             );
@@ -173,9 +176,15 @@ namespace IRasRag.Infrastructure.Data
                 }
                 else if (entry.State == EntityState.Deleted)
                 {
-                    entry.State = EntityState.Modified;
-                    entry.Entity.ModifiedAt = now;
-                    entry.Entity.DeletedAt = now;
+                    // Check if entity supports soft delete
+                    if (entry.Entity is ISoftDeletable softDeletable)
+                    {
+                        // Soft delete
+                        entry.State = EntityState.Modified;
+                        softDeletable.IsDeleted = true;
+                        softDeletable.DeletedAt = now;
+                        entry.Entity.ModifiedAt = now;
+                    }
                 }
             }
             return base.SaveChanges();
@@ -200,9 +209,15 @@ namespace IRasRag.Infrastructure.Data
                 }
                 else if (entry.State == EntityState.Deleted)
                 {
-                    entry.State = EntityState.Modified;
-                    entry.Entity.ModifiedAt = now;
-                    entry.Entity.DeletedAt = now;
+                    // Check if entity supports soft delete
+                    if (entry.Entity is ISoftDeletable softDeletable)
+                    {
+                        // Soft delete
+                        entry.State = EntityState.Modified;
+                        softDeletable.IsDeleted = true;
+                        softDeletable.DeletedAt = now;
+                        entry.Entity.ModifiedAt = now;
+                    }
                 }
             }
             return await base.SaveChangesAsync(cancellationToken);

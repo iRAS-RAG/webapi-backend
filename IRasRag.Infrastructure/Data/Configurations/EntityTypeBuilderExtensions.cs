@@ -12,7 +12,11 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.Property(e => e.CreatedAt).IsRequired(false);
 
             builder.Property(e => e.ModifiedAt).IsRequired(false);
+        }
 
+        public static void ConfigureSoftDelete<T>(this EntityTypeBuilder<T> builder)
+            where T : class, ISoftDeletable
+        {
             builder.Property(e => e.DeletedAt).IsRequired(false);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -37,6 +38,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
                     st.SensorTypeId,
                 })
                 .IsUnique();
+
+            builder.HasData(SpeciesThresholdSeed.SpeciesThresholds);
         }
     }
 }
