@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/species-stage-configs")]
     public class SpeciesStageConfigController : ControllerBase
     {
         private readonly ILogger<SpeciesStageConfigController> _logger;

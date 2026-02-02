@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/growth-stages")]
     public class GrowthStageController : ControllerBase
     {
         private readonly IGrowthStageService _growthStageService;

@@ -8,7 +8,10 @@ namespace IRasRag.Application.DI
 {
     public static class DependencyInjection
     {
-        public static void AddApplicationServices(this IServiceCollection services, IConfiguration config)
+        public static void AddApplicationServices(
+            this IServiceCollection services,
+            IConfiguration config
+        )
         {
             services.AddServices();
             services.AddAutoMapper(config);
@@ -30,8 +33,7 @@ namespace IRasRag.Application.DI
                 cfg.AddProfile<GrowthStageProfile>();
                 cfg.AddProfile<SpeciesStageConfigProfile>();
                 cfg.AddProfile<SpeciesThresholdProfile>();
-            }
-            );
+            });
         }
     }
 }

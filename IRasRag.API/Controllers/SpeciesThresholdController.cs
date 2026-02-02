@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/species-threshholds")]
     public class SpeciesThresholdController : ControllerBase
     {
         private readonly ILogger<SpeciesThresholdController> _logger;

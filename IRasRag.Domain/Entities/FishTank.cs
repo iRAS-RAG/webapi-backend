@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class FishTank : BaseEntity, ISoftDeletable 
+    public class FishTank : BaseEntity, ISoftDeletable
     {
         [Required]
         [MaxLength(255)]

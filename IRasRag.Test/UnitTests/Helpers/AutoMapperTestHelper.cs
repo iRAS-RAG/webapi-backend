@@ -12,14 +12,15 @@ namespace IRasRag.Test.UnitTests.Helpers
         public static IMapper GetMapper(params Profile[] profiles)
         {
             var loggerFactory = LoggerFactory.Create(builder => { });
-            var configuration = new MapperConfiguration(cfg =>
-            {
-                foreach (var profile in profiles)
+            var configuration = new MapperConfiguration(
+                cfg =>
                 {
-                    cfg.AddProfile(profile);
-                }
-            },
-            loggerFactory
+                    foreach (var profile in profiles)
+                    {
+                        cfg.AddProfile(profile);
+                    }
+                },
+                loggerFactory
             );
 
             // Validate the configuration
