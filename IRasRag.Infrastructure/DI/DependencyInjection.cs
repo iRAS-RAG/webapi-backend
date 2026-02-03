@@ -1,8 +1,11 @@
 ﻿using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
-using IRasRag.Infrastructure.Services;
+using IRasRag.Infrastructure.Services.Auth;
+using IRasRag.Infrastructure.Services.Email;
+using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +24,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddRepositories();
             services.AddServices();
             services.AddConnectionString(config, env);
+            services.AddSettings(config);
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -32,7 +36,14 @@ namespace IRasRag.Infrastructure.DI
         public static void AddServices(this IServiceCollection services)
         {
             services.AddScoped<IJwtService, JwtService>();
-            services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IHashingService, BCryptHashingService>();
+            services.AddScoped<IEmailService, EmailService>();
+        }
+
+        public static void AddSettings(this IServiceCollection services, IConfiguration config)
+        {
+            services.Configure<EmailSettings>(config.GetSection("Email"));
+            services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
         }
 
         public static void AddConnectionString(
