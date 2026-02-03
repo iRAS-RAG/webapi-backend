@@ -35,7 +35,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi tạo người dùng: {UserName}", dto.UserName);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi tạo người dùng");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

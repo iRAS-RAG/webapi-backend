@@ -1,5 +1,6 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -13,31 +14,25 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<UserService> _logger;
         private readonly IMapper _mapper;
-        private readonly IPasswordHasher _passwordHasher;
+        private readonly IHashingService _hasher;
 
         public UserService(
             IUnitOfWork unitOfWork,
             ILogger<UserService> logger,
             IMapper mapper,
-            IPasswordHasher passwordHasher
+            IHashingService hasher
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
-            _passwordHasher = passwordHasher;
+            _hasher = hasher;
         }
 
         public async Task<Result<UserDto>> CreateUserAsync(CreateUserDto createDto)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(createDto.UserName))
-                    return Result<UserDto>.Failure(
-                        "Tên đăng nhập không được để trống.",
-                        ResultType.BadRequest
-                    );
-
                 if (string.IsNullOrWhiteSpace(createDto.Email))
                     return Result<UserDto>.Failure(
                         "Email không được để trống.",
@@ -54,20 +49,6 @@ namespace IRasRag.Application.Services.Implementations
                     return Result<UserDto>.Failure(
                         "Mật khẩu phải có ít nhất 6 ký tự.",
                         ResultType.BadRequest
-                    );
-
-                // Kiểm tra trùng username
-                var normalizedUserName = createDto.UserName.Trim().ToLower();
-                var existingUserByUsername = await _unitOfWork
-                    .GetRepository<User>()
-                    .FirstOrDefaultAsync(u =>
-                        u.UserName.ToLower() == normalizedUserName && !u.IsDeleted
-                    );
-
-                if (existingUserByUsername != null)
-                    return Result<UserDto>.Failure(
-                        "Tên đăng nhập đã tồn tại.",
-                        ResultType.Conflict
                     );
 
                 // Kiểm tra trùng email
@@ -94,12 +75,10 @@ namespace IRasRag.Application.Services.Implementations
                 var newUser = new User
                 {
                     RoleId = userRole.Id,
-                    UserName = normalizedUserName,
                     Email = createDto.Email.Trim(),
                     FirstName = createDto.FirstName?.Trim(),
                     LastName = createDto.LastName?.Trim(),
-                    PasswordHash = _passwordHasher.HashPassword(createDto.Password),
-                    IsVerified = false,
+                    PasswordHash = _hasher.Hash(createDto.Password),
                     IsDeleted = false,
                 };
 
@@ -110,11 +89,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = newUser.Id,
                     RoleName = userRole.Name,
-                    UserName = newUser.UserName,
                     Email = newUser.Email,
                     FirstName = newUser.FirstName,
                     LastName = newUser.LastName,
-                    IsVerified = newUser.IsVerified,
                 };
 
                 return Result<UserDto>.Success(resultDto, "Tạo người dùng thành công.");
@@ -166,11 +143,9 @@ namespace IRasRag.Application.Services.Implementations
                         Id = user.Id,
                         RoleName =
                             roles.FirstOrDefault(r => r.Id == user.RoleId)?.Name ?? "Unknown",
-                        UserName = user.UserName,
                         Email = user.Email,
                         FirstName = user.FirstName,
                         LastName = user.LastName,
-                        IsVerified = user.IsVerified,
                     })
                     .ToList();
 
@@ -207,11 +182,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = user.Id,
                     RoleName = role?.Name ?? "Unknown",
-                    UserName = user.UserName,
                     Email = user.Email,
                     FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    IsVerified = user.IsVerified,
+                    LastName = user.LastName
                 };
 
                 return Result<UserDto>.Success(dto, "Lấy thông tin người dùng thành công.");
@@ -234,25 +207,6 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (user == null || user.IsDeleted)
                     return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
-
-                if (!string.IsNullOrWhiteSpace(dto.UserName))
-                {
-                    var usernameToUpdate = dto.UserName.Trim();
-
-                    // Kiểm tra trùng username với người dùng khác
-                    var existingUser = await _unitOfWork
-                        .GetRepository<User>()
-                        .FirstOrDefaultAsync(u =>
-                            u.UserName.ToLower() == usernameToUpdate.ToLower()
-                            && u.Id != id
-                            && !u.IsDeleted
-                        );
-
-                    if (existingUser != null)
-                        return Result.Failure("Tên đăng nhập đã tồn tại.", ResultType.Conflict);
-
-                    user.UserName = usernameToUpdate;
-                }
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -291,7 +245,7 @@ namespace IRasRag.Application.Services.Implementations
                             ResultType.BadRequest
                         );
 
-                    user.PasswordHash = _passwordHasher.HashPassword(dto.Password);
+                    user.PasswordHash = _hasher.Hash(dto.Password);
                 }
 
                 // if (dto.IsVerified.HasValue)
