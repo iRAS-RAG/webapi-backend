@@ -43,7 +43,7 @@ namespace IRasRag.Application.Services.Implementations
                     .FirstOrDefaultAsync(u => u.Email == request.Email);
 
                 var isValidUser =
-                    user != null && _hasher.VerifyHash(request.Password, user.PasswordHash);
+                    user != null && _hasher.VerifyPassword(request.Password, user.PasswordHash);
 
                 if (!isValidUser)
                 {
@@ -79,7 +79,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var refreshToken = new RefreshToken
                 {
-                    TokenHash = _hasher.Hash(refreshTokenResult.PlainToken),
+                    TokenHash = _hasher.HashToken(refreshTokenResult.PlainToken),
                     UserId = user.Id,
                     ExpireDate = refreshTokenResult.ExpireDate,
                 };
@@ -127,7 +127,7 @@ namespace IRasRag.Application.Services.Implementations
                     var resetToken = new Verification
                     {
                         UserId = user.Id,
-                        CodeHash = _hasher.Hash(resetTokenKey),
+                        CodeHash = _hasher.HashPassword(resetTokenKey),
                         Type = VerificationType.PasswordReset,
                         ExpireDate = DateTime.UtcNow.AddMinutes(ResetCodeExpirationMinutes),
                     };
@@ -202,7 +202,7 @@ namespace IRasRag.Application.Services.Implementations
                     && !v.IsConsumed
                 );
 
-            if (existingCode == null || !_hasher.VerifyHash(request.Code, existingCode.CodeHash))
+            if (existingCode == null || !_hasher.VerifyToken(request.Code, existingCode.CodeHash))
                 return Result.Failure(
                     "Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
                     ResultType.Unauthorized
@@ -211,7 +211,7 @@ namespace IRasRag.Application.Services.Implementations
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                user.PasswordHash = _hasher.Hash(request.NewPassword);
+                user.PasswordHash = _hasher.HashPassword(request.NewPassword);
                 existingCode.IsConsumed = true;
                 await _unitOfWork.CommitTransactionAsync();
                 return Result.Success("Mật khẩu đã được đặt lại thành công.");
@@ -233,7 +233,7 @@ namespace IRasRag.Application.Services.Implementations
 
         public async Task<Result<TokenResponse>> RefreshBothToken(string refreshToken)
         {
-            var tokenHash = _hasher.Hash(refreshToken);
+            var tokenHash = _hasher.HashToken(refreshToken);
 
             var storedToken = await _unitOfWork
                 .GetRepository<RefreshToken>()
@@ -290,7 +290,7 @@ namespace IRasRag.Application.Services.Implementations
                 var newRefreshTokenResult = _jwtService.GenerateRefreshToken();
                 var newRefreshToken = new RefreshToken
                 {
-                    TokenHash = _hasher.Hash(newRefreshTokenResult.PlainToken),
+                    TokenHash = _hasher.HashToken(newRefreshTokenResult.PlainToken),
                     UserId = user.Id,
                     ExpireDate = newRefreshTokenResult.ExpireDate,
                 };
@@ -319,16 +319,18 @@ namespace IRasRag.Application.Services.Implementations
 
         public async Task<Result> Logout(string token)
         {
-            var hashedToken = _hasher.Hash(token);
+            var hashedToken = _hasher.HashToken(token);
             var existingToken = await _unitOfWork
                 .GetRepository<RefreshToken>()
                 .FirstOrDefaultAsync(rt =>
                     rt.TokenHash == hashedToken && !rt.IsRevoked && rt.ExpireDate > DateTime.UtcNow
                 );
-
+            _logger.LogInformation("Client's hashed token: {HashedToken}", hashedToken);
+            _logger.LogInformation("Server's existing token: {ExistingToken}", existingToken);
             if (existingToken != null)
             {
                 existingToken.IsRevoked = true;
+                _unitOfWork.GetRepository<RefreshToken>().Update(existingToken);
                 await _unitOfWork.SaveChangesAsync();
             }
             return Result.Success("Đăng xuất thành công.");
