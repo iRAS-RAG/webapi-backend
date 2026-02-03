@@ -2,7 +2,9 @@
 {
     public interface IHashingService
     {
-        string Hash(string value);
-        bool VerifyHash(string value, string hashedValue);
+        string HashPassword(string value);
+        bool VerifyPassword(string value, string hashedValue);
+        string HashToken(string value);
+        bool VerifyToken(string value, string hashedValue);
     }
 }

@@ -36,7 +36,7 @@ namespace IRasRag.Infrastructure.DI
         public static void AddServices(this IServiceCollection services)
         {
             services.AddScoped<IJwtService, JwtService>();
-            services.AddScoped<IHashingService, BCryptHashingService>();
+            services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
         }
 

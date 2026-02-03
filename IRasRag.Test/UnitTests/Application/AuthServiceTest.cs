@@ -84,7 +84,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(user);
 
             _hashingServiceMock
-                .Setup(h => h.VerifyHash(request.Password, user.PasswordHash))
+                .Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
                 .Returns(true);
 
             var role = new Role() { Id = user.RoleId, Name = "User" };
@@ -108,7 +108,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .Returns(new RefreshTokenResult("plain_refresh_token", expireTime));
 
             _hashingServiceMock
-                .Setup(h => h.Hash(It.IsAny<string>()))
+                .Setup(h => h.HashToken("plain_refresh_token"))
                 .Returns("hashed_refresh_token");
 
             _refreshTokenRepositoryMock
@@ -139,7 +139,7 @@ namespace IRasRag.Test.UnitTests.Application
             );
 
             _hashingServiceMock.Verify(
-                h => h.VerifyHash(request.Password, user.PasswordHash),
+                h => h.VerifyPassword(request.Password, user.PasswordHash),
                 Times.Once
             );
 
@@ -156,6 +156,17 @@ namespace IRasRag.Test.UnitTests.Application
                 j => j.GenerateAccessToken(user.Id, request.Email, role.Name),
                 Times.Once
             );
+
+            _hashingServiceMock.Verify(
+                h => h.HashToken("plain_refresh_token"),
+                Times.Once
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.HashPassword(It.IsAny<string>()),
+                Times.Never
+            );
+
 
             _refreshTokenRepositoryMock.Verify(
                 r =>
@@ -202,7 +213,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(user);
 
             _hashingServiceMock
-                .Setup(h => h.VerifyHash(request.Password, user.PasswordHash))
+                .Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
                 .Returns(false);
 
             var result = await _sut.Login(request);
@@ -246,7 +257,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.Unauthorized);
 
             _hashingServiceMock.Verify(
-                h => h.VerifyHash(It.IsAny<string>(), It.IsAny<string>()),
+                h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()),
                 Times.Never
             );
         }
@@ -274,7 +285,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(user);
 
             _hashingServiceMock
-                .Setup(h => h.VerifyHash(It.IsAny<string>(), It.IsAny<string>()))
+                .Setup(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
 
             _roleRepositoryMock
@@ -662,7 +673,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(verification);
 
             _hashingServiceMock
-                .Setup(h => h.VerifyHash(request.Code, verification.CodeHash))
+                .Setup(h => h.VerifyPassword(request.Code, verification.CodeHash))
                 .Returns(false);
 
             _unitOfWorkMock
@@ -722,11 +733,11 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(verification);
 
             _hashingServiceMock
-                .Setup(h => h.VerifyHash(request.Code, verification.CodeHash))
+                .Setup(h => h.VerifyToken(request.Code, verification.CodeHash))
                 .Returns(true);
 
             _hashingServiceMock
-                .Setup(h => h.Hash(request.NewPassword))
+                .Setup(h => h.HashPassword(request.NewPassword))
                 .Returns("new_password_hash");
 
             _unitOfWorkMock
@@ -749,6 +760,27 @@ namespace IRasRag.Test.UnitTests.Application
                 u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
+
+            _hashingServiceMock.Verify(
+                h => h.HashToken(request.NewPassword),
+                Times.Never
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.VerifyToken(request.Code, verification.CodeHash),
+                Times.Once
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.HashPassword("NewPassword123!"),
+                Times.Once
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()),
+                Times.Never
+            );
+
         }
 
         #endregion
@@ -762,7 +794,7 @@ namespace IRasRag.Test.UnitTests.Application
             var rawToken = "refresh_token";
             var hash = "hashed_token";
 
-            _hashingServiceMock.Setup(h => h.Hash(rawToken)).Returns(hash);
+            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -797,7 +829,7 @@ namespace IRasRag.Test.UnitTests.Application
                 ExpireDate = DateTime.UtcNow.AddMinutes(-1),
             };
 
-            _hashingServiceMock.Setup(h => h.Hash(rawToken)).Returns(hash);
+            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -831,7 +863,7 @@ namespace IRasRag.Test.UnitTests.Application
                 ExpireDate = DateTime.UtcNow.AddDays(1),
             };
 
-            _hashingServiceMock.Setup(h => h.Hash(rawToken)).Returns(hash);
+            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -881,7 +913,7 @@ namespace IRasRag.Test.UnitTests.Application
                 ExpireDate = DateTime.UtcNow.AddDays(1),
             };
 
-            _hashingServiceMock.Setup(h => h.Hash(rawToken)).Returns(hash);
+            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -956,7 +988,7 @@ namespace IRasRag.Test.UnitTests.Application
                 DateTime.UtcNow.AddDays(1)
             );
 
-            _hashingServiceMock.Setup(h => h.Hash(rawToken)).Returns(oldHash);
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns(oldHash);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -995,7 +1027,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns(refreshTokenResult);
 
-            _hashingServiceMock.Setup(h => h.Hash(refreshTokenResult.PlainToken)).Returns(newHash);
+            _hashingServiceMock.Setup(h => h.HashToken(refreshTokenResult.PlainToken)).Returns(newHash);
 
             _refreshTokenRepositoryMock
                 .Setup(r => r.AddAsync(It.IsAny<RefreshToken>()))
@@ -1025,6 +1057,13 @@ namespace IRasRag.Test.UnitTests.Application
                     ),
                 Times.Once
             );
+            _hashingServiceMock.Verify(h => h.HashToken(rawToken), Times.Once);
+            _hashingServiceMock.Verify(
+                h => h.HashPassword(It.IsAny<string>()),
+                Times.Never
+            );
+            _hashingServiceMock.Verify(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _hashingServiceMock.Verify(h => h.HashToken(refreshTokenResult.PlainToken), Times.Once);
         }
 
         #endregion
@@ -1045,7 +1084,9 @@ namespace IRasRag.Test.UnitTests.Application
                 ExpireDate = DateTime.UtcNow.AddMinutes(10),
             };
 
-            _hashingServiceMock.Setup(h => h.Hash(plainToken)).Returns(hashedToken);
+            _hashingServiceMock
+                .Setup(h => h.HashToken(plainToken))
+                .Returns(hashedToken);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -1069,7 +1110,32 @@ namespace IRasRag.Test.UnitTests.Application
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
+
+            _refreshTokenRepositoryMock.Verify(
+                r => r.Update(refreshToken),
+                Times.Once
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.HashToken(plainToken),
+                Times.Once
+);
+
+            _hashingServiceMock.Verify(
+                h => h.HashPassword(It.IsAny<string>()),
+                Times.Never
+            );
+
+            _refreshTokenRepositoryMock.Verify(
+                r => r.FirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<RefreshToken, bool>>>(),
+                    It.IsAny<QueryType>()
+                ),
+                Times.Once
+            );
+
         }
+
 
         [Fact]
         public async Task Logout_ShouldNotSaveChanges_WhenTokenDoesNotExist()
@@ -1078,7 +1144,9 @@ namespace IRasRag.Test.UnitTests.Application
             var plainToken = "refresh_token";
             var hashedToken = "hashed_refresh_token";
 
-            _hashingServiceMock.Setup(h => h.Hash(plainToken)).Returns(hashedToken);
+            _hashingServiceMock
+                .Setup(h => h.HashToken(plainToken))
+                .Returns(hashedToken);
 
             _refreshTokenRepositoryMock
                 .Setup(r =>
@@ -1100,7 +1168,23 @@ namespace IRasRag.Test.UnitTests.Application
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Never
             );
+
+            _refreshTokenRepositoryMock.Verify(
+                r => r.Update(It.IsAny<RefreshToken>()),
+                Times.Never
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.HashToken(plainToken),
+                Times.Once
+            );
+
+            _hashingServiceMock.Verify(
+                h => h.HashPassword(It.IsAny<string>()),
+                Times.Never
+            );
         }
+
 
         #endregion
     }
