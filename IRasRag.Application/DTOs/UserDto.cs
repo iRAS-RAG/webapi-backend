@@ -7,19 +7,13 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string RoleName { get; set; }
-        public string UserName { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public bool IsVerified { get; set; }
     }
 
     public class CreateUserDto
     {
-        [Required(ErrorMessage = "Tên đăng nhập không được để trống.")]
-        [MaxLength(255, ErrorMessage = "Tên đăng nhập không được vượt quá 255 ký tự.")]
-        public string UserName { get; set; }
-
         [Required(ErrorMessage = "Email không được để trống.")]
         [MaxLength(255, ErrorMessage = "Email không được vượt quá 255 ký tự.")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
@@ -30,16 +24,16 @@ namespace IRasRag.Application.DTOs
 
         [MaxLength(50, ErrorMessage = "Họ không được vượt quá 50 ký tự.")]
         public string LastName { get; set; }
-
         [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [PasswordComplexity]
         public string Password { get; set; }
+
+        [Required(ErrorMessage = "Vai trò người dùng không được để trống.")]
+        public string RoleName { get; set; }
     }
 
     public class UpdateUserDto
     {
-        [MaxLength(255, ErrorMessage = "Tên đăng nhập không được vượt quá 255 ký tự.")]
-        public string? UserName { get; set; }
 
         [MaxLength(255, ErrorMessage = "Email không được vượt quá 255 ký tự.")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
@@ -53,5 +47,6 @@ namespace IRasRag.Application.DTOs
 
         [PasswordComplexity]
         public string? Password { get; set; }
+        public string? RoleName { get; set; }
     }
 }

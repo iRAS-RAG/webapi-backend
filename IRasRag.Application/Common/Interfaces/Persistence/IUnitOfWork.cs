@@ -1,6 +1,6 @@
 ﻿using IRasRag.Domain.Common;
 
-namespace IRasRag.Application.Common.Interfaces
+namespace IRasRag.Application.Common.Interfaces.Persistence
 {
     public interface IUnitOfWork : IDisposable, IAsyncDisposable
     {

@@ -12,10 +12,6 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         [MaxLength(255)]
-        public string UserName { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(255)]
         public string Email { get; set; } = string.Empty;
 
         [MaxLength(50)]
@@ -27,9 +23,8 @@ namespace IRasRag.Domain.Entities
         [Required]
         [MaxLength(255)]
         public string PasswordHash { get; set; } = string.Empty;
-        public ICollection<UserFarm> UserFarms { get; set; }
 
-        public bool IsVerified { get; set; } = false;
+        public ICollection<UserFarm> UserFarms { get; set; }
 
         [Required]
         public bool IsDeleted { get; set; } = false;

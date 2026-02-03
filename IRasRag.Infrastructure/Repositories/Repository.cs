@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
-using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Domain.Enums;
 using IRasRag.Infrastructure.Persistence;

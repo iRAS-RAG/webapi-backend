@@ -1,10 +1,12 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/species-threshholds")]
     public class SpeciesThresholdController : ControllerBase
@@ -64,6 +66,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
         public async Task<IActionResult> CreateSpeciesThreshold(
             [FromBody] CreateSpeciesThresholdDto dto
@@ -87,6 +90,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSpeciesThreshold(
             Guid id,
@@ -115,6 +119,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSpeciesThreshold(Guid id)
         {

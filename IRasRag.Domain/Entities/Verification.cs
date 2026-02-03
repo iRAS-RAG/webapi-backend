@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using IRasRag.Domain.Common;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Domain.Entities
 {
@@ -14,6 +15,9 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public DateTime ExpireDate { get; set; }
+
+        [Required]
+        public VerificationType Type { get; set; }
 
         [Required]
         public bool IsConsumed { get; set; }

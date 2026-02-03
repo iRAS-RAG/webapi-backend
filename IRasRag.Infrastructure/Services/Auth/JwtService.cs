@@ -2,21 +2,20 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using IRasRag.Application.Common.Interfaces;
-using IRasRag.Application.Common.Settings;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Models.Auth;
+using IRasRag.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IRasRag.Infrastructure.Services
+namespace IRasRag.Infrastructure.Services.Auth
 {
     public class JwtService : IJwtService
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly JwtSettings _jwtSettings;
 
-        public JwtService(IUnitOfWork unitOfWork, IOptions<JwtSettings> jwtOptions)
+        public JwtService(IOptions<JwtSettings> jwtOptions)
         {
-            _unitOfWork = unitOfWork;
             _jwtSettings = jwtOptions.Value;
         }
 
@@ -46,27 +45,12 @@ namespace IRasRag.Infrastructure.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public string GenerateRefreshToken()
+        public RefreshTokenResult GenerateRefreshToken()
         {
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        }
-
-        public string HashRefreshToken(string token)
-        {
-            var bytes = Encoding.UTF8.GetBytes(token);
-            var hash = SHA256.HashData(bytes);
-            return Convert.ToBase64String(hash);
-        }
-
-        public bool VerifyRefreshToken(string providedToken, string storedHash)
-        {
-            if (string.IsNullOrEmpty(providedToken) || string.IsNullOrEmpty(storedHash))
-                return false;
-            var providedHash = HashRefreshToken(providedToken);
-            // Use constant-time comparison
-            return CryptographicOperations.FixedTimeEquals(
-                Convert.FromBase64String(providedHash),
-                Convert.FromBase64String(storedHash)
+            var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            return new RefreshTokenResult(
+                key,
+                DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays)
             );
         }
     }
