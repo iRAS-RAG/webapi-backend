@@ -1,10 +1,12 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/growth-stages")]
     public class GrowthStageController : ControllerBase
@@ -21,6 +23,7 @@ namespace IRasRag.API.Controllers
             _logger = logger;
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
         public async Task<IActionResult> CreateGrowthStage([FromBody] CreateGrowthStageDto dto)
         {
@@ -66,6 +69,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGrowthStageById(Guid id)
         {
@@ -90,6 +94,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateGrowthStage(
             Guid id,
@@ -118,6 +123,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGrowthStage(Guid id)
         {
