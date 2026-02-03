@@ -14,6 +14,7 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public DateTime ExpireDate { get; set; }
+        public bool IsRevoked { get; set; } = false;
 
         // Navigation properties
         public User User { get; set; }

@@ -36,10 +36,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = AdminId,
                     RoleId = RoleSeed.AdminRoleId,
-                    UserName = "admin",
                     Email = "admin@example.com",
                     PasswordHash = DefaultPasswordHash,
-                    IsVerified = true,
                     CreatedAt = SeedTimestamp,
                 },
                 // ------------------------------
@@ -49,10 +47,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = SupervisorId,
                     RoleId = RoleSeed.SupervisorRoleId,
-                    UserName = "supervisor",
                     Email = "supervisor@example.com",
                     PasswordHash = DefaultPasswordHash,
-                    IsVerified = true,
                     CreatedAt = SeedTimestamp,
                 },
                 // ------------------------------
@@ -62,10 +58,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = OperatorId,
                     RoleId = RoleSeed.OperatorRoleId,
-                    UserName = "operator",
                     Email = "operator@example.com",
                     PasswordHash = DefaultPasswordHash,
-                    IsVerified = true,
                     CreatedAt = SeedTimestamp,
                 },
             };
