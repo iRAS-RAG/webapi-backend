@@ -1,6 +1,5 @@
 ﻿using IRasRag.Application.Common.Interfaces;
 using IRasRag.Domain.Common;
-using IRasRag.Infrastructure.Data;
 using IRasRag.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -17,7 +16,8 @@ namespace IRasRag.Infrastructure.Persistence
             _context = context;
         }
 
-        public IRepository<T> GetRepository<T>() where T : BaseEntity
+        public IRepository<T> GetRepository<T>()
+            where T : BaseEntity
         {
             if (!_repositories.ContainsKey(typeof(T)))
             {
@@ -26,8 +26,9 @@ namespace IRasRag.Infrastructure.Persistence
             }
             return (IRepository<T>)_repositories[typeof(T)];
         }
+
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-                    await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
         public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
@@ -56,6 +57,7 @@ namespace IRasRag.Infrastructure.Persistence
                 throw;
             }
         }
+
         public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_transaction != null)
@@ -65,6 +67,7 @@ namespace IRasRag.Infrastructure.Persistence
                 _transaction = null;
             }
         }
+
         public void Dispose()
         {
             _transaction?.Dispose();

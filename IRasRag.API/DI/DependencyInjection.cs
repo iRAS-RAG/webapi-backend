@@ -1,9 +1,9 @@
-﻿using IRasRag.Application.Common.Settings;
+﻿using System.Text;
+using System.Threading.RateLimiting;
+using IRasRag.Application.Common.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
-using System.Threading.RateLimiting;
 
 namespace IRasRag.API.DI
 {
@@ -19,36 +19,39 @@ namespace IRasRag.API.DI
             services.AddCustomRateLimiter();
         }
 
-        public static void AddJwtAuthencation(this IServiceCollection services, IConfiguration config)
+        public static void AddJwtAuthencation(
+            this IServiceCollection services,
+            IConfiguration config
+        )
         {
             var jwtSettings = config.GetSection("JwtSettings").Get<JwtSettings>();
             jwtSettings?.ValidateSettings();
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+            services
+                .AddAuthentication(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
-                    ),
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
+                        ),
+                        ClockSkew = TimeSpan.Zero,
+                    };
+                });
         }
 
         public static void AddSwagger(this IServiceCollection services)
         {
-
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {
@@ -66,6 +69,18 @@ namespace IRasRag.API.DI
                         BearerFormat = "JWT",
                     }
                 );
+
+                c.AddSecurityDefinition(
+                    "ApiKey",
+                    new OpenApiSecurityScheme
+                    {
+                        Description = "API Key via x-api-key header",
+                        Name = "x-api-key",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey,
+                    }
+                );
+
                 c.AddSecurityRequirement(
                     new OpenApiSecurityRequirement
                     {
@@ -76,6 +91,17 @@ namespace IRasRag.API.DI
                                 {
                                     Type = ReferenceType.SecurityScheme,
                                     Id = "Bearer",
+                                },
+                            },
+                            Array.Empty<string>()
+                        },
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "ApiKey",
                                 },
                             },
                             Array.Empty<string>()
@@ -93,10 +119,7 @@ namespace IRasRag.API.DI
                     name: "CorsPolicy",
                     builder =>
                     {
-                        builder
-                            .AllowAnyOrigin()
-                            .AllowAnyMethod()
-                            .AllowAnyHeader();
+                        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
                     }
                 );
             });
@@ -106,17 +129,19 @@ namespace IRasRag.API.DI
         {
             services.AddRateLimiter(options =>
             {
-                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-                    RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "global",
-                        factory: partition => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = 100,
-                            Window = TimeSpan.FromMinutes(1),
-                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                            QueueLimit = 0
-                        }
-                    )
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+                    httpContext =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString()
+                                ?? "global",
+                            factory: partition => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = 100,
+                                Window = TimeSpan.FromMinutes(1),
+                                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                                QueueLimit = 0,
+                            }
+                        )
                 );
 
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

@@ -1,11 +1,11 @@
-﻿using IRasRag.Application.Common.Interfaces;
-using IRasRag.Application.Common.Settings;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Settings;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IRasRag.Infrastructure.Services
 {
@@ -13,11 +13,11 @@ namespace IRasRag.Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly JwtSettings _jwtSettings;
+
         public JwtService(IUnitOfWork unitOfWork, IOptions<JwtSettings> jwtOptions)
         {
             _unitOfWork = unitOfWork;
             _jwtSettings = jwtOptions.Value;
-
         }
 
         public string GenerateAccessToken(Guid id, string username, string roleName)

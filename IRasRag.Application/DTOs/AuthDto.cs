@@ -1,7 +1,14 @@
 ﻿using IRasRag.Application.Validators;
 
-namespace IRasRag.Application.DTOs.Auth
+namespace IRasRag.Application.DTOs
 {
+    public class LoginRequest
+    {
+        public string? UserName { get; set; }
+        public string? Email { get; set; }
+        public string Password { get; set; }
+    }
+
     public class RegisterRequest
     {
         public string UserName { get; set; } = string.Empty;

@@ -1,7 +1,7 @@
 using IRasRag.API.DI;
-using IRasRag.Infrastructure.DI;
-using IRasRag.Application.DI;
 using IRasRag.API.Middlewares;
+using IRasRag.Application.DI;
+using IRasRag.Infrastructure.DI;
 
 namespace IRasRag.API
 {
@@ -15,7 +15,7 @@ namespace IRasRag.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddApiServices(builder.Configuration);
-            builder.Services.AddApplicationServices();
+            builder.Services.AddApplicationServices(builder.Configuration);
             builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
             var app = builder.Build();
@@ -24,6 +24,7 @@ namespace IRasRag.API
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
             app.UseCors("CorsPolicy");
             app.UseHttpsRedirection();
             app.UseRateLimiter();

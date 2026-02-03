@@ -1,6 +1,5 @@
 ﻿using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Settings;
-using IRasRag.Infrastructure.Data;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services;
@@ -11,15 +10,19 @@ using Microsoft.Extensions.Hosting;
 
 namespace IRasRag.Infrastructure.DI
 {
-    public static class DependencyInjection 
+    public static class DependencyInjection
     {
-        public static void AddInfrastructureServices(this IServiceCollection services, IConfiguration config, IHostEnvironment env)
+        public static void AddInfrastructureServices(
+            this IServiceCollection services,
+            IConfiguration config,
+            IHostEnvironment env
+        )
         {
             services.AddRepositories();
             services.AddServices();
             services.AddConnectionString(config, env);
         }
-        
+
         public static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -32,10 +35,14 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IPasswordHasher, PasswordHasher>();
         }
 
-        public static void AddConnectionString(this IServiceCollection services, IConfiguration config, IHostEnvironment env)
+        public static void AddConnectionString(
+            this IServiceCollection services,
+            IConfiguration config,
+            IHostEnvironment env
+        )
         {
             var connectionString = "";
-            if(env.IsDevelopment())
+            if (env.IsDevelopment())
             {
                 connectionString = config.GetConnectionString("DefaultConnection");
             }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using IRasRag.Domain.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations
@@ -6,10 +7,17 @@ namespace IRasRag.Infrastructure.Data.Configurations
     public static class EntityTypeBuilderExtensions
     {
         public static void ConfigureTimestamps<T>(this EntityTypeBuilder<T> builder)
-            where T : class
+            where T : BaseEntity
         {
-            builder.Property("CreatedAt").HasDefaultValueSql("CURRENT_TIMESTAMP");
-            builder.Property("ModifiedAt").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            builder.Property(e => e.CreatedAt).IsRequired(false);
+
+            builder.Property(e => e.ModifiedAt).IsRequired(false);
+        }
+
+        public static void ConfigureSoftDelete<T>(this EntityTypeBuilder<T> builder)
+            where T : class, ISoftDeletable
+        {
+            builder.Property(e => e.DeletedAt).IsRequired(false);
         }
     }
 }
