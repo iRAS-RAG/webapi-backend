@@ -7,7 +7,6 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string RoleName { get; set; }
-        public string UserName { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -30,7 +29,7 @@ namespace IRasRag.Application.DTOs
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Vai trò người dùng không được để trống.")]
-        public Guid RoleId { get; set; }
+        public string RoleName { get; set; }
     }
 
     public class UpdateUserDto
@@ -48,6 +47,6 @@ namespace IRasRag.Application.DTOs
 
         [PasswordComplexity]
         public string? Password { get; set; }
-        public Guid? RoleId { get; set; }
+        public string? RoleName { get; set; }
     }
 }

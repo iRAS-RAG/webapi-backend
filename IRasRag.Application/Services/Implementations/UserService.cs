@@ -4,6 +4,7 @@ using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -61,16 +62,14 @@ namespace IRasRag.Application.Services.Implementations
                 if (existingUserByEmail != null)
                     return Result<UserDto>.Failure("Email đã tồn tại.", ResultType.Conflict);
 
-                // Tự động gán role "User" như trong Register
                 var userRole = await _unitOfWork
                     .GetRepository<Role>()
-                    .FirstOrDefaultAsync(r => r.Name == "User");
+                    .FirstOrDefaultAsync(r => r.Name.ToLowerInvariant() == createDto.RoleName.ToLowerInvariant());
 
                 if (userRole == null)
-                    return Result<UserDto>.Failure(
-                        "Không tìm thấy vai trò mặc định.",
-                        ResultType.Unexpected
-                    );
+                {
+                    return Result<UserDto>.Failure("Vai trò người dùng không hợp lệ.", ResultType.BadRequest);
+                }
 
                 var newUser = new User
                 {
@@ -78,7 +77,7 @@ namespace IRasRag.Application.Services.Implementations
                     Email = createDto.Email.Trim(),
                     FirstName = createDto.FirstName?.Trim(),
                     LastName = createDto.LastName?.Trim(),
-                    PasswordHash = _hasher.Hash(createDto.Password),
+                    PasswordHash = _hasher.HashPassword(createDto.Password),
                     IsDeleted = false,
                 };
 
@@ -134,23 +133,11 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var users = await _unitOfWork.GetRepository<User>().FindAllAsync(u => !u.IsDeleted);
-                var roles = await _unitOfWork.GetRepository<Role>().GetAllAsync();
+                var users = await _unitOfWork.GetRepository<User>().ListAsync(new UserDtoListSpec());
 
-                var userDtos = users
-                    .Select(user => new UserDto
-                    {
-                        Id = user.Id,
-                        RoleName =
-                            roles.FirstOrDefault(r => r.Id == user.RoleId)?.Name ?? "Unknown",
-                        Email = user.Email,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                    })
-                    .ToList();
 
                 return Result<IEnumerable<UserDto>>.Success(
-                    userDtos,
+                    users,
                     "Lấy danh sách người dùng thành công."
                 );
             }
@@ -245,13 +232,20 @@ namespace IRasRag.Application.Services.Implementations
                             ResultType.BadRequest
                         );
 
-                    user.PasswordHash = _hasher.Hash(dto.Password);
+                    user.PasswordHash = _hasher.HashPassword(dto.Password);
                 }
 
-                // if (dto.IsVerified.HasValue)
-                // {
-                //     user.IsVerified = dto.IsVerified.Value;
-                // }
+                if (!string.IsNullOrWhiteSpace(dto.RoleName))
+                {
+                    var userRole = await _unitOfWork
+                        .GetRepository<Role>()
+                        .FirstOrDefaultAsync(r => r.Name.ToLowerInvariant() == dto.RoleName.ToLowerInvariant());
+                    if (userRole == null)
+                    {
+                        return Result.Failure("Vai trò người dùng không hợp lệ.", ResultType.BadRequest);
+                    }
+                    user.RoleId = userRole.Id;
+                }
 
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
