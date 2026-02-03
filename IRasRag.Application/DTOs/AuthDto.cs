@@ -1,27 +1,36 @@
-﻿using IRasRag.Application.Validators;
+﻿using System.ComponentModel.DataAnnotations;
+using IRasRag.Application.Validators;
 
 namespace IRasRag.Application.DTOs
 {
     public class LoginRequest
     {
-        public string? UserName { get; set; }
-        public string? Email { get; set; }
+        [Required(ErrorMessage = "Email không được để trống.")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         public string Password { get; set; }
     }
 
-    public class RegisterRequest
+    public class TokenResponse
     {
-        public string UserName { get; set; } = string.Empty;
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+    }
 
-        public string? FirstName { get; set; } = string.Empty;
+    public class ResetPasswordRequest
+    {
+        [Required(ErrorMessage = "Email không được để trống.")]
+        public string Email { get; set; }
 
-        public string? LastName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Mã đặt lại mật khẩu không được để trống.")]
+        public string Code { get; set; }
 
-        public string Email { get; set; } = string.Empty;
-
+        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [PasswordComplexity]
-        public string Password { get; set; } = string.Empty;
+        public string NewPassword { get; set; }
 
-        public string ConfirmPassword { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Xác nhận mật khẩu không được để trống.")]
+        public string ConfirmNewPassword { get; set; }
     }
 }
