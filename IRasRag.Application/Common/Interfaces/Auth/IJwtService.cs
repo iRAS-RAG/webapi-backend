@@ -1,10 +1,10 @@
-﻿namespace IRasRag.Application.Common.Interfaces.Auth
+﻿using IRasRag.Application.Common.Models.Auth;
+
+namespace IRasRag.Application.Common.Interfaces.Auth
 {
     public interface IJwtService
     {
         string GenerateAccessToken(Guid id, string username, string roleName);
-        string GenerateRefreshToken();
-        string HashRefreshToken(string refreshToken);
-        bool VerifyRefreshToken(string refreshToken, string hashedRefreshToken);
+        RefreshTokenResult GenerateRefreshToken();
     }
 }
