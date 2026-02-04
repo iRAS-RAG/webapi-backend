@@ -2,6 +2,6 @@
 {
     public enum VerificationType
     {
-        PasswordReset
+        PasswordReset,
     }
 }

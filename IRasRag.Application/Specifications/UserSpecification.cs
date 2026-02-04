@@ -8,9 +8,7 @@ namespace IRasRag.Application.Specifications
     {
         public UserListSpec()
         {
-            Query
-                .AsNoTracking()
-                .Include(u => u.Role);
+            Query.AsNoTracking().Include(u => u.Role);
         }
     }
 

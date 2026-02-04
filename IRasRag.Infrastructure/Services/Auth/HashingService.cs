@@ -1,9 +1,9 @@
-﻿using IRasRag.Application.Common.Interfaces.Auth;
+﻿using System.Security.Cryptography;
+using System.Text;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace IRasRag.Infrastructure.Services.Auth
 {

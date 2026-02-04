@@ -24,6 +24,7 @@ namespace IRasRag.Application.DTOs
 
         [MaxLength(50, ErrorMessage = "Họ không được vượt quá 50 ký tự.")]
         public string LastName { get; set; }
+
         [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [PasswordComplexity]
         public string Password { get; set; }
@@ -34,7 +35,6 @@ namespace IRasRag.Application.DTOs
 
     public class UpdateUserDto
     {
-
         [MaxLength(255, ErrorMessage = "Email không được vượt quá 255 ký tự.")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         public string? Email { get; set; }
