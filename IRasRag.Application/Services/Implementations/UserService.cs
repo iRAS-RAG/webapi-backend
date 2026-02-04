@@ -64,11 +64,16 @@ namespace IRasRag.Application.Services.Implementations
 
                 var userRole = await _unitOfWork
                     .GetRepository<Role>()
-                    .FirstOrDefaultAsync(r => r.Name.ToLowerInvariant() == createDto.RoleName.ToLowerInvariant());
+                    .FirstOrDefaultAsync(r =>
+                        r.Name.ToLowerInvariant() == createDto.RoleName.ToLowerInvariant()
+                    );
 
                 if (userRole == null)
                 {
-                    return Result<UserDto>.Failure("Vai trò người dùng không hợp lệ.", ResultType.BadRequest);
+                    return Result<UserDto>.Failure(
+                        "Vai trò người dùng không hợp lệ.",
+                        ResultType.BadRequest
+                    );
                 }
 
                 var newUser = new User
@@ -133,8 +138,9 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var users = await _unitOfWork.GetRepository<User>().ListAsync(new UserDtoListSpec());
-
+                var users = await _unitOfWork
+                    .GetRepository<User>()
+                    .ListAsync(new UserDtoListSpec());
 
                 return Result<IEnumerable<UserDto>>.Success(
                     users,
@@ -171,7 +177,7 @@ namespace IRasRag.Application.Services.Implementations
                     RoleName = role?.Name ?? "Unknown",
                     Email = user.Email,
                     FirstName = user.FirstName,
-                    LastName = user.LastName
+                    LastName = user.LastName,
                 };
 
                 return Result<UserDto>.Success(dto, "Lấy thông tin người dùng thành công.");
@@ -239,10 +245,15 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     var userRole = await _unitOfWork
                         .GetRepository<Role>()
-                        .FirstOrDefaultAsync(r => r.Name.ToLowerInvariant() == dto.RoleName.ToLowerInvariant());
+                        .FirstOrDefaultAsync(r =>
+                            r.Name.ToLowerInvariant() == dto.RoleName.ToLowerInvariant()
+                        );
                     if (userRole == null)
                     {
-                        return Result.Failure("Vai trò người dùng không hợp lệ.", ResultType.BadRequest);
+                        return Result.Failure(
+                            "Vai trò người dùng không hợp lệ.",
+                            ResultType.BadRequest
+                        );
                     }
                     user.RoleId = userRole.Id;
                 }
