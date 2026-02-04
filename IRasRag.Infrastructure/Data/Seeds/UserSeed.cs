@@ -20,7 +20,11 @@ namespace IRasRag.Infrastructure.Data.Seeds
 
         public static readonly Guid AdminId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
 
-        public static readonly Guid UserId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+        public static readonly Guid SupervisorId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000002"
+        );
+
+        public static readonly Guid OperatorId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000003");
 
         public static List<User> Users =>
             new()
@@ -32,23 +36,36 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = AdminId,
                     RoleId = RoleSeed.AdminRoleId,
-                    UserName = "admin",
                     Email = "admin@example.com",
                     PasswordHash = DefaultPasswordHash,
-                    IsVerified = true,
+                    FirstName = "Văn A",
+                    LastName = "Nguyễn",
                     CreatedAt = SeedTimestamp,
                 },
                 // ------------------------------
-                // Normal user
+                // Supervisor user
                 // ------------------------------
                 new User
                 {
-                    Id = UserId,
-                    RoleId = RoleSeed.UserRoleId,
-                    UserName = "user",
-                    Email = "user@example.com",
+                    Id = SupervisorId,
+                    RoleId = RoleSeed.SupervisorRoleId,
+                    Email = "supervisor@example.com",
                     PasswordHash = DefaultPasswordHash,
-                    IsVerified = true,
+                    FirstName = "Thị B",
+                    LastName = "Trần",
+                    CreatedAt = SeedTimestamp,
+                },
+                // ------------------------------
+                // Operator user
+                // ------------------------------
+                new User
+                {
+                    Id = OperatorId,
+                    RoleId = RoleSeed.OperatorRoleId,
+                    Email = "operator@example.com",
+                    PasswordHash = DefaultPasswordHash,
+                    FirstName = "Văn C",
+                    LastName = "Lê",
                     CreatedAt = SeedTimestamp,
                 },
             };

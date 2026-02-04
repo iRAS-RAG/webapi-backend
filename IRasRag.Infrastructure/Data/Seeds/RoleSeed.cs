@@ -18,7 +18,13 @@ namespace IRasRag.Infrastructure.Data.Seeds
             "aaaaaaaa-0000-0000-0000-000000000001"
         );
 
-        public static readonly Guid UserRoleId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+        public static readonly Guid SupervisorRoleId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000002"
+        );
+
+        public static readonly Guid OperatorRoleId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000003"
+        );
 
         public static List<Role> Roles =>
             new()
@@ -31,8 +37,14 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 },
                 new Role
                 {
-                    Id = UserRoleId,
-                    Name = "User",
+                    Id = SupervisorRoleId,
+                    Name = "Supervisor",
+                    CreatedAt = SeedTimestamp,
+                },
+                new Role
+                {
+                    Id = OperatorRoleId,
+                    Name = "Operator",
                     CreatedAt = SeedTimestamp,
                 },
             };

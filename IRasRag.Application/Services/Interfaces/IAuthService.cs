@@ -5,7 +5,10 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IAuthService
     {
-        Task<Result<string>> Login(LoginRequest request);
-        Task<Result<string>> Register(RegisterRequest request);
+        Task<Result<TokenResponse>> Login(LoginRequest request);
+        Task<Result> Logout(string refreshToken);
+        Task<Result> RequestPasswordReset(string email);
+        Task<Result> ResetPassword(ResetPasswordRequest request);
+        Task<Result<TokenResponse>> RefreshBothToken(string refreshToken);
     }
 }

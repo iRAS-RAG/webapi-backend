@@ -20,7 +20,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(u => u.UserName).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();
 
             builder.HasData(UserSeed.Users);

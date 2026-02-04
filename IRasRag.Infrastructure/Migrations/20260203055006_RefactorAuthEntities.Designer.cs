@@ -3,6 +3,7 @@ using System;
 using IRasRag.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203055006_RefactorAuthEntities")]
+    partial class RefactorAuthEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1527,9 +1530,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@example.com",
-                            FirstName = "Văn A",
+                            FirstName = "",
                             IsDeleted = false,
-                            LastName = "Nguyễn",
+                            LastName = "",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",
                             RoleId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
                         },
@@ -1538,9 +1541,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000002"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "supervisor@example.com",
-                            FirstName = "Thị B",
+                            FirstName = "",
                             IsDeleted = false,
-                            LastName = "Trần",
+                            LastName = "",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",
                             RoleId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
                         },
@@ -1549,9 +1552,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "operator@example.com",
-                            FirstName = "Văn C",
+                            FirstName = "",
                             IsDeleted = false,
-                            LastName = "Lê",
+                            LastName = "",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",
                             RoleId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
                         });

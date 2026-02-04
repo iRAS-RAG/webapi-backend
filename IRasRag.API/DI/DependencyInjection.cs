@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using System.Threading.RateLimiting;
-using IRasRag.Application.Common.Settings;
+using IRasRag.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,7 +11,6 @@ namespace IRasRag.API.DI
     {
         public static void AddApiServices(this IServiceCollection services, IConfiguration config)
         {
-            services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
             services.AddAuthorization();
             services.AddJwtAuthencation(config);
             services.AddSwagger();

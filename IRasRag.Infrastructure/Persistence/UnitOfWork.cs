@@ -1,4 +1,4 @@
-﻿using IRasRag.Application.Common.Interfaces;
+﻿using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Domain.Common;
 using IRasRag.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;

@@ -1,4 +1,4 @@
-﻿namespace IRasRag.Application.Common.Settings
+﻿namespace IRasRag.Infrastructure.Settings
 {
     public class JwtSettings
     {
