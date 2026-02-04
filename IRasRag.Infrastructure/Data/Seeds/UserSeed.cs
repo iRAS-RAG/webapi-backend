@@ -38,6 +38,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     RoleId = RoleSeed.AdminRoleId,
                     Email = "admin@example.com",
                     PasswordHash = DefaultPasswordHash,
+                    FirstName = "Văn A",
+                    LastName = "Nguyễn",
                     CreatedAt = SeedTimestamp,
                 },
                 // ------------------------------
@@ -49,6 +51,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     RoleId = RoleSeed.SupervisorRoleId,
                     Email = "supervisor@example.com",
                     PasswordHash = DefaultPasswordHash,
+                    FirstName = "Thị B",
+                    LastName = "Trần",
                     CreatedAt = SeedTimestamp,
                 },
                 // ------------------------------
@@ -60,6 +64,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     RoleId = RoleSeed.OperatorRoleId,
                     Email = "operator@example.com",
                     PasswordHash = DefaultPasswordHash,
+                    FirstName = "Văn C",
+                    LastName = "Lê",
                     CreatedAt = SeedTimestamp,
                 },
             };
