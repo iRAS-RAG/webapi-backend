@@ -24,7 +24,10 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả cảm biến
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllSensors([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllSensors(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             try
             {

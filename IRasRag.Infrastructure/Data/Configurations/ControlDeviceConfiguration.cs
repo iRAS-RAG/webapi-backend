@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.HasIndex(cd => new { cd.MasterBoardId, cd.IsDeleted });
             // Unique hardware constraint
             builder.HasIndex(cd => new { cd.MasterBoardId, cd.PinCode }).IsUnique();
+
+            builder.HasData(ControlDeviceSeed.ControlDevices);
         }
     }
 }

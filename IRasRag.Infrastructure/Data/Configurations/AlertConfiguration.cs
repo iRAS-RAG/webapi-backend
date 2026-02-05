@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -46,6 +47,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.HasIndex(a => new { a.FishTankId, a.Status });
             builder.HasIndex(a => new { a.FarmingBatchId, a.Status });
             builder.HasIndex(a => new { a.SensorLogId, a.Status });
+
+            builder.HasData(AlertSeed.Alerts);
         }
     }
 }

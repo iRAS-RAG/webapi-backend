@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +26,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(fb => fb.FishTankId);
+
+            builder.HasData(FarmingBatchSeed.FarmingBatches);
         }
     }
 }

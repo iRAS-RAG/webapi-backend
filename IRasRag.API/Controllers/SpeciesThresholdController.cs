@@ -24,7 +24,10 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllSpeciesThresholds([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllSpeciesThresholds(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             try
             {

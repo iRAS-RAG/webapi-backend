@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -26,6 +27,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
 
             // Get sensor readings over time
             builder.HasIndex(sl => new { sl.SensorId, sl.CreatedAt });
+
+            builder.HasData(SensorLogSeed.SensorLogs);
         }
     }
 }
