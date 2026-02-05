@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Ardalis.Specification;
-using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Common.Interfaces.Persistence
@@ -27,7 +27,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
             Expression<Func<T, bool>>? predicate = null,
             QueryType type = QueryType.ActiveOnly
         );
-        Task<PaginatedResult<T>> GetPaginatedAsync(
+        Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,
             QueryType type = QueryType.ActiveOnly
@@ -59,7 +59,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
         );
 
         // Non-projected specification with pagination
-        Task<PaginatedResult<T>> GetPaginatedAsync(
+        Task<PagedResult<T>> GetPagedAsync(
             ISpecification<T> spec,
             int pageNumber,
             int pageSize,
@@ -67,7 +67,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
         );
 
         // Projected specification with pagination
-        Task<PaginatedResult<TResult>> GetPaginatedAsync<TResult>(
+        Task<PagedResult<TResult>> GetPagedAsync<TResult>(
             ISpecification<T, TResult> spec,
             int pageNumber,
             int pageSize,

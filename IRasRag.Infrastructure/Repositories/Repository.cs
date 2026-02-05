@@ -2,7 +2,7 @@
 using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
 using IRasRag.Application.Common.Interfaces.Persistence;
-using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Domain.Enums;
 using IRasRag.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -67,7 +67,7 @@ namespace IRasRag.Infrastructure.Repositories
                 : await GetQueryable(type).CountAsync(predicate);
         }
 
-        public async Task<PaginatedResult<T>> GetPaginatedAsync(
+        public async Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,
             QueryType type = QueryType.ActiveOnly
@@ -77,12 +77,10 @@ namespace IRasRag.Infrastructure.Repositories
             var count = await query.CountAsync();
             var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PaginatedResult<T>
+            return new PagedResult<T>
             {
                 Items = items,
-                TotalCount = count,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
+                TotalItems = count,
             };
         }
 
@@ -131,7 +129,7 @@ namespace IRasRag.Infrastructure.Repositories
         }
 
         // Non-projected specification with pagination
-        public async Task<PaginatedResult<T>> GetPaginatedAsync(
+        public async Task<PagedResult<T>> GetPagedAsync(
             ISpecification<T> spec,
             int pageNumber,
             int pageSize,
@@ -147,17 +145,15 @@ namespace IRasRag.Infrastructure.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PaginatedResult<T>
+            return new PagedResult<T>
             {
                 Items = items,
-                TotalCount = count,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
+                TotalItems = count,
             };
         }
 
         // Projected specification with pagination
-        public async Task<PaginatedResult<TResult>> GetPaginatedAsync<TResult>(
+        public async Task<PagedResult<TResult>> GetPagedAsync<TResult>(
             ISpecification<T, TResult> spec,
             int pageNumber,
             int pageSize,
@@ -173,12 +169,10 @@ namespace IRasRag.Infrastructure.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PaginatedResult<TResult>
+            return new PagedResult<TResult>
             {
                 Items = items,
-                TotalCount = count,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
+                TotalItems = count,
             };
         }
 
