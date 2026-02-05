@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Domain.Entities;
@@ -571,6 +572,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFishTanksAsync_ShouldReturnOk_WhenSuccessful()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var farmId1 = Guid.NewGuid();
             var farmId2 = Guid.NewGuid();
 
@@ -615,13 +619,15 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _fishTankRepositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    )
-                )
-                .ReturnsAsync(fishTankList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(
+                    new PagedResult<FishTank>
+                    {
+                        Items = fishTankList,
+                        TotalItems = fishTankList.Count,
+                    }
+                );
+
             _farmRepositoryMock
                 .Setup(r =>
                     r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
@@ -629,21 +635,23 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(farmList);
 
             // Act
-            var result = await _sut.GetAllFishTanksAsync();
+            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách bể cá thành công.");
             result.Data.Should().NotBeNull();
-            result.Data!.Count().Should().Be(2);
+            result.Data!.Count.Should().Be(2);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(2);
+
+            result.Links.Should().NotBeNull();
 
             _fishTankRepositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }
@@ -652,70 +660,67 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFishTanksAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var emptyFishTankList = new List<FishTank>();
-            var emptyFarmList = new List<Farm>();
+            var page = 1;
+            var pageSize = 10;
 
             _fishTankRepositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    )
-                )
-                .ReturnsAsync(emptyFishTankList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(
+                    new PagedResult<FishTank> { Items = Array.Empty<FishTank>(), TotalItems = 0 }
+                );
+
             _farmRepositoryMock
                 .Setup(r =>
                     r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
                 )
-                .ReturnsAsync(emptyFarmList);
+                .ReturnsAsync(Array.Empty<Farm>());
 
             // Act
-            var result = await _sut.GetAllFishTanksAsync();
+            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách bể cá thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có bể cá nào");
             result.Data.Should().NotBeNull();
             result.Data!.Should().BeEmpty();
 
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
+
             _fishTankRepositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetAllFishTanksAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetAllFishTanksAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _fishTankRepositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    )
-                )
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFishTanksAsync();
+            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lỗi khi truy xuất danh sách bể cá.");
 
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+
             _fishTankRepositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<FishTank, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }

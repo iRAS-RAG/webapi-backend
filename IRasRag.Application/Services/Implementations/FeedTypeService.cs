@@ -1,7 +1,8 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -109,24 +110,45 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<FeedTypeDto>>> GetAllFeedTypesAsync()
+        public async Task<PaginatedResult<FeedTypeDto>> GetAllFeedTypesAsync(int page, int pageSize)
         {
             try
             {
-                var list = await _unitOfWork.GetRepository<FeedType>().GetAllAsync();
+                var repository = _unitOfWork.GetRepository<FeedType>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                return Result<IEnumerable<FeedTypeDto>>.Success(
-                    _mapper.Map<IEnumerable<FeedTypeDto>>(list),
-                    "Lấy danh sách loại thức ăn thành công."
-                );
+                var feedTypeDtos = _mapper.Map<IReadOnlyList<FeedTypeDto>>(pagedResult.Items);
+
+                return new PaginatedResult<FeedTypeDto>
+                {
+                    Message =
+                        feedTypeDtos.Count == 0
+                            ? "Không có loại thức ăn nào"
+                            : "Lấy danh sách loại thức ăn thành công.",
+                    Data = feedTypeDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi truy xuất danh sách loại thức ăn");
-                return Result<IEnumerable<FeedTypeDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách loại thức ăn.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<FeedTypeDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách loại thức ăn.",
+                    Data = Array.Empty<FeedTypeDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

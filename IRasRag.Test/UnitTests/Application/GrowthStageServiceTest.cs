@@ -3,6 +3,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Domain.Entities;
@@ -260,9 +261,12 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllGrowthStagesAsync Tests
 
         [Fact]
-        public async Task GetAllGrowthStagesAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllGrowthStagesAsync_ShouldReturnPaginatedResult_WhenSuccessful()
         {
             // Arrange
+            int page = 1;
+            int pageSize = 10;
+
             var growthStages = new List<GrowthStage>
             {
                 new GrowthStage
@@ -279,55 +283,105 @@ namespace IRasRag.Test.UnitTests.Application
                 },
             };
 
+            var pagedResult = new PagedResult<GrowthStage>
+            {
+                Items = growthStages,
+                TotalItems = growthStages.Count,
+            };
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
-                .ReturnsAsync(growthStages);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(pagedResult);
 
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync();
+            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách giai đoạn sinh trưởng thành công.");
+
             result.Data.Should().NotBeNull();
-            result.Data!.Count().Should().Be(growthStages.Count);
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Data!.Count.Should().Be(growthStages.Count);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(growthStages.Count);
+            result.Meta.TotalPages.Should().Be(1);
+
+            result.Links.Should().NotBeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                Times.Once
+            );
         }
 
         [Fact]
-        public async Task GetAllGrowthStagesAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
+        public async Task GetAllGrowthStagesAsync_ShouldReturnEmptyData_WhenNoRecordsExist()
         {
             // Arrange
+            int page = 1;
+            int pageSize = 10;
+
+            var pagedResult = new PagedResult<GrowthStage>
+            {
+                Items = Array.Empty<GrowthStage>(),
+                TotalItems = 0,
+            };
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
-                .ReturnsAsync(new List<GrowthStage>());
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(pagedResult);
 
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync();
+            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách giai đoạn sinh trưởng thành công.");
-            result.Data.Should().BeEmpty();
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có giai đoạn sinh trưởng nào");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+            result.Meta.TotalPages.Should().Be(0);
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                Times.Once
+            );
         }
 
         [Fact]
-        public async Task GetAllGrowthStagesAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetAllGrowthStagesAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
             // Arrange
+            int page = 1;
+            int pageSize = 10;
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
                 .ThrowsAsync(new Exception());
+
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync();
+            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
+
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lỗi khi truy xuất danh sách giai đoạn sinh trưởng.");
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                Times.Once
+            );
         }
 
         #endregion

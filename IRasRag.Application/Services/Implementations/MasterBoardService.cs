@@ -1,9 +1,10 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -27,33 +28,59 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<MasterBoardDto>>> GetAllMasterBoardsAsync()
+        public async Task<PaginatedResult<MasterBoardDto>> GetAllMasterBoardsAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách bảng mạch");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách bảng mạch (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
-                var spec = new MasterBoardDtoListSpec();
-                var masterBoardDtos = await masterBoardRepository.ListAsync(spec);
+                var repository = _unitOfWork.GetRepository<MasterBoard>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+
+                var masterBoardDtos = _mapper.Map<IReadOnlyList<MasterBoardDto>>(pagedResult.Items);
 
                 _logger.LogInformation(
                     "Lấy danh sách bảng mạch thành công: {Count} bảng mạch",
-                    masterBoardDtos.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<MasterBoardDto>>.Success(
-                    masterBoardDtos,
-                    "Lấy danh sách bảng mạch thành công"
-                );
+                return new PaginatedResult<MasterBoardDto>
+                {
+                    Message =
+                        masterBoardDtos.Count == 0
+                            ? "Không có bảng mạch nào"
+                            : "Lấy danh sách bảng mạch thành công",
+                    Data = masterBoardDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách bảng mạch");
-                return Result<IEnumerable<MasterBoardDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách bảng mạch",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<MasterBoardDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách bảng mạch",
+                    Data = Array.Empty<MasterBoardDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

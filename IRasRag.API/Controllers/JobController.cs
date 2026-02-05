@@ -24,12 +24,24 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả công việc
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllJobs()
+        public async Task<IActionResult> GetAllJobs([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
-                var result = await _jobService.GetAllJobsAsync();
-                return Ok(new { result.Message, result.Data });
+                if (page <= 0 || pageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                if (pageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+
+                var result = await _jobService.GetAllJobsAsync(page, pageSize);
+                return Ok(result);
             }
             catch (Exception ex)
             {

@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
@@ -23,33 +25,56 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<SensorDto>>> GetAllSensorsAsync()
+        public async Task<PaginatedResult<SensorDto>> GetAllSensorsAsync(int page, int pageSize)
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách cảm biến");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách cảm biến (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var sensorRepository = _unitOfWork.GetRepository<Sensor>();
-                var spec = new SensorDtoListSpec();
-                var sensorDtos = await sensorRepository.ListAsync(spec);
+                var repository = _unitOfWork.GetRepository<Sensor>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+
+                var sensorDtos = _mapper.Map<IReadOnlyList<SensorDto>>(pagedResult.Items);
 
                 _logger.LogInformation(
                     "Lấy danh sách cảm biến thành công: {Count} cảm biến",
-                    sensorDtos.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<SensorDto>>.Success(
-                    sensorDtos,
-                    "Lấy danh sách cảm biến thành công"
-                );
+                return new PaginatedResult<SensorDto>
+                {
+                    Message =
+                        sensorDtos.Count == 0
+                            ? "Không có cảm biến nào"
+                            : "Lấy danh sách cảm biến thành công",
+                    Data = sensorDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách cảm biến");
-                return Result<IEnumerable<SensorDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách cảm biến",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<SensorDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách cảm biến",
+                    Data = Array.Empty<SensorDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

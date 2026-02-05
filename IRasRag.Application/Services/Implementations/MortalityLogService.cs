@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -26,42 +28,61 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<MortalityLogDto>>> GetAllMortalityLogsAsync()
+        public async Task<PaginatedResult<MortalityLogDto>> GetAllMortalityLogsAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách nhật ký tử vong");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách nhật ký tử vong (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
-                var mortalityLogs = await mortalityLogRepository.GetAllAsync();
+                var repository = _unitOfWork.GetRepository<MortalityLog>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                if (!mortalityLogs.Any())
-                {
-                    _logger.LogInformation("Không tìm thấy nhật ký tử vong nào");
-                    return Result<IEnumerable<MortalityLogDto>>.Success(
-                        new List<MortalityLogDto>(),
-                        "Không có nhật ký tử vong nào"
-                    );
-                }
+                var mortalityLogDtos = _mapper.Map<IReadOnlyList<MortalityLogDto>>(
+                    pagedResult.Items
+                );
 
-                var mortalityLogDtos = _mapper.Map<IEnumerable<MortalityLogDto>>(mortalityLogs);
                 _logger.LogInformation(
                     "Lấy danh sách nhật ký tử vong thành công: {Count} bản ghi",
-                    mortalityLogs.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<MortalityLogDto>>.Success(
-                    mortalityLogDtos,
-                    "Lấy danh sách nhật ký tử vong thành công"
-                );
+                return new PaginatedResult<MortalityLogDto>
+                {
+                    Message =
+                        mortalityLogDtos.Count == 0
+                            ? "Không có nhật ký tử vong nào"
+                            : "Lấy danh sách nhật ký tử vong thành công",
+                    Data = mortalityLogDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách nhật ký tử vong");
-                return Result<IEnumerable<MortalityLogDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách nhật ký tử vong",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<MortalityLogDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách nhật ký tử vong",
+                    Data = Array.Empty<MortalityLogDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

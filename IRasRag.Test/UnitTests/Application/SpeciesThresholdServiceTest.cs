@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Specifications;
@@ -404,34 +405,118 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllSpeciesThresholdsAsync
 
         [Fact]
-        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnOk()
+        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnOk_WhenSuccessful()
         {
-            var list = new List<SpeciesThresholdDto> { new(), new() };
+            // Arrange
+            var page = 1;
+            var pageSize = 10;
+
+            var list = new List<SpeciesThresholdDto>
+            {
+                new SpeciesThresholdDto(),
+                new SpeciesThresholdDto(),
+            };
 
             _thresholdRepoMock
-                .Setup(r => r.ListAsync(It.IsAny<SpeciesThresholdListSpec>(), QueryType.ActiveOnly))
-                .ReturnsAsync(list);
+                .Setup(r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.IsAny<SpeciesThresholdListSpec>(),
+                        page,
+                        pageSize,
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ReturnsAsync(
+                    new PagedResult<SpeciesThresholdDto> { Items = list, TotalItems = list.Count }
+                );
 
-            var result = await _sut.GetAllSpeciesThresholdsAsync();
+            // Act
+            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
 
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách ngưỡng sinh trưởng thành công.");
-            result.Data.Should().HaveCount(2);
+            // Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Lấy danh sách ngưỡng sinh trưởng thành công");
+            result.Data.Should().NotBeNull();
+            result.Data!.Count.Should().Be(2);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(2);
+
+            result.Links.Should().NotBeNull();
         }
 
         [Fact]
-        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnUnexpected_WhenExceptionThrown()
+        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
+            // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _thresholdRepoMock
-                .Setup(r => r.ListAsync(It.IsAny<SpeciesThresholdListSpec>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.IsAny<SpeciesThresholdListSpec>(),
+                        page,
+                        pageSize,
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
-            var result = await _sut.GetAllSpeciesThresholdsAsync();
+            // Act
+            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
 
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi truy xuất danh sách ngưỡng sinh trưởng.");
+            // Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Lỗi khi truy xuất danh sách ngưỡng sinh trưởng");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnEmptyList_WhenNoThresholdsExist()
+        {
+            // Arrange
+            var page = 1;
+            var pageSize = 10;
+
+            _thresholdRepoMock
+                .Setup(r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.IsAny<SpeciesThresholdListSpec>(),
+                        page,
+                        pageSize,
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ReturnsAsync(
+                    new PagedResult<SpeciesThresholdDto>
+                    {
+                        Items = Array.Empty<SpeciesThresholdDto>(),
+                        TotalItems = 0,
+                    }
+                );
+
+            // Act
+            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có ngưỡng sinh trưởng nào");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
         }
 
         #endregion

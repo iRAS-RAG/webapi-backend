@@ -2,6 +2,8 @@ using AutoMapper;
 using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -87,24 +89,56 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<SpeciesDto>>> GetAllSpeciesAsync()
+        public async Task<PaginatedResult<SpeciesDto>> GetAllSpeciesAsync(int page, int pageSize)
         {
             try
             {
-                var list = await _unitOfWork.GetRepository<Species>().GetAllAsync();
-
-                return Result<IEnumerable<SpeciesDto>>.Success(
-                    _mapper.Map<IEnumerable<SpeciesDto>>(list),
-                    "Lấy danh sách loài thành công."
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách loài (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
                 );
+
+                var repository = _unitOfWork.GetRepository<Species>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+
+                var speciesDtos = _mapper.Map<IReadOnlyList<SpeciesDto>>(pagedResult.Items);
+
+                _logger.LogInformation(
+                    "Lấy danh sách loài thành công: {Count} loài",
+                    speciesDtos.Count
+                );
+
+                return new PaginatedResult<SpeciesDto>
+                {
+                    Message =
+                        speciesDtos.Count == 0
+                            ? "Không có loài nào"
+                            : "Lấy danh sách loài thành công",
+                    Data = speciesDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi truy xuất danh sách loài");
-                return Result<IEnumerable<SpeciesDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách loài.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<SpeciesDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách loài",
+                    Data = Array.Empty<SpeciesDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

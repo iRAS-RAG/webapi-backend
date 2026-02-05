@@ -2,6 +2,8 @@ using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
@@ -134,26 +136,60 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<UserDto>>> GetAllUsersAsync()
+        public async Task<PaginatedResult<UserDto>> GetAllUsersAsync(int page, int pageSize)
         {
             try
             {
-                var users = await _unitOfWork
-                    .GetRepository<User>()
-                    .ListAsync(new UserDtoListSpec());
-
-                return Result<IEnumerable<UserDto>>.Success(
-                    users,
-                    "Lấy danh sách người dùng thành công."
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách người dùng (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
                 );
+
+                var repository = _unitOfWork.GetRepository<User>();
+                var pagedResult = await repository.GetPagedAsync(
+                    new UserDtoListSpec(),
+                    page,
+                    pageSize
+                );
+
+                var userDtos = _mapper.Map<IReadOnlyList<UserDto>>(pagedResult.Items);
+
+                _logger.LogInformation(
+                    "Lấy danh sách người dùng thành công: {Count} người dùng",
+                    userDtos.Count
+                );
+
+                return new PaginatedResult<UserDto>
+                {
+                    Message =
+                        userDtos.Count == 0
+                            ? "Không có người dùng nào"
+                            : "Lấy danh sách người dùng thành công",
+                    Data = userDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi truy xuất danh sách người dùng");
-                return Result<IEnumerable<UserDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách người dùng.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<UserDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách người dùng",
+                    Data = Array.Empty<UserDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 
