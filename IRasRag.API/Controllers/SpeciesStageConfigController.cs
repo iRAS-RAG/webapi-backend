@@ -23,8 +23,8 @@ namespace IRasRag.API.Controllers
             _speciesStageConfigService = speciesStageConfigService;
         }
 
-        [HttpGet("items")]
-        public async Task<IActionResult> GetAllSpeciesStageConfigs(int page, int pageSize)
+        [HttpGet]
+        public async Task<IActionResult> GetAllSpeciesStageConfigs([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -33,6 +33,11 @@ namespace IRasRag.API.Controllers
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
+                }
+
+                if (pageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
                 var result = await _speciesStageConfigService.GetAllSpeciesStageConfigsAsync(

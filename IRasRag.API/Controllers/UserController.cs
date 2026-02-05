@@ -40,8 +40,8 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("items")]
-        public async Task<IActionResult> GetAllUsers(int page, int pageSize)
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -50,6 +50,11 @@ namespace IRasRag.API.Controllers
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
+                }
+
+                if (pageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
                 var result = await _userService.GetAllUsersAsync(page, pageSize);

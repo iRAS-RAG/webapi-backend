@@ -26,8 +26,8 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Lấy danh sách tất cả thiết bị điều khiển
         /// </summary>
-        [HttpGet("items")]
-        public async Task<IActionResult> GetAllControlDevices(int page, int pageSize)
+        [HttpGet]
+        public async Task<IActionResult> GetAllControlDevices([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -36,6 +36,11 @@ namespace IRasRag.API.Controllers
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
+                }
+
+                if (pageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
                 var result = await _controlDeviceService.GetAllControlDevicesAsync(page, pageSize);
