@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
@@ -150,26 +152,65 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<SpeciesThresholdDto>>> GetAllSpeciesThresholdsAsync()
+        public async Task<PaginatedResult<SpeciesThresholdDto>> GetAllSpeciesThresholdsAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                var list = await _unitOfWork
-                    .GetRepository<SpeciesThreshold>()
-                    .ListAsync(new SpeciesThresholdListSpec());
-
-                return Result<IEnumerable<SpeciesThresholdDto>>.Success(
-                    list,
-                    "Lấy danh sách ngưỡng sinh trưởng thành công."
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách ngưỡng sinh trưởng (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
                 );
+
+                var repository = _unitOfWork.GetRepository<SpeciesThreshold>();
+                var pagedResult = await repository.GetPagedAsync(
+                    new SpeciesThresholdListSpec(),
+                    page,
+                    pageSize
+                );
+
+                var thresholdDtos = _mapper.Map<IReadOnlyList<SpeciesThresholdDto>>(
+                    pagedResult.Items
+                );
+
+                _logger.LogInformation(
+                    "Lấy danh sách ngưỡng sinh trưởng thành công: {Count} ngưỡng",
+                    thresholdDtos.Count
+                );
+
+                return new PaginatedResult<SpeciesThresholdDto>
+                {
+                    Message =
+                        thresholdDtos.Count == 0
+                            ? "Không có ngưỡng sinh trưởng nào"
+                            : "Lấy danh sách ngưỡng sinh trưởng thành công",
+                    Data = thresholdDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving all species thresholds");
-                return Result<IEnumerable<SpeciesThresholdDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách ngưỡng sinh trưởng.",
-                    ResultType.Unexpected
-                );
+                _logger.LogError(ex, "Lỗi khi truy xuất danh sách ngưỡng sinh trưởng");
+
+                return new PaginatedResult<SpeciesThresholdDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách ngưỡng sinh trưởng",
+                    Data = Array.Empty<SpeciesThresholdDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

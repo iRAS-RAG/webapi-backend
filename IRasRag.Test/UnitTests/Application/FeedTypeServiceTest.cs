@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Domain.Entities;
@@ -424,6 +425,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFeedTypesAsync_ShouldReturnOk_WhenSuccessful()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var feedTypeList = new List<FeedType>
             {
                 new FeedType
@@ -443,59 +447,98 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
-                .ReturnsAsync(feedTypeList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .ReturnsAsync(
+                    new PagedResult<FeedType>
+                    {
+                        Items = feedTypeList,
+                        TotalItems = feedTypeList.Count,
+                    }
+                );
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync();
+            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách loại thức ăn thành công.");
             result.Data.Should().NotBeNull();
-            result.Data!.Count().Should().Be(2);
+            result.Data!.Count.Should().Be(2);
 
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(2);
+
+            result.Links.Should().NotBeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllFeedTypesAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var emptyList = new List<FeedType>();
-            _repositoryMock.Setup(r => r.GetAllAsync(QueryType.ActiveOnly)).ReturnsAsync(emptyList);
+            var page = 1;
+            var pageSize = 10;
+
+            _repositoryMock
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .ReturnsAsync(
+                    new PagedResult<FeedType> { Items = Array.Empty<FeedType>(), TotalItems = 0 }
+                );
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync();
+            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách loại thức ăn thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có loại thức ăn nào");
             result.Data.Should().NotBeNull();
             result.Data!.Should().BeEmpty();
 
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         [Fact]
-        public async Task GetAllFeedTypesAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetAllFeedTypesAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync();
+            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lỗi khi truy xuất danh sách loại thức ăn.");
 
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         #endregion

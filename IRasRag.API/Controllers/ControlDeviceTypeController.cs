@@ -52,17 +52,23 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllControlDeviceTypes()
+        [HttpGet("items")]
+        public async Task<IActionResult> GetAllControlDeviceTypes(int page, int pageSize)
         {
             try
             {
-                var result = await _controlDeviceTypeService.GetAllControlDeviceTypesAsync();
-                return result.Type switch
+                if (page <= 0 || pageSize <= 0)
                 {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                var result = await _controlDeviceTypeService.GetAllControlDeviceTypesAsync(
+                    page,
+                    pageSize
+                );
+                return Ok(result);
             }
             catch (Exception ex)
             {

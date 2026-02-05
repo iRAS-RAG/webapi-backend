@@ -77,11 +77,7 @@ namespace IRasRag.Infrastructure.Repositories
             var count = await query.CountAsync();
             var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PagedResult<T>
-            {
-                Items = items,
-                TotalItems = count,
-            };
+            return new PagedResult<T> { Items = items, TotalItems = count };
         }
 
         #endregion
@@ -145,11 +141,7 @@ namespace IRasRag.Infrastructure.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PagedResult<T>
-            {
-                Items = items,
-                TotalItems = count,
-            };
+            return new PagedResult<T> { Items = items, TotalItems = count };
         }
 
         // Projected specification with pagination
@@ -169,11 +161,7 @@ namespace IRasRag.Infrastructure.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PagedResult<TResult>
-            {
-                Items = items,
-                TotalItems = count,
-            };
+            return new PagedResult<TResult> { Items = items, TotalItems = count };
         }
 
         // Count with specification

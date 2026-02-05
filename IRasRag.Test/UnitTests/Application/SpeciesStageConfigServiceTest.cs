@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Specifications;
@@ -420,6 +421,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnOk_WhenSuccessful()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var configs = new List<SpeciesStageConfigDto>
             {
                 new SpeciesStageConfigDto { Id = Guid.NewGuid() },
@@ -428,71 +432,113 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock
                 .Setup(r =>
-                    r.ListAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
                         It.IsAny<SpeciesStageConfigListSpec>(),
+                        page,
+                        pageSize,
                         QueryType.ActiveOnly
                     )
                 )
-                .ReturnsAsync(configs);
+                .ReturnsAsync(
+                    new PagedResult<SpeciesStageConfigDto>
+                    {
+                        Items = configs,
+                        TotalItems = configs.Count,
+                    }
+                );
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync();
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
+            result.Should().NotBeNull();
             result
                 .Message.Should()
-                .Be("Lấy danh sách cấu hình giai đoạn sinh trưởng của cá thành công.");
-            result.Data.Should().HaveCount(2);
+                .Be("Lấy danh sách cấu hình giai đoạn sinh trưởng thành công");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Count.Should().Be(2);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(2);
+
+            result.Links.Should().NotBeNull();
         }
 
         [Fact]
         public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnEmptyList_WhenNoConfigsExist()
         {
             // Arrange
-            var configs = new List<SpeciesStageConfigDto>();
+            var page = 1;
+            var pageSize = 10;
 
             _configRepoMock
                 .Setup(r =>
-                    r.ListAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
                         It.IsAny<SpeciesStageConfigListSpec>(),
+                        page,
+                        pageSize,
                         QueryType.ActiveOnly
                     )
                 )
-                .ReturnsAsync(configs);
+                .ReturnsAsync(
+                    new PagedResult<SpeciesStageConfigDto>
+                    {
+                        Items = Array.Empty<SpeciesStageConfigDto>(),
+                        TotalItems = 0,
+                    }
+                );
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync();
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Data.Should().BeEmpty();
-            result.Type.Should().Be(ResultType.Ok);
-            result
-                .Message.Should()
-                .Be("Lấy danh sách cấu hình giai đoạn sinh trưởng của cá thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có cấu hình giai đoạn sinh trưởng nào");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
         }
 
         [Fact]
-        public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnUnexpected_WhenExceptionThrown()
+        public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _configRepoMock
                 .Setup(r =>
-                    r.ListAsync(It.IsAny<SpeciesStageConfigListSpec>(), QueryType.ActiveOnly)
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.IsAny<SpeciesStageConfigListSpec>(),
+                        page,
+                        pageSize,
+                        QueryType.ActiveOnly
+                    )
                 )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync();
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
+            result.Should().NotBeNull();
             result
                 .Message.Should()
-                .Be("Lỗi khi truy xuất danh sách cấu hình giai đoạn sinh trưởng của cá.");
+                .Be("Lỗi khi truy xuất danh sách cấu hình giai đoạn sinh trưởng");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
         }
 
         #endregion

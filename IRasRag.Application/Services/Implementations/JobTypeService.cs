@@ -1,9 +1,10 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -27,33 +28,56 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<JobTypeDto>>> GetAllJobTypesAsync()
+        public async Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(int page, int pageSize)
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách loại công việc");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách loại công việc (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var jobTypeRepository = _unitOfWork.GetRepository<JobType>();
-                var spec = new JobTypeDtoListSpec();
-                var jobTypeDtos = await jobTypeRepository.ListAsync(spec);
+                var repository = _unitOfWork.GetRepository<JobType>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+
+                var jobTypeDtos = _mapper.Map<IReadOnlyList<JobTypeDto>>(pagedResult.Items);
 
                 _logger.LogInformation(
                     "Lấy danh sách loại công việc thành công: {Count} loại",
-                    jobTypeDtos.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<JobTypeDto>>.Success(
-                    jobTypeDtos,
-                    "Lấy danh sách loại công việc thành công"
-                );
+                return new PaginatedResult<JobTypeDto>
+                {
+                    Message =
+                        jobTypeDtos.Count == 0
+                            ? "Không có loại công việc nào"
+                            : "Lấy danh sách loại công việc thành công",
+                    Data = jobTypeDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách loại công việc");
-                return Result<IEnumerable<JobTypeDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách loại công việc",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<JobTypeDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách loại công việc",
+                    Data = Array.Empty<JobTypeDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

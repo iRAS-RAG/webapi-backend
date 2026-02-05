@@ -26,17 +26,20 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Lấy danh sách tất cả bảng mạch
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAllMasterBoards()
+        [HttpGet("items")]
+        public async Task<IActionResult> GetAllMasterBoards(int page, int pageSize)
         {
             try
             {
-                var result = await _masterBoardService.GetAllMasterBoardsAsync();
-                return result.Type switch
+                if (page <= 0 || pageSize <= 0)
                 {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                var result = await _masterBoardService.GetAllMasterBoardsAsync(page, pageSize);
+                return Ok(result);
             }
             catch (Exception ex)
             {

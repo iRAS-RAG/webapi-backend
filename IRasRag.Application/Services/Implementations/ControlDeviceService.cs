@@ -1,9 +1,10 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -27,33 +28,61 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<ControlDeviceDto>>> GetAllControlDevicesAsync()
+        public async Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách thiết bị điều khiển");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách thiết bị điều khiển (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
                 var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
-                var spec = new ControlDeviceDtoListSpec();
-                var controlDeviceDtos = await controlDeviceRepository.ListAsync(spec);
+                var pagedResult = await controlDeviceRepository.GetPagedAsync(page, pageSize);
+
+                var controlDeviceDtos = _mapper.Map<IReadOnlyList<ControlDeviceDto>>(
+                    pagedResult.Items
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách thiết bị điều khiển thành công: {Count} thiết bị",
-                    controlDeviceDtos.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<ControlDeviceDto>>.Success(
-                    controlDeviceDtos,
-                    "Lấy danh sách thiết bị điều khiển thành công"
-                );
+                return new PaginatedResult<ControlDeviceDto>
+                {
+                    Message =
+                        controlDeviceDtos.Count == 0
+                            ? "Không có thiết bị điều khiển nào"
+                            : "Lấy danh sách thiết bị điều khiển thành công",
+                    Data = controlDeviceDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách thiết bị điều khiển");
-                return Result<IEnumerable<ControlDeviceDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách thiết bị điều khiển",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<ControlDeviceDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách thiết bị điều khiển",
+                    Data = Array.Empty<ControlDeviceDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

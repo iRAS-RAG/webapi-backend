@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Domain.Entities;
@@ -505,6 +506,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFarmsAsync_ShouldReturnOk_WhenSuccessful()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var farmList = new List<Farm>
             {
                 new Farm
@@ -528,24 +532,29 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _repositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
-                .ReturnsAsync(farmList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(
+                    new PagedResult<Farm> { Items = farmList, TotalItems = farmList.Count }
+                );
 
             // Act
-            var result = await _sut.GetAllFarmsAsync();
+            var result = await _sut.GetAllFarmsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách trang trại thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Lấy danh sách trang trại thành công");
             result.Data.Should().NotBeNull();
-            result.Data!.Count().Should().Be(2);
+            result.Data!.Count.Should().Be(2);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(2);
+
+            result.Links.Should().NotBeNull();
 
             _repositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>()),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }
@@ -554,26 +563,31 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFarmsAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var emptyList = new List<Farm>();
+            var page = 1;
+            var pageSize = 10;
+
             _repositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
-                .ReturnsAsync(emptyList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(
+                    new PagedResult<Farm> { Items = Array.Empty<Farm>(), TotalItems = 0 }
+                );
 
             // Act
-            var result = await _sut.GetAllFarmsAsync();
+            var result = await _sut.GetAllFarmsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách trang trại thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có trang trại nào");
             result.Data.Should().NotBeNull();
             result.Data!.Should().BeEmpty();
 
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
+
             _repositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>()),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }
@@ -582,6 +596,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFarmsAsync_ShouldExcludeDeletedFarms_WhenRetrievingList()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var farmList = new List<Farm>
             {
                 new Farm
@@ -594,49 +611,49 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _repositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
-                .ReturnsAsync(farmList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .ReturnsAsync(new PagedResult<Farm> { Items = farmList, TotalItems = 1 });
 
             // Act
-            var result = await _sut.GetAllFarmsAsync();
+            var result = await _sut.GetAllFarmsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Data!.All(f => !f.Id.Equals(Guid.Empty)).Should().BeTrue();
+            result.Should().NotBeNull();
+            result.Data.Should().NotBeNull();
+            result.Data!.All(f => f.Id != Guid.Empty).Should().BeTrue();
 
             _repositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(
-                        It.Is<Expression<Func<Farm, bool>>>(expr => expr != null),
-                        It.IsAny<QueryType>()
-                    ),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetAllFarmsAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetAllFarmsAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _repositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
+                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFarmsAsync();
+            var result = await _sut.GetAllFarmsAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
+            result.Should().NotBeNull();
             result.Message.Should().Be("Lỗi khi truy xuất danh sách trang trại.");
 
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+
             _repositoryMock.Verify(
-                r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>()),
+                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
                 Times.Once
             );
         }

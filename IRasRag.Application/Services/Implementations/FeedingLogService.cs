@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -26,42 +28,59 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<FeedingLogDto>>> GetAllFeedingLogsAsync()
+        public async Task<PaginatedResult<FeedingLogDto>> GetAllFeedingLogsAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách nhật ký cho ăn");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách nhật ký cho ăn (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
-                var feedingLogs = await feedingLogRepository.GetAllAsync();
+                var repository = _unitOfWork.GetRepository<FeedingLog>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                if (!feedingLogs.Any())
-                {
-                    _logger.LogInformation("Không tìm thấy nhật ký cho ăn nào");
-                    return Result<IEnumerable<FeedingLogDto>>.Success(
-                        new List<FeedingLogDto>(),
-                        "Không có nhật ký cho ăn nào"
-                    );
-                }
+                var feedingLogDtos = _mapper.Map<IReadOnlyList<FeedingLogDto>>(pagedResult.Items);
 
-                var feedingLogDtos = _mapper.Map<IEnumerable<FeedingLogDto>>(feedingLogs);
                 _logger.LogInformation(
                     "Lấy danh sách nhật ký cho ăn thành công: {Count} bản ghi",
-                    feedingLogs.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<FeedingLogDto>>.Success(
-                    feedingLogDtos,
-                    "Lấy danh sách nhật ký cho ăn thành công"
-                );
+                return new PaginatedResult<FeedingLogDto>
+                {
+                    Message =
+                        feedingLogDtos.Count == 0
+                            ? "Không có nhật ký cho ăn nào"
+                            : "Lấy danh sách nhật ký cho ăn thành công",
+                    Data = feedingLogDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách nhật ký cho ăn");
-                return Result<IEnumerable<FeedingLogDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách nhật ký cho ăn",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<FeedingLogDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách nhật ký cho ăn",
+                    Data = Array.Empty<FeedingLogDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

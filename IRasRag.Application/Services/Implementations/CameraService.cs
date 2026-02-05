@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -22,42 +24,56 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<CameraDto>>> GetAllCamerasAsync()
+        public async Task<PaginatedResult<CameraDto>> GetAllCamerasAsync(int page, int pageSize)
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách camera");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách camera (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
                 var cameraRepository = _unitOfWork.GetRepository<Camera>();
-                var cameras = await cameraRepository.GetAllAsync();
+                var pagedResult = await cameraRepository.GetPagedAsync(page, pageSize);
 
-                if (!cameras.Any())
-                {
-                    _logger.LogInformation("Không tìm thấy camera nào");
-                    return Result<IEnumerable<CameraDto>>.Success(
-                        new List<CameraDto>(),
-                        "Không có camera nào"
-                    );
-                }
+                var cameraDtos = _mapper.Map<IReadOnlyList<CameraDto>>(pagedResult.Items);
 
-                var cameraDtos = _mapper.Map<IEnumerable<CameraDto>>(cameras);
                 _logger.LogInformation(
                     "Lấy danh sách camera thành công: {Count} camera",
-                    cameras.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<CameraDto>>.Success(
-                    cameraDtos,
-                    "Lấy danh sách camera thành công"
-                );
+                return new PaginatedResult<CameraDto>
+                {
+                    Message =
+                        cameraDtos.Count == 0
+                            ? "Không có camera nào"
+                            : "Lấy danh sách camera thành công",
+                    Data = cameraDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách camera");
-                return Result<IEnumerable<CameraDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách camera",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<CameraDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách camera",
+                    Data = Array.Empty<CameraDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

@@ -4,7 +4,11 @@ namespace IRasRag.Application.Common.Utils
 {
     public class PaginationBuilder
     {
-        public static PaginationLinks BuildPaginationLinks(int currentPage, int pageSize, int totalItems)
+        public static PaginationLinks BuildPaginationLinks(
+            int currentPage,
+            int pageSize,
+            int totalItems
+        )
         {
             var totalPages = CalculateTotalPages(totalItems, pageSize);
             string BuildUrl(int page) => $"/items?page={page}&pageSize={pageSize}";
@@ -14,11 +18,15 @@ namespace IRasRag.Application.Common.Utils
                 First = BuildUrl(1),
                 Prev = currentPage > 1 ? BuildUrl(currentPage - 1) : null,
                 Next = currentPage < totalPages ? BuildUrl(currentPage + 1) : null,
-                Last = BuildUrl(totalPages)
+                Last = BuildUrl(totalPages),
             };
         }
 
-        public static PaginationMeta BuildPaginationMetadata(int currentPage, int pageSize, int totalItems)
+        public static PaginationMeta BuildPaginationMetadata(
+            int currentPage,
+            int pageSize,
+            int totalItems
+        )
         {
             var totalPages = CalculateTotalPages(totalItems, pageSize);
             return new PaginationMeta
@@ -26,7 +34,7 @@ namespace IRasRag.Application.Common.Utils
                 Page = currentPage,
                 PageSize = pageSize,
                 TotalItems = totalItems,
-                TotalPages = totalPages
+                TotalPages = totalPages,
             };
         }
 

@@ -1,4 +1,5 @@
 ﻿using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
 
@@ -6,7 +7,10 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface ISpeciesThresholdService
     {
-        Task<Result<IEnumerable<SpeciesThresholdDto>>> GetAllSpeciesThresholdsAsync();
+        Task<PaginatedResult<SpeciesThresholdDto>> GetAllSpeciesThresholdsAsync(
+            int page,
+            int pageSize
+        );
         Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdById(Guid id);
         Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(CreateSpeciesThresholdDto dto);
         Task<Result> UpdateSpeciesThreshold(Guid id, UpdateSpeciesThresholdDto dto);

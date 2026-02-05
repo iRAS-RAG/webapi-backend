@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -93,24 +95,48 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<GrowthStageDto>>> GetAllGrowthStagesAsync()
+        public async Task<PaginatedResult<GrowthStageDto>> GetAllGrowthStagesAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                var list = await _unitOfWork.GetRepository<GrowthStage>().GetAllAsync();
+                var repository = _unitOfWork.GetRepository<GrowthStage>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                return Result<IEnumerable<GrowthStageDto>>.Success(
-                    _mapper.Map<IEnumerable<GrowthStageDto>>(list),
-                    "Lấy danh sách giai đoạn sinh trưởng thành công."
-                );
+                var growthStageDtos = _mapper.Map<IReadOnlyList<GrowthStageDto>>(pagedResult.Items);
+
+                return new PaginatedResult<GrowthStageDto>
+                {
+                    Message =
+                        growthStageDtos.Count == 0
+                            ? "Không có giai đoạn sinh trưởng nào"
+                            : "Lấy danh sách giai đoạn sinh trưởng thành công.",
+                    Data = growthStageDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving all growth stages");
-                return Result<IEnumerable<GrowthStageDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách giai đoạn sinh trưởng.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<GrowthStageDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách giai đoạn sinh trưởng.",
+                    Data = Array.Empty<GrowthStageDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

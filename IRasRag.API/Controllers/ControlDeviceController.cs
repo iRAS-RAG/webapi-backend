@@ -26,13 +26,20 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Lấy danh sách tất cả thiết bị điều khiển
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAllControlDevices()
+        [HttpGet("items")]
+        public async Task<IActionResult> GetAllControlDevices(int page, int pageSize)
         {
             try
             {
-                var result = await _controlDeviceService.GetAllControlDevicesAsync();
-                return Ok(new { result.Message, result.Data });
+                if (page <= 0 || pageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                var result = await _controlDeviceService.GetAllControlDevicesAsync(page, pageSize);
+                return Ok(result);
             }
             catch (Exception ex)
             {

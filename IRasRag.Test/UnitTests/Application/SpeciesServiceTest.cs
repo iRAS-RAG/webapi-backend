@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Domain.Entities;
@@ -285,6 +286,9 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllSpeciesAsync_ShouldReturnOk_WhenSuccessful()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             var speciesList = new List<Species>
             {
                 new Species { Id = Guid.NewGuid(), Name = "Cá Rô Phi" },
@@ -292,56 +296,94 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
-                .ReturnsAsync(speciesList);
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .ReturnsAsync(
+                    new PagedResult<Species> { Items = speciesList, TotalItems = speciesList.Count }
+                );
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync();
+            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách loài thành công.");
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Lấy danh sách loài thành công");
             result.Data.Should().NotBeNull();
-            result.Data!.Count().Should().Be(speciesList.Count);
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Data!.Count.Should().Be(speciesList.Count);
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.Page.Should().Be(page);
+            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta.TotalItems.Should().Be(speciesList.Count);
+
+            result.Links.Should().NotBeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllSpeciesAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
-                .ReturnsAsync(new List<Species>());
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .ReturnsAsync(
+                    new PagedResult<Species> { Items = Array.Empty<Species>(), TotalItems = 0 }
+                );
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync();
+            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy danh sách loài thành công.");
-            result.Data.Should().BeEmpty();
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Không có loài nào");
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+
+            result.Links.Should().NotBeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         [Fact]
-        public async Task GetAllSpeciesAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetAllSpeciesAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
+            var page = 1;
+            var pageSize = 10;
+
             _repositoryMock
-                .Setup(r => r.GetAllAsync(QueryType.ActiveOnly))
+                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync();
+            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi truy xuất danh sách loài.");
-            _repositoryMock.Verify(r => r.GetAllAsync(QueryType.ActiveOnly), Times.Once);
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Lỗi khi truy xuất danh sách loài");
+
+            result.Data.Should().NotBeNull();
+            result.Data!.Should().BeEmpty();
+
+            result.Meta.Should().BeNull();
+            result.Links.Should().BeNull();
+
+            _repositoryMock.Verify(
+                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                Times.Once
+            );
         }
 
         #endregion

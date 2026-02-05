@@ -5,5 +5,4 @@
         public IReadOnlyList<T> Items { get; init; } = [];
         public int TotalItems { get; init; }
     }
-
 }

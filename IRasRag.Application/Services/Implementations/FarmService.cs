@@ -1,7 +1,8 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -114,24 +115,45 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<FarmDto>>> GetAllFarmsAsync()
+        public async Task<PaginatedResult<FarmDto>> GetAllFarmsAsync(int page, int pageSize)
         {
             try
             {
-                var list = await _unitOfWork.GetRepository<Farm>().FindAllAsync(f => !f.IsDeleted);
+                var repository = _unitOfWork.GetRepository<Farm>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                return Result<IEnumerable<FarmDto>>.Success(
-                    _mapper.Map<IEnumerable<FarmDto>>(list),
-                    "Lấy danh sách trang trại thành công."
-                );
+                var farmDtos = _mapper.Map<IReadOnlyList<FarmDto>>(pagedResult.Items);
+
+                return new PaginatedResult<FarmDto>
+                {
+                    Message =
+                        farmDtos.Count == 0
+                            ? "Không có trang trại nào"
+                            : "Lấy danh sách trang trại thành công.",
+                    Data = farmDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi truy xuất danh sách trang trại");
-                return Result<IEnumerable<FarmDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách trang trại.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<FarmDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách trang trại.",
+                    Data = Array.Empty<FarmDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

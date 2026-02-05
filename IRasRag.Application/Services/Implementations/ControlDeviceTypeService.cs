@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -26,44 +28,59 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<ControlDeviceTypeDto>>> GetAllControlDeviceTypesAsync()
+        public async Task<PaginatedResult<ControlDeviceTypeDto>> GetAllControlDeviceTypesAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách loại thiết bị điều khiển");
-
-                var controlDeviceTypeRepository = _unitOfWork.GetRepository<ControlDeviceType>();
-                var controlDeviceTypes = await controlDeviceTypeRepository.GetAllAsync();
-
-                if (!controlDeviceTypes.Any())
-                {
-                    _logger.LogInformation("Không tìm thấy loại thiết bị điều khiển nào");
-                    return Result<IEnumerable<ControlDeviceTypeDto>>.Success(
-                        new List<ControlDeviceTypeDto>(),
-                        "Không có loại thiết bị điều khiển nào"
-                    );
-                }
-
-                var controlDeviceTypeDtos = _mapper.Map<IEnumerable<ControlDeviceTypeDto>>(
-                    controlDeviceTypes
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách loại thiết bị điều khiển (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
                 );
+
+                var repository = _unitOfWork.GetRepository<ControlDeviceType>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+
+                var dtos = _mapper.Map<IReadOnlyList<ControlDeviceTypeDto>>(pagedResult.Items);
+
                 _logger.LogInformation(
                     "Lấy danh sách loại thiết bị điều khiển thành công: {Count} loại",
-                    controlDeviceTypes.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<ControlDeviceTypeDto>>.Success(
-                    controlDeviceTypeDtos,
-                    "Lấy danh sách loại thiết bị điều khiển thành công"
-                );
+                return new PaginatedResult<ControlDeviceTypeDto>
+                {
+                    Message =
+                        dtos.Count == 0
+                            ? "Không có loại thiết bị điều khiển nào"
+                            : "Lấy danh sách loại thiết bị điều khiển thành công",
+                    Data = dtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách loại thiết bị điều khiển");
-                return Result<IEnumerable<ControlDeviceTypeDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách loại thiết bị điều khiển",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<ControlDeviceTypeDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách loại thiết bị điều khiển",
+                    Data = Array.Empty<ControlDeviceTypeDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

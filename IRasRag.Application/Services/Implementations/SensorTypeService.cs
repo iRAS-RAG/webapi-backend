@@ -1,6 +1,8 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -26,42 +28,59 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<Result<IEnumerable<SensorTypeDto>>> GetAllSensorTypesAsync()
+        public async Task<PaginatedResult<SensorTypeDto>> GetAllSensorTypesAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu lấy danh sách loại cảm biến");
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách loại cảm biến (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
 
-                var sensorTypeRepository = _unitOfWork.GetRepository<SensorType>();
-                var sensorTypes = await sensorTypeRepository.GetAllAsync();
+                var repository = _unitOfWork.GetRepository<SensorType>();
+                var pagedResult = await repository.GetPagedAsync(page, pageSize);
 
-                if (!sensorTypes.Any())
-                {
-                    _logger.LogInformation("Không tìm thấy loại cảm biến nào");
-                    return Result<IEnumerable<SensorTypeDto>>.Success(
-                        new List<SensorTypeDto>(),
-                        "Không có loại cảm biến nào"
-                    );
-                }
+                var sensorTypeDtos = _mapper.Map<IReadOnlyList<SensorTypeDto>>(pagedResult.Items);
 
-                var sensorTypeDtos = _mapper.Map<IEnumerable<SensorTypeDto>>(sensorTypes);
                 _logger.LogInformation(
                     "Lấy danh sách loại cảm biến thành công: {Count} loại",
-                    sensorTypes.Count()
+                    pagedResult.Items.Count
                 );
 
-                return Result<IEnumerable<SensorTypeDto>>.Success(
-                    sensorTypeDtos,
-                    "Lấy danh sách loại cảm biến thành công"
-                );
+                return new PaginatedResult<SensorTypeDto>
+                {
+                    Message =
+                        sensorTypeDtos.Count == 0
+                            ? "Không có loại cảm biến nào"
+                            : "Lấy danh sách loại cảm biến thành công",
+                    Data = sensorTypeDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách loại cảm biến");
-                return Result<IEnumerable<SensorTypeDto>>.Failure(
-                    "Đã xảy ra lỗi khi lấy danh sách loại cảm biến",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<SensorTypeDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách loại cảm biến",
+                    Data = Array.Empty<SensorTypeDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

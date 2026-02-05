@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
@@ -147,28 +149,65 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<
-            Result<IEnumerable<SpeciesStageConfigDto>>
-        > GetAllSpeciesStageConfigsAsync()
+        public async Task<PaginatedResult<SpeciesStageConfigDto>> GetAllSpeciesStageConfigsAsync(
+            int page,
+            int pageSize
+        )
         {
             try
             {
-                var configs = await _unitOfWork
-                    .GetRepository<SpeciesStageConfig>()
-                    .ListAsync(new SpeciesStageConfigListSpec());
-
-                return Result<IEnumerable<SpeciesStageConfigDto>>.Success(
-                    _mapper.Map<IEnumerable<SpeciesStageConfigDto>>(configs),
-                    "Lấy danh sách cấu hình giai đoạn sinh trưởng của cá thành công."
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách cấu hình giai đoạn sinh trưởng (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
                 );
+
+                var repository = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var pagedResult = await repository.GetPagedAsync(
+                    new SpeciesStageConfigListSpec(),
+                    page,
+                    pageSize
+                );
+
+                var configDtos = _mapper.Map<IReadOnlyList<SpeciesStageConfigDto>>(
+                    pagedResult.Items
+                );
+
+                _logger.LogInformation(
+                    "Lấy danh sách cấu hình giai đoạn sinh trưởng thành công: {Count} cấu hình",
+                    configDtos.Count
+                );
+
+                return new PaginatedResult<SpeciesStageConfigDto>
+                {
+                    Message =
+                        configDtos.Count == 0
+                            ? "Không có cấu hình giai đoạn sinh trưởng nào"
+                            : "Lấy danh sách cấu hình giai đoạn sinh trưởng thành công",
+                    Data = configDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving SpeciesStageConfigs");
-                return Result<IEnumerable<SpeciesStageConfigDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách cấu hình giai đoạn sinh trưởng của cá.",
-                    ResultType.Unexpected
-                );
+                _logger.LogError(ex, "Lỗi khi truy xuất danh sách cấu hình giai đoạn sinh trưởng");
+
+                return new PaginatedResult<SpeciesStageConfigDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách cấu hình giai đoạn sinh trưởng",
+                    Data = Array.Empty<SpeciesStageConfigDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 

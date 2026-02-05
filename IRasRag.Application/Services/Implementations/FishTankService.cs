@@ -1,7 +1,8 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -124,17 +125,18 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IEnumerable<FishTankDto>>> GetAllFishTanksAsync()
+        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(int page, int pageSize)
         {
             try
             {
-                var fishTanks = await _unitOfWork
-                    .GetRepository<FishTank>()
-                    .FindAllAsync(f => !f.IsDeleted);
-                var farms = await _unitOfWork.GetRepository<Farm>().FindAllAsync(f => !f.IsDeleted);
+                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
+                var farmRepo = _unitOfWork.GetRepository<Farm>();
 
-                var fishTankDtos = fishTanks
-                    .Select(ft => new FishTankDto
+                var pagedResult = await fishTankRepo.GetPagedAsync(page, pageSize);
+                var farms = await farmRepo.GetAllAsync();
+
+                var fishTankDtos = pagedResult
+                    .Items.Select(ft => new FishTankDto
                     {
                         Id = ft.Id,
                         Name = ft.Name,
@@ -147,18 +149,36 @@ namespace IRasRag.Application.Services.Implementations
                     })
                     .ToList();
 
-                return Result<IEnumerable<FishTankDto>>.Success(
-                    fishTankDtos,
-                    "Lấy danh sách bể cá thành công."
-                );
+                return new PaginatedResult<FishTankDto>
+                {
+                    Message =
+                        fishTankDtos.Count == 0
+                            ? "Không có bể cá nào"
+                            : "Lấy danh sách bể cá thành công.",
+                    Data = fishTankDtos,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi truy xuất danh sách bể cá");
-                return Result<IEnumerable<FishTankDto>>.Failure(
-                    "Lỗi khi truy xuất danh sách bể cá.",
-                    ResultType.Unexpected
-                );
+
+                return new PaginatedResult<FishTankDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách bể cá.",
+                    Data = Array.Empty<FishTankDto>(),
+                    Meta = null,
+                    Links = null,
+                };
             }
         }
 
