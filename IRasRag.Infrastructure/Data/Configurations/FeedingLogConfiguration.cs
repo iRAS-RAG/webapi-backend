@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,6 +19,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
 
             // Time-series query: feeding history per batch
             builder.HasIndex(fl => new { fl.FarmingBatchId, fl.CreatedDate });
+
+            builder.HasData(FeedingLogSeed.FeedingLogs);
         }
     }
 }

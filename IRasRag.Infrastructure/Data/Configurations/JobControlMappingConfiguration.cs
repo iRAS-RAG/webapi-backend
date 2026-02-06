@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +26,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.Property(jcm => jcm.TriggerCondition).HasConversion<string>();
 
             builder.HasIndex(jcm => new { jcm.JobId, jcm.ControlDeviceId }).IsUnique();
+
+            builder.HasData(JobControlMappingSeed.JobControlMappings);
         }
     }
 }

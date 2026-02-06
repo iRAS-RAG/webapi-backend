@@ -24,7 +24,10 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả loại công việc
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllJobTypes([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllJobTypes(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             try
             {

@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,6 +19,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .WithMany(f => f.Cameras)
                 .HasForeignKey(c => c.FarmId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Thêm dữ liệu seed
+            builder.HasData(CameraSeed.Cameras);
         }
     }
 }

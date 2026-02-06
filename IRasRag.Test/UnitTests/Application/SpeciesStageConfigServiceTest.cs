@@ -452,9 +452,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Assert
             result.Should().NotBeNull();
-            result
-                .Message.Should()
-                .Be("Lấy danh sách cấu hình giai đoạn sinh trưởng thành công");
+            result.Message.Should().Be("Lấy danh sách cấu hình giai đoạn sinh trưởng thành công");
 
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);

@@ -94,6 +94,48 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_alerts_sensor_log_id_status");
 
                     b.ToTable("alerts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001801"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            RaisedAt = new DateTime(2024, 1, 15, 14, 30, 0, 0, DateTimeKind.Utc),
+                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
+                            Status = "OPEN",
+                            Value = 31.2f
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001802"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            RaisedAt = new DateTime(2024, 1, 16, 8, 0, 0, 0, DateTimeKind.Utc),
+                            ResolvedAt = new DateTime(2024, 1, 16, 10, 30, 0, 0, DateTimeKind.Utc),
+                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
+                            Status = "RESOLVED",
+                            Value = 7.2f
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001803"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            RaisedAt = new DateTime(2024, 1, 17, 12, 0, 0, 0, DateTimeKind.Utc),
+                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
+                            Status = "ACKNOWLEDGED",
+                            Value = 28.5f
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Camera", b =>
@@ -142,6 +184,35 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_cameras_farm_id");
 
                     b.ToTable("cameras", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000701"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmId = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
+                            IsDeleted = false,
+                            Name = "Camera cổng chính",
+                            Url = "rtsp://192.168.1.100:554/stream1"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000702"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmId = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
+                            IsDeleted = false,
+                            Name = "Camera giám sát bể số 1",
+                            Url = "rtsp://192.168.1.101:554/stream1"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000703"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FarmId = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
+                            IsDeleted = false,
+                            Name = "Camera khu vực cho ăn",
+                            Url = "rtsp://192.168.1.102:554/stream1"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.ControlDevice", b =>
@@ -215,6 +286,47 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_control_devices_master_board_id_pin_code");
 
                     b.ToTable("control_devices", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000801"),
+                            CommandOff = "PUMP1_OFF",
+                            CommandOn = "PUMP1_ON",
+                            ControlDeviceTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000701"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Máy bơm chính 1",
+                            PinCode = 5,
+                            State = false
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000802"),
+                            CommandOff = "AERATOR1_OFF",
+                            CommandOn = "AERATOR1_ON",
+                            ControlDeviceTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000702"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Máy sục khí 1",
+                            PinCode = 6,
+                            State = false
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000803"),
+                            CommandOff = "FEEDER1_OFF",
+                            CommandOn = "FEEDER1_ON",
+                            ControlDeviceTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000703"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Máy cho ăn tự động 1",
+                            PinCode = 7,
+                            State = false
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.ControlDeviceType", b =>
@@ -247,6 +359,29 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasName("pk_control_device_types");
 
                     b.ToTable("control_device_types", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000701"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thiết bị bơm nước tuần hoàn trong hệ thống RAS",
+                            Name = "Máy bơm nước"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000702"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thiết bị cung cấp oxy hòa tan cho nước nuôi",
+                            Name = "Máy sục khí"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000703"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thiết bị cấp thức ăn tự động theo lịch định sẵn",
+                            Name = "Máy cho ăn tự động"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.CorrectiveAction", b =>
@@ -297,6 +432,38 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_corrective_actions_user_id");
 
                     b.ToTable("corrective_actions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002001"),
+                            ActionTaken = "Bật hệ thống làm mát và tăng lưu lượng nước tuần hoàn",
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001801"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Notes = "Nhiệt độ giảm từ 31.2°C xuống 29.5°C sau 2 giờ. Tiếp tục theo dõi.",
+                            Timestamp = new DateTime(2024, 1, 15, 15, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002002"),
+                            ActionTaken = "Thêm vôi nông nghiệp để điều chỉnh pH lên mức tối ưu",
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001802"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Notes = "Đã thêm 500g vôi. pH tăng từ 7.2 lên 7.6 sau 1 giờ. Vấn đề đã được giải quyết.",
+                            Timestamp = new DateTime(2024, 1, 16, 9, 15, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002003"),
+                            ActionTaken = "Kiểm tra hệ thống sục khí và làm sạch bộ lọc",
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001803"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Notes = "Đã vệ sinh bộ lọc cơ học. Hệ thống sục khí hoạt động bình thường. Nhiệt độ ổn định.",
+                            Timestamp = new DateTime(2024, 1, 17, 13, 30, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Document", b =>
@@ -340,6 +507,35 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_documents_uploaded_by_user_id");
 
                     b.ToTable("documents", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001901"),
+                            Content = "Khi nhiệt độ nước vượt quá 30°C:\n1. Tăng lưu lượng nước tuần hoàn\n2. Bật hệ thống làm mát\n3. Giảm mật độ thả nuôi nếu cần\n4. Kiểm tra hàm lượng oxy hòa tan\n5. Theo dõi hành vi của cá",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Title = "Hướng dẫn xử lý nhiệt độ cao trong bể nuôi",
+                            UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001902"),
+                            Content = "Để duy trì độ pH ổn định:\n1. Kiểm tra độ kiềm của nước\n2. Sử dụng vôi nông nghiệp để tăng pH\n3. Sử dụng axit citric để giảm pH\n4. Theo dõi pH hàng ngày\n5. Đảm bảo hệ thống lọc sinh học hoạt động tốt",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Title = "Quy trình điều chỉnh độ pH trong hệ thống RAS",
+                            UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, 0, DateTimeKind.Utc),
+                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001903"),
+                            Content = "Các thông số quan trọng cần theo dõi:\n1. Nhiệt độ: 25-30°C\n2. pH: 6.5-8.5\n3. Oxy hòa tan: >5 mg/L\n4. Ammonia: <0.1 mg/L\n5. Nitrite: <0.2 mg/L\n6. Nitrate: <50 mg/L\nThực hiện kiểm tra hàng ngày và ghi chép đầy đủ.",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Title = "Hướng dẫn quản lý chất lượng nước trong nuôi trồng thủy sản",
+                            UploadedAt = new DateTime(2024, 1, 10, 9, 0, 0, 0, DateTimeKind.Utc),
+                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Farm", b =>
@@ -478,6 +674,37 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_farming_batches_species_id");
 
                     b.ToTable("farming_batches", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CurrentQuantity = 950f,
+                            EstimatedHarvestDate = new DateTime(2024, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            InitialQuantity = 1000f,
+                            Name = "Lô nuôi cá rô phi 2024-01",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
+                            StartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "ACTIVE",
+                            UnitOfMeasure = "con"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            ActualHarvestDate = new DateTime(2024, 5, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CurrentQuantity = 0f,
+                            EstimatedHarvestDate = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            InitialQuantity = 800f,
+                            Name = "Lô nuôi cá rô phi 2023-12",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
+                            StartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "HARVESTED",
+                            UnitOfMeasure = "con"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.FeedType", b =>
@@ -581,6 +808,32 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_feeding_logs_farming_batch_id_created_date");
 
                     b.ToTable("feeding_logs", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001601"),
+                            Amount = 5.5f,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2024, 1, 20, 6, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001602"),
+                            Amount = 5.8f,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2024, 1, 20, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001603"),
+                            Amount = 6f,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2024, 1, 20, 18, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.FishTank", b =>
@@ -795,6 +1048,51 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_jobs_sensor_id");
 
                     b.ToTable("jobs", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001001"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultState = false,
+                            Description = "Cho cá ăn tự động vào lúc 6 giờ sáng mỗi ngày",
+                            EndTime = new TimeSpan(0, 6, 5, 0, 0),
+                            ExecutionDays = "ALL",
+                            IsActive = true,
+                            IsDeleted = false,
+                            JobTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000901"),
+                            Name = "Cho ăn buổi sáng",
+                            StartTime = new TimeSpan(0, 6, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001002"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultState = false,
+                            Description = "Bật máy bơm khi nhiệt độ vượt quá 30°C",
+                            ExecutionDays = "ALL",
+                            IsActive = true,
+                            IsDeleted = false,
+                            JobTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000902"),
+                            MaxValue = 30f,
+                            Name = "Kiểm soát nhiệt độ",
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001003"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultState = false,
+                            Description = "Sục khí 15 phút mỗi 3 giờ trong giờ làm việc",
+                            EndTime = new TimeSpan(0, 18, 0, 0, 0),
+                            ExecutionDays = "ALL",
+                            IsActive = true,
+                            IsDeleted = false,
+                            JobTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000901"),
+                            Name = "Sục khí định kỳ",
+                            RepeatIntervalMinutes = 180,
+                            StartTime = new TimeSpan(0, 6, 0, 0, 0)
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.JobControlMapping", b =>
@@ -841,6 +1139,35 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_job_control_mappings_job_id_control_device_id");
 
                     b.ToTable("job_control_mappings", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001101"),
+                            ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000803"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001001"),
+                            TargetState = true,
+                            TriggerCondition = "ALWAYS"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001102"),
+                            ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000801"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001002"),
+                            TargetState = true,
+                            TriggerCondition = "ABOVE_MAX"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001103"),
+                            ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000802"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001003"),
+                            TargetState = true,
+                            TriggerCondition = "ALWAYS"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.JobType", b =>
@@ -878,6 +1205,29 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_job_types_name");
 
                     b.ToTable("job_types", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000901"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Tự động thực hiện theo thời gian đã định",
+                            Name = "Công việc theo lịch"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000902"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Tự động thực hiện dựa trên giá trị cảm biến",
+                            Name = "Công việc dựa trên cảm biến"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000903"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thực hiện bằng tay khi cần thiết",
+                            Name = "Công việc thủ công"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.MasterBoard", b =>
@@ -930,6 +1280,26 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_master_boards_fish_tank_id_is_deleted");
 
                     b.ToTable("master_boards", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            IsDeleted = false,
+                            MacAddress = "AA:BB:CC:DD:EE:01",
+                            Name = "Board điều khiển chính 1"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001202"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
+                            IsDeleted = false,
+                            MacAddress = "AA:BB:CC:DD:EE:02",
+                            Name = "Board điều khiển chính 2"
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.MortalityLog", b =>
@@ -966,6 +1336,24 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_mortality_logs_batch_id");
 
                     b.ToTable("mortality_logs", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001701"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Quantity = 30f
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001702"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2024, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Quantity = 20f
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Recommendation", b =>
@@ -1006,6 +1394,32 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_recommendations_document_id");
 
                     b.ToTable("recommendations", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002101"),
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001801"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001901"),
+                            SuggestionText = "Áp dụng quy trình xử lý nhiệt độ cao trong tài liệu: Tăng lưu lượng nước tuần hoàn và bật hệ thống làm mát. Kiểm tra mức oxy hòa tan để đảm bảo cá không bị thiếu oxy."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002102"),
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001802"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001902"),
+                            SuggestionText = "Theo quy trình điều chỉnh pH: Thêm vôi nông nghiệp để tăng độ pH lên mức tối ưu (7.5-8.0). Theo dõi pH hàng ngày và điều chỉnh nếu cần."
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002103"),
+                            AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001803"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001903"),
+                            SuggestionText = "Tham khảo hướng dẫn quản lý chất lượng nước: Duy trì nhiệt độ trong khoảng 25-30°C. Kiểm tra các thông số khác như oxy hòa tan, ammonia và nitrite để đảm bảo môi trường nuôi tối ưu."
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.RefreshToken", b =>
@@ -1155,6 +1569,38 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_sensors_master_board_id_pin_code");
 
                     b.ToTable("sensors", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến nhiệt độ 1",
+                            PinCode = 2,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001302"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến pH 1",
+                            PinCode = 3,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001303"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001202"),
+                            Name = "Cảm biến nhiệt độ 2",
+                            PinCode = 2,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SensorLog", b =>
@@ -1198,6 +1644,35 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_sensor_logs_sensor_id_created_at");
 
                     b.ToTable("sensor_logs", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Data = 28.5,
+                            DataJson = "{\"temperature\": 28.5, \"unit\": \"C\"}",
+                            IsWarning = false,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 30, 0, 0, DateTimeKind.Utc),
+                            Data = 31.199999999999999,
+                            DataJson = "{\"temperature\": 31.2, \"unit\": \"C\"}",
+                            IsWarning = true,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Data = 7.2000000000000002,
+                            DataJson = "{\"ph\": 7.2}",
+                            IsWarning = false,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SensorType", b =>

@@ -27,7 +27,10 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả bảng mạch
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllMasterBoards([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllMasterBoards(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             try
             {

@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +23,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
             // MacAddress for IoT device registration
             builder.HasIndex(mb => mb.MacAddress).IsUnique();
             builder.HasIndex(mb => new { mb.FishTankId, mb.IsDeleted });
+
+            builder.HasData(MasterBoardSeed.MasterBoards);
         }
     }
 }

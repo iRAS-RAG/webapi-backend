@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,6 +22,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .WithMany(d => d.Recommendations)
                 .HasForeignKey(r => r.DocumentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasData(RecommendationSeed.Recommendations);
         }
     }
 }
