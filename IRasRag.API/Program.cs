@@ -46,8 +46,12 @@ namespace IRasRag.API
             app.UseCors("CorsPolicy");
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<ApiKeyMiddleware>();
-            app.UseCors("CorsPolicy");
-            app.UseHttpsRedirection();
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+
             app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
