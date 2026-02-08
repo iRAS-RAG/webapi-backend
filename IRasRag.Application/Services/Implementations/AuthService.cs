@@ -127,7 +127,7 @@ namespace IRasRag.Application.Services.Implementations
                     var resetToken = new Verification
                     {
                         UserId = user.Id,
-                        CodeHash = _hasher.HashPassword(resetTokenKey),
+                        CodeHash = _hasher.HashToken(resetTokenKey),
                         Type = VerificationType.PasswordReset,
                         ExpireDate = DateTime.UtcNow.AddMinutes(ResetCodeExpirationMinutes),
                     };
