@@ -1,3 +1,4 @@
+using Hangfire;
 using IRasRag.API.DI;
 using IRasRag.API.Middlewares;
 using IRasRag.Application.DI;
@@ -14,29 +15,9 @@ namespace IRasRag.API
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddApiServices(builder.Configuration);
+            builder.Services.AddApiServices(builder.Configuration, builder.Environment);
             builder.Services.AddApplicationServices(builder.Configuration);
             builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
-
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(
-                    "CorsPolicy",
-                    builder =>
-                    {
-                        builder
-                            .WithOrigins(
-                                "http://localhost:5173",
-                                "https://iras-rag.vercel.app",
-                                "https://iras-rag-dev.vercel.app"
-                            )
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials()
-                            .WithExposedHeaders("Content-Disposition", "content-disposition");
-                    }
-                );
-            });
 
             var app = builder.Build();
 
