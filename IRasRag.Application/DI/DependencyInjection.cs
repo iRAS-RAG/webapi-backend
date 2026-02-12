@@ -1,5 +1,4 @@
-﻿using IRasRag.Application.Common.Interfaces;
-using IRasRag.Application.Common.Mappings;
+﻿using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.Extensions.Configuration;

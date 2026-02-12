@@ -2,7 +2,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 
-namespace IRasRag.Application.Common.Interfaces
+namespace IRasRag.Application.Services.Interfaces
 {
     public interface IUserFarmService
     {
