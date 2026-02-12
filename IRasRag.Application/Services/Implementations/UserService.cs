@@ -336,14 +336,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result> UpdateUserAsync(Guid id, UpdateUserDto dto)
+        public async Task<Result<UserDto>> UpdateUserAsync(Guid id, UpdateUserDto dto)
         {
             try
             {
                 var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id);
 
                 if (user == null || user.IsDeleted)
-                    return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                    return Result<UserDto>.Failure("Người dùng không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -359,7 +359,7 @@ namespace IRasRag.Application.Services.Implementations
                         );
 
                     if (existingUser != null)
-                        return Result.Failure("Email đã tồn tại.", ResultType.Conflict);
+                        return Result<UserDto>.Failure("Email đã tồn tại.", ResultType.Conflict);
 
                     user.Email = emailToUpdate;
                 }
@@ -377,7 +377,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                 {
                     if (dto.Password.Length < 6)
-                        return Result.Failure(
+                        return Result<UserDto>.Failure(
                             "Mật khẩu phải có ít nhất 6 ký tự.",
                             ResultType.BadRequest
                         );
@@ -394,7 +394,7 @@ namespace IRasRag.Application.Services.Implementations
                         );
                     if (userRole == null)
                     {
-                        return Result.Failure(
+                        return Result<UserDto>.Failure(
                             "Vai trò người dùng không hợp lệ.",
                             ResultType.BadRequest
                         );
@@ -414,12 +414,12 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result.Success("Cập nhật người dùng thành công.");
+                return Result<UserDto>.Success(_mapper.Map<UserDto>(user), "Cập nhật người dùng thành công.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật người dùng");
-                return Result.Failure("Lỗi khi cập nhật người dùng.", ResultType.Unexpected);
+                return Result<UserDto>.Failure("Lỗi khi cập nhật người dùng.", ResultType.Unexpected);
             }
         }
 
@@ -456,14 +456,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto)
+        public async Task<Result<UserDto>> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto)
         {
             try
             {
                 var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id);
 
                 if (user == null || user.IsDeleted)
-                    return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                    return Result<UserDto>.Failure("Người dùng không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -475,11 +475,10 @@ namespace IRasRag.Application.Services.Implementations
                         .FirstOrDefaultAsync(u =>
                             u.Email.ToLower() == emailToUpdate.ToLower()
                             && u.Id != id
-                            && !u.IsDeleted
                         );
 
                     if (existingUser != null)
-                        return Result.Failure("Email đã tồn tại.", ResultType.Conflict);
+                        return Result<UserDto>.Failure("Email đã tồn tại.", ResultType.Conflict);
 
                     user.Email = emailToUpdate;
                 }
@@ -497,12 +496,12 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result.Success("Cập nhật người dùng thành công.");
+                return Result<UserDto>.Success(_mapper.Map<UserDto>(user), "Cập nhật người dùng thành công.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật hồ sơ người dùng");
-                return Result.Failure("Lỗi khi cập nhật hồ sơ người dùng.", ResultType.Unexpected);
+                return Result<UserDto>.Failure("Lỗi khi cập nhật hồ sơ người dùng.", ResultType.Unexpected);
             }
         }
     }
