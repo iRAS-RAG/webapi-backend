@@ -192,7 +192,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (user == null || user.IsDeleted)
                 {
-                    return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                    return Result.Failure("Người dùng không tồn tại hoặc đã xóa.", ResultType.NotFound);
                 }
 
                 _unitOfWork.GetRepository<User>().Delete(user);
@@ -340,9 +340,9 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id);
+                var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id, QueryType.IncludeDeleted);
 
-                if (user == null || user.IsDeleted)
+                if (user == null)
                     return Result<UserDto>.Failure("Người dùng không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
@@ -409,6 +409,7 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         user.DeletedAt = DateTime.UtcNow;
                     }
+                    else user.DeletedAt = null;
                 }
 
                 _unitOfWork.GetRepository<User>().Update(user);
