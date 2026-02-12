@@ -1,9 +1,11 @@
 ﻿using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services.Auth;
+using IRasRag.Infrastructure.Services.BackgroundJobs;
 using IRasRag.Infrastructure.Services.Email;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +40,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
         }
 
         public static void AddSettings(this IServiceCollection services, IConfiguration config)
@@ -52,19 +55,29 @@ namespace IRasRag.Infrastructure.DI
             IHostEnvironment env
         )
         {
-            var connectionString = "";
-            if (env.IsDevelopment())
-            {
-                connectionString = config.GetConnectionString("DefaultConnection");
-            }
-            else if (env.IsProduction())
-            {
-                connectionString = config.GetConnectionString("NeonConnection");
-            }
+            var connectionString = ConnectionStringResolver.Resolve(config, env);
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
             });
+        }
+    }
+
+    public static class ConnectionStringResolver
+    {
+        public static string Resolve(IConfiguration config, IHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                return config.GetConnectionString("DefaultConnection");
+            }
+
+            if (env.IsProduction())
+            {
+                return config.GetConnectionString("NeonConnection");
+            }
+
+            throw new InvalidOperationException("Unsupported environment");
         }
     }
 }
