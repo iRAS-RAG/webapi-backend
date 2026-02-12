@@ -347,7 +347,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
-                    var emailToUpdate = dto.Email.Trim();
+                    var emailToUpdate = dto.Email.Trim().ToLower();
 
                     // Kiểm tra trùng email với người dùng khác
                     var existingUser = await _unitOfWork
@@ -467,7 +467,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
-                    var emailToUpdate = dto.Email.Trim();
+                    var emailToUpdate = dto.Email.Trim().ToLower();
 
                     // Kiểm tra trùng email với người dùng khác
                     var existingUser = await _unitOfWork

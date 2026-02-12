@@ -42,9 +42,10 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
+                var normalizedEmail = request.Email.Trim().ToLower();
                 var user = await _unitOfWork
                     .GetRepository<User>()
-                    .FirstOrDefaultAsync(u => u.Email == request.Email);
+                    .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
                 var isValidUser =
                     user != null && _hasher.VerifyPassword(request.Password, user.PasswordHash);
@@ -52,7 +53,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (!isValidUser)
                 {
                     _logger.LogWarning(
-                        $"Invalid login attempt for user with email: {request.Email}"
+                        $"Invalid login attempt for user with email: {normalizedEmail}"
                     );
                     return Result<TokenResponse>.Failure(
                         "Sai tài khoản hoặc mật khẩu.",
@@ -77,7 +78,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var token = _jwtService.GenerateAccessToken(user.Id, request.Email, userRole.Name);
+                var token = _jwtService.GenerateAccessToken(user.Id, normalizedEmail, userRole.Name);
 
                 var refreshTokenResult = _jwtService.GenerateRefreshToken();
 
@@ -114,11 +115,12 @@ namespace IRasRag.Application.Services.Implementations
         {
             const int ResetCodeExpirationMinutes = 5;
             string? resetTokenKey = null;
+            var normalizedEmail = email.Trim().ToLower();
             try
             {
                 var user = await _unitOfWork
                     .GetRepository<User>()
-                    .FirstOrDefaultAsync(u => u.Email == email);
+                    .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
                 if (user != null)
                 {
                     await ConsumeUserVerificationCodesAsync(
@@ -175,6 +177,7 @@ namespace IRasRag.Application.Services.Implementations
 
         public async Task<Result> ResetPassword(ResetPasswordRequest request)
         {
+            var normalizedEmail = request.Email.Trim().ToLower();
             try
             {
                 if (request.NewPassword != request.ConfirmNewPassword)
@@ -187,7 +190,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var user = await _unitOfWork
                     .GetRepository<User>()
-                    .FirstOrDefaultAsync(u => u.Email == request.Email);
+                    .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
                 if (user == null)
                     return Result.Failure(
