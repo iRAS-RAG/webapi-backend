@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Created</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .message {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .credential-box {
+            display: block;
+            width: fit-content;
+            margin: 0 auto 30px auto;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2F80ED;
+            padding: 15px 25px;
+            border: 2px dashed #2F80ED;
+            border-radius: 6px;
+        }
+
+        .footer {
+            font-size: 14px;
+            color: #888;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .warning {
+            font-size: 14px;
+            color: #EB5757;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Tài khoản của bạn đã được tạo</div>
+
+        <div class="message">
+            Quản trị viên đã tạo tài khoản cho bạn với vai trò: <strong>{{RoleName}}</strong>.
+        </div>
+
+        <div class="message">
+            Bạn có thể đăng nhập bằng thông tin sau:
+        </div>
+
+        <div class="credential-box">
+            Email: {{Email}}<br/>
+            Mật khẩu: {{Password}}
+        </div>
+
+        <div class="message">
+            Vui lòng đăng nhập và thay đổi mật khẩu ngay sau lần đăng nhập đầu tiên để đảm bảo an toàn.
+        </div>
+
+        <div class="warning">
+            Không chia sẻ thông tin đăng nhập này với bất kỳ ai.
+        </div>
+
+        <div class="footer">
+            Nếu bạn không mong đợi email này, vui lòng liên hệ quản trị viên hệ thống.
+        </div>
+    </div>
+</body>
+</html>

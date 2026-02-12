@@ -1,23 +1,33 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/farms")]
     public class FarmController : ControllerBase
     {
         private readonly IFarmService _farmService;
         private readonly ILogger<FarmController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
-        public FarmController(IFarmService farmService, ILogger<FarmController> logger)
+        public FarmController(
+            IFarmService farmService,
+            ILogger<FarmController> logger,
+            HttpContextUtils httpContextUtils
+        )
         {
             _farmService = farmService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
         public async Task<IActionResult> CreateFarm([FromBody] CreateFarmDto dto)
         {
@@ -66,6 +76,45 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Đã xảy ra lỗi khi lấy danh sách trang trại.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [Authorize(Roles = "Supervisor")]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetAllFarmsByUser(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
+        {
+            var userId = _httpContextUtils.GetUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
+            }
+            try
+            {
+                if (page <= 0 || pageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (pageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+
+                var result = await _farmService.GetAllFarmsFromUserAsync(
+                    userId.Value,
+                    page,
+                    pageSize
+                );
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy danh sách trang trại của người dùng.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

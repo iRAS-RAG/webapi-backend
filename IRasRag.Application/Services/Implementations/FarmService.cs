@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -150,6 +151,50 @@ namespace IRasRag.Application.Services.Implementations
                 return new PaginatedResult<FarmDto>
                 {
                     Message = "Lỗi khi truy xuất danh sách trang trại.",
+                    Data = Array.Empty<FarmDto>(),
+                    Meta = null,
+                    Links = null,
+                };
+            }
+        }
+
+        public async Task<PaginatedResult<FarmDto>> GetAllFarmsFromUserAsync(
+            Guid id,
+            int page,
+            int pageSize
+        )
+        {
+            try
+            {
+                var pagedResult = await _unitOfWork
+                    .GetRepository<Farm>()
+                    .GetPagedAsync(new FarmListDtoByUserSpec(id), page, pageSize);
+
+                return new PaginatedResult<FarmDto>
+                {
+                    Message =
+                        pagedResult.Items.Count == 0
+                            ? "Không có trang trại nào của người dùng này."
+                            : "Lấy danh sách trang trại của người dùng thành công.",
+                    Data = _mapper.Map<IReadOnlyList<FarmDto>>(pagedResult.Items),
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi truy xuất danh sách trang trại của người dùng");
+                return new PaginatedResult<FarmDto>
+                {
+                    Message = "Lỗi khi truy xuất danh sách trang trại của người dùng.",
                     Data = Array.Empty<FarmDto>(),
                     Meta = null,
                     Links = null,
