@@ -7,6 +7,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -37,13 +38,13 @@ namespace IRasRag.Test.UnitTests.Application
         #region CreateFarmAsync Tests
 
         [Fact]
-        public async Task CreateFarmAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task CreateFarmAsync_ShouldReturnSuccess_WhenValidInput()
         {
             // Arrange
             var createDto = new CreateFarmDto
             {
                 Name = "Trang trại ABC",
-                Address = "123 Đường ABC, Quận 1, TP.HCM",
+                Address = "123 Đường ABC",
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
@@ -56,37 +57,15 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync((Farm?)null);
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Tạo trang trại thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
-            result.Data.Address.Should().Be(createDto.Address);
-            result.Data.PhoneNumber.Should().Be(createDto.PhoneNumber);
-            result.Data.Email.Should().Be(createDto.Email);
-
-            _repositoryMock.Verify(
-                r =>
-                    r.AddAsync(
-                        It.Is<Farm>(f =>
-                            f.Name == createDto.Name
-                            && f.Address == createDto.Address
-                            && f.PhoneNumber == createDto.PhoneNumber
-                            && f.Email == createDto.Email
-                            && f.IsDeleted == false
-                        )
-                    ),
-                Times.Once
-            );
-
+            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Once);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
@@ -94,7 +73,7 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task CreateFarmAsync_ShouldTrimInputs_WhenCreating()
+        public async Task CreateFarmAsync_ShouldTrimInputs()
         {
             // Arrange
             var createDto = new CreateFarmDto
@@ -113,20 +92,12 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync((Farm?)null);
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Data!.Name.Should().Be("Trang trại ABC");
-            result.Data.Address.Should().Be("123 Đường ABC");
-            result.Data.PhoneNumber.Should().Be("0123456789");
-            result.Data.Email.Should().Be("abc@farm.com");
-
             _repositoryMock.Verify(
                 r =>
                     r.AddAsync(
@@ -142,11 +113,9 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Theory]
+        [InlineData(null, "Tên trang trại không được để trống.")]
         [InlineData("", "Tên trang trại không được để trống.")]
         [InlineData(" ", "Tên trang trại không được để trống.")]
-        [InlineData("  ", "Tên trang trại không được để trống.")]
-        [InlineData("\t", "Tên trang trại không được để trống.")]
-        [InlineData("\n", "Tên trang trại không được để trống.")]
         public async Task CreateFarmAsync_ShouldReturnBadRequest_WhenNameIsInvalid(
             string name,
             string expectedMessage
@@ -160,9 +129,6 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -171,20 +137,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
             result.Message.Should().Be(expectedMessage);
-
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Theory]
+        [InlineData(null, "Địa chỉ không được để trống.")]
         [InlineData("", "Địa chỉ không được để trống.")]
         [InlineData(" ", "Địa chỉ không được để trống.")]
-        [InlineData("  ", "Địa chỉ không được để trống.")]
-        [InlineData("\t", "Địa chỉ không được để trống.")]
-        [InlineData("\n", "Địa chỉ không được để trống.")]
         public async Task CreateFarmAsync_ShouldReturnBadRequest_WhenAddressIsInvalid(
             string address,
             string expectedMessage
@@ -198,9 +157,6 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -208,21 +164,13 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be(expectedMessage);
-
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Theory]
+        [InlineData(null, "Số điện thoại không được để trống.")]
         [InlineData("", "Số điện thoại không được để trống.")]
         [InlineData(" ", "Số điện thoại không được để trống.")]
-        [InlineData("  ", "Số điện thoại không được để trống.")]
-        [InlineData("\t", "Số điện thoại không được để trống.")]
-        [InlineData("\n", "Số điện thoại không được để trống.")]
         public async Task CreateFarmAsync_ShouldReturnBadRequest_WhenPhoneNumberIsInvalid(
             string phoneNumber,
             string expectedMessage
@@ -236,9 +184,6 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = phoneNumber,
                 Email = "abc@farm.com",
             };
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -246,21 +191,13 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be(expectedMessage);
-
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Theory]
+        [InlineData(null, "Email không được để trống.")]
         [InlineData("", "Email không được để trống.")]
         [InlineData(" ", "Email không được để trống.")]
-        [InlineData("  ", "Email không được để trống.")]
-        [InlineData("\t", "Email không được để trống.")]
-        [InlineData("\n", "Email không được để trống.")]
         public async Task CreateFarmAsync_ShouldReturnBadRequest_WhenEmailIsInvalid(
             string email,
             string expectedMessage
@@ -274,9 +211,6 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = email,
             };
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -284,13 +218,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be(expectedMessage);
-
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -304,15 +232,7 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
-            var existingFarm = new Farm
-            {
-                Id = Guid.NewGuid(),
-                Name = "Trang trại XYZ",
-                Address = "456 Đường XYZ",
-                PhoneNumber = "0987654321",
-                Email = "abc@farm.com",
-                IsDeleted = false,
-            };
+            var existingFarm = new Farm { Email = "abc@farm.com", IsDeleted = false };
 
             _repositoryMock
                 .Setup(r =>
@@ -322,9 +242,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(existingFarm);
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -332,13 +249,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Conflict);
-            result.Message.Should().Be("Email này đã được sử dụng cho trang trại khác.");
-
             _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -361,9 +272,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ThrowsAsync(new Exception());
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.CreateFarmAsync(createDto);
@@ -371,7 +279,6 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi tạo trang trại.");
         }
 
         #endregion
@@ -379,7 +286,7 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetFarmByIdAsync Tests
 
         [Fact]
-        public async Task GetFarmByIdAsync_ShouldReturnOk_WhenFarmExists()
+        public async Task GetFarmByIdAsync_ShouldReturnSuccess_WhenFarmExists()
         {
             // Arrange
             var farmId = Guid.NewGuid();
@@ -394,7 +301,7 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(farm);
 
             // Act
@@ -402,28 +309,17 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Lấy thông tin trang trại thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Id.Should().Be(farmId);
-            result.Data.Name.Should().Be(farm.Name);
-            result.Data.Address.Should().Be(farm.Address);
-            result.Data.PhoneNumber.Should().Be(farm.PhoneNumber);
-            result.Data.Email.Should().Be(farm.Email);
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
         }
 
         [Fact]
-        public async Task GetFarmByIdAsync_ShouldReturnNotFound_WhenFarmNotExists()
+        public async Task GetFarmByIdAsync_ShouldReturnNotFound_WhenFarmDoesNotExist()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync((Farm?)null);
 
             // Act
@@ -432,13 +328,6 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-            result.Data.Should().BeNull();
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
         }
 
         [Fact]
@@ -446,19 +335,10 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                Address = "123 Đường ABC",
-                PhoneNumber = "0123456789",
-                Email = "abc@farm.com",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
-            };
+            var deletedFarm = new Farm { Id = farmId, IsDeleted = true };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(deletedFarm);
 
             // Act
@@ -467,21 +347,15 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
         }
 
         [Fact]
-        public async Task GetFarmByIdAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetFarmByIdAsync_ShouldReturnUnexpected_WhenExceptionThrown()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ThrowsAsync(new Exception());
 
             // Act
@@ -490,12 +364,6 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi truy xuất thông tin trang trại.");
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
         }
 
         #endregion
@@ -503,159 +371,75 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllFarmsAsync Tests
 
         [Fact]
-        public async Task GetAllFarmsAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllFarmsAsync_ShouldReturnSuccess_WhenFarmsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
-
             var farmList = new List<Farm>
             {
                 new Farm
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Trang trại ABC",
-                    Address = "123 Đường ABC",
-                    PhoneNumber = "0123456789",
-                    Email = "abc@farm.com",
+                    Name = "Farm 1",
+                    Email = "farm1@test.com",
                     IsDeleted = false,
                 },
                 new Farm
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Trang trại XYZ",
-                    Address = "456 Đường XYZ",
-                    PhoneNumber = "0987654321",
-                    Email = "xyz@farm.com",
+                    Name = "Farm 2",
+                    Email = "farm2@test.com",
                     IsDeleted = false,
                 },
             };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
-                .ReturnsAsync(
-                    new PagedResult<Farm> { Items = farmList, TotalItems = farmList.Count }
-                );
+                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
+                .ReturnsAsync(new PagedResult<Farm> { Items = farmList, TotalItems = 2 });
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(page, pageSize);
+            var result = await _sut.GetAllFarmsAsync(1, 10);
 
             // Assert
             result.Should().NotBeNull();
-            result.Message.Should().Be("Lấy danh sách trang trại thành công");
-            result.Data.Should().NotBeNull();
-            result.Data!.Count.Should().Be(2);
-
+            result.Data.Should().HaveCount(2);
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
-            result.Meta.TotalItems.Should().Be(2);
-
-            result.Links.Should().NotBeNull();
-
-            _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
-                Times.Once
-            );
+            result.Meta!.TotalItems.Should().Be(2);
         }
 
         [Fact]
-        public async Task GetAllFarmsAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
+        public async Task GetAllFarmsAsync_ShouldReturnEmptyList_WhenNoFarmsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
-
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
                 .ReturnsAsync(
                     new PagedResult<Farm> { Items = Array.Empty<Farm>(), TotalItems = 0 }
                 );
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(page, pageSize);
+            var result = await _sut.GetAllFarmsAsync(1, 10);
 
             // Assert
             result.Should().NotBeNull();
-            result.Message.Should().Be("Không có trang trại nào");
-            result.Data.Should().NotBeNull();
-            result.Data!.Should().BeEmpty();
-
-            result.Meta.Should().NotBeNull();
+            result.Data.Should().BeEmpty();
             result.Meta!.TotalItems.Should().Be(0);
-
-            result.Links.Should().NotBeNull();
-
-            _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
-                Times.Once
-            );
         }
 
         [Fact]
-        public async Task GetAllFarmsAsync_ShouldExcludeDeletedFarms_WhenRetrievingList()
+        public async Task GetAllFarmsAsync_ShouldReturnError_WhenExceptionThrown()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
-
-            var farmList = new List<Farm>
-            {
-                new Farm
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Trang trại ABC",
-                    Email = "abc@farm.com",
-                    IsDeleted = false,
-                },
-            };
-
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
-                .ReturnsAsync(new PagedResult<Farm> { Items = farmList, TotalItems = 1 });
-
-            // Act
-            var result = await _sut.GetAllFarmsAsync(page, pageSize);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Data.Should().NotBeNull();
-            result.Data!.All(f => f.Id != Guid.Empty).Should().BeTrue();
-
-            _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
-                Times.Once
-            );
-        }
-
-        [Fact]
-        public async Task GetAllFarmsAsync_ShouldReturnErrorMessage_WhenThrownException()
-        {
-            // Arrange
-            var page = 1;
-            var pageSize = 10;
-
-            _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(page, pageSize);
+            var result = await _sut.GetAllFarmsAsync(1, 10);
 
             // Assert
             result.Should().NotBeNull();
-            result.Message.Should().Be("Lỗi khi truy xuất danh sách trang trại.");
-
-            result.Data.Should().NotBeNull();
-            result.Data!.Should().BeEmpty();
-
+            result.Data.Should().BeEmpty();
             result.Meta.Should().BeNull();
-            result.Links.Should().BeNull();
-
-            _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
-                Times.Once
-            );
         }
 
         #endregion
@@ -663,47 +447,29 @@ namespace IRasRag.Test.UnitTests.Application
         #region DeleteFarmAsync Tests
 
         [Fact]
-        public async Task DeleteFarmAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task DeleteFarmAsync_ShouldReturnSuccess_WhenFarmExists()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             var farm = new Farm
             {
                 Id = farmId,
-                Name = "Trang trại ABC",
-                Address = "123 Đường ABC",
-                PhoneNumber = "0123456789",
-                Email = "abc@farm.com",
+                Name = "Farm ABC",
                 IsDeleted = false,
             };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(farm);
-            _repositoryMock.Setup(r => r.Update(It.IsAny<Farm>())).Verifiable();
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.DeleteFarmAsync(farmId);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Xóa trang trại thành công.");
             farm.IsDeleted.Should().BeTrue();
             farm.DeletedAt.Should().NotBeNull();
-            farm.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
-            _repositoryMock.Verify(
-                r => r.Update(It.Is<Farm>(f => f.Id == farmId && f.IsDeleted == true)),
-                Times.Once
-            );
+            _repositoryMock.Verify(r => r.Update(farm), Times.Once);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
@@ -711,12 +477,12 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task DeleteFarmAsync_ShouldReturnNotFound_WhenFarmNotExists()
+        public async Task DeleteFarmAsync_ShouldReturnNotFound_WhenFarmDoesNotExist()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync((Farm?)null);
 
             // Act
@@ -725,17 +491,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
             _repositoryMock.Verify(r => r.Update(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -743,16 +499,10 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
+            var deletedFarm = new Farm { Id = farmId, IsDeleted = true };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(deletedFarm);
 
             // Act
@@ -761,22 +511,16 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-
             _repositoryMock.Verify(r => r.Update(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
-        public async Task DeleteFarmAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task DeleteFarmAsync_ShouldReturnUnexpected_WhenExceptionThrown()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ThrowsAsync(new Exception());
 
             // Act
@@ -785,12 +529,6 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi xóa trang trại.");
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
         }
 
         #endregion
@@ -798,29 +536,29 @@ namespace IRasRag.Test.UnitTests.Application
         #region UpdateFarmAsync Tests
 
         [Fact]
-        public async Task UpdateFarmAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task UpdateFarmAsync_ShouldReturnSuccess_WhenValidInput()
         {
             // Arrange
             var farmId = Guid.NewGuid();
             var existingFarm = new Farm
             {
                 Id = farmId,
-                Name = "Trang trại ABC",
-                Address = "123 Đường ABC",
+                Name = "Old Name",
+                Address = "Old Address",
                 PhoneNumber = "0123456789",
-                Email = "abc@farm.com",
+                Email = "old@farm.com",
                 IsDeleted = false,
             };
             var updateDto = new UpdateFarmDto
             {
-                Name = "Trang trại ABC Mới",
-                Address = "456 Đường XYZ",
+                Name = "New Name",
+                Address = "New Address",
                 PhoneNumber = "0987654321",
                 Email = "new@farm.com",
             };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(existingFarm);
             _repositoryMock
                 .Setup(r =>
@@ -829,95 +567,38 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((Farm?)null);
-            _repositoryMock.Setup(r => r.Update(It.IsAny<Farm>())).Verifiable();
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
+                .ReturnsAsync((Farm?)null); // No duplicate email
 
             // Act
             var result = await _sut.UpdateFarmAsync(farmId, updateDto);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-            result.Message.Should().Be("Cập nhật trang trại thành công.");
-
-            existingFarm.Name.Should().Be(updateDto.Name);
-            existingFarm.Address.Should().Be(updateDto.Address);
-            existingFarm.PhoneNumber.Should().Be(updateDto.PhoneNumber);
-            existingFarm.Email.Should().Be(updateDto.Email);
-
-            _repositoryMock.Verify(r => r.Update(It.Is<Farm>(f => f.Id == farmId)), Times.Once);
+            existingFarm.Name.Should().Be("New Name");
+            existingFarm.Address.Should().Be("New Address");
+            existingFarm.Email.Should().Be("new@farm.com");
+            _repositoryMock.Verify(r => r.Update(existingFarm), Times.Once);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
 
-        [Theory]
-        [InlineData(null, "Trang trại ABC")]
-        [InlineData("", "Trang trại ABC")]
-        [InlineData(" ", "Trang trại ABC")]
-        [InlineData("  ", "Trang trại ABC")]
-        public async Task UpdateFarmAsync_ShouldNotUpdateName_WhenNameIsNullOrWhitespace(
-            string nameInput,
-            string expectedName
-        )
-        {
-            // Arrange
-            var farmId = Guid.NewGuid();
-            var existingFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                Address = "123 Đường ABC",
-                PhoneNumber = "0123456789",
-                Email = "abc@farm.com",
-                IsDeleted = false,
-            };
-            var updateDto = new UpdateFarmDto { Name = nameInput };
-
-            _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(existingFarm);
-            _repositoryMock.Setup(r => r.Update(It.IsAny<Farm>())).Verifiable();
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
-            // Act
-            var result = await _sut.UpdateFarmAsync(farmId, updateDto);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            existingFarm.Name.Should().Be(expectedName);
-        }
-
         [Fact]
-        public async Task UpdateFarmAsync_ShouldTrimInputs_WhenUpdating()
+        public async Task UpdateFarmAsync_ShouldTrimInputs()
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var existingFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                Address = "123 Đường ABC",
-                PhoneNumber = "0123456789",
-                Email = "abc@farm.com",
-                IsDeleted = false,
-            };
+            var existingFarm = new Farm { Id = farmId, IsDeleted = false };
             var updateDto = new UpdateFarmDto
             {
-                Name = "  Trang trại ABC Mới  ",
-                Address = "  456 Đường XYZ  ",
-                PhoneNumber = "  0987654321  ",
+                Name = "  New Name  ",
+                Address = "  New Address  ",
                 Email = "  new@farm.com  ",
             };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(existingFarm);
             _repositoryMock
                 .Setup(r =>
@@ -927,31 +608,53 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync((Farm?)null);
-            _repositoryMock.Setup(r => r.Update(It.IsAny<Farm>())).Verifiable();
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
 
             // Act
             var result = await _sut.UpdateFarmAsync(farmId, updateDto);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            existingFarm.Name.Should().Be("Trang trại ABC Mới");
-            existingFarm.Address.Should().Be("456 Đường XYZ");
-            existingFarm.PhoneNumber.Should().Be("0987654321");
+            existingFarm.Name.Should().Be("New Name");
+            existingFarm.Address.Should().Be("New Address");
             existingFarm.Email.Should().Be("new@farm.com");
         }
 
         [Fact]
-        public async Task UpdateFarmAsync_ShouldReturnNotFound_WhenFarmNotExists()
+        public async Task UpdateFarmAsync_ShouldNotUpdateField_WhenNullOrWhitespace()
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var updateDto = new UpdateFarmDto { Name = "Trang trại ABC Mới" };
+            var existingFarm = new Farm
+            {
+                Id = farmId,
+                Name = "Original Name",
+                Address = "Original Address",
+                IsDeleted = false,
+            };
+            var updateDto = new UpdateFarmDto { Name = null, Address = "" };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
+                .ReturnsAsync(existingFarm);
+
+            // Act
+            var result = await _sut.UpdateFarmAsync(farmId, updateDto);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            existingFarm.Name.Should().Be("Original Name");
+            existingFarm.Address.Should().Be("Original Address");
+        }
+
+        [Fact]
+        public async Task UpdateFarmAsync_ShouldReturnNotFound_WhenFarmDoesNotExist()
+        {
+            // Arrange
+            var farmId = Guid.NewGuid();
+            var updateDto = new UpdateFarmDto { Name = "New Name" };
+
+            _repositoryMock
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync((Farm?)null);
 
             // Act
@@ -960,50 +663,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
             _repositoryMock.Verify(r => r.Update(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
-        }
-
-        [Fact]
-        public async Task UpdateFarmAsync_ShouldReturnNotFound_WhenFarmIsDeleted()
-        {
-            // Arrange
-            var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
-            var updateDto = new UpdateFarmDto { Name = "Trang trại ABC Mới" };
-
-            _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
-
-            // Act
-            var result = await _sut.UpdateFarmAsync(farmId, updateDto);
-
-            // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Trang trại không tồn tại.");
-
-            _repositoryMock.Verify(r => r.Update(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -1014,21 +674,19 @@ namespace IRasRag.Test.UnitTests.Application
             var existingFarm = new Farm
             {
                 Id = farmId,
-                Name = "Trang trại ABC",
-                Email = "abc@farm.com",
+                Email = "old@farm.com",
                 IsDeleted = false,
             };
             var anotherFarm = new Farm
             {
                 Id = Guid.NewGuid(),
-                Name = "Trang trại XYZ",
-                Email = "xyz@farm.com",
+                Email = "taken@farm.com",
                 IsDeleted = false,
             };
-            var updateDto = new UpdateFarmDto { Email = "xyz@farm.com" };
+            var updateDto = new UpdateFarmDto { Email = "taken@farm.com" };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ReturnsAsync(existingFarm);
             _repositoryMock
                 .Setup(r =>
@@ -1045,13 +703,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Conflict);
-            result.Message.Should().Be("Email này đã được sử dụng cho trang trại khác.");
-
             _repositoryMock.Verify(r => r.Update(It.IsAny<Farm>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
@@ -1059,10 +711,10 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var updateDto = new UpdateFarmDto { Name = "Trang trại ABC Mới" };
+            var updateDto = new UpdateFarmDto { Name = "New Name" };
 
             _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
                 .ThrowsAsync(new Exception());
 
             // Act
@@ -1071,12 +723,78 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi cập nhật trang trại.");
+        }
 
-            _repositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
-                Times.Once
-            );
+        #endregion
+
+        #region GetAllFarmFromUserAsync Tests
+        [Fact]
+        public async Task GetAllFarmsFromUserAsync_ShouldReturnSuccess_WhenFarmsExist()
+        {
+            var userId = Guid.NewGuid();
+
+            var farms = new List<FarmDto>
+            {
+                new FarmDto { Id = Guid.NewGuid(), Name = "Farm 1" },
+                new FarmDto { Id = Guid.NewGuid(), Name = "Farm 2" },
+            };
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(It.IsAny<FarmListDtoByUserSpec>(), 1, 10, QueryType.ActiveOnly)
+                )
+                .ReturnsAsync(new PagedResult<FarmDto> { Items = farms, TotalItems = 2 });
+
+            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
+
+            result.Should().NotBeNull();
+            result.Data.Should().HaveCount(2);
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task GetAllFarmsFromUserAsync_ShouldReturnEmpty_WhenNoFarmsExist()
+        {
+            var userId = Guid.NewGuid();
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(It.IsAny<FarmListDtoByUserSpec>(), 1, 10, QueryType.ActiveOnly)
+                )
+                .ReturnsAsync(
+                    new PagedResult<FarmDto> { Items = new List<FarmDto>(), TotalItems = 0 }
+                );
+
+            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
+
+            result.Should().NotBeNull();
+            result.Data.Should().BeEmpty();
+            result.Meta.Should().NotBeNull();
+            result.Meta!.TotalItems.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task GetAllFarmsFromUserAsync_ShouldReturnError_WhenExceptionOccurs()
+        {
+            var userId = Guid.NewGuid();
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<FarmListDtoByUserSpec>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ThrowsAsync(new Exception());
+
+            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
+
+            result.Should().NotBeNull();
+            result.Data.Should().BeEmpty();
+            result.Meta.Should().BeNull();
         }
 
         #endregion

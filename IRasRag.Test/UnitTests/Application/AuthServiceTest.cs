@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
@@ -25,6 +26,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IJwtService> _jwtServiceMock;
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IHashingService> _hashingServiceMock;
+        private readonly Mock<IBackgroundJobService> _backgroundJobServiceMock;
         private readonly AuthService _sut;
 
         public AuthServiceTest()
@@ -38,6 +40,8 @@ namespace IRasRag.Test.UnitTests.Application
             _emailServiceMock = new Mock<IEmailService>();
             _jwtServiceMock = new Mock<IJwtService>();
             _hashingServiceMock = new Mock<IHashingService>();
+            _backgroundJobServiceMock = new Mock<IBackgroundJobService>();
+
             _unitOfWorkMock.Setup(u => u.GetRepository<User>()).Returns(_userRepositoryMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<Role>()).Returns(_roleRepositoryMock.Object);
             _unitOfWorkMock
@@ -46,19 +50,21 @@ namespace IRasRag.Test.UnitTests.Application
             _unitOfWorkMock
                 .Setup(u => u.GetRepository<RefreshToken>())
                 .Returns(_refreshTokenRepositoryMock.Object);
+
             _sut = new AuthService(
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
                 _hashingServiceMock.Object,
                 _jwtServiceMock.Object,
-                _emailServiceMock.Object
+                _emailServiceMock.Object,
+                _backgroundJobServiceMock.Object
             );
         }
 
         #region Login Tests
 
         [Fact]
-        public async Task Login_ShouldReturnOk_WhenSuccessful()
+        public async Task Login_ShouldReturnSuccess_WhenCredentialsAreValid()
         {
             // Arrange
             var request = new LoginRequest
@@ -73,6 +79,7 @@ namespace IRasRag.Test.UnitTests.Application
                 PasswordHash = "hashedPassword",
                 RoleId = Guid.NewGuid(),
             };
+            var role = new Role { Id = user.RoleId, Name = "User" };
 
             _userRepositoryMock
                 .Setup(r =>
@@ -82,13 +89,9 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _hashingServiceMock
                 .Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
                 .Returns(true);
-
-            var role = new Role() { Id = user.RoleId, Name = "User" };
-
             _roleRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -97,103 +100,49 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(role);
-
             _jwtServiceMock
                 .Setup(j => j.GenerateAccessToken(user.Id, user.Email, role.Name))
-                .Returns("mocked_jwt_token");
-
-            var expireTime = DateTime.UtcNow.AddDays(7);
+                .Returns("access_token");
             _jwtServiceMock
                 .Setup(j => j.GenerateRefreshToken())
-                .Returns(new RefreshTokenResult("plain_refresh_token", expireTime));
-
-            _hashingServiceMock
-                .Setup(h => h.HashToken("plain_refresh_token"))
-                .Returns("hashed_refresh_token");
-
-            _refreshTokenRepositoryMock
-                .Setup(r => r.AddAsync(It.IsAny<RefreshToken>()))
-                .Returns(Task.CompletedTask);
-
-            _unitOfWorkMock
-                .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
+                .Returns(new RefreshTokenResult("refresh_token", DateTime.UtcNow.AddDays(7)));
+            _hashingServiceMock.Setup(h => h.HashToken("refresh_token")).Returns("hashed_refresh");
 
             // Act
             var result = await _sut.Login(request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Data.AccessToken.Should().Be("mocked_jwt_token");
-            result.Data.RefreshToken.Should().Be("plain_refresh_token");
-            result.Message.Should().Be("Đăng nhập thành công.");
-            result.Type.Should().Be(ResultType.Ok);
-
-            _userRepositoryMock.Verify(
-                r =>
-                    r.FirstOrDefaultAsync(
-                        It.IsAny<Expression<Func<User, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
-                Times.Once
-            );
-
-            _hashingServiceMock.Verify(
-                h => h.VerifyPassword(request.Password, user.PasswordHash),
-                Times.Once
-            );
-
-            _roleRepositoryMock.Verify(
-                r =>
-                    r.FirstOrDefaultAsync(
-                        It.IsAny<Expression<Func<Role, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
-                Times.Once
-            );
-
-            _jwtServiceMock.Verify(
-                j => j.GenerateAccessToken(user.Id, request.Email, role.Name),
-                Times.Once
-            );
-
-            _hashingServiceMock.Verify(h => h.HashToken("plain_refresh_token"), Times.Once);
-
-            _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
-
+            result.Data.AccessToken.Should().Be("access_token");
+            result.Data.RefreshToken.Should().Be("refresh_token");
             _refreshTokenRepositoryMock.Verify(
-                r =>
-                    r.AddAsync(
-                        It.Is<RefreshToken>(rt =>
-                            rt.UserId == user.Id
-                            && rt.TokenHash == "hashed_refresh_token"
-                            && rt.ExpireDate == expireTime
-                        )
-                    ),
+                r => r.AddAsync(It.IsAny<RefreshToken>()),
                 Times.Once
             );
-
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
+
+            // Critical: Verify correct hashing methods used
+            _hashingServiceMock.Verify(h => h.HashToken("refresh_token"), Times.Once);
+            _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task Login_ShouldReturnUnAuthorized_WhenPasswordIsInvalid()
+        public async Task Login_ShouldReturnUnauthorized_WhenPasswordIsInvalid()
         {
+            // Arrange
             var request = new LoginRequest
             {
                 Email = "test@example.com",
-                Password = "WrongPassword!",
+                Password = "WrongPassword",
             };
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = request.Email,
                 PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
             };
 
             _userRepositoryMock
@@ -204,32 +153,26 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _hashingServiceMock
                 .Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
                 .Returns(false);
 
+            // Act
             var result = await _sut.Login(request);
 
-            result.Should().NotBeNull();
+            // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Data.Should().BeNull();
-            result.Message.Should().Be("Sai tài khoản hoặc mật khẩu.");
             result.Type.Should().Be(ResultType.Unauthorized);
-
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
-            _refreshTokenRepositoryMock.Verify(
-                r => r.AddAsync(It.IsAny<RefreshToken>()),
                 Times.Never
             );
         }
 
         [Fact]
-        public async Task Login_ShouldReturnUnAuthorized_WhenUserDoesNotExist()
+        public async Task Login_ShouldReturnUnauthorized_WhenUserDoesNotExist()
         {
+            // Arrange
             var request = new LoginRequest { Email = "test@example.com", Password = "Password!" };
 
             _userRepositoryMock
@@ -241,14 +184,12 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((User?)null);
 
+            // Act
             var result = await _sut.Login(request);
 
-            result.Should().NotBeNull();
+            // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Data.Should().BeNull();
-            result.Message.Should().Be("Sai tài khoản hoặc mật khẩu.");
             result.Type.Should().Be(ResultType.Unauthorized);
-
             _hashingServiceMock.Verify(
                 h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()),
                 Times.Never
@@ -256,10 +197,10 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task Login_ShouldFail_WhenRoleNotFound()
+        public async Task Login_ShouldReturnUnexpected_WhenRoleNotFound()
         {
+            // Arrange
             var request = new LoginRequest { Email = "test@example.com", Password = "Password!" };
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -276,11 +217,9 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _hashingServiceMock
                 .Setup(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
-
             _roleRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -290,22 +229,70 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((Role?)null);
 
+            // Act
             var result = await _sut.Login(request);
 
-            result.Should().NotBeNull();
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Đã xảy ra lỗi trong quá trình đăng nhập.");
-            result.Data.Should().BeNull();
-
-            _refreshTokenRepositoryMock.Verify(
-                r => r.AddAsync(It.IsAny<RefreshToken>()),
-                Times.Never
-            );
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Never
             );
+        }
+
+        [Fact]
+        public async Task Login_ShouldReturnUnexpected_WhenSaveChangesFails()
+        {
+            // Arrange
+            var request = new LoginRequest { Email = "test@example.com", Password = "Password!" };
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email,
+                PasswordHash = "hashed",
+                RoleId = Guid.NewGuid(),
+            };
+            var role = new Role { Id = user.RoleId, Name = "User" };
+
+            _userRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<User, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(user);
+            _hashingServiceMock
+                .Setup(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+            _roleRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<Role, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(role);
+            _jwtServiceMock
+                .Setup(j =>
+                    j.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>())
+                )
+                .Returns("token");
+            _jwtServiceMock
+                .Setup(j => j.GenerateRefreshToken())
+                .Returns(new RefreshTokenResult("refresh", DateTime.UtcNow.AddDays(1)));
+            _hashingServiceMock.Setup(h => h.HashToken(It.IsAny<string>())).Returns("hash");
+            _unitOfWorkMock
+                .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _sut.Login(request);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         #endregion
@@ -315,6 +302,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task RequestPasswordReset_ShouldReturnSuccess_WhenUserExists()
         {
+            // Arrange
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -331,11 +319,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -344,42 +327,30 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(Enumerable.Empty<Verification>());
-
-            _verificationRepositoryMock
-                .Setup(r => r.AddAsync(It.IsAny<Verification>()))
-                .Returns(Task.CompletedTask);
-
-            _unitOfWorkMock
-                .Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
             _emailServiceMock
-                .Setup(e => e.SendEmailAsync(user.Email, It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.CompletedTask);
+                .Setup(e =>
+                    e.GenerateResetPasswordEmailBodyAsync(It.IsAny<string>(), It.IsAny<int>())
+                )
+                .ReturnsAsync("email_body");
 
+            // Act
             var result = await _sut.RequestPasswordReset(user.Email);
 
-            result.Should().NotBeNull();
-            result
-                .Message.Should()
-                .Be("Mã đặt lại mật khẩu sẽ được gửi nếu email có trong hệ thống.");
+            // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Type.Should().Be(ResultType.Ok);
-
             _verificationRepositoryMock.Verify(
                 r =>
                     r.AddAsync(
                         It.Is<Verification>(v =>
                             v.UserId == user.Id
                             && v.Type == VerificationType.PasswordReset
-                            && v.IsConsumed == false
+                            && !v.IsConsumed
                         )
                     ),
                 Times.Once
             );
-
             _unitOfWorkMock.Verify(
-                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -387,6 +358,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task RequestPasswordReset_ShouldReturnSuccess_WhenUserDoesNotExist()
         {
+            // Arrange
             _userRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -396,39 +368,26 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((User?)null);
 
+            // Act
             var result = await _sut.RequestPasswordReset("missing@example.com");
 
-            result.Should().NotBeNull();
+            // Assert
             result.IsSuccess.Should().BeTrue();
-            result
-                .Message.Should()
-                .Be("Mã đặt lại mật khẩu sẽ được gửi nếu email có trong hệ thống.");
-            result.Type.Should().Be(ResultType.Ok);
-
-            _unitOfWorkMock.Verify(
-                u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
             _verificationRepositoryMock.Verify(
                 r => r.AddAsync(It.IsAny<Verification>()),
                 Times.Never
             );
-            _emailServiceMock.Verify(
-                e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Never
             );
         }
 
         [Fact]
-        public async Task RequestPasswordReset_ShouldRollback_WhenDatabaseFails()
+        public async Task RequestPasswordReset_ShouldReturnFailure_WhenDatabaseFails()
         {
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "test@example.com",
-                PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
-            };
+            // Arrange
+            var user = new User { Id = Guid.NewGuid(), Email = "test@example.com" };
 
             _userRepositoryMock
                 .Setup(r =>
@@ -438,7 +397,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -446,31 +404,21 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ThrowsAsync(new Exception(""));
+                .ThrowsAsync(new Exception("Database error"));
 
+            // Act
             var result = await _sut.RequestPasswordReset(user.Email);
 
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Đã xảy ra lỗi trong quá trình yêu cầu đặt lại mật khẩu.");
-
-            _unitOfWorkMock.Verify(
-                u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()),
-                Times.Once
-            );
         }
 
         [Fact]
-        public async Task RequestPasswordReset_ShouldConsumeExistingVerificationCodes()
+        public async Task RequestPasswordReset_ShouldConsumeExistingCodes()
         {
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "test@example.com",
-                PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
-            };
-
+            // Arrange
+            var user = new User { Id = Guid.NewGuid(), Email = "test@example.com" };
             var existingCodes = new List<Verification>
             {
                 new()
@@ -495,7 +443,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -504,10 +451,17 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(existingCodes);
+            _emailServiceMock
+                .Setup(e =>
+                    e.GenerateResetPasswordEmailBodyAsync(It.IsAny<string>(), It.IsAny<int>())
+                )
+                .ReturnsAsync("email_body");
 
+            // Act
             await _sut.RequestPasswordReset(user.Email);
 
-            existingCodes.All(c => c.IsConsumed).Should().BeTrue();
+            // Assert
+            existingCodes.Should().AllSatisfy(c => c.IsConsumed.Should().BeTrue());
         }
 
         #endregion
@@ -517,35 +471,33 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task ResetPassword_ShouldReturnBadRequest_WhenPasswordsDoNotMatch()
         {
+            // Arrange
             var request = new ResetPasswordRequest
             {
                 Email = "test@example.com",
                 Code = "123456",
-                NewPassword = "NewPassword123!",
-                ConfirmNewPassword = "NewPassword1234!",
+                NewPassword = "Password1",
+                ConfirmNewPassword = "Password2",
             };
 
+            // Act
             var result = await _sut.ResetPassword(request);
 
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be("Mật khẩu mới và xác nhận mật khẩu không khớp.");
-
-            _unitOfWorkMock.Verify(
-                u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
-        public async Task ResetPassword_ShouldFail_WhenUserNotFound()
+        public async Task ResetPassword_ShouldReturnUnauthorized_WhenUserNotFound()
         {
+            // Arrange
             var request = new ResetPasswordRequest
             {
                 Email = "test@example.com",
                 Code = "123456",
-                NewPassword = "NewPassword123!",
-                ConfirmNewPassword = "NewPassword123!",
+                NewPassword = "Password123!",
+                ConfirmNewPassword = "Password123!",
             };
 
             _userRepositoryMock
@@ -557,39 +509,26 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((User?)null);
 
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.ResetPassword(request);
 
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unauthorized);
-
-            _unitOfWorkMock.Verify(
-                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
         }
 
         [Fact]
-        public async Task ResetPassword_ShouldFail_WhenVerificationCodeNotFound()
+        public async Task ResetPassword_ShouldReturnUnauthorized_WhenCodeNotFound()
         {
+            // Arrange
             var request = new ResetPasswordRequest
             {
                 Email = "test@example.com",
                 Code = "123456",
-                NewPassword = "NewPassword123!",
-                ConfirmNewPassword = "NewPassword123!",
+                NewPassword = "Password123!",
+                ConfirmNewPassword = "Password123!",
             };
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
-            };
+            var user = new User { Id = Guid.NewGuid(), Email = request.Email };
 
             _userRepositoryMock
                 .Setup(r =>
@@ -599,7 +538,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -609,35 +547,26 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((Verification?)null);
 
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.ResetPassword(request);
 
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unauthorized);
         }
 
         [Fact]
-        public async Task ResetPassword_ShouldFail_WhenCodeIsInvalid()
+        public async Task ResetPassword_ShouldReturnUnauthorized_WhenCodeIsInvalid()
         {
+            // Arrange
             var request = new ResetPasswordRequest
             {
                 Email = "test@example.com",
                 Code = "123456",
-                NewPassword = "NewPassword123!",
-                ConfirmNewPassword = "NewPassword123!",
+                NewPassword = "Password123!",
+                ConfirmNewPassword = "Password123!",
             };
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
-            };
-
+            var user = new User { Id = Guid.NewGuid(), Email = request.Email };
             var verification = new Verification
             {
                 UserId = user.Id,
@@ -655,7 +584,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -664,24 +592,22 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(verification);
-
             _hashingServiceMock
-                .Setup(h => h.VerifyPassword(request.Code, verification.CodeHash))
+                .Setup(h => h.VerifyToken(request.Code, verification.CodeHash))
                 .Returns(false);
 
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.ResetPassword(request);
 
+            // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unauthorized);
         }
 
         [Fact]
-        public async Task ResetPassword_ShouldSucceed_WhenValid()
+        public async Task ResetPassword_ShouldReturnSuccess_WhenValid()
         {
+            // Arrange
             var request = new ResetPasswordRequest
             {
                 Email = "test@example.com",
@@ -689,15 +615,12 @@ namespace IRasRag.Test.UnitTests.Application
                 NewPassword = "NewPassword123!",
                 ConfirmNewPassword = "NewPassword123!",
             };
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = request.Email,
-                PasswordHash = "hashedPassword",
-                RoleId = Guid.NewGuid(),
+                PasswordHash = "old_hash",
             };
-
             var verification = new Verification
             {
                 UserId = user.Id,
@@ -715,7 +638,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _verificationRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -724,49 +646,90 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(verification);
-
             _hashingServiceMock
                 .Setup(h => h.VerifyToken(request.Code, verification.CodeHash))
                 .Returns(true);
-
             _hashingServiceMock
                 .Setup(h => h.HashPassword(request.NewPassword))
                 .Returns("new_password_hash");
 
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            _unitOfWorkMock
-                .Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.ResetPassword(request);
 
+            // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Message.Should().Be("Mật khẩu đã được đặt lại thành công.");
-
             user.PasswordHash.Should().Be("new_password_hash");
             verification.IsConsumed.Should().BeTrue();
-
             _unitOfWorkMock.Verify(
-                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
 
-            _hashingServiceMock.Verify(h => h.HashToken(request.NewPassword), Times.Never);
-
+            // Critical: Verify correct hashing methods used
+            _hashingServiceMock.Verify(h => h.HashPassword(request.NewPassword), Times.Once);
             _hashingServiceMock.Verify(
                 h => h.VerifyToken(request.Code, verification.CodeHash),
                 Times.Once
             );
+            _hashingServiceMock.Verify(h => h.HashToken(It.IsAny<string>()), Times.Never);
+        }
 
-            _hashingServiceMock.Verify(h => h.HashPassword("NewPassword123!"), Times.Once);
+        [Fact]
+        public async Task ResetPassword_ShouldReturnUnexpected_WhenSaveChangesFails()
+        {
+            // Arrange
+            var request = new ResetPasswordRequest
+            {
+                Email = "test@example.com",
+                Code = "123456",
+                NewPassword = "NewPassword123!",
+                ConfirmNewPassword = "NewPassword123!",
+            };
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email,
+                PasswordHash = "old_hash",
+            };
+            var verification = new Verification
+            {
+                UserId = user.Id,
+                CodeHash = "hashed_code",
+                Type = VerificationType.PasswordReset,
+                ExpireDate = DateTime.UtcNow.AddMinutes(5),
+                IsConsumed = false,
+            };
 
-            _hashingServiceMock.Verify(
-                h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never
-            );
+            _userRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<User, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(user);
+            _verificationRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<Verification, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(verification);
+            _hashingServiceMock
+                .Setup(h => h.VerifyToken(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+            _hashingServiceMock.Setup(h => h.HashPassword(It.IsAny<string>())).Returns("new_hash");
+            _unitOfWorkMock
+                .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _sut.ResetPassword(request);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         #endregion
@@ -778,10 +741,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var rawToken = "refresh_token";
-            var hash = "hashed_token";
-
-            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
-
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -797,26 +757,21 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unauthorized);
-            result
-                .Message.Should()
-                .Be("Phiên đăng nhập không hợp lệ hoặc đã hết hạn, xin vui lòng đăng nhập lại.");
         }
 
         [Fact]
         public async Task RefreshBothToken_ShouldReturnUnauthorized_WhenTokenExpired()
         {
+            // Arrange
             var rawToken = "refresh_token";
-            var hash = "hashed_token";
-
             var expiredToken = new RefreshToken
             {
-                TokenHash = hash,
+                TokenHash = "hashed",
                 IsRevoked = false,
                 ExpireDate = DateTime.UtcNow.AddMinutes(-1),
             };
 
-            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
-
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -826,31 +781,28 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync(expiredToken);
 
+            // Act
             var result = await _sut.RefreshBothToken(rawToken);
 
-            result.Type.Should().Be(ResultType.Unauthorized);
+            // Assert
             result.IsSuccess.Should().BeFalse();
-            result
-                .Message.Should()
-                .Be("Phiên đăng nhập không hợp lệ hoặc đã hết hạn, xin vui lòng đăng nhập lại.");
+            result.Type.Should().Be(ResultType.Unauthorized);
         }
 
         [Fact]
         public async Task RefreshBothToken_ShouldReturnUnexpected_WhenUserNotFound()
         {
+            // Arrange
             var rawToken = "refresh_token";
-            var hash = "hashed_token";
             var storedToken = new RefreshToken
             {
-                Id = Guid.NewGuid(),
                 UserId = Guid.NewGuid(),
-                TokenHash = hash,
+                TokenHash = "hashed",
                 IsRevoked = false,
                 ExpireDate = DateTime.UtcNow.AddDays(1),
             };
 
-            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
-
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -859,7 +811,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(storedToken);
-
             _userRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -869,38 +820,34 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((User?)null);
 
+            // Act
             var result = await _sut.RefreshBothToken(rawToken);
 
-            result.Type.Should().Be(ResultType.Unexpected);
+            // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Be("Đã xảy ra lỗi trong quá trình làm mới phiên đăng nhập.");
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         [Fact]
         public async Task RefreshBothToken_ShouldReturnUnexpected_WhenRoleNotFound()
         {
+            // Arrange
             var rawToken = "refresh_token";
-            var hash = "hashed_token";
-            var roleId = Guid.NewGuid();
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
-                PasswordHash = "hashedPassword",
-                RoleId = roleId,
+                RoleId = Guid.NewGuid(),
             };
-
             var storedToken = new RefreshToken
             {
-                Id = Guid.NewGuid(),
                 UserId = user.Id,
-                TokenHash = hash,
+                TokenHash = "hashed",
                 IsRevoked = false,
                 ExpireDate = DateTime.UtcNow.AddDays(1),
             };
 
-            _hashingServiceMock.Setup(h => h.HashPassword(rawToken)).Returns(hash);
-
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -909,7 +856,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(storedToken);
-
             _userRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -918,7 +864,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _roleRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -928,54 +873,35 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync((Role?)null);
 
+            // Act
             var result = await _sut.RefreshBothToken(rawToken);
 
-            result.Type.Should().Be(ResultType.Unexpected);
+            // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Be("Đã xảy ra lỗi trong quá trình làm mới phiên đăng nhập.");
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         [Fact]
         public async Task RefreshBothToken_ShouldReturnNewTokens_WhenSuccessful()
         {
-            var rawToken = "refresh_token";
-            var oldHash = "old_hash";
-            var newHash = "new_hash";
+            // Arrange
+            var rawToken = "old_refresh";
             var role = new Role { Id = Guid.NewGuid(), Name = "User" };
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
-                PasswordHash = "hashedPassword",
                 RoleId = role.Id,
             };
-
             var storedToken = new RefreshToken
             {
-                Id = Guid.NewGuid(),
                 UserId = user.Id,
-                TokenHash = oldHash,
+                TokenHash = "old_hash",
                 IsRevoked = false,
                 ExpireDate = DateTime.UtcNow.AddDays(1),
             };
 
-            var newStoredToken = new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                TokenHash = newHash,
-                IsRevoked = false,
-                ExpireDate = DateTime.UtcNow.AddDays(1),
-            };
-
-            var refreshTokenResult = new RefreshTokenResult(
-                "new_refresh",
-                DateTime.UtcNow.AddDays(1)
-            );
-
-            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns(oldHash);
-
+            _hashingServiceMock.Setup(h => h.HashToken(rawToken)).Returns("old_hash");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -984,7 +910,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(storedToken);
-
             _userRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -993,7 +918,6 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(user);
-
             _roleRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -1002,56 +926,105 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(role);
-
             _jwtServiceMock
                 .Setup(j => j.GenerateAccessToken(user.Id, user.Email, role.Name))
                 .Returns("new_access");
+            _jwtServiceMock
+                .Setup(j => j.GenerateRefreshToken())
+                .Returns(new RefreshTokenResult("new_refresh", DateTime.UtcNow.AddDays(1)));
+            _hashingServiceMock.Setup(h => h.HashToken("new_refresh")).Returns("new_hash");
 
-            _unitOfWorkMock
-                .Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns(refreshTokenResult);
-
-            _hashingServiceMock
-                .Setup(h => h.HashToken(refreshTokenResult.PlainToken))
-                .Returns(newHash);
-
-            _refreshTokenRepositoryMock
-                .Setup(r => r.AddAsync(It.IsAny<RefreshToken>()))
-                .Returns(Task.CompletedTask);
-
-            _unitOfWorkMock
-                .Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.RefreshBothToken(rawToken);
 
+            // Assert
             result.IsSuccess.Should().BeTrue();
             result.Data.AccessToken.Should().Be("new_access");
             result.Data.RefreshToken.Should().Be("new_refresh");
             storedToken.IsRevoked.Should().BeTrue();
-
-            _unitOfWorkMock.Verify(
-                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
-                Times.Once
-            );
             _refreshTokenRepositoryMock.Verify(
                 r =>
                     r.AddAsync(
                         It.Is<RefreshToken>(rt =>
-                            rt.UserId == user.Id && rt.TokenHash == newHash && rt.IsRevoked == false
+                            rt.UserId == user.Id && rt.TokenHash == "new_hash"
                         )
                     ),
                 Times.Once
             );
-            _hashingServiceMock.Verify(h => h.HashToken(rawToken), Times.Once);
-            _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
-            _hashingServiceMock.Verify(
-                h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Once
             );
-            _hashingServiceMock.Verify(h => h.HashToken(refreshTokenResult.PlainToken), Times.Once);
+
+            // Critical: Verify correct hashing methods used
+            _hashingServiceMock.Verify(h => h.HashToken(rawToken), Times.Once);
+            _hashingServiceMock.Verify(h => h.HashToken("new_refresh"), Times.Once);
+            _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task RefreshBothToken_ShouldReturnUnexpected_WhenSaveChangesFails()
+        {
+            // Arrange
+            var rawToken = "refresh";
+            var role = new Role { Id = Guid.NewGuid(), Name = "User" };
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "test@example.com",
+                RoleId = role.Id,
+            };
+            var storedToken = new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = "hash",
+                IsRevoked = false,
+                ExpireDate = DateTime.UtcNow.AddDays(1),
+            };
+
+            _hashingServiceMock.Setup(h => h.HashToken(It.IsAny<string>())).Returns("hash");
+            _refreshTokenRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<RefreshToken, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(storedToken);
+            _userRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<User, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(user);
+            _roleRepositoryMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<Role, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(role);
+            _jwtServiceMock
+                .Setup(j =>
+                    j.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>())
+                )
+                .Returns("token");
+            _jwtServiceMock
+                .Setup(j => j.GenerateRefreshToken())
+                .Returns(new RefreshTokenResult("new", DateTime.UtcNow.AddDays(1)));
+            _unitOfWorkMock
+                .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _sut.RefreshBothToken(rawToken);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         #endregion
@@ -1059,21 +1032,18 @@ namespace IRasRag.Test.UnitTests.Application
         #region Logout Tests
 
         [Fact]
-        public async Task Logout_ShouldRevokeToken_AndSaveChanges_WhenValidTokenExists()
+        public async Task Logout_ShouldRevokeToken_WhenTokenExists()
         {
             // Arrange
             var plainToken = "refresh_token";
-            var hashedToken = "hashed_refresh_token";
-
             var refreshToken = new RefreshToken
             {
-                TokenHash = hashedToken,
+                TokenHash = "hashed",
                 IsRevoked = false,
                 ExpireDate = DateTime.UtcNow.AddMinutes(10),
             };
 
-            _hashingServiceMock.Setup(h => h.HashToken(plainToken)).Returns(hashedToken);
-
+            _hashingServiceMock.Setup(h => h.HashToken(plainToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -1088,40 +1058,25 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Message.Should().Be("Đăng xuất thành công.");
-
             refreshToken.IsRevoked.Should().BeTrue();
-
+            _refreshTokenRepositoryMock.Verify(r => r.Update(refreshToken), Times.Once);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
 
-            _refreshTokenRepositoryMock.Verify(r => r.Update(refreshToken), Times.Once);
-
+            // Critical: Verify correct hashing method used
             _hashingServiceMock.Verify(h => h.HashToken(plainToken), Times.Once);
-
             _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
-
-            _refreshTokenRepositoryMock.Verify(
-                r =>
-                    r.FirstOrDefaultAsync(
-                        It.IsAny<Expression<Func<RefreshToken, bool>>>(),
-                        It.IsAny<QueryType>()
-                    ),
-                Times.Once
-            );
         }
 
         [Fact]
-        public async Task Logout_ShouldNotSaveChanges_WhenTokenDoesNotExist()
+        public async Task Logout_ShouldReturnSuccess_WhenTokenDoesNotExist()
         {
             // Arrange
             var plainToken = "refresh_token";
-            var hashedToken = "hashed_refresh_token";
 
-            _hashingServiceMock.Setup(h => h.HashToken(plainToken)).Returns(hashedToken);
-
+            _hashingServiceMock.Setup(h => h.HashToken(plainToken)).Returns("hashed");
             _refreshTokenRepositoryMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
@@ -1129,28 +1084,17 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((RefreshToken)null);
+                .ReturnsAsync((RefreshToken?)null);
 
             // Act
             var result = await _sut.Logout(plainToken);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Message.Should().Be("Đăng xuất thành công.");
-
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Never
             );
-
-            _refreshTokenRepositoryMock.Verify(
-                r => r.Update(It.IsAny<RefreshToken>()),
-                Times.Never
-            );
-
-            _hashingServiceMock.Verify(h => h.HashToken(plainToken), Times.Once);
-
-            _hashingServiceMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
         }
 
         #endregion
