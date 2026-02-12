@@ -11,7 +11,7 @@ namespace IRasRag.Application.Validators
         {
             var specialChars = "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~";
             if (value == null)
-                return new ValidationResult("Mật khẩu không được để trống.");
+                return ValidationResult.Success;
 
             var password = value.ToString()!;
             if (
