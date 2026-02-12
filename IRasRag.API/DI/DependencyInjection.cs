@@ -2,6 +2,7 @@
 using System.Threading.RateLimiting;
 using Hangfire;
 using Hangfire.PostgreSql;
+using IRasRag.API.Utils;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,6 +25,8 @@ namespace IRasRag.API.DI
             services.AddCors();
             services.AddCustomRateLimiter();
             services.AddHangfireSetup(config, env);
+            services.AddHttpContextAccessor();
+            services.AddScoped<HttpContextUtils>();
         }
 
         public static void AddJwtAuthencation(
