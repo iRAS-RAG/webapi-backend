@@ -26,6 +26,7 @@ namespace IRasRag.Application.Specifications
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     RoleName = u.Role.Name,
+                    IsDeleted = u.IsDeleted,
                 });
         }
     }

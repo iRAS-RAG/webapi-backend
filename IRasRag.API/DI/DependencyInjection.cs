@@ -1,5 +1,9 @@
 ﻿using System.Text;
 using System.Threading.RateLimiting;
+using Hangfire;
+using Hangfire.PostgreSql;
+using IRasRag.API.Utils;
+using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -9,13 +13,20 @@ namespace IRasRag.API.DI
 {
     public static class DependencyInjection
     {
-        public static void AddApiServices(this IServiceCollection services, IConfiguration config)
+        public static void AddApiServices(
+            this IServiceCollection services,
+            IConfiguration config,
+            IHostEnvironment env
+        )
         {
             services.AddAuthorization();
             services.AddJwtAuthencation(config);
             services.AddSwagger();
             services.AddCors();
             services.AddCustomRateLimiter();
+            services.AddHangfireSetup(config, env);
+            services.AddHttpContextAccessor();
+            services.AddScoped<HttpContextUtils>();
         }
 
         public static void AddJwtAuthencation(
@@ -115,10 +126,19 @@ namespace IRasRag.API.DI
             services.AddCors(options =>
             {
                 options.AddPolicy(
-                    name: "CorsPolicy",
+                    "CorsPolicy",
                     builder =>
                     {
-                        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                        builder
+                            .WithOrigins(
+                                "http://localhost:5173",
+                                "https://iras-rag.vercel.app",
+                                "https://iras-rag-dev.vercel.app"
+                            )
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials()
+                            .WithExposedHeaders("Content-Disposition", "content-disposition");
                     }
                 );
             });
@@ -156,6 +176,33 @@ namespace IRasRag.API.DI
                     );
                 };
             });
+        }
+
+        public static void AddHangfireSetup(
+            this IServiceCollection services,
+            IConfiguration config,
+            IHostEnvironment env
+        )
+        {
+            var connectionString = ConnectionStringResolver.Resolve(config, env);
+
+            services.AddHangfire(configuration =>
+                configuration
+                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                    .UseSimpleAssemblyNameTypeSerializer()
+                    .UseRecommendedSerializerSettings()
+                    .UsePostgreSqlStorage(
+                        c => c.UseNpgsqlConnection(connectionString),
+                        new PostgreSqlStorageOptions
+                        {
+                            SchemaName = "hangfire",
+                            // Create the schema if it doesn't exist
+                            PrepareSchemaIfNecessary = true,
+                            QueuePollInterval = TimeSpan.FromSeconds(15),
+                        }
+                    )
+            );
+            services.AddHangfireServer();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using IRasRag.Application.Common.Interfaces.Email;
+﻿using Hangfire;
+using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Infrastructure.Settings;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -19,6 +20,7 @@ namespace IRasRag.Infrastructure.Services.Email
             _logger = logger;
         }
 
+        [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 10, 30, 60 })]
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             if (string.IsNullOrWhiteSpace(to))
@@ -74,6 +76,20 @@ namespace IRasRag.Infrastructure.Services.Email
                 .Replace("{{ResetCode}}", code)
                 .Replace("{{ExpirationMinutes}}", expiresInMinutes.ToString());
 
+            return template;
+        }
+
+        public async Task<string> GenerateAccountCreatedEmailBodyAsync(
+            string roleName,
+            string email,
+            string plainPassword
+        )
+        {
+            var template = await LoadTemplateAsync("AccountCreatedTemplate.html");
+            template = template
+                .Replace("{{RoleName}}", roleName)
+                .Replace("{{Email}}", email)
+                .Replace("{{Password}}", plainPassword);
             return template;
         }
 

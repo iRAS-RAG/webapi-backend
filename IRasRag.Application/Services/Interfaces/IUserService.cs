@@ -9,7 +9,11 @@ namespace IRasRag.Application.Services.Interfaces
         Task<PaginatedResult<UserDto>> GetAllUsersAsync(int page, int pageSize);
         Task<Result<UserDto>> GetUserByIdAsync(Guid id);
         Task<Result<UserDto>> CreateUserAsync(CreateUserDto createDto);
-        Task<Result> UpdateUserAsync(Guid id, UpdateUserDto updateDto);
+        Task<Result<UserDto>> UpdateUserAsync(Guid id, UpdateUserDto updateDto);
         Task<Result> DeleteUserAsync(Guid id);
+        Task<Result<UserDto>> CreateOperatorAsync(CreateOperatorUserDto createDto);
+        Task<Result<UserProfileDto>> GetUserProfileAsync(Guid id);
+        Task<Result<UserDto>> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
+        Task<Result> UpdateUserPasswordAsync(Guid id, UpdateUserPasswordDto dto);
     }
 }
