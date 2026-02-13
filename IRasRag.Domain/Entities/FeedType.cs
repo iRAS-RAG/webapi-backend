@@ -13,9 +13,6 @@ namespace IRasRag.Domain.Entities
         public string Description { get; set; }
 
         [Required]
-        public float WeightPerUnit { get; set; } // e.g., weight of one bag or pellet in kg
-
-        [Required]
         public float ProteinPercentage { get; set; } // % of protein
 
         [MaxLength(255)]
