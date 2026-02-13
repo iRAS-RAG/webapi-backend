@@ -44,7 +44,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "Thức ăn viên",
                 Description = "Thức ăn viên cho cá",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
                 Manufacturer = "Nhà máy ABC",
             };
@@ -71,7 +70,6 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
             result.Data.Description.Should().Be(createDto.Description);
-            result.Data.WeightPerUnit.Should().Be(createDto.WeightPerUnit);
             result.Data.ProteinPercentage.Should().Be(createDto.ProteinPercentage);
             result.Data.Manufacturer.Should().Be(createDto.Manufacturer);
 
@@ -81,7 +79,6 @@ namespace IRasRag.Test.UnitTests.Application
                         It.Is<FeedType>(f =>
                             f.Name == createDto.Name
                             && f.Description == createDto.Description
-                            && f.WeightPerUnit == createDto.WeightPerUnit
                             && f.ProteinPercentage == createDto.ProteinPercentage
                             && f.Manufacturer == createDto.Manufacturer
                         )
@@ -103,7 +100,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "  Thức ăn viên  ",
                 Description = "  Thức ăn viên cho cá  ",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
                 Manufacturer = "  Nhà máy ABC  ",
             };
@@ -157,42 +153,6 @@ namespace IRasRag.Test.UnitTests.Application
             var createDto = new CreateFeedTypeDto
             {
                 Name = name,
-                WeightPerUnit = 25.5f,
-                ProteinPercentage = 35.0f,
-            };
-            _unitOfWorkMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
-            // Act
-            var result = await _sut.CreateFeedTypeAsync(createDto);
-
-            // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be(expectedMessage);
-
-            _repositoryMock.Verify(r => r.AddAsync(It.IsAny<FeedType>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
-        }
-
-        [Theory]
-        [InlineData(0, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        [InlineData(-1, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        [InlineData(-25.5f, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        public async Task CreateFeedTypeAsync_ShouldReturnBadRequest_WhenWeightPerUnitIsInvalid(
-            float weightPerUnit,
-            string expectedMessage
-        )
-        {
-            // Arrange
-            var createDto = new CreateFeedTypeDto
-            {
-                Name = "Thức ăn viên",
-                WeightPerUnit = weightPerUnit,
                 ProteinPercentage = 35.0f,
             };
             _unitOfWorkMock
@@ -227,7 +187,6 @@ namespace IRasRag.Test.UnitTests.Application
             var createDto = new CreateFeedTypeDto
             {
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = proteinPercentage,
             };
             _unitOfWorkMock
@@ -256,14 +215,12 @@ namespace IRasRag.Test.UnitTests.Application
             var createDto = new CreateFeedTypeDto
             {
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
             var existingFeedType = new FeedType
             {
                 Id = Guid.NewGuid(),
                 Name = "Thức ăn viên",
-                WeightPerUnit = 30.0f,
                 ProteinPercentage = 40.0f,
             };
 
@@ -301,7 +258,6 @@ namespace IRasRag.Test.UnitTests.Application
             var createDto = new CreateFeedTypeDto
             {
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
 
@@ -340,7 +296,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
                 Description = "Thức ăn viên cho cá",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
                 Manufacturer = "Nhà máy ABC",
             };
@@ -360,7 +315,6 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.Id.Should().Be(feedTypeId);
             result.Data.Name.Should().Be(feedType.Name);
             result.Data.Description.Should().Be(feedType.Description);
-            result.Data.WeightPerUnit.Should().Be(feedType.WeightPerUnit);
             result.Data.ProteinPercentage.Should().Be(feedType.ProteinPercentage);
             result.Data.Manufacturer.Should().Be(feedType.Manufacturer);
 
@@ -434,14 +388,12 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn viên",
-                    WeightPerUnit = 25.5f,
                     ProteinPercentage = 35.0f,
                 },
                 new FeedType
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn bột",
-                    WeightPerUnit = 10.0f,
                     ProteinPercentage = 40.0f,
                 },
             };
@@ -554,7 +506,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
 
@@ -653,7 +604,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
                 Description = "Mô tả cũ",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
                 Manufacturer = "Nhà máy ABC",
             };
@@ -661,7 +611,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "Thức ăn viên mới",
                 Description = "Mô tả mới",
-                WeightPerUnit = 30.0f,
                 ProteinPercentage = 40.0f,
                 Manufacturer = "Nhà máy XYZ",
             };
@@ -692,7 +641,6 @@ namespace IRasRag.Test.UnitTests.Application
 
             existingFeedType.Name.Should().Be(updateDto.Name);
             existingFeedType.Description.Should().Be(updateDto.Description);
-            existingFeedType.WeightPerUnit.Should().Be(updateDto.WeightPerUnit!.Value);
             existingFeedType.ProteinPercentage.Should().Be(updateDto.ProteinPercentage!.Value);
             existingFeedType.Manufacturer.Should().Be(updateDto.Manufacturer);
 
@@ -722,7 +670,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
             var updateDto = new UpdateFeedTypeDto { Name = nameInput };
@@ -752,7 +699,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
             var updateDto = new UpdateFeedTypeDto
@@ -827,14 +773,12 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
             var anotherFeedType = new FeedType
             {
                 Id = Guid.NewGuid(),
                 Name = "Thức ăn bột",
-                WeightPerUnit = 10.0f,
                 ProteinPercentage = 40.0f,
             };
             var updateDto = new UpdateFeedTypeDto { Name = "Thức ăn bột" };
@@ -867,45 +811,6 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Theory]
-        [InlineData(0, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        [InlineData(-1, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        [InlineData(-25.5f, "Trọng lượng mỗi đơn vị phải lớn hơn 0.")]
-        public async Task UpdateFeedTypeAsync_ShouldReturnBadRequest_WhenWeightPerUnitIsInvalid(
-            float weightPerUnit,
-            string expectedMessage
-        )
-        {
-            // Arrange
-            var feedTypeId = Guid.NewGuid();
-            var existingFeedType = new FeedType
-            {
-                Id = feedTypeId,
-                Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
-                ProteinPercentage = 35.0f,
-            };
-            var updateDto = new UpdateFeedTypeDto { WeightPerUnit = weightPerUnit };
-
-            _repositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(existingFeedType);
-
-            // Act
-            var result = await _sut.UpdateFeedTypeAsync(feedTypeId, updateDto);
-
-            // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be(expectedMessage);
-
-            _repositoryMock.Verify(r => r.Update(It.IsAny<FeedType>()), Times.Never);
-            _unitOfWorkMock.Verify(
-                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never
-            );
-        }
-
-        [Theory]
         [InlineData(-1, "Tỷ lệ protein phải từ 0 đến 100.")]
         [InlineData(101, "Tỷ lệ protein phải từ 0 đến 100.")]
         [InlineData(150, "Tỷ lệ protein phải từ 0 đến 100.")]
@@ -920,7 +825,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = feedTypeId,
                 Name = "Thức ăn viên",
-                WeightPerUnit = 25.5f,
                 ProteinPercentage = 35.0f,
             };
             var updateDto = new UpdateFeedTypeDto { ProteinPercentage = proteinPercentage };

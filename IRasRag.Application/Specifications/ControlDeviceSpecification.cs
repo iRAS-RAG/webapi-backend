@@ -22,7 +22,28 @@ namespace IRasRag.Application.Specifications
                     CommandOff = cd.CommandOff,
                     MasterBoardId = cd.MasterBoardId,
                     MasterBoardName = cd.MasterBoard.Name,
-                    ControlDeviceTypeId = cd.ControlDeviceTypeId,
+                    ControlDeviceTypeName = cd.ControlDeviceType.Name,
+                });
+        }
+    }
+
+    public class ControlDeviceDtoListByMasterBoardIdSpec : Specification<ControlDevice, ControlDeviceDto>
+    {
+        public ControlDeviceDtoListByMasterBoardIdSpec(Guid id)
+        {
+            Query
+                .AsNoTracking()
+                .Where(cd => cd.MasterBoardId == id)
+                .Select(cd => new ControlDeviceDto
+                {
+                    Id = cd.Id,
+                    Name = cd.Name,
+                    PinCode = cd.PinCode,
+                    State = cd.State,
+                    CommandOn = cd.CommandOn,
+                    CommandOff = cd.CommandOff,
+                    MasterBoardId = cd.MasterBoardId,
+                    MasterBoardName = cd.MasterBoard.Name,
                     ControlDeviceTypeName = cd.ControlDeviceType.Name,
                 });
         }

@@ -8,7 +8,6 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string MacAddress { get; set; }
-        public Guid FishTankId { get; set; }
         public string FishTankName { get; set; }
     }
 

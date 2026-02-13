@@ -13,7 +13,6 @@ namespace IRasRag.Application.DTOs
         public string CommandOff { get; set; }
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; }
-        public Guid ControlDeviceTypeId { get; set; }
         public string ControlDeviceTypeName { get; set; }
     }
 

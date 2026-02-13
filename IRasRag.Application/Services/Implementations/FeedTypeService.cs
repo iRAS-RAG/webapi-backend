@@ -37,12 +37,6 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
-                if (createDto.WeightPerUnit <= 0)
-                    return Result<FeedTypeDto>.Failure(
-                        "Trọng lượng mỗi đơn vị phải lớn hơn 0.",
-                        ResultType.BadRequest
-                    );
-
                 if (createDto.ProteinPercentage < 0 || createDto.ProteinPercentage > 100)
                     return Result<FeedTypeDto>.Failure(
                         "Tỷ lệ protein phải từ 0 đến 100.",
@@ -64,7 +58,6 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Name = createDto.Name.Trim(),
                     Description = createDto.Description?.Trim(),
-                    WeightPerUnit = createDto.WeightPerUnit,
                     ProteinPercentage = createDto.ProteinPercentage,
                     Manufacturer = createDto.Manufacturer?.Trim(),
                 };
@@ -169,7 +162,6 @@ namespace IRasRag.Application.Services.Implementations
                     Id = feedType.Id,
                     Name = feedType.Name,
                     Description = feedType.Description,
-                    WeightPerUnit = feedType.WeightPerUnit,
                     ProteinPercentage = feedType.ProteinPercentage,
                     Manufacturer = feedType.Manufacturer,
                 };
@@ -218,17 +210,6 @@ namespace IRasRag.Application.Services.Implementations
                 if (!string.IsNullOrWhiteSpace(dto.Description))
                 {
                     feedType.Description = dto.Description.Trim();
-                }
-
-                if (dto.WeightPerUnit.HasValue)
-                {
-                    if (dto.WeightPerUnit.Value <= 0)
-                        return Result.Failure(
-                            "Trọng lượng mỗi đơn vị phải lớn hơn 0.",
-                            ResultType.BadRequest
-                        );
-
-                    feedType.WeightPerUnit = dto.WeightPerUnit.Value;
                 }
 
                 if (dto.ProteinPercentage.HasValue)

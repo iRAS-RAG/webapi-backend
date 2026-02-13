@@ -36,9 +36,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 var repository = _unitOfWork.GetRepository<Sensor>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
-
-                var sensorDtos = _mapper.Map<IReadOnlyList<SensorDto>>(pagedResult.Items);
+                var pagedResult = await repository.GetPagedAsync(new SensorDtoListSpec(), page, pageSize);
 
                 _logger.LogInformation(
                     "Lấy danh sách cảm biến thành công: {Count} cảm biến",
@@ -48,10 +46,62 @@ namespace IRasRag.Application.Services.Implementations
                 return new PaginatedResult<SensorDto>
                 {
                     Message =
-                        sensorDtos.Count == 0
+                        pagedResult.Items.Count == 0
                             ? "Không có cảm biến nào"
                             : "Lấy danh sách cảm biến thành công",
-                    Data = sensorDtos,
+                    Data = pagedResult.Items,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách cảm biến");
+
+                return new PaginatedResult<SensorDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách cảm biến",
+                    Data = Array.Empty<SensorDto>(),
+                    Meta = null,
+                    Links = null,
+                };
+            }
+        }
+
+        public async Task<PaginatedResult<SensorDto>> GetAllSensorsByMasterBoardIdAsync(Guid masterBoardId, int page, int pageSize)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách cảm biến (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
+
+                var repository = _unitOfWork.GetRepository<Sensor>();
+                var pagedResult = await repository.GetPagedAsync(new SensorDtoListByMasterBoardIdSpec(masterBoardId),page, pageSize);
+
+
+                _logger.LogInformation(
+                    "Lấy danh sách cảm biến thành công: {Count} cảm biến",
+                    pagedResult.Items.Count
+                );
+
+                return new PaginatedResult<SensorDto>
+                {
+                    Message =
+                        pagedResult.Items.Count == 0
+                            ? "Không có cảm biến nào"
+                            : "Lấy danh sách cảm biến thành công",
+                    Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
                         page,
                         pageSize,
@@ -119,16 +169,6 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogInformation("Bắt đầu tạo cảm biến mới: {Name}", createDto.Name);
 
-                // Validate Name
-                if (string.IsNullOrWhiteSpace(createDto.Name))
-                {
-                    _logger.LogWarning("Tên cảm biến không được để trống");
-                    return Result<SensorDto>.Failure(
-                        "Tên cảm biến là bắt buộc",
-                        ResultType.BadRequest
-                    );
-                }
-
                 var sensorRepository = _unitOfWork.GetRepository<Sensor>();
 
                 // Check if SensorType exists
@@ -164,11 +204,11 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // Check duplicate PinCode on the same MasterBoard
-                var existingSensor = await sensorRepository.FirstOrDefaultAsync(s =>
+                var existingSensor = await sensorRepository.AnyAsync(s =>
                     s.MasterBoardId == createDto.MasterBoardId && s.PinCode == createDto.PinCode
                 );
 
-                if (existingSensor != null)
+                if (existingSensor)
                 {
                     _logger.LogWarning(
                         "Cảm biến với mã chân {PinCode} đã tồn tại trên bảng mạch này",
@@ -186,6 +226,8 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 var sensorDto = _mapper.Map<SensorDto>(sensor);
+                sensorDto.SensorTypeName = sensorType.Name;
+                sensorDto.MasterBoardName = masterBoard.Name;
                 _logger.LogInformation("Tạo cảm biến thành công: {Id}", sensor.Id);
 
                 return Result<SensorDto>.Success(sensorDto, "Tạo cảm biến thành công");
@@ -221,46 +263,45 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Validate and update Name if provided
-                if (!string.IsNullOrWhiteSpace(updateDto.Name))
-                {
-                    sensor.Name = updateDto.Name.Trim();
-                }
+                sensor.Name = string.IsNullOrWhiteSpace(updateDto.Name)
+                    ? sensor.Name
+                    : updateDto.Name.Trim();
 
-                // Validate and update PinCode if provided
-                if (updateDto.PinCode.HasValue)
+                var newPinCode = updateDto.PinCode ?? sensor.PinCode;
+                var newMasterBoardId = updateDto.MasterBoardId ?? sensor.MasterBoardId;
+
+                if (newPinCode != sensor.PinCode || newMasterBoardId != sensor.MasterBoardId)
                 {
-                    // Check duplicate PinCode on the same MasterBoard (excluding current sensor)
-                    var existingSensor = await sensorRepository.FirstOrDefaultAsync(s =>
-                        s.MasterBoardId == sensor.MasterBoardId
-                        && s.PinCode == updateDto.PinCode.Value
+                    // Check duplicate PinCode on the (possibly new) MasterBoard
+                    var existingSensor = await sensorRepository.AnyAsync(s =>
+                        s.MasterBoardId == newMasterBoardId
+                        && s.PinCode == newPinCode
                         && s.Id != id
                     );
-
-                    if (existingSensor != null)
+                    if (existingSensor)
                     {
                         _logger.LogWarning(
-                            "Cảm biến với mã chân {PinCode} đã tồn tại trên bảng mạch này",
-                            updateDto.PinCode.Value
+                            "Cảm biến với mã chân {PinCode} đã tồn tại trên bảng mạch đã chọn",
+                            newPinCode
                         );
                         return Result.Failure(
-                            $"Cảm biến với mã chân {updateDto.PinCode.Value} đã tồn tại trên bảng mạch này",
+                            $"Cảm biến với mã chân {newPinCode} đã tồn tại trên bảng mạch đã chọn",
                             ResultType.Conflict
                         );
                     }
 
-                    sensor.PinCode = updateDto.PinCode.Value;
+                    sensor.PinCode = newPinCode;
                 }
 
                 // Validate and update SensorTypeId if provided
                 if (updateDto.SensorTypeId.HasValue)
                 {
                     var sensorTypeRepository = _unitOfWork.GetRepository<SensorType>();
-                    var sensorType = await sensorTypeRepository.GetByIdAsync(
-                        updateDto.SensorTypeId.Value
+                    var sensorType = await sensorTypeRepository.AnyAsync(
+                        st => st.Id == updateDto.SensorTypeId.Value
                     );
 
-                    if (sensorType == null)
+                    if (!sensorType)
                     {
                         _logger.LogWarning(
                             "Không tìm thấy loại cảm biến với Id: {SensorTypeId}",
@@ -278,12 +319,11 @@ namespace IRasRag.Application.Services.Implementations
                 // Validate and update MasterBoardId if provided
                 if (updateDto.MasterBoardId.HasValue)
                 {
-                    var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
-                    var masterBoard = await masterBoardRepository.GetByIdAsync(
-                        updateDto.MasterBoardId.Value
+                    var existMasterBoard = await _unitOfWork.GetRepository<MasterBoard>().AnyAsync(
+                        mb => mb.Id == updateDto.MasterBoardId.Value
                     );
 
-                    if (masterBoard == null)
+                    if (!existMasterBoard)
                     {
                         _logger.LogWarning(
                             "Không tìm thấy bảng mạch với Id: {MasterBoardId}",
@@ -295,29 +335,9 @@ namespace IRasRag.Application.Services.Implementations
                         );
                     }
 
-                    // Check duplicate PinCode on the new MasterBoard
-                    var existingSensorOnNewBoard = await sensorRepository.FirstOrDefaultAsync(s =>
-                        s.MasterBoardId == updateDto.MasterBoardId.Value
-                        && s.PinCode == sensor.PinCode
-                        && s.Id != id
-                    );
-
-                    if (existingSensorOnNewBoard != null)
-                    {
-                        _logger.LogWarning(
-                            "Cảm biến với mã chân {PinCode} đã tồn tại trên bảng mạch mới",
-                            sensor.PinCode
-                        );
-                        return Result.Failure(
-                            $"Cảm biến với mã chân {sensor.PinCode} đã tồn tại trên bảng mạch mới",
-                            ResultType.Conflict
-                        );
-                    }
-
                     sensor.MasterBoardId = updateDto.MasterBoardId.Value;
                 }
 
-                sensorRepository.Update(sensor);
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Cập nhật cảm biến thành công: {Id}", id);

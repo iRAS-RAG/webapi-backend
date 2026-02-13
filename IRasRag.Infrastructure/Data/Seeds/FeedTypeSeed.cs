@@ -13,7 +13,6 @@ public static class FeedTypeSeed
             {
                 Id = StarterFeedId,
                 Name = "Giàu protein",
-                WeightPerUnit = 25.0f,
                 Description =
                     "Thức ăn có hàm lượng protein cao, phù hợp cho giai đoạn đầu phát triển của cá.",
                 ProteinPercentage = 45.0f,
@@ -23,7 +22,6 @@ public static class FeedTypeSeed
             {
                 Id = GrowerFeedId,
                 Name = "Tiêu chuẩn",
-                WeightPerUnit = 25.0f,
                 Description =
                     "Thức ăn tiêu chuẩn, phù hợp cho giai đoạn phát triển tiếp theo của cá.",
                 ProteinPercentage = 38.0f,
