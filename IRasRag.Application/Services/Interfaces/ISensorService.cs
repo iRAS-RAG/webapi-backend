@@ -7,6 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface ISensorService
     {
         Task<PaginatedResult<SensorDto>> GetAllSensorsAsync(int page, int pageSize);
+        Task<PaginatedResult<SensorDto>> GetAllSensorsByMasterBoardIdAsync(Guid masterBoardId, int page, int pageSize);
         Task<Result<SensorDto>> GetSensorByIdAsync(Guid id);
         Task<Result<SensorDto>> CreateSensorAsync(CreateSensorDto createDto);
         Task<Result> UpdateSensorAsync(Guid id, UpdateSensorDto updateDto);

@@ -16,7 +16,23 @@ namespace IRasRag.Application.Specifications
                     Id = mb.Id,
                     Name = mb.Name,
                     MacAddress = mb.MacAddress,
-                    FishTankId = mb.FishTankId,
+                    FishTankName = mb.FishTank.Name,
+                });
+        }
+    }
+
+    public class MasterBoardDtoListByTankIdSpec : Specification<MasterBoard, MasterBoardDto>
+    {
+        public MasterBoardDtoListByTankIdSpec(Guid tankId)
+        {
+            Query
+                .AsNoTracking()
+                .Where(mb => mb.FishTankId == tankId)
+                .Select(mb => new MasterBoardDto
+                {
+                    Id = mb.Id,
+                    Name = mb.Name,
+                    MacAddress = mb.MacAddress,
                     FishTankName = mb.FishTank.Name,
                 });
         }

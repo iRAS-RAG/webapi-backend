@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -42,9 +43,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 var repository = _unitOfWork.GetRepository<MasterBoard>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
-
-                var masterBoardDtos = _mapper.Map<IReadOnlyList<MasterBoardDto>>(pagedResult.Items);
+                var pagedResult = await repository.GetPagedAsync(new MasterBoardDtoListSpec(),page, pageSize);
 
                 _logger.LogInformation(
                     "Lấy danh sách bảng mạch thành công: {Count} bảng mạch",
@@ -54,10 +53,65 @@ namespace IRasRag.Application.Services.Implementations
                 return new PaginatedResult<MasterBoardDto>
                 {
                     Message =
-                        masterBoardDtos.Count == 0
+                        pagedResult.Items.Count == 0
                             ? "Không có bảng mạch nào"
                             : "Lấy danh sách bảng mạch thành công",
-                    Data = masterBoardDtos,
+                    Data = pagedResult.Items,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        page,
+                        pageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách bảng mạch");
+
+                return new PaginatedResult<MasterBoardDto>
+                {
+                    Message = "Đã xảy ra lỗi khi lấy danh sách bảng mạch",
+                    Data = Array.Empty<MasterBoardDto>(),
+                    Meta = null,
+                    Links = null,
+                };
+            }
+        }
+
+        public async Task<PaginatedResult<MasterBoardDto>> GetAllMasterBoardsByTankIdAsync(
+            Guid tankId,
+            int page,
+            int pageSize
+        )
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Bắt đầu lấy danh sách bảng mạch (Page: {Page}, PageSize: {PageSize})",
+                    page,
+                    pageSize
+                );
+
+                var repository = _unitOfWork.GetRepository<MasterBoard>();
+                var pagedResult = await repository.GetPagedAsync(new MasterBoardDtoListByTankIdSpec(tankId) ,page, pageSize);
+
+                _logger.LogInformation(
+                    "Lấy danh sách bảng mạch thành công: {Count} bảng mạch",
+                    pagedResult.Items.Count
+                );
+
+                return new PaginatedResult<MasterBoardDto>
+                {
+                    Message =
+                        pagedResult.Items.Count == 0
+                            ? "Không có bảng mạch nào"
+                            : "Lấy danh sách bảng mạch thành công",
+                    Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
                         page,
                         pageSize,
@@ -127,26 +181,6 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogInformation("Bắt đầu tạo bảng mạch mới: {Name}", createDto.Name);
 
-                // Validate Name
-                if (string.IsNullOrWhiteSpace(createDto.Name))
-                {
-                    _logger.LogWarning("Tên bảng mạch không được để trống");
-                    return Result<MasterBoardDto>.Failure(
-                        "Tên bảng mạch là bắt buộc",
-                        ResultType.BadRequest
-                    );
-                }
-
-                // Validate MacAddress
-                if (string.IsNullOrWhiteSpace(createDto.MacAddress))
-                {
-                    _logger.LogWarning("Địa chỉ MAC không được để trống");
-                    return Result<MasterBoardDto>.Failure(
-                        "Địa chỉ MAC là bắt buộc",
-                        ResultType.BadRequest
-                    );
-                }
-
                 // Check duplicate MacAddress
                 var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
                 var existingMasterBoard = await masterBoardRepository.FirstOrDefaultAsync(mb =>
@@ -187,6 +221,7 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 var masterBoardDto = _mapper.Map<MasterBoardDto>(masterBoard);
+                masterBoardDto.FishTankName = fishTank.Name;
                 _logger.LogInformation("Tạo bảng mạch thành công: {Id}", masterBoard.Id);
 
                 return Result<MasterBoardDto>.Success(masterBoardDto, "Tạo bảng mạch thành công");

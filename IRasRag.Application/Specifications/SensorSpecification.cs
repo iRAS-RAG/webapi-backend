@@ -17,7 +17,25 @@ namespace IRasRag.Application.Specifications
                     Id = s.Id,
                     Name = s.Name,
                     PinCode = s.PinCode,
-                    SensorTypeId = s.SensorTypeId,
+                    SensorTypeName = s.SensorType.Name,
+                    MasterBoardId = s.MasterBoardId,
+                    MasterBoardName = s.MasterBoard.Name,
+                });
+        }
+    }
+
+    public class SensorDtoListByMasterBoardIdSpec : Specification<Sensor, SensorDto>
+    {
+        public SensorDtoListByMasterBoardIdSpec(Guid masterBoardId)
+        {
+            Query
+                .AsNoTracking()
+                .Where(s => s.MasterBoardId == masterBoardId)
+                .Select(s => new SensorDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    PinCode = s.PinCode,
                     SensorTypeName = s.SensorType.Name,
                     MasterBoardId = s.MasterBoardId,
                     MasterBoardName = s.MasterBoard.Name,

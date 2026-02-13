@@ -9,8 +9,6 @@ namespace IRasRag.Application.DTOs
         public string Name { get; set; }
         public string MeasureType { get; set; }
         public string UnitOfMeasure { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? ModifiedAt { get; set; }
     }
 
     // Create DTO

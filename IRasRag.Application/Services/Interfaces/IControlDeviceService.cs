@@ -7,6 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface IControlDeviceService
     {
         Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesAsync(int page, int pageSize);
+        Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesByMasterBoardIdAsync(Guid masterBoardId, int page, int pageSize);
         Task<Result<ControlDeviceDto>> GetControlDeviceByIdAsync(Guid id);
         Task<Result<ControlDeviceDto>> CreateControlDeviceAsync(CreateControlDeviceDto createDto);
         Task<Result> UpdateControlDeviceAsync(Guid id, UpdateControlDeviceDto updateDto);
