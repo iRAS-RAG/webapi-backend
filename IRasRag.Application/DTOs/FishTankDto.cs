@@ -6,12 +6,14 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public float Height { get; set; }
-        public float Radius { get; set; }
+        public float Volume { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
         public string CameraUrl { get; set; }
+        public string CurrentSpecies { get; set; }
+        public float? CurrentCount { get; set; }
+        public string LatestStatus { get; set; }
     }
 
     public class CreateFishTankDto

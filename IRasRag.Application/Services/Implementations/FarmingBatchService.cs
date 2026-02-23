@@ -72,6 +72,10 @@ namespace IRasRag.Application.Services.Implementations
                 };
             }
         }
+        public Task<Result<FarmingBatchDto>> GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id)
         {

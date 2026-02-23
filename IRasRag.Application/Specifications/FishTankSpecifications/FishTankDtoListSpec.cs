@@ -15,8 +15,7 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
             var sortMap = new Dictionary<string, Expression<Func<FishTank, object?>>>
             {
                 ["name"] = ft => ft.Name,
-                ["height"] = ft => ft.Height,
-                ["radius"] = ft => ft.Radius,
+                ["volume"] = ft => ft.Height * ft.Radius * ft.Radius,
             };
 
             ApplySearch(
@@ -34,8 +33,7 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
             {
                 Id = ft.Id,
                 Name = ft.Name,
-                Height = ft.Height,
-                Radius = ft.Radius,
+                Volume = (float)(Math.PI * ft.Radius * ft.Radius * ft.Height),
                 FarmId = ft.FarmId,
                 FarmName = ft.Farm.Name,
                 TopicCode = ft.TopicCode,

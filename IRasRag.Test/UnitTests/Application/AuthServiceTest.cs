@@ -326,7 +326,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(Enumerable.Empty<Verification>());
+                .ReturnsAsync(Array.Empty<Verification>());
             _emailServiceMock
                 .Setup(e =>
                     e.GenerateResetPasswordEmailBodyAsync(It.IsAny<string>(), It.IsAny<int>())
