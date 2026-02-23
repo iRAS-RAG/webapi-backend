@@ -39,4 +39,7 @@ namespace IRasRag.Application.DTOs
         [MaxLength(50, ErrorMessage = "Đơn vị đo không được vượt quá 50 ký tự")]
         public string? UnitOfMeasure { get; set; }
     }
+
+    // List Request DTO
+    public class SensorTypeListRequest : BasePaginatedListRequest { }
 }

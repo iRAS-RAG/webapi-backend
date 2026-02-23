@@ -6,8 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IFarmService
     {
-        Task<PaginatedResult<FarmDto>> GetAllFarmsAsync(int page, int pageSize);
-        Task<PaginatedResult<FarmDto>> GetAllFarmsFromUserAsync(Guid id, int page, int pageSize);
+        Task<PaginatedResult<FarmDto>> GetAllFarmsAsync(FarmListRequest request);
         Task<Result<FarmDto>> GetFarmByIdAsync(Guid id);
         Task<Result<FarmDto>> CreateFarmAsync(CreateFarmDto createDto);
         Task<Result> UpdateFarmAsync(Guid id, UpdateFarmDto updateDto);

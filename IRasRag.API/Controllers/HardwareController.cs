@@ -1,6 +1,7 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,8 @@ namespace IRasRag.API.Controllers
             ISensorTypeService sensorTypeService,
             ISensorService sensorService,
             IMasterBoardService masterBoardService,
-            IControlDeviceService controlDeviceService)
+            IControlDeviceService controlDeviceService
+        )
         {
             _logger = logger;
             _sensorTypeService = sensorTypeService;
@@ -32,50 +34,52 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensor-types")]
-        public async Task<IActionResult> GetAllSensorTypes(int page = 1, int pageSize = 10)
-        {
-            {
-                try
-                {
-                    if (page <= 0 || pageSize <= 0)
-                    {
-                        return BadRequest(
-                            new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                        );
-                    }
-
-                    if (pageSize > 100)
-                    {
-                        return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                    }
-
-                    var result = await _sensorTypeService.GetAllSensorTypesAsync(page, pageSize);
-                    return Ok(result);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred while retrieving sensor types.");
-                    return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-                }
-            }
-        }
-
-        [HttpGet("sensors")]
-        public async Task<IActionResult> GetAllSensors(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAllSensorTypes(
+            [FromQuery] SensorTypeListRequest request
+        )
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
                 }
-                if (pageSize > 100)
+
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
-                var result = await _sensorService.GetAllSensorsAsync(page, pageSize);
+                var result = await _sensorTypeService.GetAllSensorTypesAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving sensor types.");
+                return StatusCode(
+                    500,
+                    new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." }
+                );
+            }
+        }
+
+        [HttpGet("sensors")]
+        public async Task<IActionResult> GetAllSensors([FromQuery] SensorListRequest request)
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+                var result = await _sensorService.GetAllSensorsAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -85,47 +89,24 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("sensors/masterboard/{id}")]
-        public async Task<IActionResult> GetAllSensorsByMasterBoardId(Guid id, int page = 1, int pageSize = 10)
-        {
-            try
-            {
-                if (page <= 0 || pageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (pageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _sensorService.GetAllSensorsByMasterBoardIdAsync(id, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving sensors by master board ID.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
         [HttpGet("masterboards")]
-        public async Task<IActionResult> GetAllMasterBoards(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAllMasterBoards(
+            [FromQuery] MasterBoardListRequest request
+        )
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
                 }
-                if (pageSize > 100)
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
-                var result = await _masterBoardService.GetAllMasterBoardsAsync(page, pageSize);
+                var result = await _masterBoardService.GetAllMasterBoardsAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -135,77 +116,27 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("masterboards/tank/{id}")]
-        public async Task<IActionResult> GetAllMasterBoardsByTankId(Guid id, int page = 1, int pageSize = 10)
-        {
-            try
-            {
-                if (page <= 0 || pageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (pageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _masterBoardService.GetAllMasterBoardsByTankIdAsync(id, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving master boards by tank ID.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
         [HttpGet("control-devices")]
-        public async Task<IActionResult> GetAllControlDevices(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
                 }
-                if (pageSize > 100)
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
-                var result = await _controlDeviceService.GetAllControlDevicesAsync(page, pageSize);
+                var result = await _controlDeviceService.GetAllControlDevicesAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving control devices.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [HttpGet("control-devices/masterboard/{id}")]
-        public async Task<IActionResult> GetAllControlDevicesByMasterBoardId(Guid id, int page = 1, int pageSize = 10)
-        {
-            try
-            {
-                if (page <= 0 || pageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (pageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _controlDeviceService.GetAllControlDevicesByMasterBoardIdAsync(id, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving control devices by master board ID.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -283,7 +214,6 @@ namespace IRasRag.API.Controllers
                 );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
-
         }
 
         [HttpPut("sensors/{id}")]
@@ -302,11 +232,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while updating sensor: {SensorId}",
-                    id
-                );
+                _logger.LogError(ex, "An error occurred while updating sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

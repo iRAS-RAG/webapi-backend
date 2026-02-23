@@ -7,8 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface IJobControlMappingService
     {
         Task<PaginatedResult<JobControlMappingDto>> GetAllJobControlMappingsAsync(
-            int page,
-            int pageSize
+            JobControlMappingListRequest request
         );
         Task<Result<JobControlMappingDto>> GetJobControlMappingByIdAsync(Guid id);
         Task<Result<JobControlMappingDto>> CreateJobControlMappingAsync(

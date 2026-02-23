@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -125,29 +126,15 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(int page, int pageSize)
+        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(FishTankListRequest request)
         {
             try
             {
                 var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var farmRepo = _unitOfWork.GetRepository<Farm>();
+                var spec = new FishTankDtoListSpec(request);
+                var pagedResult = await fishTankRepo.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var pagedResult = await fishTankRepo.GetPagedAsync(page, pageSize);
-                var farms = await farmRepo.GetAllAsync();
-
-                var fishTankDtos = pagedResult
-                    .Items.Select(ft => new FishTankDto
-                    {
-                        Id = ft.Id,
-                        Name = ft.Name,
-                        Height = ft.Height,
-                        Radius = ft.Radius,
-                        FarmId = ft.FarmId,
-                        FarmName = farms.FirstOrDefault(f => f.Id == ft.FarmId)?.Name ?? "Unknown",
-                        TopicCode = ft.TopicCode,
-                        CameraUrl = ft.CameraUrl,
-                    })
-                    .ToList();
+                var fishTankDtos = pagedResult.Items.ToList();
 
                 return new PaginatedResult<FishTankDto>
                 {
@@ -157,13 +144,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách bể cá thành công.",
                     Data = fishTankDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

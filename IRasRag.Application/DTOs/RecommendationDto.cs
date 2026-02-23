@@ -34,4 +34,7 @@ namespace IRasRag.Application.DTOs
 
         public string? SuggestionText { get; set; }
     }
+
+    // List Request DTO
+    public class RecommendationListRequest : BasePaginatedListRequest { }
 }

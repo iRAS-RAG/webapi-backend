@@ -37,4 +37,10 @@ namespace IRasRag.Application.DTOs
 
         public DateTime? CreatedDate { get; set; }
     }
+
+    // List Request DTO
+    public class FeedingLogListRequest : BasePaginatedListRequest 
+    {
+        public DateTime? CreatedDate { get; set; }
+    }
 }

@@ -8,7 +8,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.UserSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -191,7 +191,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (user == null || user.IsDeleted)
                 {
-                    return Result.Failure("Người dùng không tồn tại hoặc đã xóa.", ResultType.NotFound);
+                    return Result.Failure(
+                        "Người dùng không tồn tại hoặc đã xóa.",
+                        ResultType.NotFound
+                    );
                 }
 
                 _unitOfWork.GetRepository<User>().Delete(user);
@@ -206,25 +209,25 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<UserDto>> GetAllUsersAsync(int page, int pageSize)
+        public async Task<PaginatedResult<UserDto>> GetAllUsersAsync(UserListRequest request)
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách người dùng (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<User>();
                 var pagedResult = await repository.GetPagedAsync(
-                    new UserDtoListSpec(),
-                    page,
-                    pageSize,
+                    new UserDtoListSpec(request),
+                    request.Page,
+                    request.PageSize,
                     QueryType.IncludeDeleted
                 );
 
-                var userDtos = _mapper.Map<IReadOnlyList<UserDto>>(pagedResult.Items);
+                var userDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách người dùng thành công: {Count} người dùng",
@@ -239,13 +242,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách người dùng thành công",
                     Data = userDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };
@@ -339,10 +342,15 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id, QueryType.IncludeDeleted);
+                var user = await _unitOfWork
+                    .GetRepository<User>()
+                    .GetByIdAsync(id, QueryType.IncludeDeleted);
 
                 if (user == null)
-                    return Result<UserDto>.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                    return Result<UserDto>.Failure(
+                        "Người dùng không tồn tại.",
+                        ResultType.NotFound
+                    );
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -408,18 +416,25 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         user.DeletedAt = DateTime.UtcNow;
                     }
-                    else user.DeletedAt = null;
+                    else
+                        user.DeletedAt = null;
                 }
 
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result<UserDto>.Success(_mapper.Map<UserDto>(user), "Cập nhật người dùng thành công.");
+                return Result<UserDto>.Success(
+                    _mapper.Map<UserDto>(user),
+                    "Cập nhật người dùng thành công."
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật người dùng");
-                return Result<UserDto>.Failure("Lỗi khi cập nhật người dùng.", ResultType.Unexpected);
+                return Result<UserDto>.Failure(
+                    "Lỗi khi cập nhật người dùng.",
+                    ResultType.Unexpected
+                );
             }
         }
 
@@ -463,7 +478,10 @@ namespace IRasRag.Application.Services.Implementations
                 var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id);
 
                 if (user == null || user.IsDeleted)
-                    return Result<UserDto>.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                    return Result<UserDto>.Failure(
+                        "Người dùng không tồn tại.",
+                        ResultType.NotFound
+                    );
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -473,8 +491,7 @@ namespace IRasRag.Application.Services.Implementations
                     var existingUser = await _unitOfWork
                         .GetRepository<User>()
                         .FirstOrDefaultAsync(u =>
-                            u.Email.ToLower() == emailToUpdate.ToLower()
-                            && u.Id != id
+                            u.Email.ToLower() == emailToUpdate.ToLower() && u.Id != id
                         );
 
                     if (existingUser != null)
@@ -496,12 +513,18 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result<UserDto>.Success(_mapper.Map<UserDto>(user), "Cập nhật người dùng thành công.");
+                return Result<UserDto>.Success(
+                    _mapper.Map<UserDto>(user),
+                    "Cập nhật người dùng thành công."
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật hồ sơ người dùng");
-                return Result<UserDto>.Failure("Lỗi khi cập nhật hồ sơ người dùng.", ResultType.Unexpected);
+                return Result<UserDto>.Failure(
+                    "Lỗi khi cập nhật hồ sơ người dùng.",
+                    ResultType.Unexpected
+                );
             }
         }
     }

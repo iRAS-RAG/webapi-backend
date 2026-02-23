@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.JobTypeSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -28,20 +29,21 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(int page, int pageSize)
+        public async Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(JobTypeListRequest request)
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách loại công việc (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<JobType>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new JobTypeDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var jobTypeDtos = _mapper.Map<IReadOnlyList<JobTypeDto>>(pagedResult.Items);
+                var jobTypeDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách loại công việc thành công: {Count} loại",
@@ -56,13 +58,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách loại công việc thành công",
                     Data = jobTypeDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

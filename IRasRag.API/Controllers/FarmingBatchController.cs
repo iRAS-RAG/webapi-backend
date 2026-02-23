@@ -26,23 +26,21 @@ namespace IRasRag.API.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAllFarmingBatches(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
+            [FromQuery] FarmingBatchListRequest request
         )
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(new { Message = "Page và PageSize phải lớn hơn 0" });
                 }
 
-                if (pageSize > 100)
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "PageSize không được vượt quá 100" });
                 }
-
-                var result = await _farmingBatchService.GetAllFarmingBatchesAsync(page, pageSize);
+                var result = await _farmingBatchService.GetAllFarmingBatchesAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)

@@ -40,4 +40,11 @@ namespace IRasRag.Application.DTOs
 
         public JobTriggerCondition? TriggerCondition { get; set; }
     }
+
+    // List Request DTO
+    public class JobControlMappingListRequest : BasePaginatedListRequest 
+    {
+        public bool? TargetState { get; set; }
+        public JobTriggerCondition? TriggerCondition { get; set; }
+    }
 }

@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.RecommendationSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -30,24 +30,23 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<RecommendationDto>> GetAllRecommendationsAsync(
-            int page,
-            int pageSize
+            RecommendationListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
-                    "Bắt đầu lấy danh sách khuyến nghị (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    "Bắt đầu lấy danh sách gợi ý (Page: {Page}, PageSize: {PageSize})",
+                    request.Page,
+                    request.PageSize
                 );
 
                 var recommendationRepository = _unitOfWork.GetRepository<Recommendation>();
-                var spec = new RecommendationDtoListSpec();
+                var spec = new RecommendationDtoListSpec(request);
                 var pagedResult = await recommendationRepository.GetPagedAsync(
                     spec,
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 _logger.LogInformation(
@@ -63,13 +62,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách khuyến nghị thành công",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

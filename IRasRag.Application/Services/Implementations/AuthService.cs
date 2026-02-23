@@ -78,7 +78,11 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var token = _jwtService.GenerateAccessToken(user.Id, normalizedEmail, userRole.Name);
+                var token = _jwtService.GenerateAccessToken(
+                    user.Id,
+                    normalizedEmail,
+                    userRole.Name
+                );
 
                 var refreshTokenResult = _jwtService.GenerateRefreshToken();
 

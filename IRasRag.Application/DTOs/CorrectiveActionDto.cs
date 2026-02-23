@@ -9,6 +9,7 @@ namespace IRasRag.Application.DTOs
         public Guid AlertId { get; set; }
         public Guid UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
+        public string PerformedBy { get; set; } = string.Empty;
         public string ActionTaken { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
@@ -42,4 +43,6 @@ namespace IRasRag.Application.DTOs
 
         public string? Notes { get; set; }
     }
+
+    public class CorrectiveActionListRequest : BasePaginatedListRequest{}
 }

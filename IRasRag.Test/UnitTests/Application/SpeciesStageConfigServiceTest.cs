@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -8,6 +9,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -418,37 +420,112 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllSpeciesStageConfigsAsync Tests
 
         [Fact]
-        public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllSpeciesStageConfigsAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
-
-            var configs = new List<SpeciesStageConfigDto>
+            var request = new SpeciesStageConfigListRequest
             {
-                new SpeciesStageConfigDto { Id = Guid.NewGuid() },
-                new SpeciesStageConfigDto { Id = Guid.NewGuid() },
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "tilapia",
+                SortBy = "feedtypename",
+                SortDir = "desc",
             };
+
+            var configs = new List<SpeciesStageConfig>
+            {
+                new SpeciesStageConfig
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Juvenile",
+                        Description = "desc",
+                    },
+                    FeedType = new FeedType
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Feed A",
+                        Description = "d",
+                        ProteinPercentage = 35,
+                    },
+                },
+                new SpeciesStageConfig
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Adult",
+                        Description = "desc",
+                    },
+                    FeedType = new FeedType
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Feed Z",
+                        Description = "d",
+                        ProteinPercentage = 45,
+                    },
+                },
+                new SpeciesStageConfig
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Juvenile",
+                        Description = "desc",
+                    },
+                    FeedType = new FeedType
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Feed M",
+                        Description = "d",
+                        ProteinPercentage = 40,
+                    },
+                },
+            };
+
+            ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>? capturedSpec = null;
 
             _configRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesStageConfigDto>(
-                        It.IsAny<SpeciesStageConfigListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
+                .Callback(
+                    (
+                        ISpecification<SpeciesStageConfig, SpeciesStageConfigDto> spec,
+                        int _,
+                        int _,
+                        QueryType _
+                    ) => capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    new PagedResult<SpeciesStageConfigDto>
-                    {
-                        Items = configs,
-                        TotalItems = configs.Count,
-                    }
+                    (
+                        ISpecification<SpeciesStageConfig, SpeciesStageConfigDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            configs,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -456,29 +533,135 @@ namespace IRasRag.Test.UnitTests.Application
 
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
+            result.Data.Select(x => x.FeedTypeName).Should().ContainInOrder("Feed Z", "Feed A");
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
             result.Meta.TotalItems.Should().Be(2);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<SpeciesStageConfigListSpec>();
+
+            _configRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
+                            s is SpeciesStageConfigListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllSpeciesStageConfigsAsync_ShouldApplyDefaultSort_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new SpeciesStageConfigListRequest { Page = 1, PageSize = 10 };
+
+            var configs = new List<SpeciesStageConfig>
+            {
+                new SpeciesStageConfig
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "G1",
+                        Description = "desc",
+                    },
+                    FeedType = new FeedType
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "F1",
+                        Description = "d",
+                        ProteinPercentage = 35,
+                    },
+                },
+                new SpeciesStageConfig
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "G2",
+                        Description = "desc",
+                    },
+                    FeedType = new FeedType
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "F2",
+                        Description = "d",
+                        ProteinPercentage = 45,
+                    },
+                },
+            };
+
+            _configRepoMock
+                .Setup(r =>
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<SpeciesStageConfig, SpeciesStageConfigDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            configs,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
+
+            // Act
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.SpeciesName).Should().ContainInOrder("Alpha", "Zulu");
+
+            _configRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
+                            s is SpeciesStageConfigListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnEmptyList_WhenNoConfigsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesStageConfigListRequest { Page = 1, PageSize = 10 };
 
             _configRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesStageConfigDto>(
-                        It.IsAny<SpeciesStageConfigListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
                 .ReturnsAsync(
@@ -490,7 +673,7 @@ namespace IRasRag.Test.UnitTests.Application
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -503,28 +686,38 @@ namespace IRasRag.Test.UnitTests.Application
             result.Meta!.TotalItems.Should().Be(0);
 
             result.Links.Should().NotBeNull();
+
+            _configRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllSpeciesStageConfigsAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesStageConfigListRequest { Page = 1, PageSize = 10 };
 
             _configRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesStageConfigDto>(
-                        It.IsAny<SpeciesStageConfigListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllSpeciesStageConfigsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesStageConfigsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -537,6 +730,17 @@ namespace IRasRag.Test.UnitTests.Application
 
             result.Meta.Should().BeNull();
             result.Links.Should().BeNull();
+
+            _configRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         #endregion

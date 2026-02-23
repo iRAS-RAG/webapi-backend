@@ -37,4 +37,7 @@ namespace IRasRag.Application.DTOs
 
         public DateTime? Date { get; set; }
     }
+
+    // List Request DTO
+    public class MortalityLogListRequest : BasePaginatedListRequest { }
 }

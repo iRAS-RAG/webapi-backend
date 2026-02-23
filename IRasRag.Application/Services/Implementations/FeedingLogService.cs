@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.FeedingLogSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -29,22 +30,22 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<FeedingLogDto>> GetAllFeedingLogsAsync(
-            int page,
-            int pageSize
+            FeedingLogListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách nhật ký cho ăn (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<FeedingLog>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new FeedingLogDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var feedingLogDtos = _mapper.Map<IReadOnlyList<FeedingLogDto>>(pagedResult.Items);
+                var feedingLogDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách nhật ký cho ăn thành công: {Count} bản ghi",
@@ -59,13 +60,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách nhật ký cho ăn thành công",
                     Data = feedingLogDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

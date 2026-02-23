@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.UserFarmSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -29,24 +29,24 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(int page, int pageSize)
+        public async Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(UserFarmListRequest request)
         {
             try
             {
-                var spec = new UserFarmDtoListSpec();
+                var spec = new UserFarmDtoListSpec(request);
                 var pagedResult = await _unitOfWork
                     .GetRepository<UserFarm>()
-                    .GetPagedAsync(spec, page, pageSize);
+                    .GetPagedAsync(spec, request.Page, request.PageSize);
 
                 var meta = PaginationBuilder.BuildPaginationMetadata(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 
                 var links = PaginationBuilder.BuildPaginationLinks(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 

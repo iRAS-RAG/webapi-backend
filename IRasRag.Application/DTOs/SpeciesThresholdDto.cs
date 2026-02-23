@@ -36,4 +36,7 @@ namespace IRasRag.Application.DTOs
 
         public float? MaxValue { get; set; }
     }
+
+    // List Request DTO
+    public class SpeciesThresholdListRequest : BasePaginatedListRequest { }
 }

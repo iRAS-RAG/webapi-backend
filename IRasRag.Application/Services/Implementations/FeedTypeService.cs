@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.FeedTypeSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -103,14 +104,15 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<FeedTypeDto>> GetAllFeedTypesAsync(int page, int pageSize)
+        public async Task<PaginatedResult<FeedTypeDto>> GetAllFeedTypesAsync(FeedTypeListRequest request)
         {
             try
             {
                 var repository = _unitOfWork.GetRepository<FeedType>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new FeedTypeDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var feedTypeDtos = _mapper.Map<IReadOnlyList<FeedTypeDto>>(pagedResult.Items);
+                var feedTypeDtos = pagedResult.Items;
 
                 return new PaginatedResult<FeedTypeDto>
                 {
@@ -120,13 +122,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách loại thức ăn thành công.",
                     Data = feedTypeDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

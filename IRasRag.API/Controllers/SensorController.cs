@@ -24,26 +24,23 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả cảm biến
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllSensors(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
-        )
+        public async Task<IActionResult> GetAllSensors([FromQuery] SensorListRequest request)
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
                 }
 
-                if (pageSize > 100)
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
-                var result = await _sensorService.GetAllSensorsAsync(page, pageSize);
+                var result = await _sensorService.GetAllSensorsAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)

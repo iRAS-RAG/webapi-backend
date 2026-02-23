@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface ISpeciesService
     {
-        Task<PaginatedResult<SpeciesDto>> GetAllSpeciesAsync(int page, int pageSize);
+        Task<PaginatedResult<SpeciesDto>> GetAllSpeciesAsync(SpeciesListRequest request);
         Task<Result<SpeciesDto>> GetSpeciesByIdAsync(Guid id);
         Task<Result<SpeciesDto>> CreateSpeciesAsync(CreateSpeciesDto createDto);
         Task<Result> UpdateSpeciesAsync(Guid id, UpdateSpeciesDto updateDto);

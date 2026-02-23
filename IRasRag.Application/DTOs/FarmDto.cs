@@ -48,4 +48,9 @@ namespace IRasRag.Application.DTOs
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         public string? Email { get; set; }
     }
+
+    public class FarmListRequest : BasePaginatedListRequest
+    {
+        public Guid? UserId { get; set; }
+    }
 }

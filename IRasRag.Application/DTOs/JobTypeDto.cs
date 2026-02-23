@@ -30,4 +30,7 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Mô tả không được vượt quá 255 ký tự")]
         public string? Description { get; set; }
     }
+
+    // List Request DTO
+    public class JobTypeListRequest : BasePaginatedListRequest { }
 }

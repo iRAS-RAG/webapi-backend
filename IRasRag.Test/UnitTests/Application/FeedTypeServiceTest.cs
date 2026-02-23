@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -7,6 +8,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Specifications.FeedTypeSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -150,11 +152,7 @@ namespace IRasRag.Test.UnitTests.Application
         )
         {
             // Arrange
-            var createDto = new CreateFeedTypeDto
-            {
-                Name = name,
-                ProteinPercentage = 35.0f,
-            };
+            var createDto = new CreateFeedTypeDto { Name = name, ProteinPercentage = 35.0f };
             _unitOfWorkMock
                 .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
@@ -376,56 +374,162 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllFeedTypesAsync Tests
 
         [Fact]
-        public async Task GetAllFeedTypesAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllFeedTypesAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FeedTypeListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "thức ăn",
+                SortBy = "proteinpercentage",
+                SortDir = "desc",
+            };
 
-            var feedTypeList = new List<FeedType>
+            var entities = new List<FeedType>
             {
                 new FeedType
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn viên",
+                    Description = "Cho cá",
                     ProteinPercentage = 35.0f,
+                    Manufacturer = "A",
                 },
                 new FeedType
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn bột",
+                    Description = "Cho tôm",
                     ProteinPercentage = 40.0f,
+                    Manufacturer = "B",
+                },
+                new FeedType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Vitamin tổng hợp",
+                    Description = "Phụ gia",
+                    ProteinPercentage = 5.0f,
+                    Manufacturer = "C",
                 },
             };
 
+            ISpecification<FeedType, FeedTypeDto>? capturedSpec = null;
+
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FeedType, FeedTypeDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .Callback(
+                    (
+                        ISpecification<FeedType, FeedTypeDto> spec,
+                        int _,
+                        int _,
+                        QueryType _
+                    ) => capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    new PagedResult<FeedType>
-                    {
-                        Items = feedTypeList,
-                        TotalItems = feedTypeList.Count,
-                    }
+                    (
+                        ISpecification<FeedType, FeedTypeDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
+            var result = await _sut.GetAllFeedTypesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách loại thức ăn thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
+            result.Data.Select(x => x.Name).Should().ContainInOrder("Thức ăn bột", "Thức ăn viên");
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
             result.Meta.TotalItems.Should().Be(2);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<FeedTypeDtoListSpec>();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FeedType, FeedTypeDto>>(s => s is FeedTypeDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllFeedTypesAsync_ShouldApplyDefaultSortByName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new FeedTypeListRequest { Page = 1, PageSize = 10 };
+            var entities = new List<FeedType>
+            {
+                new FeedType { Id = Guid.NewGuid(), Name = "Zulu", ProteinPercentage = 30.0f },
+                new FeedType { Id = Guid.NewGuid(), Name = "Alpha", ProteinPercentage = 40.0f },
+                new FeedType { Id = Guid.NewGuid(), Name = "Beta", ProteinPercentage = 20.0f },
+            };
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FeedType, FeedTypeDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<FeedType, FeedTypeDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
+
+            // Act
+            var result = await _sut.GetAllFeedTypesAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.Name).Should().ContainInOrder("Alpha", "Beta", "Zulu");
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FeedType, FeedTypeDto>>(s => s is FeedTypeDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -434,17 +538,23 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFeedTypesAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FeedTypeListRequest { Page = 1, PageSize = 10 };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FeedType, FeedTypeDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(
-                    new PagedResult<FeedType> { Items = Array.Empty<FeedType>(), TotalItems = 0 }
+                    new PagedResult<FeedTypeDto> { Items = Array.Empty<FeedTypeDto>(), TotalItems = 0 }
                 );
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
+            var result = await _sut.GetAllFeedTypesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -458,7 +568,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().NotBeNull();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FeedType, FeedTypeDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -467,15 +583,21 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFeedTypesAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FeedTypeListRequest { Page = 1, PageSize = 10 };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FeedType, FeedTypeDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFeedTypesAsync(page, pageSize);
+            var result = await _sut.GetAllFeedTypesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -488,7 +610,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().BeNull();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FeedType, FeedTypeDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }

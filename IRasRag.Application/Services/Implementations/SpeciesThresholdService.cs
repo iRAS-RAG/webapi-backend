@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -153,28 +153,25 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<PaginatedResult<SpeciesThresholdDto>> GetAllSpeciesThresholdsAsync(
-            int page,
-            int pageSize
+            SpeciesThresholdListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách ngưỡng sinh trưởng (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<SpeciesThreshold>();
                 var pagedResult = await repository.GetPagedAsync(
-                    new SpeciesThresholdListSpec(),
-                    page,
-                    pageSize
+                    new SpeciesThresholdListSpec(request),
+                    request.Page,
+                    request.PageSize
                 );
 
-                var thresholdDtos = _mapper.Map<IReadOnlyList<SpeciesThresholdDto>>(
-                    pagedResult.Items
-                );
+                var thresholdDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách ngưỡng sinh trưởng thành công: {Count} ngưỡng",
@@ -189,13 +186,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách ngưỡng sinh trưởng thành công",
                     Data = thresholdDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

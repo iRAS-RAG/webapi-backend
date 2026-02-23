@@ -70,4 +70,10 @@ namespace IRasRag.Application.DTOs
         [MaxLength(20, ErrorMessage = "Đơn vị đo không được vượt quá 20 ký tự")]
         public string? UnitOfMeasure { get; set; }
     }
+
+    // List Request DTO
+    public class FarmingBatchListRequest : BasePaginatedListRequest
+    {
+        public FarmingBatchStatus? Status { get; set; }
+    }
 }
