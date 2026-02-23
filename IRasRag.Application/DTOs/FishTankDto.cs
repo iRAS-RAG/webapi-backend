@@ -60,4 +60,7 @@ namespace IRasRag.Application.DTOs
         [Url(ErrorMessage = "URL camera không hợp lệ.")]
         public string? CameraUrl { get; set; }
     }
+
+    // List Request DTO
+    public class FishTankListRequest : BasePaginatedListRequest { }
 }

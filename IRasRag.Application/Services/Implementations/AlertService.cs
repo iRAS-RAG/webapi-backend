@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.AlertSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -26,24 +26,24 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(int page, int pageSize)
+        public async Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(AlertListRequest request)
         {
             try
             {
-                var spec = new AlertDtoListSpec();
+                var spec = new AlertDtoListSpec(request);
                 var pagedResult = await _unitOfWork
                     .GetRepository<Alert>()
-                    .GetPagedAsync(spec, page, pageSize);
+                    .GetPagedAsync(spec, request.Page, request.PageSize);
 
                 var meta = PaginationBuilder.BuildPaginationMetadata(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 
                 var links = PaginationBuilder.BuildPaginationLinks(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 

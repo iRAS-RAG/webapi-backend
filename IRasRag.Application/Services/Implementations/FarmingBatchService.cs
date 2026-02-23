@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.FarmingBatchSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -30,26 +30,25 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<FarmingBatchDto>> GetAllFarmingBatchesAsync(
-            int page,
-            int pageSize
+            FarmingBatchListRequest request
         )
         {
             try
             {
-                var spec = new FarmingBatchDtoListSpec();
+                var spec = new FarmingBatchDtoListSpec(request);
                 var pagedResult = await _unitOfWork
                     .GetRepository<FarmingBatch>()
-                    .GetPagedAsync(spec, page, pageSize);
+                    .GetPagedAsync(spec, request.Page, request.PageSize);
 
                 var meta = PaginationBuilder.BuildPaginationMetadata(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 
                 var links = PaginationBuilder.BuildPaginationLinks(
-                    page,
-                    pageSize,
+                    request.Page,
+                    request.PageSize,
                     pagedResult.TotalItems
                 );
 

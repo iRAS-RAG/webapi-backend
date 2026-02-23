@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Ardalis.Specification;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
@@ -6,6 +7,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Specifications.GrowthStageSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -261,13 +263,19 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllGrowthStagesAsync Tests
 
         [Fact]
-        public async Task GetAllGrowthStagesAsync_ShouldReturnPaginatedResult_WhenSuccessful()
+        public async Task GetAllGrowthStagesAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            int page = 1;
-            int pageSize = 10;
+            var request = new GrowthStageListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "stage",
+                SortBy = "name",
+                SortDir = "desc",
+            };
 
-            var growthStages = new List<GrowthStage>
+            var entities = new List<GrowthStage>
             {
                 new GrowthStage
                 {
@@ -281,38 +289,136 @@ namespace IRasRag.Test.UnitTests.Application
                     Name = "Adult",
                     Description = "Adult stage description",
                 },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Larva",
+                    Description = "Early life",
+                },
             };
 
-            var pagedResult = new PagedResult<GrowthStage>
-            {
-                Items = growthStages,
-                TotalItems = growthStages.Count,
-            };
+            ISpecification<GrowthStage, GrowthStageDto>? capturedSpec = null;
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
-                .ReturnsAsync(pagedResult);
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<GrowthStage, GrowthStageDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .Callback(
+                    (
+                        ISpecification<GrowthStage, GrowthStageDto> spec,
+                        int _,
+                        int _,
+                        QueryType _
+                    ) => capturedSpec = spec
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<GrowthStage, GrowthStageDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
 
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
+            var result = await _sut.GetAllGrowthStagesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách giai đoạn sinh trưởng thành công.");
 
             result.Data.Should().NotBeNull();
-            result.Data!.Count.Should().Be(growthStages.Count);
+            result.Data!.Count.Should().Be(2);
+            result.Data.Select(x => x.Name).Should().ContainInOrder("Juvenile", "Adult");
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
-            result.Meta.TotalItems.Should().Be(growthStages.Count);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
+            result.Meta.TotalItems.Should().Be(2);
             result.Meta.TotalPages.Should().Be(1);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<GrowthStageDtoListSpec>();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<GrowthStage, GrowthStageDto>>(s =>
+                            s is GrowthStageDtoListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllGrowthStagesAsync_ShouldApplyDefaultSortByName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
+            var entities = new List<GrowthStage>
+            {
+                new GrowthStage { Id = Guid.NewGuid(), Name = "Zulu", Description = "d1" },
+                new GrowthStage { Id = Guid.NewGuid(), Name = "Alpha", Description = "d2" },
+                new GrowthStage { Id = Guid.NewGuid(), Name = "Beta", Description = "d3" },
+            };
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<GrowthStage, GrowthStageDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<GrowthStage, GrowthStageDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
+
+            // Act
+            var result = await _sut.GetAllGrowthStagesAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.Name).Should().ContainInOrder("Alpha", "Beta", "Zulu");
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<GrowthStage, GrowthStageDto>>(s =>
+                            s is GrowthStageDtoListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -321,21 +427,27 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllGrowthStagesAsync_ShouldReturnEmptyData_WhenNoRecordsExist()
         {
             // Arrange
-            int page = 1;
-            int pageSize = 10;
+            var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
 
-            var pagedResult = new PagedResult<GrowthStage>
+            var pagedResult = new PagedResult<GrowthStageDto>
             {
-                Items = Array.Empty<GrowthStage>(),
+                Items = Array.Empty<GrowthStageDto>(),
                 TotalItems = 0,
             };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<GrowthStage, GrowthStageDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(pagedResult);
 
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
+            var result = await _sut.GetAllGrowthStagesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -349,7 +461,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Meta.TotalPages.Should().Be(0);
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<GrowthStage, GrowthStageDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -358,15 +476,21 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllGrowthStagesAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
             // Arrange
-            int page = 1;
-            int pageSize = 10;
+            var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<GrowthStage, GrowthStageDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllGrowthStagesAsync(page, pageSize);
+            var result = await _sut.GetAllGrowthStagesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -379,7 +503,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().BeNull();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<GrowthStage, GrowthStageDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }

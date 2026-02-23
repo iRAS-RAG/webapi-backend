@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SensorSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -25,18 +25,22 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<SensorDto>> GetAllSensorsAsync(int page, int pageSize)
+        public async Task<PaginatedResult<SensorDto>> GetAllSensorsAsync(SensorListRequest request)
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách cảm biến (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<Sensor>();
-                var pagedResult = await repository.GetPagedAsync(new SensorDtoListSpec(), page, pageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    new SensorDtoListSpec(request),
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách cảm biến thành công: {Count} cảm biến",
@@ -51,65 +55,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách cảm biến thành công",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách cảm biến");
-
-                return new PaginatedResult<SensorDto>
-                {
-                    Message = "Đã xảy ra lỗi khi lấy danh sách cảm biến",
-                    Data = Array.Empty<SensorDto>(),
-                    Meta = null,
-                    Links = null,
-                };
-            }
-        }
-
-        public async Task<PaginatedResult<SensorDto>> GetAllSensorsByMasterBoardIdAsync(Guid masterBoardId, int page, int pageSize)
-        {
-            try
-            {
-                _logger.LogInformation(
-                    "Bắt đầu lấy danh sách cảm biến (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
-                );
-
-                var repository = _unitOfWork.GetRepository<Sensor>();
-                var pagedResult = await repository.GetPagedAsync(new SensorDtoListByMasterBoardIdSpec(masterBoardId),page, pageSize);
-
-
-                _logger.LogInformation(
-                    "Lấy danh sách cảm biến thành công: {Count} cảm biến",
-                    pagedResult.Items.Count
-                );
-
-                return new PaginatedResult<SensorDto>
-                {
-                    Message =
-                        pagedResult.Items.Count == 0
-                            ? "Không có cảm biến nào"
-                            : "Lấy danh sách cảm biến thành công",
-                    Data = pagedResult.Items,
-                    Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                    Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };
@@ -274,9 +226,7 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     // Check duplicate PinCode on the (possibly new) MasterBoard
                     var existingSensor = await sensorRepository.AnyAsync(s =>
-                        s.MasterBoardId == newMasterBoardId
-                        && s.PinCode == newPinCode
-                        && s.Id != id
+                        s.MasterBoardId == newMasterBoardId && s.PinCode == newPinCode && s.Id != id
                     );
                     if (existingSensor)
                     {
@@ -297,8 +247,8 @@ namespace IRasRag.Application.Services.Implementations
                 if (updateDto.SensorTypeId.HasValue)
                 {
                     var sensorTypeRepository = _unitOfWork.GetRepository<SensorType>();
-                    var sensorType = await sensorTypeRepository.AnyAsync(
-                        st => st.Id == updateDto.SensorTypeId.Value
+                    var sensorType = await sensorTypeRepository.AnyAsync(st =>
+                        st.Id == updateDto.SensorTypeId.Value
                     );
 
                     if (!sensorType)
@@ -319,9 +269,9 @@ namespace IRasRag.Application.Services.Implementations
                 // Validate and update MasterBoardId if provided
                 if (updateDto.MasterBoardId.HasValue)
                 {
-                    var existMasterBoard = await _unitOfWork.GetRepository<MasterBoard>().AnyAsync(
-                        mb => mb.Id == updateDto.MasterBoardId.Value
-                    );
+                    var existMasterBoard = await _unitOfWork
+                        .GetRepository<MasterBoard>()
+                        .AnyAsync(mb => mb.Id == updateDto.MasterBoardId.Value);
 
                     if (!existMasterBoard)
                     {

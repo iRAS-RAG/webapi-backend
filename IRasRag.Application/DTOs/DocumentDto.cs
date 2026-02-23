@@ -35,4 +35,7 @@ namespace IRasRag.Application.DTOs
 
         public string? Content { get; set; }
     }
+
+    // List Request DTO
+    public class DocumentListRequest : BasePaginatedListRequest { }
 }

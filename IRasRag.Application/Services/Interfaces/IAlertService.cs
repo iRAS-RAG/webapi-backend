@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IAlertService
     {
-        Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(int page, int pageSize);
+        Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(AlertListRequest request);
         Task<Result<AlertDto>> GetAlertByIdAsync(Guid id);
         Task<Result<AlertDto>> CreateAlertAsync(CreateAlertDto createDto);
         Task<Result> UpdateAlertAsync(Guid id, UpdateAlertDto updateDto);

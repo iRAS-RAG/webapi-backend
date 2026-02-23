@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IFarmingBatchService
     {
-        Task<PaginatedResult<FarmingBatchDto>> GetAllFarmingBatchesAsync(int page, int pageSize);
+        Task<PaginatedResult<FarmingBatchDto>> GetAllFarmingBatchesAsync(FarmingBatchListRequest request);
         Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id);
         Task<Result<FarmingBatchDto>> CreateFarmingBatchAsync(CreateFarmingBatchDto createDto);
         Task<Result> UpdateFarmingBatchAsync(Guid id, UpdateFarmingBatchDto updateDto);

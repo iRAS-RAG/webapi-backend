@@ -20,4 +20,7 @@ namespace IRasRag.Application.DTOs
         [MaxLength(100, ErrorMessage = "Tên loài không được vượt quá 100 ký tự.")]
         public string? Name { get; set; }
     }
+
+    // List Request DTO
+    public class SpeciesListRequest : BasePaginatedListRequest { }
 }

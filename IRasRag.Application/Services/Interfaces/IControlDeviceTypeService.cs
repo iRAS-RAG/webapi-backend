@@ -7,8 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface IControlDeviceTypeService
     {
         Task<PaginatedResult<ControlDeviceTypeDto>> GetAllControlDeviceTypesAsync(
-            int page,
-            int pageSize
+            ControlDeviceTypeListRequest request
         );
         Task<Result<ControlDeviceTypeDto>> GetControlDeviceTypeByIdAsync(Guid id);
         Task<Result<ControlDeviceTypeDto>> CreateControlDeviceTypeAsync(

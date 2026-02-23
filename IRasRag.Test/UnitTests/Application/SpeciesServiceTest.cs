@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -7,6 +8,8 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SpeciesSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -283,42 +286,137 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllSpeciesAsync Tests
 
         [Fact]
-        public async Task GetAllSpeciesAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllSpeciesAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "cá",
+                SortBy = "name",
+                SortDir = "desc",
+            };
 
-            var speciesList = new List<Species>
+            var entities = new List<Species>
             {
                 new Species { Id = Guid.NewGuid(), Name = "Cá Rô Phi" },
                 new Species { Id = Guid.NewGuid(), Name = "Cá Chép" },
+                new Species { Id = Guid.NewGuid(), Name = "Tôm Sú" },
             };
 
+            ISpecification<Species, SpeciesDto>? capturedSpec = null;
+
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Species, SpeciesDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .Callback(
+                    (ISpecification<Species, SpeciesDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    new PagedResult<Species> { Items = speciesList, TotalItems = speciesList.Count }
+                    (
+                        ISpecification<Species, SpeciesDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách loài thành công");
             result.Data.Should().NotBeNull();
-            result.Data!.Count.Should().Be(speciesList.Count);
+            result.Data!.Count.Should().Be(2);
+            result.Data.Select(x => x.Name).Should().ContainInOrder("Cá Rô Phi", "Cá Chép");
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
-            result.Meta.TotalItems.Should().Be(speciesList.Count);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
+            result.Meta.TotalItems.Should().Be(2);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<SpeciesDtoListSpec>();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Species, SpeciesDto>>(s => s is SpeciesDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllSpeciesAsync_ShouldApplyDefaultSortByName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new SpeciesListRequest { Page = 1, PageSize = 10 };
+            var entities = new List<Species>
+            {
+                new Species { Id = Guid.NewGuid(), Name = "Zulu" },
+                new Species { Id = Guid.NewGuid(), Name = "Alpha" },
+                new Species { Id = Guid.NewGuid(), Name = "Beta" },
+            };
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Species, SpeciesDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<Species, SpeciesDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
+
+            // Act
+            var result = await _sut.GetAllSpeciesAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.Name).Should().ContainInOrder("Alpha", "Beta", "Zulu");
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Species, SpeciesDto>>(s => s is SpeciesDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -327,17 +425,23 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllSpeciesAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesListRequest { Page = 1, PageSize = 10 };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Species, SpeciesDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(
-                    new PagedResult<Species> { Items = Array.Empty<Species>(), TotalItems = 0 }
+                    new PagedResult<SpeciesDto> { Items = Array.Empty<SpeciesDto>(), TotalItems = 0 }
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -351,7 +455,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().NotBeNull();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Species, SpeciesDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -360,15 +470,21 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllSpeciesAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesListRequest { Page = 1, PageSize = 10 };
 
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Species, SpeciesDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllSpeciesAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -381,7 +497,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().BeNull();
 
             _repositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, QueryType.ActiveOnly),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Species, SpeciesDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }

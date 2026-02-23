@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IFishTankService
     {
-        Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(int page, int pageSize);
+        Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(FishTankListRequest request);
         Task<Result<FishTankDto>> GetFishTankByIdAsync(Guid id);
         Task<Result<FishTankDto>> CreateFishTankAsync(CreateFishTankDto createDto);
         Task<Result> UpdateFishTankAsync(Guid id, UpdateFishTankDto updateDto);

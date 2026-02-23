@@ -8,8 +8,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface ISpeciesThresholdService
     {
         Task<PaginatedResult<SpeciesThresholdDto>> GetAllSpeciesThresholdsAsync(
-            int page,
-            int pageSize
+            SpeciesThresholdListRequest request
         );
         Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdById(Guid id);
         Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(CreateSpeciesThresholdDto dto);

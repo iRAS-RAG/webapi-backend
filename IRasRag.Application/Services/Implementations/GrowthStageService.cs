@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.GrowthStageSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -96,16 +97,16 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<PaginatedResult<GrowthStageDto>> GetAllGrowthStagesAsync(
-            int page,
-            int pageSize
+            GrowthStageListRequest request
         )
         {
             try
             {
                 var repository = _unitOfWork.GetRepository<GrowthStage>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new GrowthStageDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var growthStageDtos = _mapper.Map<IReadOnlyList<GrowthStageDto>>(pagedResult.Items);
+                var growthStageDtos = pagedResult.Items;
 
                 return new PaginatedResult<GrowthStageDto>
                 {
@@ -115,13 +116,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách giai đoạn sinh trưởng thành công.",
                     Data = growthStageDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

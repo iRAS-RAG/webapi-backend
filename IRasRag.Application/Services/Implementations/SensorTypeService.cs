@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.SensorTypeSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -29,22 +30,22 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<SensorTypeDto>> GetAllSensorTypesAsync(
-            int page,
-            int pageSize
+            SensorTypeListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách loại cảm biến (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<SensorType>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new SensorTypeDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var sensorTypeDtos = _mapper.Map<IReadOnlyList<SensorTypeDto>>(pagedResult.Items);
+                var sensorTypeDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách loại cảm biến thành công: {Count} loại",
@@ -59,13 +60,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách loại cảm biến thành công",
                     Data = sensorTypeDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

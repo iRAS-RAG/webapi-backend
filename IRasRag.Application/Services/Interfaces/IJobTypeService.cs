@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IJobTypeService
     {
-        Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(int page, int pageSize);
+        Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(JobTypeListRequest request);
         Task<Result<JobTypeDto>> GetJobTypeByIdAsync(Guid id);
         Task<Result<JobTypeDto>> CreateJobTypeAsync(CreateJobTypeDto createDto);
         Task<Result> UpdateJobTypeAsync(Guid id, UpdateJobTypeDto updateDto);

@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IMortalityLogService
     {
-        Task<PaginatedResult<MortalityLogDto>> GetAllMortalityLogsAsync(int page, int pageSize);
+        Task<PaginatedResult<MortalityLogDto>> GetAllMortalityLogsAsync(MortalityLogListRequest request);
         Task<Result<MortalityLogDto>> GetMortalityLogByIdAsync(Guid id);
         Task<Result<MortalityLogDto>> CreateMortalityLogAsync(CreateMortalityLogDto createDto);
         Task<Result> UpdateMortalityLogAsync(Guid id, UpdateMortalityLogDto updateDto);

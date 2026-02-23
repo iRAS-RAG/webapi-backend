@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IUserFarmService
     {
-        Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(int page, int pageSize);
+        Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(UserFarmListRequest request);
         Task<Result<UserFarmDto>> GetUserFarmByIdAsync(Guid id);
         Task<Result<UserFarmDto>> CreateUserFarmAsync(CreateUserFarmDto createDto);
         Task<Result> UpdateUserFarmAsync(Guid id, UpdateUserFarmDto updateDto);

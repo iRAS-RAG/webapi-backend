@@ -68,4 +68,9 @@ namespace IRasRag.Application.DTOs
 
         public AlertStatus? Status { get; set; }
     }
+
+    public class AlertListRequest : BasePaginatedListRequest
+    {
+        public AlertStatus? Status { get; set; }
+    }
 }

@@ -7,8 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface ISpeciesStageConfigService
     {
         public Task<PaginatedResult<SpeciesStageConfigDto>> GetAllSpeciesStageConfigsAsync(
-            int page,
-            int pageSize
+            SpeciesStageConfigListRequest request
         );
         public Task<Result<SpeciesStageConfigDto>> GetSpeciesStageConfigById(Guid id);
         public Task<Result<SpeciesStageConfigDto>> CreateSpeciesStageConfig(

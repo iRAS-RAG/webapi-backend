@@ -87,4 +87,11 @@ namespace IRasRag.Application.DTOs
         [MaxLength(20, ErrorMessage = "Ngày thực thi không được vượt quá 20 ký tự")]
         public string? ExecutionDays { get; set; }
     }
+
+    // List Request DTO
+    public class JobListRequest : BasePaginatedListRequest 
+    {
+        public bool? DefaultState { get; set; }
+        public bool? IsActive { get; set; }
+    }
 }

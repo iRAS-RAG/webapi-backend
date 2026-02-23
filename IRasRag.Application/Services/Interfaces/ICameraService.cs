@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface ICameraService
     {
-        Task<PaginatedResult<CameraDto>> GetAllCamerasAsync(int page, int pageSize);
+        Task<PaginatedResult<CameraDto>> GetAllCamerasAsync(CameraListRequest request);
         Task<Result<CameraDto>> GetCameraByIdAsync(Guid id);
         Task<Result<CameraDto>> CreateCameraAsync(CreateCameraDto createDto);
         Task<Result> UpdateCameraAsync(Guid id, UpdateCameraDto updateDto);

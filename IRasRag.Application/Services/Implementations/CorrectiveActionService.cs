@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.CorrectiveActionSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -30,24 +30,23 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<CorrectiveActionDto>> GetAllCorrectiveActionsAsync(
-            int page,
-            int pageSize
+            CorrectiveActionListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách hành động khắc phục (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
-                var spec = new CorrectiveActionDtoListSpec();
+                var spec = new CorrectiveActionDtoListSpec(request);
                 var pagedResult = await correctiveActionRepository.GetPagedAsync(
                     spec,
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 _logger.LogInformation(
@@ -63,13 +62,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách hành động khắc phục thành công",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

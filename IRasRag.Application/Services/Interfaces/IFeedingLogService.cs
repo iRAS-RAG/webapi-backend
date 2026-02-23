@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IFeedingLogService
     {
-        Task<PaginatedResult<FeedingLogDto>> GetAllFeedingLogsAsync(int page, int pageSize);
+        Task<PaginatedResult<FeedingLogDto>> GetAllFeedingLogsAsync(FeedingLogListRequest request);
         Task<Result<FeedingLogDto>> GetFeedingLogByIdAsync(Guid id);
         Task<Result<FeedingLogDto>> CreateFeedingLogAsync(CreateFeedingLogDto createDto);
         Task<Result> UpdateFeedingLogAsync(Guid id, UpdateFeedingLogDto updateDto);

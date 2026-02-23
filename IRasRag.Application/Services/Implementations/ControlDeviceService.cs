@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.ControlDeviceSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -30,20 +30,23 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesAsync(
-            int page,
-            int pageSize
+            ControlDeviceListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách thiết bị điều khiển (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
-                var pagedResult = await controlDeviceRepository.GetPagedAsync(new ControlDeviceDtoListSpec(), page, pageSize);
+                var pagedResult = await controlDeviceRepository.GetPagedAsync(
+                    new ControlDeviceDtoListSpec(request),
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách thiết bị điều khiển thành công: {Count} thiết bị",
@@ -58,68 +61,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách thiết bị điều khiển thành công",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách thiết bị điều khiển");
-
-                return new PaginatedResult<ControlDeviceDto>
-                {
-                    Message = "Đã xảy ra lỗi khi lấy danh sách thiết bị điều khiển",
-                    Data = Array.Empty<ControlDeviceDto>(),
-                    Meta = null,
-                    Links = null,
-                };
-            }
-        }
-
-        public async Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesByMasterBoardIdAsync(
-            Guid masterBoardId,
-            int page,
-            int pageSize
-        )
-        {
-            try
-            {
-                _logger.LogInformation(
-                    "Bắt đầu lấy danh sách thiết bị điều khiển (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
-                );
-
-                var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
-                var pagedResult = await controlDeviceRepository.GetPagedAsync(new ControlDeviceDtoListByMasterBoardIdSpec(masterBoardId), page, pageSize);
-
-                _logger.LogInformation(
-                    "Lấy danh sách thiết bị điều khiển thành công: {Count} thiết bị",
-                    pagedResult.Items.Count
-                );
-
-                return new PaginatedResult<ControlDeviceDto>
-                {
-                    Message =
-                        pagedResult.Items.Count == 0
-                            ? "Không có thiết bị điều khiển nào"
-                            : "Lấy danh sách thiết bị điều khiển thành công",
-                    Data = pagedResult.Items,
-                    Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                    Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

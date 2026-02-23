@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -7,6 +8,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -569,16 +571,23 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllFishTanksAsync Tests
 
         [Fact]
-        public async Task GetAllFishTanksAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllFishTanksAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FishTankListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "trại beta",
+                SortBy = "height",
+                SortDir = "desc",
+            };
 
             var farmId1 = Guid.NewGuid();
             var farmId2 = Guid.NewGuid();
+            var farmId3 = Guid.NewGuid();
 
-            var fishTankList = new List<FishTank>
+            var entities = new List<FishTank>
             {
                 new FishTank
                 {
@@ -587,8 +596,15 @@ namespace IRasRag.Test.UnitTests.Application
                     Height = 2.5f,
                     Radius = 3.0f,
                     FarmId = farmId1,
+                    Farm = new Farm
+                    {
+                        Id = farmId1,
+                        Name = "Trang trại Alpha",
+                        Address = "Addr1",
+                        PhoneNumber = "0123",
+                        Email = "alpha@farm.com",
+                    },
                     CameraUrl = "http://camera.com/stream1",
-                    IsDeleted = false,
                 },
                 new FishTank
                 {
@@ -597,61 +613,196 @@ namespace IRasRag.Test.UnitTests.Application
                     Height = 3.0f,
                     Radius = 4.0f,
                     FarmId = farmId2,
+                    Farm = new Farm
+                    {
+                        Id = farmId2,
+                        Name = "Trang trại Beta",
+                        Address = "Addr2",
+                        PhoneNumber = "0456",
+                        Email = "beta@farm.com",
+                    },
                     CameraUrl = "http://camera.com/stream2",
-                    IsDeleted = false,
+                },
+                new FishTank
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Bể cá số 3",
+                    Height = 5.0f,
+                    Radius = 4.5f,
+                    FarmId = farmId3,
+                    Farm = new Farm
+                    {
+                        Id = farmId3,
+                        Name = "Trang trại Beta",
+                        Address = "Addr3",
+                        PhoneNumber = "0789",
+                        Email = "beta2@farm.com",
+                    },
+                    CameraUrl = "http://camera.com/stream3",
                 },
             };
 
-            var farmList = new List<Farm>
-            {
-                new Farm
-                {
-                    Id = farmId1,
-                    Name = "Trang trại ABC",
-                    IsDeleted = false,
-                },
-                new Farm
-                {
-                    Id = farmId2,
-                    Name = "Trang trại XYZ",
-                    IsDeleted = false,
-                },
-            };
+            ISpecification<FishTank, FishTankDto>? capturedSpec = null;
 
             _fishTankRepositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .Callback(
+                    (ISpecification<FishTank, FishTankDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    new PagedResult<FishTank>
-                    {
-                        Items = fishTankList,
-                        TotalItems = fishTankList.Count,
-                    }
+                    (
+                        ISpecification<FishTank, FishTankDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
-            _farmRepositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
-                .ReturnsAsync(farmList);
-
             // Act
-            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
+            var result = await _sut.GetAllFishTanksAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
+            result.Data.Select(x => x.Height).Should().ContainInOrder(5.0f, 3.0f);
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
             result.Meta.TotalItems.Should().Be(2);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<FishTankDtoListSpec>();
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FishTank, FishTankDto>>(s => s is FishTankDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllFishTanksAsync_ShouldApplyDefaultSortByName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new FishTankListRequest { Page = 1, PageSize = 10 };
+            var farmId = Guid.NewGuid();
+            var entities = new List<FishTank>
+            {
+                new FishTank
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Zulu",
+                    Height = 1,
+                    Radius = 1,
+                    FarmId = farmId,
+                    Farm = new Farm
+                    {
+                        Id = farmId,
+                        Name = "Farm",
+                        Address = "A",
+                        PhoneNumber = "1",
+                        Email = "f@f.com",
+                    },
+                    CameraUrl = "http://camera.com/1",
+                },
+                new FishTank
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Alpha",
+                    Height = 1,
+                    Radius = 1,
+                    FarmId = farmId,
+                    Farm = new Farm
+                    {
+                        Id = farmId,
+                        Name = "Farm",
+                        Address = "A",
+                        PhoneNumber = "1",
+                        Email = "f@f.com",
+                    },
+                    CameraUrl = "http://camera.com/2",
+                },
+                new FishTank
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Beta",
+                    Height = 1,
+                    Radius = 1,
+                    FarmId = farmId,
+                    Farm = new Farm
+                    {
+                        Id = farmId,
+                        Name = "Farm",
+                        Address = "A",
+                        PhoneNumber = "1",
+                        Email = "f@f.com",
+                    },
+                    CameraUrl = "http://camera.com/3",
+                },
+            };
+
+            _fishTankRepositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<FishTank, FishTankDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            entities,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
+
+            // Act
+            var result = await _sut.GetAllFishTanksAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.Name).Should().ContainInOrder("Alpha", "Beta", "Zulu");
+
+            _fishTankRepositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FishTank, FishTankDto>>(s => s is FishTankDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -660,23 +811,23 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFishTanksAsync_ShouldReturnEmptyList_WhenNoRecordsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FishTankListRequest { Page = 1, PageSize = 10 };
 
             _fishTankRepositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(
-                    new PagedResult<FishTank> { Items = Array.Empty<FishTank>(), TotalItems = 0 }
+                    new PagedResult<FishTankDto> { Items = Array.Empty<FishTankDto>(), TotalItems = 0 }
                 );
 
-            _farmRepositoryMock
-                .Setup(r =>
-                    r.FindAllAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>())
-                )
-                .ReturnsAsync(Array.Empty<Farm>());
-
             // Act
-            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
+            var result = await _sut.GetAllFishTanksAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -690,7 +841,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().NotBeNull();
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FishTank, FishTankDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }
@@ -699,15 +856,21 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllFishTanksAsync_ShouldReturnErrorMessage_WhenThrownException()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new FishTankListRequest { Page = 1, PageSize = 10 };
 
             _fishTankRepositoryMock
-                .Setup(r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFishTanksAsync(page, pageSize);
+            var result = await _sut.GetAllFishTanksAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -720,7 +883,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Links.Should().BeNull();
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetPagedAsync(page, pageSize, It.IsAny<QueryType>()),
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<FishTank, FishTankDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
                 Times.Once
             );
         }

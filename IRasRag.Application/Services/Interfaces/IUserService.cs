@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<PaginatedResult<UserDto>> GetAllUsersAsync(int page, int pageSize);
+        Task<PaginatedResult<UserDto>> GetAllUsersAsync(UserListRequest request);
         Task<Result<UserDto>> GetUserByIdAsync(Guid id);
         Task<Result<UserDto>> CreateUserAsync(CreateUserDto createDto);
         Task<Result<UserDto>> UpdateUserAsync(Guid id, UpdateUserDto updateDto);

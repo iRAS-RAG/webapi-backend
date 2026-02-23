@@ -104,4 +104,9 @@ namespace IRasRag.Application.DTOs
         [Required(ErrorMessage = "Xác nhận mật khẩu mới không được để trống.")]
         public string ConfirmNewPassword { get; set; }
     }
+    // List Request DTO
+    public class UserListRequest : BasePaginatedListRequest 
+    {
+        public bool? IsDeleted { get; set; }
+    }
 }

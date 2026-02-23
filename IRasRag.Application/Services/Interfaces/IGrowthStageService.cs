@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IGrowthStageService
     {
-        Task<PaginatedResult<GrowthStageDto>> GetAllGrowthStagesAsync(int pageNumber, int pageSize);
+        Task<PaginatedResult<GrowthStageDto>> GetAllGrowthStagesAsync(GrowthStageListRequest request);
         Task<Result<GrowthStageDto>> GetGrowthStageByIdAsync(Guid id);
         Task<Result<GrowthStageDto>> CreateGrowthStageAsync(CreateGrowthStageDto createDto);
         Task<Result> UpdateGrowthStageAsync(Guid id, UpdateGrowthStageDto updateDto);

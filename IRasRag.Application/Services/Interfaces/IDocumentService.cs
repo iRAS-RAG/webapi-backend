@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IDocumentService
     {
-        Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(int page, int pageSize);
+        Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(DocumentListRequest request);
         Task<Result<DocumentDto>> GetDocumentByIdAsync(Guid id);
         Task<Result<DocumentDto>> CreateDocumentAsync(CreateDocumentDto createDto);
         Task<Result> UpdateDocumentAsync(Guid id, UpdateDocumentDto updateDto);

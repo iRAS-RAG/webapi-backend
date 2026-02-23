@@ -36,4 +36,7 @@ namespace IRasRag.Application.DTOs
 
         public string? Description { get; set; }
     }
+
+    // List Request DTO
+    public class ControlDeviceTypeListRequest : BasePaginatedListRequest { }
 }

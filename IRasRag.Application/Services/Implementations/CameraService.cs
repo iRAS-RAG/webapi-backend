@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.CameraSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -24,20 +25,19 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<CameraDto>> GetAllCamerasAsync(int page, int pageSize)
+        public async Task<PaginatedResult<CameraDto>> GetAllCamerasAsync(CameraListRequest request)
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách camera (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var cameraRepository = _unitOfWork.GetRepository<Camera>();
-                var pagedResult = await cameraRepository.GetPagedAsync(page, pageSize);
-
-                var cameraDtos = _mapper.Map<IReadOnlyList<CameraDto>>(pagedResult.Items);
+                var spec = new CameraDtoListSpec(request);
+                var pagedResult = await cameraRepository.GetPagedAsync(spec, request.Page, request.PageSize);
 
                 _logger.LogInformation(
                     "Lấy danh sách camera thành công: {Count} camera",
@@ -47,18 +47,18 @@ namespace IRasRag.Application.Services.Implementations
                 return new PaginatedResult<CameraDto>
                 {
                     Message =
-                        cameraDtos.Count == 0
+                        pagedResult.Items.Count == 0
                             ? "Không có camera nào"
                             : "Lấy danh sách camera thành công",
-                    Data = cameraDtos,
+                    Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

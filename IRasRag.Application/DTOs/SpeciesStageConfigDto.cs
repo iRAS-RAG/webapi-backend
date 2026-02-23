@@ -62,4 +62,7 @@ namespace IRasRag.Application.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Thời gian dự kiến phải là số ngày hợp lệ.")]
         public int? ExpectedDurationDays { get; set; }
     }
+
+    // List Request DTO
+    public class SpeciesStageConfigListRequest : BasePaginatedListRequest { }
 }

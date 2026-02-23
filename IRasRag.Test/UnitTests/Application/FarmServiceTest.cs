@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -8,6 +9,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.FarmSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -371,75 +373,232 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllFarmsAsync Tests
 
         [Fact]
-        public async Task GetAllFarmsAsync_ShouldReturnSuccess_WhenFarmsExist()
+        public async Task GetAllFarmsAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var farmList = new List<Farm>
+            var request = new FarmListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "farm",
+                SortBy = "email",
+                SortDir = "desc",
+            };
+            var farms = new List<Farm>
             {
                 new Farm
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 1",
+                    Address = "Address 1",
+                    PhoneNumber = "0123",
                     Email = "farm1@test.com",
-                    IsDeleted = false,
                 },
                 new Farm
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 2",
+                    Address = "Address 2",
+                    PhoneNumber = "0456",
                     Email = "farm2@test.com",
-                    IsDeleted = false,
+                },
+                new Farm
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Aquaculture",
+                    Address = "Address 3",
+                    PhoneNumber = "0789",
+                    Email = "aqua@test.com",
                 },
             };
 
+            ISpecification<Farm, FarmDto>? capturedSpec = null;
+
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
-                .ReturnsAsync(new PagedResult<Farm> { Items = farmList, TotalItems = 2 });
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Farm, FarmDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .Callback((ISpecification<Farm, FarmDto> spec, int _, int _, QueryType _) => capturedSpec = spec)
+                .ReturnsAsync(
+                    (
+                        ISpecification<Farm, FarmDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(farms, spec, page, pageSize)
+                );
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(1, 10);
+            var result = await _sut.GetAllFarmsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Data.Should().HaveCount(2);
+            result.Data.Select(x => x.Email).Should().ContainInOrder("farm2@test.com", "farm1@test.com");
             result.Meta.Should().NotBeNull();
             result.Meta!.TotalItems.Should().Be(2);
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<FarmListDtoSpec>();
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Farm, FarmDto>>(s => s is FarmListDtoSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllFarmsAsync_ShouldApplyDefaultSortByName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new FarmListRequest { Page = 1, PageSize = 10 };
+            var farms = new List<Farm>
+            {
+                new Farm
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Zulu",
+                    Address = "A1",
+                    PhoneNumber = "1",
+                    Email = "z@test.com",
+                },
+                new Farm
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Alpha",
+                    Address = "A2",
+                    PhoneNumber = "2",
+                    Email = "a@test.com",
+                },
+                new Farm
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Beta",
+                    Address = "A3",
+                    PhoneNumber = "3",
+                    Email = "b@test.com",
+                },
+            };
+
+            _repositoryMock
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Farm, FarmDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<Farm, FarmDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(farms, spec, page, pageSize)
+                );
+
+            // Act
+            var result = await _sut.GetAllFarmsAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.Name).Should().ContainInOrder("Alpha", "Beta", "Zulu");
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Farm, FarmDto>>(s => s is FarmListDtoSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllFarmsAsync_ShouldReturnEmptyList_WhenNoFarmsExist()
         {
             // Arrange
+            var request = new FarmListRequest { Page = 1, PageSize = 10 };
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Farm, FarmDto>>(),
+                        1,
+                        10,
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(
-                    new PagedResult<Farm> { Items = Array.Empty<Farm>(), TotalItems = 0 }
+                    new PagedResult<FarmDto> { Items = new List<FarmDto>(), TotalItems = 0 }
                 );
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(1, 10);
+            var result = await _sut.GetAllFarmsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Data.Should().BeEmpty();
             result.Meta!.TotalItems.Should().Be(0);
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Farm, FarmDto>>(s => s != null),
+                        1,
+                        10,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllFarmsAsync_ShouldReturnError_WhenExceptionThrown()
         {
             // Arrange
+            var request = new FarmListRequest { Page = 1, PageSize = 10 };
             _repositoryMock
-                .Setup(r => r.GetPagedAsync(1, 10, It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Farm, FarmDto>>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllFarmsAsync(1, 10);
+            var result = await _sut.GetAllFarmsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Data.Should().BeEmpty();
             result.Meta.Should().BeNull();
+
+            _repositoryMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Farm, FarmDto>>(s => s != null),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         #endregion
@@ -723,78 +882,6 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.Unexpected);
-        }
-
-        #endregion
-
-        #region GetAllFarmFromUserAsync Tests
-        [Fact]
-        public async Task GetAllFarmsFromUserAsync_ShouldReturnSuccess_WhenFarmsExist()
-        {
-            var userId = Guid.NewGuid();
-
-            var farms = new List<FarmDto>
-            {
-                new FarmDto { Id = Guid.NewGuid(), Name = "Farm 1" },
-                new FarmDto { Id = Guid.NewGuid(), Name = "Farm 2" },
-            };
-
-            _repositoryMock
-                .Setup(r =>
-                    r.GetPagedAsync(It.IsAny<FarmListDtoByUserSpec>(), 1, 10, QueryType.ActiveOnly)
-                )
-                .ReturnsAsync(new PagedResult<FarmDto> { Items = farms, TotalItems = 2 });
-
-            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
-
-            result.Should().NotBeNull();
-            result.Data.Should().HaveCount(2);
-            result.Meta.Should().NotBeNull();
-            result.Meta!.TotalItems.Should().Be(2);
-        }
-
-        [Fact]
-        public async Task GetAllFarmsFromUserAsync_ShouldReturnEmpty_WhenNoFarmsExist()
-        {
-            var userId = Guid.NewGuid();
-
-            _repositoryMock
-                .Setup(r =>
-                    r.GetPagedAsync(It.IsAny<FarmListDtoByUserSpec>(), 1, 10, QueryType.ActiveOnly)
-                )
-                .ReturnsAsync(
-                    new PagedResult<FarmDto> { Items = new List<FarmDto>(), TotalItems = 0 }
-                );
-
-            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
-
-            result.Should().NotBeNull();
-            result.Data.Should().BeEmpty();
-            result.Meta.Should().NotBeNull();
-            result.Meta!.TotalItems.Should().Be(0);
-        }
-
-        [Fact]
-        public async Task GetAllFarmsFromUserAsync_ShouldReturnError_WhenExceptionOccurs()
-        {
-            var userId = Guid.NewGuid();
-
-            _repositoryMock
-                .Setup(r =>
-                    r.GetPagedAsync(
-                        It.IsAny<FarmListDtoByUserSpec>(),
-                        It.IsAny<int>(),
-                        It.IsAny<int>(),
-                        QueryType.ActiveOnly
-                    )
-                )
-                .ThrowsAsync(new Exception());
-
-            var result = await _sut.GetAllFarmsFromUserAsync(userId, 1, 10);
-
-            result.Should().NotBeNull();
-            result.Data.Should().BeEmpty();
-            result.Meta.Should().BeNull();
         }
 
         #endregion

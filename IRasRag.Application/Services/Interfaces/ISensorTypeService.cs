@@ -6,7 +6,7 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface ISensorTypeService
     {
-        Task<PaginatedResult<SensorTypeDto>> GetAllSensorTypesAsync(int page, int pageSize);
+        Task<PaginatedResult<SensorTypeDto>> GetAllSensorTypesAsync(SensorTypeListRequest request);
         Task<Result<SensorTypeDto>> GetSensorTypeByIdAsync(Guid id);
         Task<Result<SensorTypeDto>> CreateSensorTypeAsync(CreateSensorTypeDto createDto);
         Task<Result> UpdateSensorTypeAsync(Guid id, UpdateSensorTypeDto updateDto);

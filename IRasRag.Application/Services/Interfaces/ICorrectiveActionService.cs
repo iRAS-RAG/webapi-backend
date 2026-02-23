@@ -7,8 +7,7 @@ namespace IRasRag.Application.Services.Interfaces
     public interface ICorrectiveActionService
     {
         Task<PaginatedResult<CorrectiveActionDto>> GetAllCorrectiveActionsAsync(
-            int page,
-            int pageSize
+            CorrectiveActionListRequest request
         );
         Task<Result<CorrectiveActionDto>> GetCorrectiveActionByIdAsync(Guid id);
         Task<Result<CorrectiveActionDto>> CreateCorrectiveActionAsync(

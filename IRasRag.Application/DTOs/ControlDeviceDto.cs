@@ -66,4 +66,9 @@ namespace IRasRag.Application.DTOs
 
         public Guid? ControlDeviceTypeId { get; set; }
     }
+
+    public class ControlDeviceListRequest : BasePaginatedListRequest
+    {
+        public bool? State { get; set; }
+    }
 }

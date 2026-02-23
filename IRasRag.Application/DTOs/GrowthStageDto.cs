@@ -23,4 +23,7 @@ namespace IRasRag.Application.DTOs
         public string? Name { get; set; }
         public string? Description { get; set; }
     }
+
+    // List Request DTO
+    public class GrowthStageListRequest : BasePaginatedListRequest { }
 }

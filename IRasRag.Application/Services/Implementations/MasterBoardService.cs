@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.MasterBoardSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -30,20 +30,23 @@ namespace IRasRag.Application.Services.Implementations
 
         #region Get Methods
         public async Task<PaginatedResult<MasterBoardDto>> GetAllMasterBoardsAsync(
-            int page,
-            int pageSize
+            MasterBoardListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách bảng mạch (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<MasterBoard>();
-                var pagedResult = await repository.GetPagedAsync(new MasterBoardDtoListSpec(),page, pageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    new MasterBoardDtoListSpec(request),
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách bảng mạch thành công: {Count} bảng mạch",
@@ -58,68 +61,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách bảng mạch thành công",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách bảng mạch");
-
-                return new PaginatedResult<MasterBoardDto>
-                {
-                    Message = "Đã xảy ra lỗi khi lấy danh sách bảng mạch",
-                    Data = Array.Empty<MasterBoardDto>(),
-                    Meta = null,
-                    Links = null,
-                };
-            }
-        }
-
-        public async Task<PaginatedResult<MasterBoardDto>> GetAllMasterBoardsByTankIdAsync(
-            Guid tankId,
-            int page,
-            int pageSize
-        )
-        {
-            try
-            {
-                _logger.LogInformation(
-                    "Bắt đầu lấy danh sách bảng mạch (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
-                );
-
-                var repository = _unitOfWork.GetRepository<MasterBoard>();
-                var pagedResult = await repository.GetPagedAsync(new MasterBoardDtoListByTankIdSpec(tankId) ,page, pageSize);
-
-                _logger.LogInformation(
-                    "Lấy danh sách bảng mạch thành công: {Count} bảng mạch",
-                    pagedResult.Items.Count
-                );
-
-                return new PaginatedResult<MasterBoardDto>
-                {
-                    Message =
-                        pagedResult.Items.Count == 0
-                            ? "Không có bảng mạch nào"
-                            : "Lấy danh sách bảng mạch thành công",
-                    Data = pagedResult.Items,
-                    Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
-                        pagedResult.TotalItems
-                    ),
-                    Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

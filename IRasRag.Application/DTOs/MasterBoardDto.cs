@@ -37,4 +37,10 @@ namespace IRasRag.Application.DTOs
 
         public Guid? FishTankId { get; set; }
     }
+
+    // List Request DTO
+    public class MasterBoardListRequest : BasePaginatedListRequest
+    {
+        public Guid? FishTankId { get; set; }
+    }
 }

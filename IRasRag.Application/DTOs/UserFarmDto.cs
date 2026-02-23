@@ -31,4 +31,7 @@ namespace IRasRag.Application.DTOs
         // No fields to update - junction table typically delete and recreate
         // Including this for consistency with CRUD pattern
     }
+
+    // List Request DTO
+    public class UserFarmListRequest : BasePaginatedListRequest { }
 }

@@ -6,6 +6,7 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.JobSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -25,20 +26,21 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<JobDto>> GetAllJobsAsync(int page, int pageSize)
+        public async Task<PaginatedResult<JobDto>> GetAllJobsAsync(JobListRequest request)
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách công việc (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<Job>();
-                var pagedResult = await repository.GetPagedAsync(page, pageSize);
+                var spec = new JobDtoListSpec(request);
+                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
 
-                var jobDtos = _mapper.Map<IReadOnlyList<JobDto>>(pagedResult.Items);
+                var jobDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách công việc thành công: {Count} công việc",
@@ -53,13 +55,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách công việc thành công",
                     Data = jobDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

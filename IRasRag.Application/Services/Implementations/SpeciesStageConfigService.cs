@@ -5,7 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -150,28 +150,25 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<PaginatedResult<SpeciesStageConfigDto>> GetAllSpeciesStageConfigsAsync(
-            int page,
-            int pageSize
+            SpeciesStageConfigListRequest request
         )
         {
             try
             {
                 _logger.LogInformation(
                     "Bắt đầu lấy danh sách cấu hình giai đoạn sinh trưởng (Page: {Page}, PageSize: {PageSize})",
-                    page,
-                    pageSize
+                    request.Page,
+                    request.PageSize
                 );
 
                 var repository = _unitOfWork.GetRepository<SpeciesStageConfig>();
                 var pagedResult = await repository.GetPagedAsync(
-                    new SpeciesStageConfigListSpec(),
-                    page,
-                    pageSize
+                    new SpeciesStageConfigListSpec(request),
+                    request.Page,
+                    request.PageSize
                 );
 
-                var configDtos = _mapper.Map<IReadOnlyList<SpeciesStageConfigDto>>(
-                    pagedResult.Items
-                );
+                var configDtos = pagedResult.Items;
 
                 _logger.LogInformation(
                     "Lấy danh sách cấu hình giai đoạn sinh trưởng thành công: {Count} cấu hình",
@@ -186,13 +183,13 @@ namespace IRasRag.Application.Services.Implementations
                             : "Lấy danh sách cấu hình giai đoạn sinh trưởng thành công",
                     Data = configDtos,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                     Links = PaginationBuilder.BuildPaginationLinks(
-                        page,
-                        pageSize,
+                        request.Page,
+                        request.PageSize,
                         pagedResult.TotalItems
                     ),
                 };

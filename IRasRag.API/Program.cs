@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Hangfire;
 using IRasRag.API.DI;
 using IRasRag.API.Middlewares;
@@ -13,7 +14,12 @@ namespace IRasRag.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder
+                .Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddApiServices(builder.Configuration, builder.Environment);
             builder.Services.AddApplicationServices(builder.Configuration);

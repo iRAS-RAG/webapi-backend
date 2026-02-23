@@ -39,4 +39,7 @@ namespace IRasRag.Application.DTOs
 
         public Guid? FarmId { get; set; }
     }
+
+    // List Request DTO
+    public class CameraListRequest : BasePaginatedListRequest { }
 }

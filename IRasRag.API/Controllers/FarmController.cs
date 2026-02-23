@@ -1,4 +1,3 @@
-using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -14,17 +13,11 @@ namespace IRasRag.API.Controllers
     {
         private readonly IFarmService _farmService;
         private readonly ILogger<FarmController> _logger;
-        private readonly HttpContextUtils _httpContextUtils;
 
-        public FarmController(
-            IFarmService farmService,
-            ILogger<FarmController> logger,
-            HttpContextUtils httpContextUtils
-        )
+        public FarmController(IFarmService farmService, ILogger<FarmController> logger)
         {
             _farmService = farmService;
             _logger = logger;
-            _httpContextUtils = httpContextUtils;
         }
 
         [Authorize(Roles = "Supervisor")]
@@ -51,70 +44,27 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllFarms(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
-        )
+        public async Task<IActionResult> GetAllFarms([FromQuery] FarmListRequest request)
         {
             try
             {
-                if (page <= 0 || pageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                 {
                     return BadRequest(
                         new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
                     );
                 }
 
-                if (pageSize > 100)
+                if (request.PageSize > 100)
                 {
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
-
-                var result = await _farmService.GetAllFarmsAsync(page, pageSize);
+                var result = await _farmService.GetAllFarmsAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Đã xảy ra lỗi khi lấy danh sách trang trại.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [Authorize(Roles = "Supervisor")]
-        [HttpGet("me")]
-        public async Task<IActionResult> GetAllFarmsByUser(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
-        )
-        {
-            var userId = _httpContextUtils.GetUserId();
-            if (userId == null)
-            {
-                return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
-            }
-            try
-            {
-                if (page <= 0 || pageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (pageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-
-                var result = await _farmService.GetAllFarmsFromUserAsync(
-                    userId.Value,
-                    page,
-                    pageSize
-                );
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy danh sách trang trại của người dùng.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

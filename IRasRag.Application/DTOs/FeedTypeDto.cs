@@ -42,4 +42,7 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên nhà sản xuất không được vượt quá 255 ký tự.")]
         public string? Manufacturer { get; set; }
     }
+
+    // List Request DTO
+    public class FeedTypeListRequest : BasePaginatedListRequest { }
 }

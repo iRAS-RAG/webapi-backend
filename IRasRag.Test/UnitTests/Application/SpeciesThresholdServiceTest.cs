@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -8,6 +9,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Specifications;
+using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
@@ -405,68 +407,224 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAllSpeciesThresholdsAsync
 
         [Fact]
-        public async Task GetAllSpeciesThresholdsAsync_ShouldReturnOk_WhenSuccessful()
+        public async Task GetAllSpeciesThresholdsAsync_ShouldApplySearchAndSort_FromSpecification()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
-
-            var list = new List<SpeciesThresholdDto>
+            var request = new SpeciesThresholdListRequest
             {
-                new SpeciesThresholdDto(),
-                new SpeciesThresholdDto(),
+                Page = 1,
+                PageSize = 10,
+                SearchTerm = "tilapia",
+                SortBy = "sensortypename",
+                SortDir = "desc",
             };
+
+            var list = new List<SpeciesThreshold>
+            {
+                new SpeciesThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Juvenile",
+                        Description = "desc",
+                    },
+                    SensorType = new SensorType { Id = Guid.NewGuid(), Name = "PH" },
+                    MinValue = 1,
+                    MaxValue = 2,
+                },
+                new SpeciesThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Adult",
+                        Description = "desc",
+                    },
+                    SensorType = new SensorType { Id = Guid.NewGuid(), Name = "Temperature" },
+                    MinValue = 1,
+                    MaxValue = 2,
+                },
+                new SpeciesThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Adult",
+                        Description = "desc",
+                    },
+                    SensorType = new SensorType { Id = Guid.NewGuid(), Name = "Dissolved Oxygen" },
+                    MinValue = 1,
+                    MaxValue = 2,
+                },
+            };
+
+            ISpecification<SpeciesThreshold, SpeciesThresholdDto>? capturedSpec = null;
 
             _thresholdRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesThresholdDto>(
-                        It.IsAny<SpeciesThresholdListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
+                .Callback(
+                    (
+                        ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec,
+                        int _,
+                        int _,
+                        QueryType _
+                    ) => capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    new PagedResult<SpeciesThresholdDto> { Items = list, TotalItems = list.Count }
+                    (
+                        ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(list, spec, page, pageSize)
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesThresholdsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
             result.Message.Should().Be("Lấy danh sách ngưỡng sinh trưởng thành công");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
+            result
+                .Data.Select(x => x.SensorTypeName)
+                .Should()
+                .ContainInOrder("Temperature", "PH");
 
             result.Meta.Should().NotBeNull();
-            result.Meta!.Page.Should().Be(page);
-            result.Meta.PageSize.Should().Be(pageSize);
+            result.Meta!.Page.Should().Be(request.Page);
+            result.Meta.PageSize.Should().Be(request.PageSize);
             result.Meta.TotalItems.Should().Be(2);
 
             result.Links.Should().NotBeNull();
+            capturedSpec.Should().NotBeNull();
+            capturedSpec.Should().BeOfType<SpeciesThresholdListSpec>();
+
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s is SpeciesThresholdListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task GetAllSpeciesThresholdsAsync_ShouldApplyDefaultSortBySpeciesName_WhenSortByIsNull()
+        {
+            // Arrange
+            var request = new SpeciesThresholdListRequest { Page = 1, PageSize = 10 };
+
+            var list = new List<SpeciesThreshold>
+            {
+                new SpeciesThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Juvenile",
+                        Description = "desc",
+                    },
+                    SensorType = new SensorType { Id = Guid.NewGuid(), Name = "PH" },
+                    MinValue = 1,
+                    MaxValue = 2,
+                },
+                new SpeciesThreshold
+                {
+                    Id = Guid.NewGuid(),
+                    Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },
+                    GrowthStage = new GrowthStage
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Adult",
+                        Description = "desc",
+                    },
+                    SensorType = new SensorType { Id = Guid.NewGuid(), Name = "Temperature" },
+                    MinValue = 1,
+                    MaxValue = 2,
+                },
+            };
+
+            _thresholdRepoMock
+                .Setup(r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec,
+                        int page,
+                        int pageSize,
+                        QueryType _
+                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(list, spec, page, pageSize)
+                );
+
+            // Act
+            var result = await _sut.GetAllSpeciesThresholdsAsync(request);
+
+            // Assert
+            result.Data.Should().NotBeNull();
+            result.Data!.Select(x => x.SpeciesName).Should().ContainInOrder("Alpha", "Zulu");
+
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s is SpeciesThresholdListSpec
+                        ),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllSpeciesThresholdsAsync_ShouldReturnErrorMessage_WhenExceptionThrown()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesThresholdListRequest { Page = 1, PageSize = 10 };
 
             _thresholdRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesThresholdDto>(
-                        It.IsAny<SpeciesThresholdListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesThresholdsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -477,22 +635,32 @@ namespace IRasRag.Test.UnitTests.Application
 
             result.Meta.Should().BeNull();
             result.Links.Should().BeNull();
+
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
         public async Task GetAllSpeciesThresholdsAsync_ShouldReturnEmptyList_WhenNoThresholdsExist()
         {
             // Arrange
-            var page = 1;
-            var pageSize = 10;
+            var request = new SpeciesThresholdListRequest { Page = 1, PageSize = 10 };
 
             _thresholdRepoMock
                 .Setup(r =>
                     r.GetPagedAsync<SpeciesThresholdDto>(
-                        It.IsAny<SpeciesThresholdListSpec>(),
-                        page,
-                        pageSize,
-                        QueryType.ActiveOnly
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
                     )
                 )
                 .ReturnsAsync(
@@ -504,7 +672,7 @@ namespace IRasRag.Test.UnitTests.Application
                 );
 
             // Act
-            var result = await _sut.GetAllSpeciesThresholdsAsync(page, pageSize);
+            var result = await _sut.GetAllSpeciesThresholdsAsync(request);
 
             // Assert
             result.Should().NotBeNull();
@@ -517,6 +685,17 @@ namespace IRasRag.Test.UnitTests.Application
             result.Meta!.TotalItems.Should().Be(0);
 
             result.Links.Should().NotBeNull();
+
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync<SpeciesThresholdDto>(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s => s != null),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         #endregion

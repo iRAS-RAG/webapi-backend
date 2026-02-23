@@ -44,4 +44,10 @@ namespace IRasRag.Application.DTOs
 
         public Guid? MasterBoardId { get; set; }
     }
+
+    // List Request DTO
+    public class SensorListRequest : BasePaginatedListRequest
+    {
+        public Guid? MasterBoardId { get; set; }
+    }
 }
