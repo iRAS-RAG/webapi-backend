@@ -1,8 +1,8 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
 
-namespace IRasRag.Application.Specifications
+namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
 {
     public class SpeciesStageConfigByIdSpec
         : Specification<SpeciesStageConfig, SpeciesStageConfigDto>
@@ -12,27 +12,6 @@ namespace IRasRag.Application.Specifications
             Query
                 .AsNoTracking()
                 .Where(s => s.Id == id)
-                .Select(s => new SpeciesStageConfigDto
-                {
-                    Id = s.Id,
-                    SpeciesName = s.Species.Name,
-                    GrowthStageName = s.GrowthStage.Name,
-                    FeedTypeName = s.FeedType.Name,
-                    AmountPer100Fish = s.AmountPer100Fish,
-                    FrequencyPerDay = s.FrequencyPerDay,
-                    MaxStockingDensity = s.MaxStockingDensity,
-                    ExpectedDurationDays = s.ExpectedDurationDays,
-                });
-        }
-    }
-
-    public class SpeciesStageConfigListSpec
-        : Specification<SpeciesStageConfig, SpeciesStageConfigDto>
-    {
-        public SpeciesStageConfigListSpec()
-        {
-            Query
-                .AsNoTracking()
                 .Select(s => new SpeciesStageConfigDto
                 {
                     Id = s.Id,
