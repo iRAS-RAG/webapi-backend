@@ -82,7 +82,7 @@ namespace IRasRag.Application.Services.Implementations
                 };
 
                 var emailBody = await _emailService.GenerateAccountCreatedEmailBodyAsync(
-                    userRole.Name,
+                    "Kỹ thuật viên",
                     newUser.Email,
                     createDto.Password
                 );
@@ -134,6 +134,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var systemRole = userRole.ToSystemRole();
+
                 var newUser = new User
                 {
                     RoleId = userRole.Id,
@@ -144,10 +146,7 @@ namespace IRasRag.Application.Services.Implementations
                     IsDeleted = false,
                 };
 
-                if (
-                    userRole.Name.ToLower() == "operator"
-                    || userRole.Name.ToLower() == "supervisor"
-                )
+                if (systemRole == SystemRole.Operator || systemRole == SystemRole.Supervisor)
                 {
                     // Temporary assign new non admin user to the seeded farm
                     newUser.UserFarms = new List<UserFarm>
@@ -163,7 +162,7 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 var emailBody = await _emailService.GenerateAccountCreatedEmailBodyAsync(
-                    userRole.Name,
+                    systemRole.ToRoleName(),
                     newUser.Email,
                     createDto.Password
                 );
