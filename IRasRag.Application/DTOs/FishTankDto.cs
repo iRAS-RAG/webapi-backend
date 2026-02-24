@@ -64,5 +64,8 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class FishTankListRequest : BasePaginatedListRequest { }
+    public class FishTankListRequest : BasePaginatedListRequest
+    {
+        public Guid? FarmId { get; set; }
+    }
 }

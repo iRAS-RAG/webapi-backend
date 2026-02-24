@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.MortalityLogSpecifications
@@ -16,8 +16,10 @@ namespace IRasRag.Application.Specifications.MortalityLogSpecifications
             {
                 ["date"] = ml => ml.Date,
                 ["quantity"] = ml => ml.Quantity,
-                ["createdat"] = ml => ml.CreatedAt
+                ["createdat"] = ml => ml.CreatedAt,
             };
+
+            ApplyFilter(request.BatchId, ml => ml.BatchId == request.BatchId);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "date");
 

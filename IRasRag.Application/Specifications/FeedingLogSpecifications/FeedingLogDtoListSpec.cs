@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.FeedingLogSpecifications
@@ -15,10 +15,11 @@ namespace IRasRag.Application.Specifications.FeedingLogSpecifications
             var sortMap = new Dictionary<string, Expression<Func<FeedingLog, object?>>>
             {
                 ["createddate"] = fl => fl.CreatedDate,
-                ["amount"] = fl => fl.Amount
+                ["amount"] = fl => fl.Amount,
             };
 
             ApplyFilter(request.CreatedDate, fl => fl.CreatedDate == request.CreatedDate);
+            ApplyFilter(request.FarmingBatchId, fl => fl.FarmingBatchId == request.FarmingBatchId);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "createddate");
 

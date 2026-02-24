@@ -39,8 +39,25 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class FeedingLogListRequest : BasePaginatedListRequest 
+    public class FeedingLogListRequest : BasePaginatedListRequest
     {
         public DateTime? CreatedDate { get; set; }
+        public Guid? FarmingBatchId { get; set; }
+    }
+
+    // Batch sub-route requests
+    public class RecordFeedingRequest
+    {
+        [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
+        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public float Amount { get; set; }
+    }
+
+    public class BatchFeedingLogQuery
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public string? SortBy { get; set; }
+        public string SortDir { get; set; } = "asc";
     }
 }

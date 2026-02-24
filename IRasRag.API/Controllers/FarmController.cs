@@ -12,11 +12,17 @@ namespace IRasRag.API.Controllers
     public class FarmController : ControllerBase
     {
         private readonly IFarmService _farmService;
+        private readonly IFishTankService _fishTankService;
         private readonly ILogger<FarmController> _logger;
 
-        public FarmController(IFarmService farmService, ILogger<FarmController> logger)
+        public FarmController(
+            IFarmService farmService,
+            IFishTankService fishTankService,
+            ILogger<FarmController> logger
+        )
         {
             _farmService = farmService;
+            _fishTankService = fishTankService;
             _logger = logger;
         }
 
@@ -111,6 +117,41 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Đã xảy ra lỗi khi cập nhật trang trại với ID: {FarmId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("{farmId}/tanks")]
+        public async Task<IActionResult> GetTanksByFarmId(
+            Guid farmId,
+            [FromQuery] FishTankListRequest request
+        )
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+
+                if (request.PageSize > 100)
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+
+                var farmResult = await _farmService.GetFarmByIdAsync(farmId);
+                if (farmResult.Type == ResultType.NotFound)
+                    return NotFound(new { farmResult.Message });
+
+                request.FarmId = farmId;
+                var result = await _fishTankService.GetAllFishTanksAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy danh sách bể cá của trang trại: {FarmId}",
+                    farmId
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

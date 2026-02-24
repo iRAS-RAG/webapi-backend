@@ -39,5 +39,19 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class MortalityLogListRequest : BasePaginatedListRequest { }
+    public class MortalityLogListRequest : BasePaginatedListRequest
+    {
+        public Guid? BatchId { get; set; }
+    }
+
+    // Batch sub-route request
+    public class LogMortalityRequest
+    {
+        [Required(ErrorMessage = "Số lượng là bắt buộc")]
+        [Range(0.1, float.MaxValue, ErrorMessage = "Số lượng phải lớn hơn 0")]
+        public float Quantity { get; set; }
+
+        [Required(ErrorMessage = "Ngày ghi nhận là bắt buộc")]
+        public DateTime Date { get; set; }
+    }
 }

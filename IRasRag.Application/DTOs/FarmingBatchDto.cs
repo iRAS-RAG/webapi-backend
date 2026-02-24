@@ -75,5 +75,6 @@ namespace IRasRag.Application.DTOs
     public class FarmingBatchListRequest : BasePaginatedListRequest
     {
         public FarmingBatchStatus? Status { get; set; }
+        public Guid? FishTankId { get; set; }
     }
 }
