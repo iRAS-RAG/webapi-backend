@@ -17,13 +17,15 @@ namespace IRasRag.API.Controllers
         private readonly ISensorService _sensorService;
         private readonly IMasterBoardService _masterBoardService;
         private readonly IControlDeviceService _controlDeviceService;
+        private readonly IControlDeviceTypeService _controlDeviceTypeService;
 
         public HardwareController(
             ILogger<HardwareController> logger,
             ISensorTypeService sensorTypeService,
             ISensorService sensorService,
             IMasterBoardService masterBoardService,
-            IControlDeviceService controlDeviceService
+            IControlDeviceService controlDeviceService,
+            IControlDeviceTypeService controlDeviceTypeService
         )
         {
             _logger = logger;
@@ -31,6 +33,7 @@ namespace IRasRag.API.Controllers
             _sensorService = sensorService;
             _masterBoardService = masterBoardService;
             _controlDeviceService = controlDeviceService;
+            _controlDeviceTypeService = controlDeviceTypeService;
         }
 
         #region Sensor Types
@@ -63,6 +66,95 @@ namespace IRasRag.API.Controllers
                     500,
                     new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." }
                 );
+            }
+        }
+
+        [HttpGet("sensor-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> GetSensorTypeById(Guid id)
+        {
+            try
+            {
+                var result = await _sensorTypeService.GetSensorTypeByIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving sensor type: {SensorTypeId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("sensor-types")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateSensorType([FromBody] CreateSensorTypeDto dto)
+        {
+            try
+            {
+                var result = await _sensorTypeService.CreateSensorTypeAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating sensor type: {SensorTypeName}", dto.Name);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPut("sensor-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdateSensorType(Guid id, [FromBody] UpdateSensorTypeDto dto)
+        {
+            try
+            {
+                var result = await _sensorTypeService.UpdateSensorTypeAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating sensor type: {SensorTypeId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpDelete("sensor-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteSensorType(Guid id)
+        {
+            try
+            {
+                var result = await _sensorTypeService.DeleteSensorTypeAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting sensor type: {SensorTypeId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
@@ -429,6 +521,124 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while deleting control device: {ControlDeviceId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        #endregion
+
+        #region Control Device Types
+
+        [HttpGet("control-device-types")]
+        public async Task<IActionResult> GetAllControlDeviceTypes([FromQuery] ControlDeviceTypeListRequest request)
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+                var result = await _controlDeviceTypeService.GetAllControlDeviceTypesAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving control device types.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("control-device-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> GetControlDeviceTypeById(Guid id)
+        {
+            try
+            {
+                var result = await _controlDeviceTypeService.GetControlDeviceTypeByIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving control device type: {ControlDeviceTypeId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("control-device-types")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateControlDeviceType([FromBody] CreateControlDeviceTypeDto dto)
+        {
+            try
+            {
+                var result = await _controlDeviceTypeService.CreateControlDeviceTypeAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating control device type: {ControlDeviceTypeName}", dto.Name);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPut("control-device-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdateControlDeviceType(Guid id, [FromBody] UpdateControlDeviceTypeDto dto)
+        {
+            try
+            {
+                var result = await _controlDeviceTypeService.UpdateControlDeviceTypeAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating control device type: {ControlDeviceTypeId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpDelete("control-device-types/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteControlDeviceType(Guid id)
+        {
+            try
+            {
+                var result = await _controlDeviceTypeService.DeleteControlDeviceTypeAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting control device type: {ControlDeviceTypeId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
