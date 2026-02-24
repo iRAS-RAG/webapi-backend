@@ -316,11 +316,11 @@ namespace IRasRag.Application.Services.Implementations
                     );
 
                 var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
-
+                var roleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định";
                 var dto = new UserProfileDto
                 {
                     Id = user.Id,
-                    RoleName = role?.Name ?? "Unknown",
+                    RoleName = roleName,
                     Email = user.Email,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
