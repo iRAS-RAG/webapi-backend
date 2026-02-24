@@ -8,6 +8,7 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; }
         public int PinCode { get; set; }
+        public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; }
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; }
