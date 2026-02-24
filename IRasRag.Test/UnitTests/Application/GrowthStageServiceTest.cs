@@ -13,6 +13,7 @@ using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 
 namespace IRasRag.Test.UnitTests.Application
 {

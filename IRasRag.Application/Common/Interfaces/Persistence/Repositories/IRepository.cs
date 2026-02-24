@@ -3,7 +3,7 @@ using Ardalis.Specification;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Domain.Enums;
 
-namespace IRasRag.Application.Common.Interfaces.Persistence
+namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
 {
     public interface IRepository<T>
         where T : class
