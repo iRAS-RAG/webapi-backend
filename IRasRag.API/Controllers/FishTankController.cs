@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/fish-tanks")]
+    [Route("api/tanks")]
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
@@ -102,7 +102,7 @@ namespace IRasRag.API.Controllers
                 var result = await _fishTankService.UpdateFishTankAsync(id, dto);
                 return result.Type switch
                 {
-                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
                     ResultType.NotFound => NotFound(new { result.Message }),
                     ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
@@ -112,6 +112,44 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Đã xảy ra lỗi khi cập nhật bể cá với ID: {FishTankId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("{id}/cameras")]
+        public async Task<IActionResult> GetCamerasByTankId(Guid id)
+        {
+            try
+            {
+                var result = await _fishTankService.GetFishTankByIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Ok => Ok(
+                        new
+                        {
+                            Message = "Lấy thông tin camera thành công.",
+                            Data = new[]
+                            {
+                                new
+                                {
+                                    TankId = result.Data!.Id,
+                                    TankName = result.Data.Name,
+                                    CameraUrl = result.Data.CameraUrl,
+                                },
+                            },
+                        }
+                    ),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

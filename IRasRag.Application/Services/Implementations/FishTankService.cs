@@ -126,13 +126,19 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(FishTankListRequest request)
+        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksAsync(
+            FishTankListRequest request
+        )
         {
             try
             {
                 var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
                 var spec = new FishTankDtoListSpec(request);
-                var pagedResult = await fishTankRepo.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await fishTankRepo.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var fishTankDtos = pagedResult.Items.ToList();
 
@@ -204,67 +210,91 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result> UpdateFishTankAsync(Guid id, UpdateFishTankDto dto)
+        public async Task<Result<FishTankDto>> UpdateFishTankAsync(Guid id, UpdateFishTankDto dto)
         {
             try
             {
                 var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(id);
 
                 if (fishTank == null || fishTank.IsDeleted)
-                    return Result.Failure("Bể cá không tồn tại.", ResultType.NotFound);
+                    return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Name))
-                {
                     fishTank.Name = dto.Name.Trim();
-                }
 
                 if (dto.Height.HasValue)
                 {
                     if (dto.Height.Value <= 0)
-                        return Result.Failure("Chiều cao phải lớn hơn 0.", ResultType.BadRequest);
-
+                        return Result<FishTankDto>.Failure(
+                            "Chiều cao phải lớn hơn 0.",
+                            ResultType.BadRequest
+                        );
                     fishTank.Height = dto.Height.Value;
                 }
 
                 if (dto.Radius.HasValue)
                 {
                     if (dto.Radius.Value <= 0)
-                        return Result.Failure("Bán kính phải lớn hơn 0.", ResultType.BadRequest);
-
+                        return Result<FishTankDto>.Failure(
+                            "Bán kính phải lớn hơn 0.",
+                            ResultType.BadRequest
+                        );
                     fishTank.Radius = dto.Radius.Value;
                 }
 
+                string? farmName = null;
                 if (dto.FarmId.HasValue)
                 {
-                    // Kiểm tra trang trại tồn tại
                     var farm = await _unitOfWork
                         .GetRepository<Farm>()
                         .GetByIdAsync(dto.FarmId.Value);
                     if (farm == null || farm.IsDeleted)
-                        return Result.Failure("Trang trại không tồn tại.", ResultType.BadRequest);
-
+                        return Result<FishTankDto>.Failure(
+                            "Trang trại không tồn tại.",
+                            ResultType.BadRequest
+                        );
                     fishTank.FarmId = dto.FarmId.Value;
+                    farmName = farm.Name;
                 }
 
                 if (!string.IsNullOrWhiteSpace(dto.TopicCode))
-                {
                     fishTank.TopicCode = dto.TopicCode.Trim();
-                }
 
                 if (!string.IsNullOrWhiteSpace(dto.CameraUrl))
-                {
                     fishTank.CameraUrl = dto.CameraUrl.Trim();
-                }
 
                 _unitOfWork.GetRepository<FishTank>().Update(fishTank);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result.Success("Cập nhật bể cá thành công.");
+                if (farmName == null)
+                {
+                    var farm = await _unitOfWork
+                        .GetRepository<Farm>()
+                        .GetByIdAsync(fishTank.FarmId);
+                    farmName = farm?.Name ?? "Unknown";
+                }
+
+                var resultDto = new FishTankDto
+                {
+                    Id = fishTank.Id,
+                    Name = fishTank.Name,
+                    Height = fishTank.Height,
+                    Radius = fishTank.Radius,
+                    FarmId = fishTank.FarmId,
+                    FarmName = farmName,
+                    TopicCode = fishTank.TopicCode,
+                    CameraUrl = fishTank.CameraUrl,
+                };
+
+                return Result<FishTankDto>.Success(resultDto, "Cập nhật bể cá thành công.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật bể cá");
-                return Result.Failure("Lỗi khi cập nhật bể cá.", ResultType.Unexpected);
+                return Result<FishTankDto>.Failure(
+                    "Lỗi khi cập nhật bể cá.",
+                    ResultType.Unexpected
+                );
             }
         }
     }

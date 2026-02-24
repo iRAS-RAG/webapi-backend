@@ -8,19 +8,25 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/farming-batches")]
+    [Route("api/batches")]
     [Authorize]
     public class FarmingBatchController : ControllerBase
     {
         private readonly IFarmingBatchService _farmingBatchService;
+        private readonly IMortalityLogService _mortalityLogService;
+        private readonly IFeedingLogService _feedingLogService;
         private readonly ILogger<FarmingBatchController> _logger;
 
         public FarmingBatchController(
             IFarmingBatchService farmingBatchService,
+            IMortalityLogService mortalityLogService,
+            IFeedingLogService feedingLogService,
             ILogger<FarmingBatchController> logger
         )
         {
             _farmingBatchService = farmingBatchService;
+            _mortalityLogService = mortalityLogService;
+            _feedingLogService = feedingLogService;
             _logger = logger;
         }
 
@@ -155,6 +161,109 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi xóa lô nuôi với ID {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xóa lô nuôi" });
+            }
+        }
+
+        [HttpPost("{id}/mortality")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> LogMortality(Guid id, [FromBody] LogMortalityRequest body)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var dto = new CreateMortalityLogDto
+                {
+                    BatchId = id,
+                    Quantity = body.Quantity,
+                    Date = body.Date,
+                };
+
+                var result = await _mortalityLogService.CreateMortalityLogAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi ghi nhận tỷ lệ chết cho lô nuôi {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi ghi nhận tỷ lệ chết." });
+            }
+        }
+
+        [HttpGet("{id}/feeding-logs")]
+        public async Task<IActionResult> GetFeedingLogs(
+            Guid id,
+            [FromQuery] BatchFeedingLogQuery query
+        )
+        {
+            try
+            {
+                if (query.Page <= 0 || query.PageSize <= 0)
+                    return BadRequest(new { Message = "Page và PageSize phải lớn hơn 0." });
+
+                if (query.PageSize > 100)
+                    return BadRequest(new { Message = "PageSize không được vượt quá 100." });
+
+                var request = new FeedingLogListRequest
+                {
+                    FarmingBatchId = id,
+                    Page = query.Page,
+                    PageSize = query.PageSize,
+                    SortBy = query.SortBy,
+                    SortDir = query.SortDir,
+                };
+
+                var result = await _feedingLogService.GetAllFeedingLogsAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy lịch sử cho ăn cho lô nuôi {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy lịch sử cho ăn." });
+            }
+        }
+
+        [HttpPost("{id}/feeding")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> RecordFeeding(
+            Guid id,
+            [FromBody] RecordFeedingRequest body
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var dto = new CreateFeedingLogDto
+                {
+                    FarmingBatchId = id,
+                    Amount = body.Amount,
+                    CreatedDate = DateTime.UtcNow,
+                };
+
+                var result = await _feedingLogService.CreateFeedingLogAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi ghi nhận sự kiện cho ăn." }
+                );
             }
         }
     }
