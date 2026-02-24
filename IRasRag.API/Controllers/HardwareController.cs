@@ -33,6 +33,8 @@ namespace IRasRag.API.Controllers
             _controlDeviceService = controlDeviceService;
         }
 
+        #region Sensor Types
+
         [HttpGet("sensor-types")]
         public async Task<IActionResult> GetAllSensorTypes(
             [FromQuery] SensorTypeListRequest request
@@ -64,6 +66,10 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        #endregion
+
+        #region Sensors
+
         [HttpGet("sensors")]
         public async Task<IActionResult> GetAllSensors([FromQuery] SensorListRequest request)
         {
@@ -89,104 +95,24 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("masterboards")]
-        public async Task<IActionResult> GetAllMasterBoards(
-            [FromQuery] MasterBoardListRequest request
-        )
+        [HttpGet("sensors/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> GetSensorById(Guid id)
         {
             try
             {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _masterBoardService.GetAllMasterBoardsAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving master boards.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [HttpGet("control-devices")]
-        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
-        {
-            try
-            {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _controlDeviceService.GetAllControlDevicesAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving control devices.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [HttpPost("masterboards")]
-        public async Task<IActionResult> CreateMasterBoard([FromBody] CreateMasterBoardDto dto)
-        {
-            try
-            {
-                var result = await _masterBoardService.CreateMasterBoardAsync(dto);
+                var result = await _sensorService.GetSensorByIdAsync(id);
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while creating master board: {MasterBoardName}",
-                    dto.Name
-                );
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [HttpPost("control-devices")]
-        public async Task<IActionResult> CreateControlDevice([FromBody] CreateControlDeviceDto dto)
-        {
-            try
-            {
-                var result = await _controlDeviceService.CreateControlDeviceAsync(dto);
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.Conflict => Conflict(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while creating control device: {ControlDeviceName}",
-                    dto.Name
-                );
+                _logger.LogError(ex, "An error occurred while retrieving sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -217,6 +143,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("sensors/{id}")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateSensor(Guid id, [FromBody] UpdateSensorDto dto)
         {
             try
@@ -226,6 +153,7 @@ namespace IRasRag.API.Controllers
                 {
                     ResultType.Ok => Ok(new { result.Message }),
                     ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
@@ -236,5 +164,275 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
+
+        [HttpDelete("sensors/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteSensor(Guid id)
+        {
+            try
+            {
+                var result = await _sensorService.DeleteSensorAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting sensor: {SensorId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        #endregion
+
+        #region Master Boards
+
+        [HttpGet("masterboards")]
+        public async Task<IActionResult> GetAllMasterBoards(
+            [FromQuery] MasterBoardListRequest request
+        )
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+                var result = await _masterBoardService.GetAllMasterBoardsAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving master boards.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("masterboards/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> GetMasterBoardById(Guid id)
+        {
+            try
+            {
+                var result = await _masterBoardService.GetMasterBoardByIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving master board: {MasterBoardId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("masterboards")]
+        public async Task<IActionResult> CreateMasterBoard([FromBody] CreateMasterBoardDto dto)
+        {
+            try
+            {
+                var result = await _masterBoardService.CreateMasterBoardAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while creating master board: {MasterBoardName}",
+                    dto.Name
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPut("masterboards/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdateMasterBoard(Guid id, [FromBody] UpdateMasterBoardDto dto)
+        {
+            try
+            {
+                var result = await _masterBoardService.UpdateMasterBoardAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating master board: {MasterBoardId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpDelete("masterboards/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteMasterBoard(Guid id)
+        {
+            try
+            {
+                var result = await _masterBoardService.DeleteMasterBoardAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting master board: {MasterBoardId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        #endregion
+
+        #region Control Devices
+
+        [HttpGet("control-devices")]
+        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+                var result = await _controlDeviceService.GetAllControlDevicesAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving control devices.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("control-devices/{id}")]
+        public async Task<IActionResult> GetControlDeviceById(Guid id)
+        {
+            try
+            {
+                var result = await _controlDeviceService.GetControlDeviceByIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving control device: {ControlDeviceId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("control-devices")]
+        public async Task<IActionResult> CreateControlDevice([FromBody] CreateControlDeviceDto dto)
+        {
+            try
+            {
+                var result = await _controlDeviceService.CreateControlDeviceAsync(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while creating control device: {ControlDeviceName}",
+                    dto.Name
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPut("control-devices/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdateControlDevice(Guid id, [FromBody] UpdateControlDeviceDto dto)
+        {
+            try
+            {
+                var result = await _controlDeviceService.UpdateControlDeviceAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating control device: {ControlDeviceId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpDelete("control-devices/{id}")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteControlDevice(Guid id)
+        {
+            try
+            {
+                var result = await _controlDeviceService.DeleteControlDeviceAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting control device: {ControlDeviceId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        #endregion
     }
 }
