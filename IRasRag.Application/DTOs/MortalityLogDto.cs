@@ -39,5 +39,8 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class MortalityLogListRequest : BasePaginatedListRequest { }
+    public class MortalityLogListRequest : BasePaginatedListRequest
+    {
+        public Guid? BatchId { get; set; }
+    }
 }

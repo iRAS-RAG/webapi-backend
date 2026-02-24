@@ -39,8 +39,9 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class FeedingLogListRequest : BasePaginatedListRequest 
+    public class FeedingLogListRequest : BasePaginatedListRequest
     {
         public DateTime? CreatedDate { get; set; }
+        public Guid? FarmingBatchId { get; set; }
     }
 }
