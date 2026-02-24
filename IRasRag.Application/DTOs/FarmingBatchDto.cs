@@ -23,6 +23,14 @@ namespace IRasRag.Application.DTOs
         public DateTime? ModifiedAt { get; set; }
     }
 
+    public class ActiveFarmingBatchResponseDto
+    {
+        public string FishTankName { get; set; } = string.Empty;
+        public string SpeciesName { get; set; } = string.Empty;
+        public int CurrentQuantity { get; set; }
+        public double TankVolume { get; set; }
+    }
+
     // Create DTO
     public class CreateFarmingBatchDto
     {

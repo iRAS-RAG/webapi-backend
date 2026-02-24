@@ -1,7 +1,6 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -117,7 +116,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("control-devices")]
-        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
+        public async Task<IActionResult> GetAllControlDevicesByTank([FromQuery] ControlDeviceListRequest request)
         {
             try
             {

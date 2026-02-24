@@ -1,4 +1,5 @@
 ﻿using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Domain.Common;
 using IRasRag.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -14,7 +15,10 @@ namespace IRasRag.Infrastructure.Persistence
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
+            SensorLogs = new SensorLogRepository(_context);
         }
+
+        public ISensorLogRepository SensorLogs { get; private set; }
 
         public IRepository<T> GetRepository<T>()
             where T : BaseEntity

@@ -1,26 +1,33 @@
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
+using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/tanks")]
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
         private readonly ILogger<FishTankController> _logger;
+        private readonly IControlDeviceService _controlDeviceService;
 
         public FishTankController(
             IFishTankService fishTankService,
-            ILogger<FishTankController> logger
+            ILogger<FishTankController> logger,
+            IControlDeviceService controlDeviceService
         )
         {
             _fishTankService = fishTankService;
             _logger = logger;
+            _controlDeviceService = controlDeviceService;
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
         {
@@ -70,6 +77,31 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("/{id}/control-devices")]
+        public async Task<IActionResult> GetAllControlDevicesByTank(Guid id, [FromQuery] ControlDeviceListRequest request)
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+                var result = await _controlDeviceService.GetAllControlDevicesByTankAsync(id, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving control devices.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFishTankById(Guid id)
         {
@@ -94,6 +126,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
         {

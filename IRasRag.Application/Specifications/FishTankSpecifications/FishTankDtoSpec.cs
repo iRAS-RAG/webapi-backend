@@ -1,37 +1,18 @@
-using System.Linq.Expressions;
-using Ardalis.Specification;
+﻿using Ardalis.Specification;
 using IRasRag.Application.DTOs;
-using IRasRag.Application.Specifications.Base;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Specifications.FishTankSpecifications
 {
-    public class FishTankDtoListSpec : BaseListSpec<FishTank, FishTankDto>
+    public class FishTankDtoSpec : Specification<FishTank, FishTankDto>
     {
-        public FishTankDtoListSpec(FishTankListRequest request, Guid? farmId = null)
+        public FishTankDtoSpec(Guid fishTankId)
         {
-            Query.AsNoTracking();
-
-            ApplyFilter(farmId, ft => ft.FarmId == farmId!.Value);
-
-            var sortMap = new Dictionary<string, Expression<Func<FishTank, object?>>>
-            {
-                ["name"] = ft => ft.Name,
-                ["volume"] = ft => ft.Height * ft.Radius * ft.Radius,
-            };
-
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    ft => ft.Name,
-                    ft => ft.Farm.Name
-                ]
-            );
-
-            ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
-
-            Query.Select(ft => new FishTankDto
+            Query
+                .AsNoTracking()
+                .Where(ft => ft.Id == fishTankId)
+                .Select(ft => new FishTankDto
             {
                 Id = ft.Id,
                 Name = ft.Name,

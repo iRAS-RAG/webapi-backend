@@ -6,11 +6,17 @@ using System.Linq.Expressions;
 
 namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
 {
-    public class ControlDeviceDtoListSpec : BaseListSpec<ControlDevice, ControlDeviceDto>
+    public class ControlDeviceDtoListByTankSpec : BaseListSpec<ControlDevice, ControlDeviceDto>
     {
-        public ControlDeviceDtoListSpec(ControlDeviceListRequest request)
+        public ControlDeviceDtoListByTankSpec(ControlDeviceListRequest request, Guid? fishTankId = null)
         {
-            Query.AsNoTracking();
+            Query
+                .AsNoTracking();
+
+            if (fishTankId.HasValue)
+            {
+                Query.Where(cd => cd.MasterBoard.FishTankId == fishTankId.Value);
+            }
 
             var sortKeyMap = new Dictionary<string, Expression<Func<ControlDevice, object?>>>
             {

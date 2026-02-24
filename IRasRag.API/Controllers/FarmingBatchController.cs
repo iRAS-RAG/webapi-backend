@@ -56,6 +56,21 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveFarmingBatches([FromQuery] Guid fishTankId)
+        {
+            try
+            {
+                var result = await _farmingBatchService.GetActiveFarmingBatchByFishTankIdAsync(fishTankId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách lô nuôi đang hoạt động");
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy danh sách lô nuôi đang hoạt động" });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFarmingBatchById(Guid id)
         {
