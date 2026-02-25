@@ -366,5 +366,138 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        #region SensorLog Methods
+        public async Task<Result<SensorLogDto>> CreateSensorLogAsync(Guid sensorId, CreateSensorLogDto dto)
+        {
+            try
+            {
+                _logger.LogInformation("Bắt đầu thêm dữ liệu thủ công cho cảm biến: {SensorId}", sensorId);
+
+                var sensorRepository = _unitOfWork.GetRepository<Sensor>();
+                var sensor = await sensorRepository.GetByIdAsync(sensorId);
+
+                if (sensor == null)
+                {
+                    _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
+                    return Result<SensorLogDto>.Failure(
+                        $"Không tìm thấy cảm biến với Id: {sensorId}",
+                        ResultType.NotFound
+                    );
+                }
+
+                var logRepository = _unitOfWork.GetRepository<SensorLog>();
+                var sensorLog = new SensorLog
+                {
+                    SensorId = sensorId,
+                    Data = dto.Data,
+                    IsWarning = false,
+                    DataJson = "{}",
+                };
+
+                await logRepository.AddAsync(sensorLog);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Override CreatedAt after save if a custom timestamp was provided
+                if (dto.Timestamp.HasValue)
+                {
+                    sensorLog.CreatedAt = dto.Timestamp.Value;
+                    logRepository.Update(sensorLog);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                var logDto = _mapper.Map<SensorLogDto>(sensorLog);
+                _logger.LogInformation(
+                    "Thêm dữ liệu thủ công thành công: {LogId} cho cảm biến {SensorId}",
+                    sensorLog.Id,
+                    sensorId
+                );
+
+                return Result<SensorLogDto>.Success(logDto, "Thêm dữ liệu cảm biến thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi thêm dữ liệu thủ công cho cảm biến: {SensorId}", sensorId);
+                return Result<SensorLogDto>.Failure(
+                    "Đã xảy ra lỗi khi thêm dữ liệu cảm biến",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
+        public async Task<Result<List<SensorLogDto>>> GetSensorLogsAsync(Guid sensorId, SensorLogListRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Lấy lịch sử dữ liệu cảm biến: {SensorId}", sensorId);
+
+                var sensorRepository = _unitOfWork.GetRepository<Sensor>();
+                var sensor = await sensorRepository.GetByIdAsync(sensorId);
+
+                if (sensor == null)
+                {
+                    _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
+                    return Result<List<SensorLogDto>>.Failure(
+                        $"Không tìm thấy cảm biến với Id: {sensorId}",
+                        ResultType.NotFound
+                    );
+                }
+
+                var logRepository = _unitOfWork.GetRepository<SensorLog>();
+                var logs = await logRepository.ListAsync(new SensorLogListSpec(sensorId, request));
+
+                List<SensorLogDto> result;
+
+                if (request.Interval.HasValue && request.Interval.Value > 0)
+                {
+                    var intervalTicks = TimeSpan.FromMinutes(request.Interval.Value).Ticks;
+                    result = logs
+                        .Where(l => l.CreatedAt.HasValue)
+                        .GroupBy(l =>
+                            new DateTime(
+                                l.CreatedAt!.Value.Ticks / intervalTicks * intervalTicks,
+                                l.CreatedAt.Value.Kind
+                            )
+                        )
+                        .OrderBy(g => g.Key)
+                        .Select(g => new SensorLogDto
+                        {
+                            Id = g.First().Id,
+                            SensorId = sensorId,
+                            Data = g.Average(l => l.Data),
+                            IsWarning = g.Any(l => l.IsWarning),
+                            DataJson = g.First().DataJson,
+                            CreatedAt = g.Key,
+                        })
+                        .ToList();
+                }
+                else
+                {
+                    result = logs.ToList();
+                }
+
+                _logger.LogInformation(
+                    "Lấy lịch sử cảm biến thành công: {Count} bản ghi",
+                    result.Count
+                );
+
+                return Result<List<SensorLogDto>>.Success(
+                    result,
+                    result.Count == 0
+                        ? "Không có dữ liệu lịch sử"
+                        : $"Lấy lịch sử cảm biến thành công: {result.Count} bản ghi"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy lịch sử cảm biến với Id: {SensorId}", sensorId);
+                return Result<List<SensorLogDto>>.Failure(
+                    "Đã xảy ra lỗi khi lấy lịch sử cảm biến",
+                    ResultType.Unexpected
+                );
+            }
+        }
+        
+        #endregion
     }
 }

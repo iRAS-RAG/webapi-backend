@@ -66,4 +66,28 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? FarmId { get; set; }
     }
+
+    // Quick status for a tank based on sensor warning flags
+    public class TankStatusDto
+    {
+        public Guid TankId { get; set; }
+        public string TankName { get; set; }
+        public string Status { get; set; }  // "Normal" | "Warning"
+        public int TotalSensors { get; set; }
+        public int WarningSensors { get; set; }
+    }
+
+    // Latest sensor reading per sensor in a tank
+    public class TankSensorLatestDataDto
+    {
+        public Guid SensorId { get; set; }
+        public string SensorName { get; set; }
+        public string SensorTypeName { get; set; }
+        public string MeasureType { get; set; }
+        public string UnitOfMeasure { get; set; }
+        public string MasterBoardName { get; set; }
+        public double? LatestValue { get; set; }
+        public bool? IsWarning { get; set; }
+        public DateTime? RecordedAt { get; set; }
+    }
 }

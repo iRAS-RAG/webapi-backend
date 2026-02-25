@@ -50,4 +50,35 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? MasterBoardId { get; set; }
     }
+
+    // SensorLog Response DTO
+    public class SensorLogDto
+    {
+        public Guid Id { get; set; }
+        public Guid SensorId { get; set; }
+        public double Data { get; set; }
+        public bool IsWarning { get; set; }
+        public string DataJson { get; set; }
+        public DateTime? CreatedAt { get; set; }
+    }
+
+    // SensorLog List Request (chart query)
+    public class SensorLogListRequest
+    {
+        public DateTime? From { get; set; }
+        public DateTime? To { get; set; }
+
+        /// <summary>Interval in minutes for downsampling. If null, returns raw logs.</summary>
+        public int? Interval { get; set; }
+    }
+
+    // Create SensorLog DTO (manual entry)
+    public class CreateSensorLogDto
+    {
+        [Required(ErrorMessage = "Giá trị dữ liệu là bắt buộc")]
+        public double Data { get; set; }
+
+        /// <summary>Custom timestamp for the log entry. Defaults to current UTC time if not provided.</summary>
+        public DateTime? Timestamp { get; set; }
+    }
 }

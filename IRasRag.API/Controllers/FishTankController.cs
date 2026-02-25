@@ -116,6 +116,50 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy trạng thái nhanh của bể (Normal/Warning) dựa trên ngưỡng cảm biến
+        /// </summary>
+        [HttpGet("{id}/status")]
+        public async Task<IActionResult> GetTankStatus(Guid id)
+        {
+            try
+            {
+                var result = await _fishTankService.GetTankStatusAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy trạng thái bể: {TankId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("{id}/latest-data")]
+        public async Task<IActionResult> GetTankLatestData(Guid id)
+        {
+            try
+            {
+                var result = await _fishTankService.GetTankLatestDataAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving latest sensor data for tank: {TankId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         [HttpGet("{id}/cameras")]
         public async Task<IActionResult> GetCamerasByTankId(Guid id)
         {
