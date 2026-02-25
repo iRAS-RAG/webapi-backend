@@ -159,6 +159,15 @@ namespace IRasRag.Infrastructure.Persistence
             }
         }
 
+        private bool _hardDelete;
+
+        public void HardDelete<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            _hardDelete = true;
+            Remove(entity);
+        }
+
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries<BaseEntity>();
@@ -174,20 +183,28 @@ namespace IRasRag.Infrastructure.Persistence
                 {
                     entry.Entity.ModifiedAt = now;
                 }
-                else if (entry.State == EntityState.Deleted)
+                else if (
+                    entry.State == EntityState.Deleted
+                    && entry.Entity is ISoftDeletable softDeletable
+                    && !_hardDelete
+                )
                 {
-                    // Check if entity supports soft delete
-                    if (entry.Entity is ISoftDeletable softDeletable)
-                    {
-                        // Soft delete
-                        entry.State = EntityState.Modified;
-                        softDeletable.IsDeleted = true;
-                        softDeletable.DeletedAt = now;
-                        entry.Entity.ModifiedAt = now;
-                    }
+                    // Soft delete
+                    entry.State = EntityState.Modified;
+                    softDeletable.IsDeleted = true;
+                    softDeletable.DeletedAt = now;
+                    entry.Entity.ModifiedAt = now;
                 }
             }
-            return base.SaveChanges();
+
+            try
+            {
+                return base.SaveChanges();
+            }
+            finally
+            {
+                _hardDelete = false;
+            }
         }
 
         public override async Task<int> SaveChangesAsync(
@@ -207,20 +224,28 @@ namespace IRasRag.Infrastructure.Persistence
                 {
                     entry.Entity.ModifiedAt = now;
                 }
-                else if (entry.State == EntityState.Deleted)
+                else if (
+                    entry.State == EntityState.Deleted
+                    && entry.Entity is ISoftDeletable softDeletable
+                    && !_hardDelete
+                )
                 {
-                    // Check if entity supports soft delete
-                    if (entry.Entity is ISoftDeletable softDeletable)
-                    {
-                        // Soft delete
-                        entry.State = EntityState.Modified;
-                        softDeletable.IsDeleted = true;
-                        softDeletable.DeletedAt = now;
-                        entry.Entity.ModifiedAt = now;
-                    }
+                    // Soft delete
+                    entry.State = EntityState.Modified;
+                    softDeletable.IsDeleted = true;
+                    softDeletable.DeletedAt = now;
+                    entry.Entity.ModifiedAt = now;
                 }
             }
-            return await base.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            finally
+            {
+                _hardDelete = false;
+            }
         }
     }
 }

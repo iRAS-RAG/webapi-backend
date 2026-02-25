@@ -209,6 +209,31 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
+        public async Task<Result> HardDeleteUserAsync(Guid id)
+        {
+            try
+            {
+                var user = await _unitOfWork
+                    .GetRepository<User>()
+                    .GetByIdAsync(id, QueryType.IncludeDeleted);
+
+                if (user == null)
+                {
+                    return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
+                }
+
+                _unitOfWork.GetRepository<User>().HardDelete(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                return Result.Success("Xóa vĩnh viễn người dùng thành công.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xóa vĩnh viễn người dùng");
+                return Result.Failure("Lỗi khi xóa vĩnh viễn người dùng.", ResultType.Unexpected);
+            }
+        }
+
         public async Task<PaginatedResult<UserDto>> GetAllUsersAsync(UserListRequest request)
         {
             try

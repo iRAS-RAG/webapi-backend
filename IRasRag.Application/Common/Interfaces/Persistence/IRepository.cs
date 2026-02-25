@@ -88,6 +88,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
+        void HardDelete(T entity);
 
         #endregion
     }
