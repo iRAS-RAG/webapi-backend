@@ -37,17 +37,14 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
 
                 // Correlated subquery: latest log value for this sensor
                 LatestValue = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
                     .Select(l => (double?)l.Data)
                     .FirstOrDefault(),
 
                 IsWarning = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
                     .Select(l => (bool?)l.IsWarning)
                     .FirstOrDefault(),
 
                 RecordedAt = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
                     .Select(l => l.CreatedAt)
                     .FirstOrDefault(),
             });

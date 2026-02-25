@@ -59,7 +59,8 @@ namespace IRasRag.Application.DTOs
         public Guid SensorId { get; set; }
         public double Data { get; set; }
         public bool IsWarning { get; set; }
-        public string DataJson { get; set; }
+        [Required]
+        public string DataJson { get; set; } = "{}";
         public DateTime? CreatedAt { get; set; }
     }
 
@@ -70,6 +71,7 @@ namespace IRasRag.Application.DTOs
         public DateTime? To { get; set; }
 
         /// <summary>Interval in minutes for downsampling. If null, returns raw logs.</summary>
+        [Range(1, int.MaxValue, ErrorMessage = "Interval phải là số nguyên dương (tối thiểu 1 phút)")]
         public int? Interval { get; set; }
     }
 

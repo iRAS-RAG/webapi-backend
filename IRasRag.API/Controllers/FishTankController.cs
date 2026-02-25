@@ -1,10 +1,12 @@
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/tanks")]
     public class FishTankController : ControllerBase
@@ -22,6 +24,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
         {
             try
@@ -71,6 +74,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetFishTankById(Guid id)
         {
             try
@@ -95,6 +99,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
         {
             try
@@ -138,7 +143,17 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
-
+ 
+        /// <summary>
+        /// Lấy dữ liệu cảm biến mới nhất của bể cá theo ID.
+        /// Trả về danh sách các cảm biến cùng với giá trị đo gần nhất, loại cảm biến và trạng thái cảnh báo.
+        /// </summary>
+        /// <param name="id">ID của bể cá cần lấy dữ liệu cảm biến mới nhất.</param>
+        /// <returns>
+        /// 200 OK – Danh sách dữ liệu cảm biến mới nhất.<br/>
+        /// 404 Not Found – Không tìm thấy bể cá với ID đã cho.<br/>
+        /// 500 Internal Server Error – Lỗi hệ thống.
+        /// </returns>
         [HttpGet("{id}/latest-data")]
         public async Task<IActionResult> GetTankLatestData(Guid id)
         {
@@ -155,12 +170,23 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving latest sensor data for tank: {TankId}", id);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến mới nhất của bể với ID: {TankId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
+        /// <summary>
+        /// Lấy thông tin URL camera của bể cá theo ID.
+        /// Chỉ dành cho người dùng có vai trò Supervisor.
+        /// </summary>
+        /// <param name="id">ID của bể cá cần lấy thông tin camera.</param>
+        /// <returns>
+        /// 200 OK – Thông tin camera của bể cá bao gồm TankId, TankName và CameraUrl.<br/>
+        /// 404 Not Found – Không tìm thấy bể cá với ID đã cho.<br/>
+        /// 500 Internal Server Error – Lỗi hệ thống.
+        /// </returns>
         [HttpGet("{id}/cameras")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetCamerasByTankId(Guid id)
         {
             try
@@ -190,15 +216,13 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(
-                    ex,
-                    "Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}",
-                    id
-                );
+                    ex,"Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> DeleteFishTank(Guid id)
         {
             try

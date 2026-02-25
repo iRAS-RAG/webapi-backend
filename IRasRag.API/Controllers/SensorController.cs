@@ -40,7 +40,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while creating sensor log for sensor: {SensorId}", id);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -64,7 +64,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving logs for sensor: {SensorId}", id);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

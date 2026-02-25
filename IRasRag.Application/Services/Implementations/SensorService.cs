@@ -395,16 +395,14 @@ namespace IRasRag.Application.Services.Implementations
                     DataJson = "{}",
                 };
 
-                await logRepository.AddAsync(sensorLog);
-                await _unitOfWork.SaveChangesAsync();
-
-                // Override CreatedAt after save if a custom timestamp was provided
+                // If a custom timestamp is provided, set it before the initial save
                 if (dto.Timestamp.HasValue)
                 {
                     sensorLog.CreatedAt = dto.Timestamp.Value;
-                    logRepository.Update(sensorLog);
-                    await _unitOfWork.SaveChangesAsync();
                 }
+
+                await logRepository.AddAsync(sensorLog);
+                await _unitOfWork.SaveChangesAsync();
 
                 var logDto = _mapper.Map<SensorLogDto>(sensorLog);
                 _logger.LogInformation(
@@ -454,11 +452,14 @@ namespace IRasRag.Application.Services.Implementations
                     result = logs
                         .Where(l => l.CreatedAt.HasValue)
                         .GroupBy(l =>
-                            new DateTime(
-                                l.CreatedAt!.Value.Ticks / intervalTicks * intervalTicks,
-                                l.CreatedAt.Value.Kind
-                            )
-                        )
+                        {
+                            var createdAt = l.CreatedAt!.Value;
+                            var kind = createdAt.Kind == DateTimeKind.Unspecified
+                                ? DateTimeKind.Utc
+                                : createdAt.Kind;
+                            var roundedTicks = createdAt.Ticks / intervalTicks * intervalTicks;
+                            return new DateTime(roundedTicks, kind);
+                        })
                         .OrderBy(g => g.Key)
                         .Select(g => new SensorLogDto
                         {

@@ -7,6 +7,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -372,7 +373,7 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     TankId = tank.Id,
                     TankName = tank.Name,
-                    Status = warningSensors > 0 ? "Warning" : "Normal",
+                    Status = warningSensors > 0 ? TankStatus.Warning : TankStatus.Normal,
                     TotalSensors = totalSensors,
                     WarningSensors = warningSensors,
                 };

@@ -24,6 +24,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly IMapper _mapper;
         private readonly Mock<IRepository<FishTank>> _fishTankRepositoryMock;
         private readonly Mock<IRepository<Farm>> _farmRepositoryMock;
+        private readonly Mock<IRepository<Sensor>> _sensorRepositoryMock;
         private readonly FishTankService _sut;
 
         public FishTankServiceTest()
@@ -34,10 +35,13 @@ namespace IRasRag.Test.UnitTests.Application
             _fishTankRepositoryMock = new Mock<IRepository<FishTank>>();
             _farmRepositoryMock = new Mock<IRepository<Farm>>();
 
+            _sensorRepositoryMock = new Mock<IRepository<Sensor>>();
+
             _unitOfWorkMock
                 .Setup(x => x.GetRepository<FishTank>())
                 .Returns(_fishTankRepositoryMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<Farm>()).Returns(_farmRepositoryMock.Object);
+            _unitOfWorkMock.Setup(x => x.GetRepository<Sensor>()).Returns(_sensorRepositoryMock.Object);
 
             _sut = new FishTankService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
         }
@@ -1441,6 +1445,265 @@ namespace IRasRag.Test.UnitTests.Application
                 r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
                 Times.Once
             );
+        }
+
+        #endregion
+
+        #region GetTankLatestDataAsync Tests
+
+        [Fact]
+        public async Task GetTankLatestDataAsync_ShouldReturnSuccess_WhenTankHasSensors()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể A", IsDeleted = false };
+            var sensorData = new List<TankSensorLatestDataDto>
+            {
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(), SensorName = "Nhiệt độ 1",
+                    SensorTypeName = "Nhiệt độ", LatestValue = 28.5, IsWarning = false,
+                    RecordedAt = DateTime.UtcNow,
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(), SensorName = "pH 1",
+                    SensorTypeName = "pH", LatestValue = 7.2, IsWarning = false,
+                    RecordedAt = DateTime.UtcNow,
+                },
+            };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(sensorData);
+
+            // Act
+            var result = await _sut.GetTankLatestDataAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().HaveCount(2);
+            result.Data![0].SensorName.Should().Be("Nhiệt độ 1");
+            result.Data[1].LatestValue.Should().Be(7.2);
+        }
+
+        [Fact]
+        public async Task GetTankLatestDataAsync_ShouldReturnEmptyList_WhenTankHasNoSensors()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new List<TankSensorLatestDataDto>());
+
+            // Act
+            var result = await _sut.GetTankLatestDataAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().BeEmpty();
+            result.Message.Should().Be("Bể cá chưa có cảm biến nào");
+        }
+
+        [Fact]
+        public async Task GetTankLatestDataAsync_ShouldReturnNotFound_WhenTankDoesNotExist()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync((FishTank?)null);
+
+            // Act
+            var result = await _sut.GetTankLatestDataAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.NotFound);
+            _sensorRepositoryMock.Verify(
+                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GetTankLatestDataAsync_ShouldReturnUnexpected_WhenExceptionThrown()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ThrowsAsync(new Exception());
+
+            // Act
+            var result = await _sut.GetTankLatestDataAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.Unexpected);
+        }
+
+        #endregion
+
+        #region GetTankStatusAsync Tests
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnNormal_WhenNoSensorsAreWarning()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường", IsDeleted = false };
+            var sensorData = new List<TankSensorLatestDataDto>
+            {
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+            };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(sensorData);
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data!.Status.Should().Be(TankStatus.Normal);
+            result.Data.TotalSensors.Should().Be(3);
+            result.Data.WarningSensors.Should().Be(0);
+            result.Data.TankId.Should().Be(tankId);
+            result.Data.TankName.Should().Be("Bể Bình Thường");
+        }
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnWarning_WhenAtLeastOneSensorIsWarning()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo", IsDeleted = false };
+            var sensorData = new List<TankSensorLatestDataDto>
+            {
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+            };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(sensorData);
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data!.Status.Should().Be(TankStatus.Warning);
+            result.Data.TotalSensors.Should().Be(3);
+            result.Data.WarningSensors.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnWarning_WhenAllSensorsAreWarning()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm", IsDeleted = false };
+            var sensorData = new List<TankSensorLatestDataDto>
+            {
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+            };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(sensorData);
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data!.Status.Should().Be(TankStatus.Warning);
+            result.Data.TotalSensors.Should().Be(2);
+            result.Data.WarningSensors.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnNormal_WhenTankHasNoSensors()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync(tank);
+            _sensorRepositoryMock
+                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new List<TankSensorLatestDataDto>());
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Data!.Status.Should().Be(TankStatus.Normal);
+            result.Data.TotalSensors.Should().Be(0);
+            result.Data.WarningSensors.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnNotFound_WhenTankDoesNotExist()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ReturnsAsync((FishTank?)null);
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.NotFound);
+            _sensorRepositoryMock.Verify(
+                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GetTankStatusAsync_ShouldReturnUnexpected_WhenExceptionThrown()
+        {
+            // Arrange
+            var tankId = Guid.NewGuid();
+            _fishTankRepositoryMock
+                .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
+                .ThrowsAsync(new Exception());
+
+            // Act
+            var result = await _sut.GetTankStatusAsync(tankId);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Type.Should().Be(ResultType.Unexpected);
         }
 
         #endregion
