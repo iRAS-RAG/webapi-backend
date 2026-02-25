@@ -423,7 +423,7 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<List<SensorLogDto>>> GetSensorLogsAsync(Guid sensorId, SensorLogListRequest request)
+        public async Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsAsync(Guid sensorId, SensorLogListRequest request)
         {
             try
             {
@@ -435,21 +435,22 @@ namespace IRasRag.Application.Services.Implementations
                 if (sensor == null)
                 {
                     _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
-                    return Result<List<SensorLogDto>>.Failure(
+                    return Result<PaginatedResult<SensorLogDto>>.Failure(
                         $"Không tìm thấy cảm biến với Id: {sensorId}",
                         ResultType.NotFound
                     );
                 }
 
                 var logRepository = _unitOfWork.GetRepository<SensorLog>();
-                var logs = await logRepository.ListAsync(new SensorLogListSpec(sensorId, request));
-
-                List<SensorLogDto> result;
+                PaginatedResult<SensorLogDto> pagedResult;
 
                 if (request.Interval.HasValue && request.Interval.Value > 0)
                 {
+                    // Kéo toàn bộ dữ liệu (đã lọc theo From/To), gom nhóm trong bộ nhớ, rồi phân trang
+                    var allLogs = await logRepository.ListAsync(new SensorLogListSpec(sensorId, request));
+
                     var intervalTicks = TimeSpan.FromMinutes(request.Interval.Value).Ticks;
-                    result = logs
+                    var buckets = allLogs
                         .Where(l => l.CreatedAt.HasValue)
                         .GroupBy(l =>
                         {
@@ -471,28 +472,53 @@ namespace IRasRag.Application.Services.Implementations
                             CreatedAt = g.Key,
                         })
                         .ToList();
+
+                    // Phân trang trên danh sách bucket đã gom nhóm
+                    var totalBuckets = buckets.Count;
+                    var pagedBuckets = buckets
+                        .Skip((request.Page - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToList();
+
+                    pagedResult = new PaginatedResult<SensorLogDto>
+                    {
+                        Message = totalBuckets == 0 ? "Không có dữ liệu lịch sử" : "Lấy lịch sử cảm biến thành công",
+                        Data = pagedBuckets,
+                        Meta = PaginationBuilder.BuildPaginationMetadata(request.Page, request.PageSize, totalBuckets),
+                        Links = PaginationBuilder.BuildPaginationLinks(request.Page, request.PageSize, totalBuckets),
+                    };
                 }
                 else
                 {
-                    result = logs.ToList();
+                    // Phân trang trực tiếp từ cơ sở dữ liệu, không cần kéo toàn bộ dữ liệu về bộ nhớ
+                    var dbPaged = await logRepository.GetPagedAsync(
+                        new SensorLogListSpec(sensorId, request),
+                        request.Page,
+                        request.PageSize
+                    );
+
+                    pagedResult = new PaginatedResult<SensorLogDto>
+                    {
+                        Message = dbPaged.TotalItems == 0 ? "Không có dữ liệu lịch sử" : "Lấy lịch sử cảm biến thành công",
+                        Data = dbPaged.Items,
+                        Meta = PaginationBuilder.BuildPaginationMetadata(request.Page, request.PageSize, dbPaged.TotalItems),
+                        Links = PaginationBuilder.BuildPaginationLinks(request.Page, request.PageSize, dbPaged.TotalItems),
+                    };
                 }
 
                 _logger.LogInformation(
-                    "Lấy lịch sử cảm biến thành công: {Count} bản ghi",
-                    result.Count
+                    "Lấy lịch sử cảm biến thành công: {Count} bản ghi (trang {Page}/{TotalPages})",
+                    pagedResult.Data?.Count ?? 0,
+                    pagedResult.Meta?.Page,
+                    pagedResult.Meta?.TotalPages
                 );
 
-                return Result<List<SensorLogDto>>.Success(
-                    result,
-                    result.Count == 0
-                        ? "Không có dữ liệu lịch sử"
-                        : $"Lấy lịch sử cảm biến thành công: {result.Count} bản ghi"
-                );
+                return Result<PaginatedResult<SensorLogDto>>.Success(pagedResult, pagedResult.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy lịch sử cảm biến với Id: {SensorId}", sensorId);
-                return Result<List<SensorLogDto>>.Failure(
+                return Result<PaginatedResult<SensorLogDto>>.Failure(
                     "Đã xảy ra lỗi khi lấy lịch sử cảm biến",
                     ResultType.Unexpected
                 );

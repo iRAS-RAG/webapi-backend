@@ -59,7 +59,6 @@ namespace IRasRag.Application.DTOs
         public Guid SensorId { get; set; }
         public double Data { get; set; }
         public bool IsWarning { get; set; }
-        [Required]
         public string DataJson { get; set; } = "{}";
         public DateTime? CreatedAt { get; set; }
     }
@@ -70,9 +69,17 @@ namespace IRasRag.Application.DTOs
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
 
-        /// <summary>Interval in minutes for downsampling. If null, returns raw logs.</summary>
+        /// <summary>Interval tính bằng phút để gộp nhóm dữ liệu. Nếu null, trả về dữ liệu thô.</summary>
         [Range(1, int.MaxValue, ErrorMessage = "Interval phải là số nguyên dương (tối thiểu 1 phút)")]
         public int? Interval { get; set; }
+
+        /// <summary>Số trang hiện tại (mặc định: 1).</summary>
+        [Range(1, int.MaxValue, ErrorMessage = "Page phải lớn hơn 0")]
+        public int Page { get; set; } = 1;
+
+        /// <summary>Số bản ghi mỗi trang (mặc định: 50, tối đa: 500).</summary>
+        [Range(1, 500, ErrorMessage = "PageSize phải từ 1 đến 500")]
+        public int PageSize { get; set; } = 50;
     }
 
     // Create SensorLog DTO (manual entry)

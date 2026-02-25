@@ -46,7 +46,7 @@ namespace IRasRag.API.Controllers
         }
 
         /// <summary>
-        /// Lấy lịch sử dữ liệu cảm biến cho biểu đồ
+        /// Lấy lịch sử dữ liệu cảm biến cho biểu đồ (có phân trang)
         /// </summary>
         [HttpGet("{id}/logs")]
         public async Task<IActionResult> GetSensorLogs(Guid id, [FromQuery] SensorLogListRequest request)
@@ -56,7 +56,7 @@ namespace IRasRag.API.Controllers
                 var result = await _sensorService.GetSensorLogsAsync(id, request);
                 return result.Type switch
                 {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.Ok => Ok(result.Data),
                     ResultType.NotFound => NotFound(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),

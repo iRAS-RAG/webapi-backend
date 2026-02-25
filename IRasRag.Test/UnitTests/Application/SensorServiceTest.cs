@@ -560,16 +560,19 @@ namespace IRasRag.Test.UnitTests.Application
 
             _sensorRepoMock.Setup(r => r.GetByIdAsync(sensorId, QueryType.ActiveOnly)).ReturnsAsync(sensor);
             _logRepoMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<SensorLog, SensorLogDto>>(), QueryType.ActiveOnly))
-                .ReturnsAsync(logs);
+                .Setup(r => r.GetPagedAsync(
+                    It.IsAny<ISpecification<SensorLog, SensorLogDto>>(),
+                    It.IsAny<int>(), It.IsAny<int>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new PagedResult<SensorLogDto> { Items = logs, TotalItems = logs.Count });
 
             // Act
             var result = await _sut.GetSensorLogsAsync(sensorId, request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Data.Should().HaveCount(3);
-            result.Data!.Select(l => l.Data).Should().BeEquivalentTo(new[] { 10.0, 20.0, 30.0 });
+            result.Data!.Data.Should().HaveCount(3);
+            result.Data.Data!.Select(l => l.Data).Should().BeEquivalentTo(new[] { 10.0, 20.0, 30.0 });
+            result.Data.Meta!.TotalItems.Should().Be(3);
         }
 
         [Fact]
@@ -601,19 +604,20 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Data.Should().HaveCount(2);
+            result.Data!.Data.Should().HaveCount(2);
+            result.Data.Meta!.TotalItems.Should().Be(2);
 
-            var bucket1 = result.Data![0];
+            var bucket1 = result.Data.Data![0];
             bucket1.Data.Should().Be(15.0);       // avg(10, 20)
             bucket1.IsWarning.Should().BeFalse();  // no warning in bucket 1
 
-            var bucket2 = result.Data[1];
+            var bucket2 = result.Data.Data[1];
             bucket2.Data.Should().Be(35.0);        // avg(30, 40)
             bucket2.IsWarning.Should().BeTrue();   // one warning in bucket 2
 
             // Bucket keys should align to the hour boundary
-            result.Data[0].CreatedAt.Should().Be(baseTime);               // 00:00
-            result.Data[1].CreatedAt.Should().Be(baseTime.AddHours(1));   // 01:00
+            result.Data.Data[0].CreatedAt.Should().Be(baseTime);               // 00:00
+            result.Data.Data[1].CreatedAt.Should().Be(baseTime.AddHours(1));   // 01:00
         }
 
         [Fact]
@@ -626,16 +630,18 @@ namespace IRasRag.Test.UnitTests.Application
 
             _sensorRepoMock.Setup(r => r.GetByIdAsync(sensorId, QueryType.ActiveOnly)).ReturnsAsync(sensor);
             _logRepoMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<SensorLog, SensorLogDto>>(), QueryType.ActiveOnly))
-                .ReturnsAsync(new List<SensorLogDto>());
+                .Setup(r => r.GetPagedAsync(
+                    It.IsAny<ISpecification<SensorLog, SensorLogDto>>(),
+                    It.IsAny<int>(), It.IsAny<int>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new PagedResult<SensorLogDto> { Items = new List<SensorLogDto>(), TotalItems = 0 });
 
             // Act
             var result = await _sut.GetSensorLogsAsync(sensorId, request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            result.Data.Should().BeEmpty();
-            result.Message.Should().Be("Không có dữ liệu lịch sử");
+            result.Data!.Data.Should().BeEmpty();
+            result.Data.Message.Should().Be("Không có dữ liệu lịch sử");
         }
 
         [Fact]
@@ -651,7 +657,9 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
-            _logRepoMock.Verify(r => r.ListAsync(It.IsAny<ISpecification<SensorLog, SensorLogDto>>(), QueryType.ActiveOnly), Times.Never);
+            _logRepoMock.Verify(r => r.GetPagedAsync(
+                It.IsAny<ISpecification<SensorLog, SensorLogDto>>(),
+                It.IsAny<int>(), It.IsAny<int>(), It.IsAny<QueryType>()), Times.Never);
         }
 
         [Fact]

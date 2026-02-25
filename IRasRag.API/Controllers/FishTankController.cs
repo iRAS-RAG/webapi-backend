@@ -177,7 +177,6 @@ namespace IRasRag.API.Controllers
 
         /// <summary>
         /// Lấy thông tin URL camera của bể cá theo ID.
-        /// Chỉ dành cho người dùng có vai trò Supervisor.
         /// </summary>
         /// <param name="id">ID của bể cá cần lấy thông tin camera.</param>
         /// <returns>
@@ -186,7 +185,6 @@ namespace IRasRag.API.Controllers
         /// 500 Internal Server Error – Lỗi hệ thống.
         /// </returns>
         [HttpGet("{id}/cameras")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetCamerasByTankId(Guid id)
         {
             try
