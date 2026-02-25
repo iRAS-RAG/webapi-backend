@@ -26,6 +26,10 @@ namespace IRasRag.Infrastructure.Data.Seeds
             "aaaaaaaa-0000-0000-0000-000000001303"
         );
 
+        public static readonly Guid DoSensor1Id = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000001304"
+        );
+
         public static List<Sensor> Sensors =>
             new()
             {
@@ -54,6 +58,15 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     PinCode = 2,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
                     MasterBoardId = MasterBoardSeed.MasterBoard2Id,
+                    CreatedAt = SeedTimestamp,
+                },
+                new Sensor
+                {
+                    Id = DoSensor1Id,
+                    Name = "Cảm biến oxy hòa tan 1",
+                    PinCode = 4,
+                    SensorTypeId = SensorTypeSeed.DoSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
                     CreatedAt = SeedTimestamp,
                 },
             };

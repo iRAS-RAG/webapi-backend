@@ -20,6 +20,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
 
         public static readonly Guid PhLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001403");
 
+        public static readonly Guid DoLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001404");
+
         public static List<SensorLog> SensorLogs =>
             new()
             {
@@ -48,6 +50,15 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Data = 7.2,
                     IsWarning = false,
                     DataJson = "{\"ph\": 7.2}",
+                    CreatedAt = SeedTimestamp,
+                },
+                new SensorLog
+                {
+                    Id = DoLog1Id,
+                    SensorId = SensorSeed.DoSensor1Id,
+                    Data = 6.8,
+                    IsWarning = false,
+                    DataJson = "{\"dissolvedOxygen\": 6.8, \"unit\": \"mg/L\"}",
                     CreatedAt = SeedTimestamp,
                 },
             };
