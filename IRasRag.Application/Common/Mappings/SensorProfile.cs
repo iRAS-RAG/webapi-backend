@@ -41,6 +41,8 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.SensorLogs, opt => opt.Ignore())
                 .ForMember(dest => dest.Jobs, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<SensorLog, SensorLogDto>();
         }
     }
 }

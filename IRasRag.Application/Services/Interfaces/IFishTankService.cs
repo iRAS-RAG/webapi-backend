@@ -11,5 +11,7 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result<FishTankDto>> CreateFishTankAsync(CreateFishTankDto createDto);
         Task<Result<FishTankDto>> UpdateFishTankAsync(Guid id, UpdateFishTankDto updateDto);
         Task<Result> DeleteFishTankAsync(Guid id);
+        Task<Result<List<TankSensorLatestDataDto>>> GetTankLatestDataAsync(Guid tankId);
+        Task<Result<TankStatusDto>> GetTankStatusAsync(Guid tankId);
     }
 }
