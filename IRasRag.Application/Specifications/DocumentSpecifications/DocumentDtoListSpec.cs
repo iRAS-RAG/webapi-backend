@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.DocumentSpecifications
@@ -18,12 +18,7 @@ namespace IRasRag.Application.Specifications.DocumentSpecifications
                 ["title"] = d => d.Title,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    d => d.Title
-                ]
-            );
+            ApplySearch(request.SearchTerm, [d => d.Title]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "uploadedat");
 

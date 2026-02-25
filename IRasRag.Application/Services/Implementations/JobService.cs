@@ -38,7 +38,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var repository = _unitOfWork.GetRepository<Job>();
                 var spec = new JobDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var jobDtos = pagedResult.Items;
 

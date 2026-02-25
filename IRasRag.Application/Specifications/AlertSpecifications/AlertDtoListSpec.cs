@@ -17,7 +17,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 ["raisedat"] = a => a.RaisedAt,
                 ["status"] = a => a.Status,
                 ["value"] = a => a.Value,
-                ["fishtankname"] = a => a.FishTank.Name
+                ["fishtankname"] = a => a.FishTank.Name,
             };
 
             ApplySearch(

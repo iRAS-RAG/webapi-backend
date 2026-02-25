@@ -1,12 +1,13 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
 {
-    public class SpeciesStageConfigListSpec : BaseListSpec<SpeciesStageConfig, SpeciesStageConfigDto>
+    public class SpeciesStageConfigListSpec
+        : BaseListSpec<SpeciesStageConfig, SpeciesStageConfigDto>
     {
         public SpeciesStageConfigListSpec(SpeciesStageConfigListRequest request)
         {
@@ -19,12 +20,10 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                 ["feedtypename"] = s => s.FeedType.Name,
             };
 
-            ApplySearch(request.SearchTerm,
-                [
-                    s => s.Species.Name,
-                    s => s.GrowthStage.Name,
-                    s => s.FeedType.Name,
-                ]);
+            ApplySearch(
+                request.SearchTerm,
+                [s => s.Species.Name, s => s.GrowthStage.Name, s => s.FeedType.Name]
+            );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "speciesname");
 

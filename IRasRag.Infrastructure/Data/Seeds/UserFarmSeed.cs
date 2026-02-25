@@ -13,6 +13,12 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     UserId = UserSeed.SupervisorId,
                     FarmId = FarmSeed.DefaultFarmId,
                 },
+                new UserFarm
+                {
+                    Id = Guid.Parse("44444444-0001-0001-0001-000000000002"),
+                    UserId = UserSeed.OperatorId,
+                    FarmId = FarmSeed.DefaultFarmId,
+                },
             };
     }
 }

@@ -43,7 +43,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var repository = _unitOfWork.GetRepository<FeedingLog>();
                 var spec = new FeedingLogDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var feedingLogDtos = pagedResult.Items;
 

@@ -89,7 +89,7 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class JobListRequest : BasePaginatedListRequest 
+    public class JobListRequest : BasePaginatedListRequest
     {
         public bool? DefaultState { get; set; }
         public bool? IsActive { get; set; }

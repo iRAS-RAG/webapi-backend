@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.UserFarmSpecifications
@@ -19,13 +19,15 @@ namespace IRasRag.Application.Specifications.UserFarmSpecifications
                 ["createdat"] = uf => uf.CreatedAt ?? DateTime.MinValue,
             };
 
-            ApplySearch(request.SearchTerm,
+            ApplySearch(
+                request.SearchTerm,
                 [
                     uf => uf.User.Email,
                     uf => uf.User.FirstName,
                     uf => uf.User.LastName,
-                    uf => uf.Farm.Name
-                ]);
+                    uf => uf.Farm.Name,
+                ]
+            );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "createdat");
 

@@ -14,11 +14,14 @@ namespace IRasRag.Domain.Entities
         public string Name { get; set; }
 
         [Required]
-        public Guid SpeciesId { get; set; }
+        public Guid CurrentStageConfigId { get; set; }
 
         [Required]
         [MaxLength(20)]
         public FarmingBatchStatus Status { get; set; } = FarmingBatchStatus.ACTIVE;
+
+        [MaxLength(20)]
+        public BatchPausedReason? PausedReason { get; set; } = null;
 
         [Required]
         public DateTime StartDate { get; set; }
@@ -39,7 +42,7 @@ namespace IRasRag.Domain.Entities
 
         // Navigation properties
         public FishTank FishTank { get; set; }
-        public Species Species { get; set; }
+        public SpeciesStageConfig CurrentStageConfig { get; set; }
         public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<MortalityLog> MortalityLogs { get; set; }
         public ICollection<Alert> Alerts { get; set; }

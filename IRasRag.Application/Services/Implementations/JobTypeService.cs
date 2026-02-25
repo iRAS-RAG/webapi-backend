@@ -29,7 +29,9 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(JobTypeListRequest request)
+        public async Task<PaginatedResult<JobTypeDto>> GetAllJobTypesAsync(
+            JobTypeListRequest request
+        )
         {
             try
             {
@@ -41,7 +43,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var repository = _unitOfWork.GetRepository<JobType>();
                 var spec = new JobTypeDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var jobTypeDtos = pagedResult.Items;
 

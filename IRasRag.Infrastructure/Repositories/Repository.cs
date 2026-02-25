@@ -209,6 +209,11 @@ namespace IRasRag.Infrastructure.Repositories
             _dbSet.Remove(entity);
         }
 
+        public void HardDelete(T entity)
+        {
+            _context.HardDelete(entity);
+        }
+
         #endregion
     }
 }

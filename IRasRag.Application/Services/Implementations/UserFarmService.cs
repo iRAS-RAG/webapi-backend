@@ -29,7 +29,9 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(UserFarmListRequest request)
+        public async Task<PaginatedResult<UserFarmDto>> GetAllUserFarmsAsync(
+            UserFarmListRequest request
+        )
         {
             try
             {

@@ -25,7 +25,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllJobControlMappings([FromQuery] JobControlMappingListRequest request)
+        public async Task<IActionResult> GetAllJobControlMappings(
+            [FromQuery] JobControlMappingListRequest request
+        )
         {
             try
             {

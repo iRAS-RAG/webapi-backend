@@ -1,8 +1,8 @@
+using System.Linq.Expressions;
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
 using IRasRag.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
 {
@@ -15,7 +15,7 @@ namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
             var sortKeyMap = new Dictionary<string, Expression<Func<ControlDevice, object?>>>
             {
                 ["state"] = cd => cd.State,
-                ["name"] = cd => cd.Name
+                ["name"] = cd => cd.Name,
             };
 
             ApplySearch(

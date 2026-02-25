@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
@@ -19,16 +19,12 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
                 ["sensortypename"] = st => st.SensorType.Name,
             };
 
-
-
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "speciesname");
 
-            ApplySearch(request.SearchTerm,
-                [
-                    st => st.Species.Name,
-                    st => st.GrowthStage.Name,
-                    st => st.SensorType.Name
-                ]);
+            ApplySearch(
+                request.SearchTerm,
+                [st => st.Species.Name, st => st.GrowthStage.Name, st => st.SensorType.Name]
+            );
 
             Query.Select(st => new SpeciesThresholdDto
             {

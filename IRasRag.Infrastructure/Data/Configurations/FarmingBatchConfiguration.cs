@@ -12,6 +12,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.ConfigureTimestamps();
 
             builder.Property(fb => fb.Status).HasConversion<string>().HasMaxLength(20);
+            builder.Property(fb => fb.PausedReason).HasConversion<string>().HasMaxLength(20);
 
             builder
                 .HasOne(fb => fb.FishTank)
@@ -20,9 +21,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasOne(fb => fb.Species)
-                .WithMany(s => s.FarmingBatches)
-                .HasForeignKey(fb => fb.SpeciesId)
+                .HasOne(fb => fb.CurrentStageConfig)
+                .WithMany(ssc => ssc.FarmingBatches)
+                .HasForeignKey(fb => fb.CurrentStageConfigId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(fb => fb.FishTankId);

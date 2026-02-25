@@ -10,9 +10,11 @@ namespace IRasRag.Application.DTOs
         public Guid FishTankId { get; set; }
         public string FishTankName { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public Guid SpeciesId { get; set; }
+        public Guid SpeciesStageConfigId { get; set; }
         public string SpeciesName { get; set; } = string.Empty;
+        public string StageName { get; set; } = string.Empty;
         public FarmingBatchStatus Status { get; set; }
+        public BatchPausedReason? PausedReason { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EstimatedHarvestDate { get; set; }
         public DateTime? ActualHarvestDate { get; set; }
@@ -33,8 +35,8 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên lô nuôi không được vượt quá 255 ký tự")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "SpeciesId là bắt buộc")]
-        public Guid SpeciesId { get; set; }
+        [Required(ErrorMessage = "SpeciesStageConfigId là bắt buộc")]
+        public Guid SpeciesStageConfigId { get; set; }
 
         [Required(ErrorMessage = "Ngày bắt đầu là bắt buộc")]
         public DateTime StartDate { get; set; }
@@ -57,6 +59,10 @@ namespace IRasRag.Application.DTOs
         public string? Name { get; set; }
 
         public FarmingBatchStatus? Status { get; set; }
+
+        public BatchPausedReason? PausedReason { get; set; }
+
+        public Guid? SpeciesStageConfigId { get; set; }
 
         public DateTime? StartDate { get; set; }
 
