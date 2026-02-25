@@ -280,55 +280,6 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Nhập dữ liệu cảm biến thủ công
-        /// </summary>
-        [Authorize(Roles = "Supervisor")]
-        [HttpPost("sensors/{id}/logs")]
-        public async Task<IActionResult> CreateSensorLog(Guid id, [FromBody] CreateSensorLogDto dto)
-        {
-            try
-            {
-                var result = await _sensorService.CreateSensorLogAsync(id, dto);
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while creating sensor log for sensor: {SensorId}", id);
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        /// <summary>
-        /// Lấy lịch sử dữ liệu cảm biến cho biểu đồ
-        /// </summary>
-        [HttpGet("sensors/{id}/logs")]
-        public async Task<IActionResult> GetSensorLogs(Guid id, [FromQuery] SensorLogListRequest request)
-        {
-            try
-            {
-                var result = await _sensorService.GetSensorLogsAsync(id, request);
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving logs for sensor: {SensorId}", id);
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
         #endregion
 
         #region Master Boards
