@@ -203,17 +203,11 @@ namespace IRasRag.Application.Services.Implementations
                 await farmingBatchRepo.AddAsync(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Load related entities for response
-                var fishTank = await fishTankRepo.GetByIdAsync(farmingBatch.FishTankId);
-                var stageConfig = await stageConfigRepo.GetByIdAsync(
-                    farmingBatch.CurrentStageConfigId
-                );
-                farmingBatch.FishTank = fishTank!;
-                farmingBatch.CurrentStageConfig = stageConfig!;
+                var farmingBatchDto = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(farmingBatch.Id));
 
-                var farmingBatchDto = _mapper.Map<FarmingBatchDto>(farmingBatch);
-
-                return Result<FarmingBatchDto>.Success(farmingBatchDto, "Tạo lô nuôi thành công");
+                return Result<FarmingBatchDto>.Success(farmingBatchDto!, "Tạo lô nuôi thành công");
             }
             catch (Exception ex)
             {
