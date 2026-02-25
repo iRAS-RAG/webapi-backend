@@ -37,7 +37,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var cameraRepository = _unitOfWork.GetRepository<Camera>();
                 var spec = new CameraDtoListSpec(request);
-                var pagedResult = await cameraRepository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await cameraRepository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách camera thành công: {Count} camera",

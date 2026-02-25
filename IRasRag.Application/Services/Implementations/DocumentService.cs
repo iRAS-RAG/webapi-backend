@@ -29,7 +29,9 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(DocumentListRequest request)
+        public async Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(
+            DocumentListRequest request
+        )
         {
             try
             {
@@ -41,7 +43,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var documentRepository = _unitOfWork.GetRepository<Document>();
                 var spec = new DocumentDtoListSpec(request);
-                var pagedResult = await documentRepository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await documentRepository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách tài liệu thành công: {Count} tài liệu",

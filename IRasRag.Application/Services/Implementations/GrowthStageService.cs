@@ -104,7 +104,11 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var repository = _unitOfWork.GetRepository<GrowthStage>();
                 var spec = new GrowthStageDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var growthStageDtos = pagedResult.Items;
 

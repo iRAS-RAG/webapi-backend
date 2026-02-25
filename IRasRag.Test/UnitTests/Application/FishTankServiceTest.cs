@@ -823,7 +823,11 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new PagedResult<FishTankDto> { Items = Array.Empty<FishTankDto>(), TotalItems = 0 }
+                    new PagedResult<FishTankDto>
+                    {
+                        Items = Array.Empty<FishTankDto>(),
+                        TotalItems = 0,
+                    }
                 );
 
             // Act

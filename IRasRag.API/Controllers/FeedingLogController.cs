@@ -51,7 +51,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllFeedingLogs([FromQuery] FeedingLogListRequest request)
+        public async Task<IActionResult> GetAllFeedingLogs(
+            [FromQuery] FeedingLogListRequest request
+        )
         {
             try
             {

@@ -24,7 +24,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllSpeciesThresholds([FromQuery] SpeciesThresholdListRequest request)
+        public async Task<IActionResult> GetAllSpeciesThresholds(
+            [FromQuery] SpeciesThresholdListRequest request
+        )
         {
             try
             {

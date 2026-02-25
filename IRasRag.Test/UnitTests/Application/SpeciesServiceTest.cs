@@ -437,7 +437,11 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new PagedResult<SpeciesDto> { Items = Array.Empty<SpeciesDto>(), TotalItems = 0 }
+                    new PagedResult<SpeciesDto>
+                    {
+                        Items = Array.Empty<SpeciesDto>(),
+                        TotalItems = 0,
+                    }
                 );
 
             // Act

@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Ardalis.Specification;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Mappings;
@@ -309,12 +309,8 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .Callback(
-                    (
-                        ISpecification<GrowthStage, GrowthStageDto> spec,
-                        int _,
-                        int _,
-                        QueryType _
-                    ) => capturedSpec = spec
+                    (ISpecification<GrowthStage, GrowthStageDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
                 )
                 .ReturnsAsync(
                     (
@@ -373,9 +369,24 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
             var entities = new List<GrowthStage>
             {
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Zulu", Description = "d1" },
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Alpha", Description = "d2" },
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Beta", Description = "d3" },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Zulu",
+                    Description = "d1",
+                },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Alpha",
+                    Description = "d2",
+                },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Beta",
+                    Description = "d3",
+                },
             };
 
             _repositoryMock

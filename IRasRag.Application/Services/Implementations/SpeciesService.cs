@@ -91,7 +91,9 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<SpeciesDto>> GetAllSpeciesAsync(SpeciesListRequest request)
+        public async Task<PaginatedResult<SpeciesDto>> GetAllSpeciesAsync(
+            SpeciesListRequest request
+        )
         {
             try
             {
@@ -103,7 +105,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var repository = _unitOfWork.GetRepository<Species>();
                 var spec = new SpeciesDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var speciesDtos = pagedResult.Items;
 

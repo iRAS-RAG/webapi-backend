@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.UserSpecifications
@@ -18,17 +18,12 @@ namespace IRasRag.Application.Specifications.UserSpecifications
                 ["firstname"] = u => u.FirstName,
                 ["lastname"] = u => u.LastName,
                 ["rolename"] = u => u.Role.Name,
-                ["isdeleted"] = u => u.IsDeleted
+                ["isdeleted"] = u => u.IsDeleted,
             };
 
             ApplySearch(
                 request.SearchTerm,
-                [
-                    u => u.Email,
-                    u => u.FirstName,
-                    u => u.LastName,
-                    u => u.Role.Name
-                ]
+                [u => u.Email, u => u.FirstName, u => u.LastName, u => u.Role.Name]
             );
 
             ApplyFilter(request.IsDeleted, u => u.IsDeleted == request.IsDeleted);

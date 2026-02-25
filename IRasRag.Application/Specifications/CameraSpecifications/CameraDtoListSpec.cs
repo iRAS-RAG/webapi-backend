@@ -18,12 +18,7 @@ namespace IRasRag.Application.Specifications.CameraSpecifications
                 ["name"] = c => c.Name,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    c => c.Name,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [c => c.Name]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "createdat");
 

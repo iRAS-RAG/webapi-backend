@@ -51,7 +51,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllGrowthStages([FromQuery] GrowthStageListRequest request)
+        public async Task<IActionResult> GetAllGrowthStages(
+            [FromQuery] GrowthStageListRequest request
+        )
         {
             try
             {

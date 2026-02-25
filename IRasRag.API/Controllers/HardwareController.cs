@@ -62,10 +62,7 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving sensor types.");
-                return StatusCode(
-                    500,
-                    new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." }
-                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
@@ -86,7 +83,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving sensor type: {SensorTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving sensor type: {SensorTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -108,14 +109,21 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while creating sensor type: {SensorTypeName}", dto.Name);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while creating sensor type: {SensorTypeName}",
+                    dto.Name
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         [HttpPut("sensor-types/{id}")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> UpdateSensorType(Guid id, [FromBody] UpdateSensorTypeDto dto)
+        public async Task<IActionResult> UpdateSensorType(
+            Guid id,
+            [FromBody] UpdateSensorTypeDto dto
+        )
         {
             try
             {
@@ -131,7 +139,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while updating sensor type: {SensorTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating sensor type: {SensorTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -153,7 +165,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while deleting sensor type: {SensorTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while deleting sensor type: {SensorTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -328,7 +344,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving master board: {MasterBoardId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving master board: {MasterBoardId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -360,7 +380,10 @@ namespace IRasRag.API.Controllers
 
         [HttpPut("masterboards/{id}")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> UpdateMasterBoard(Guid id, [FromBody] UpdateMasterBoardDto dto)
+        public async Task<IActionResult> UpdateMasterBoard(
+            Guid id,
+            [FromBody] UpdateMasterBoardDto dto
+        )
         {
             try
             {
@@ -376,7 +399,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while updating master board: {MasterBoardId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating master board: {MasterBoardId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -399,7 +426,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while deleting master board: {MasterBoardId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while deleting master board: {MasterBoardId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -409,7 +440,9 @@ namespace IRasRag.API.Controllers
         #region Control Devices
 
         [HttpGet("control-devices")]
-        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
+        public async Task<IActionResult> GetAllControlDevices(
+            [FromQuery] ControlDeviceListRequest request
+        )
         {
             try
             {
@@ -449,7 +482,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving control device: {ControlDeviceId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving control device: {ControlDeviceId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -481,7 +518,10 @@ namespace IRasRag.API.Controllers
 
         [HttpPut("control-devices/{id}")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> UpdateControlDevice(Guid id, [FromBody] UpdateControlDeviceDto dto)
+        public async Task<IActionResult> UpdateControlDevice(
+            Guid id,
+            [FromBody] UpdateControlDeviceDto dto
+        )
         {
             try
             {
@@ -497,7 +537,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while updating control device: {ControlDeviceId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating control device: {ControlDeviceId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -520,7 +564,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while deleting control device: {ControlDeviceId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while deleting control device: {ControlDeviceId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -530,7 +578,9 @@ namespace IRasRag.API.Controllers
         #region Control Device Types
 
         [HttpGet("control-device-types")]
-        public async Task<IActionResult> GetAllControlDeviceTypes([FromQuery] ControlDeviceTypeListRequest request)
+        public async Task<IActionResult> GetAllControlDeviceTypes(
+            [FromQuery] ControlDeviceTypeListRequest request
+        )
         {
             try
             {
@@ -571,14 +621,20 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving control device type: {ControlDeviceTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving control device type: {ControlDeviceTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         [HttpPost("control-device-types")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateControlDeviceType([FromBody] CreateControlDeviceTypeDto dto)
+        public async Task<IActionResult> CreateControlDeviceType(
+            [FromBody] CreateControlDeviceTypeDto dto
+        )
         {
             try
             {
@@ -593,14 +649,21 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while creating control device type: {ControlDeviceTypeName}", dto.Name);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while creating control device type: {ControlDeviceTypeName}",
+                    dto.Name
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         [HttpPut("control-device-types/{id}")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> UpdateControlDeviceType(Guid id, [FromBody] UpdateControlDeviceTypeDto dto)
+        public async Task<IActionResult> UpdateControlDeviceType(
+            Guid id,
+            [FromBody] UpdateControlDeviceTypeDto dto
+        )
         {
             try
             {
@@ -616,7 +679,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while updating control device type: {ControlDeviceTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating control device type: {ControlDeviceTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -638,7 +705,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while deleting control device type: {ControlDeviceTypeId}", id);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while deleting control device type: {ControlDeviceTypeId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

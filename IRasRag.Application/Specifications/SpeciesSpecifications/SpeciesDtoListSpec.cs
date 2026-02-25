@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesSpecifications
@@ -17,20 +17,11 @@ namespace IRasRag.Application.Specifications.SpeciesSpecifications
                 ["name"] = s => s.Name,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    s => s.Name,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [s => s.Name]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 
-            Query.Select(s => new SpeciesDto
-            {
-                Id = s.Id,
-                Name = s.Name,
-            });
+            Query.Select(s => new SpeciesDto { Id = s.Id, Name = s.Name });
         }
     }
 }

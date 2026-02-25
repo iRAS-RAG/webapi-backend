@@ -426,12 +426,8 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .Callback(
-                    (
-                        ISpecification<FeedType, FeedTypeDto> spec,
-                        int _,
-                        int _,
-                        QueryType _
-                    ) => capturedSpec = spec
+                    (ISpecification<FeedType, FeedTypeDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
                 )
                 .ReturnsAsync(
                     (
@@ -486,9 +482,24 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new FeedTypeListRequest { Page = 1, PageSize = 10 };
             var entities = new List<FeedType>
             {
-                new FeedType { Id = Guid.NewGuid(), Name = "Zulu", ProteinPercentage = 30.0f },
-                new FeedType { Id = Guid.NewGuid(), Name = "Alpha", ProteinPercentage = 40.0f },
-                new FeedType { Id = Guid.NewGuid(), Name = "Beta", ProteinPercentage = 20.0f },
+                new FeedType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Zulu",
+                    ProteinPercentage = 30.0f,
+                },
+                new FeedType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Alpha",
+                    ProteinPercentage = 40.0f,
+                },
+                new FeedType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Beta",
+                    ProteinPercentage = 20.0f,
+                },
             };
 
             _repositoryMock
@@ -550,7 +561,11 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new PagedResult<FeedTypeDto> { Items = Array.Empty<FeedTypeDto>(), TotalItems = 0 }
+                    new PagedResult<FeedTypeDto>
+                    {
+                        Items = Array.Empty<FeedTypeDto>(),
+                        TotalItems = 0,
+                    }
                 );
 
             // Act

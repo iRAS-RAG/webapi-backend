@@ -104,13 +104,19 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<FeedTypeDto>> GetAllFeedTypesAsync(FeedTypeListRequest request)
+        public async Task<PaginatedResult<FeedTypeDto>> GetAllFeedTypesAsync(
+            FeedTypeListRequest request
+        )
         {
             try
             {
                 var repository = _unitOfWork.GetRepository<FeedType>();
                 var spec = new FeedTypeDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 var feedTypeDtos = pagedResult.Items;
 

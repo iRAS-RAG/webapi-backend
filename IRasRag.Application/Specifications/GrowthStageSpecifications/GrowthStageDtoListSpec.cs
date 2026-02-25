@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.GrowthStageSpecifications
@@ -14,16 +14,10 @@ namespace IRasRag.Application.Specifications.GrowthStageSpecifications
 
             var sortMap = new Dictionary<string, Expression<Func<GrowthStage, object?>>>
             {
-                ["name"] = gs => gs.Name
+                ["name"] = gs => gs.Name,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    gs => gs.Name,
-                    gs => gs.Description,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [gs => gs.Name, gs => gs.Description]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 

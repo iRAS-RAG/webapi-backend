@@ -27,7 +27,9 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả khuyến nghị
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllRecommendations([FromQuery] RecommendationListRequest request)
+        public async Task<IActionResult> GetAllRecommendations(
+            [FromQuery] RecommendationListRequest request
+        )
         {
             try
             {

@@ -44,5 +44,5 @@ namespace IRasRag.Application.DTOs
         public string? Notes { get; set; }
     }
 
-    public class CorrectiveActionListRequest : BasePaginatedListRequest{}
+    public class CorrectiveActionListRequest : BasePaginatedListRequest { }
 }

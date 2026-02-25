@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.FarmSpecifications
@@ -12,7 +12,10 @@ namespace IRasRag.Application.Specifications.FarmSpecifications
         {
             Query.AsNoTracking();
 
-            ApplyFilter(request.UserId, f => f.UserFarms.Any(uf => uf.UserId == request.UserId!.Value));
+            ApplyFilter(
+                request.UserId,
+                f => f.UserFarms.Any(uf => uf.UserId == request.UserId!.Value)
+            );
 
             var sortMap = new Dictionary<string, Expression<Func<Farm, object?>>>
             {
@@ -21,14 +24,7 @@ namespace IRasRag.Application.Specifications.FarmSpecifications
                 ["email"] = f => f.Email,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    f => f.Name,
-                    f => f.Address,
-                    f => f.Email,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [f => f.Name, f => f.Address, f => f.Email]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 

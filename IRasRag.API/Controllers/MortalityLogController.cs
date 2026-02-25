@@ -51,7 +51,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllMortalityLogs([FromQuery] MortalityLogListRequest request)
+        public async Task<IActionResult> GetAllMortalityLogs(
+            [FromQuery] MortalityLogListRequest request
+        )
         {
             try
             {

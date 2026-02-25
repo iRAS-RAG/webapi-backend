@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.RecommendationSpecifications
@@ -17,12 +17,7 @@ namespace IRasRag.Application.Specifications.RecommendationSpecifications
                 ["documenttitle"] = r => r.Document.Title,
             };
 
-            ApplySearch(request.SearchTerm,
-                [
-                    r => r.SuggestionText,
-                    r => r.Document.Title,
-                ]
-                );
+            ApplySearch(request.SearchTerm, [r => r.SuggestionText, r => r.Document.Title]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "documenttitle");
 
