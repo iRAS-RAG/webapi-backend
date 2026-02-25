@@ -28,5 +28,6 @@ namespace IRasRag.Domain.Entities
         public Species Species { get; set; }
         public GrowthStage GrowthStage { get; set; }
         public FeedType FeedType { get; set; }
+        public ICollection<FarmingBatch> FarmingBatches { get; set; }
     }
 }

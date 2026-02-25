@@ -7,6 +7,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmingBatchSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -77,28 +78,17 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
-                var farmingBatch = await farmingBatchRepo.FirstOrDefaultAsync(fb => fb.Id == id);
+                var farmingBatchDto = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(id));
 
-                if (farmingBatch == null)
+                if (farmingBatchDto == null)
                 {
                     return Result<FarmingBatchDto>.Failure(
                         "Không tìm thấy lô nuôi",
                         ResultType.NotFound
                     );
                 }
-
-                // Load related entities
-                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var fishTank = await fishTankRepo.GetByIdAsync(farmingBatch.FishTankId);
-
-                var speciesRepo = _unitOfWork.GetRepository<Species>();
-                var species = await speciesRepo.GetByIdAsync(farmingBatch.SpeciesId);
-
-                farmingBatch.FishTank = fishTank!;
-                farmingBatch.Species = species!;
-
-                var farmingBatchDto = _mapper.Map<FarmingBatchDto>(farmingBatch);
 
                 return Result<FarmingBatchDto>.Success(
                     farmingBatchDto,
@@ -136,13 +126,44 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Validate Species exists
-                var speciesRepo = _unitOfWork.GetRepository<Species>();
-                var speciesExists = await speciesRepo.AnyAsync(s => s.Id == createDto.SpeciesId);
-                if (!speciesExists)
+                // Guard: no ACTIVE batch in the same tank
+                var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var hasActiveBatch = await farmingBatchRepo.AnyAsync(fb =>
+                    fb.FishTankId == createDto.FishTankId && fb.Status == FarmingBatchStatus.ACTIVE
+                );
+                if (hasActiveBatch)
                 {
                     return Result<FarmingBatchDto>.Failure(
-                        "Loài cá không tồn tại",
+                        "Bể cá đang có lô nuôi hoạt động, không thể tạo lô nuôi mới",
+                        ResultType.Conflict
+                    );
+                }
+
+                // Guard: no PAUSED batch in the same tank that blocks a new batch
+                var pausedBatch = await farmingBatchRepo.FirstOrDefaultAsync(fb =>
+                    fb.FishTankId == createDto.FishTankId && fb.Status == FarmingBatchStatus.PAUSED
+                );
+                if (pausedBatch != null)
+                {
+                    var pausedReason = pausedBatch.PausedReason;
+                    if (!pausedReason.HasValue || !pausedReason.Value.AllowsAddNewBatch())
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Bể cá đang chứa cá từ lô nuôi đang tạm dừng, không thể tạo lô nuôi mới",
+                            ResultType.Conflict
+                        );
+                    }
+                }
+
+                // Validate SpeciesStageConfig exists
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var stageConfigExists = await stageConfigRepo.AnyAsync(sc =>
+                    sc.Id == createDto.SpeciesStageConfigId
+                );
+                if (!stageConfigExists)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Cấu hình giai đoạn không tồn tại",
                         ResultType.BadRequest
                     );
                 }
@@ -179,15 +200,16 @@ namespace IRasRag.Application.Services.Implementations
                 farmingBatch.Name = trimmedName;
                 farmingBatch.UnitOfMeasure = trimmedUnitOfMeasure;
 
-                var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
                 await farmingBatchRepo.AddAsync(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
 
                 // Load related entities for response
                 var fishTank = await fishTankRepo.GetByIdAsync(farmingBatch.FishTankId);
-                var species = await speciesRepo.GetByIdAsync(farmingBatch.SpeciesId);
+                var stageConfig = await stageConfigRepo.GetByIdAsync(
+                    farmingBatch.CurrentStageConfigId
+                );
                 farmingBatch.FishTank = fishTank!;
-                farmingBatch.Species = species!;
+                farmingBatch.CurrentStageConfig = stageConfig!;
 
                 var farmingBatchDto = _mapper.Map<FarmingBatchDto>(farmingBatch);
 
