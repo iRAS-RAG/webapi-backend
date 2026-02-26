@@ -80,38 +80,6 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        //public async Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByTankAsync(Guid fishTankId)
-        //{
-        //    var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
-        //    if(fishTank == null)
-        //    {
-        //        _logger.LogWarning("Không tìm thấy bể cá với Id: {FishTankId}", fishTankId);
-        //        return Result<IReadOnlyList<SensorLogDto>>.Failure(
-        //            $"Không tìm thấy bể cá với Id: {fishTankId}",
-        //            ResultType.NotFound
-        //        );
-        //    }
-
-        //    var result = await _unitOfWork.SensorLogs.GetLatestLogPerSensorByTank(fishTankId);
-        //    return Result<IReadOnlyList<SensorLogDto>>.Success(result, "Lấy nhật ký cảm biến thành công");
-        //}
-
-        //public async Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByFarmAsync(Guid farmId)
-        //{
-        //    var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(farmId);
-        //    if (farm == null)
-        //    {
-        //        _logger.LogWarning("Không tìm thấy trang trại với Id: {FishTankId}", farm);
-        //        return Result<IReadOnlyList<SensorLogDto>>.Failure(
-        //            $"Không tìm thấy trang trại với Id: {farmId}",
-        //            ResultType.NotFound
-        //        );
-        //    }
-
-        //    var result = await _unitOfWork.SensorLogs.GetLatestLogPerSensorByFarm(farmId);
-        //    return Result<IReadOnlyList<SensorLogDto>>.Success(result, "Lấy nhật ký cảm biến thành công");
-        //}
-
         public async Task<Result<SensorDto>> GetSensorByIdAsync(Guid id)
         {
             try
