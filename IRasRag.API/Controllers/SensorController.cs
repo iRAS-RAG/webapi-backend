@@ -50,23 +50,9 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("logs/latest/{fishTankId}")]
-        public async Task<IActionResult> GetLatestLogsPerSensorByTank(Guid fishTankId)
-        {
-            var result = await _sensorService.GetLatestSensorLogsByTankAsync(fishTankId);
-            return result.Type switch
-            {
-                ResultType.Ok => Ok(new { result.Message, result.Data }),
-                ResultType.NotFound => NotFound(new { result.Message }),
-                ResultType.BadRequest => BadRequest(new { result.Message }),
-                _ => StatusCode(500, new { result.Message }),
-            };
-        }
-
         /// <summary>
         /// Lấy thông tin cảm biến theo Id
         /// </summary>
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSensorById(Guid id)
         {

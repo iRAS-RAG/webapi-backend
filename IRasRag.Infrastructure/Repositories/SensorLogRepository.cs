@@ -10,54 +10,32 @@ namespace IRasRag.Infrastructure.Repositories
 {
     public class SensorLogRepository : Repository<SensorLog>, ISensorLogRepository
     {
-        public SensorLogRepository(AppDbContext context) : base(context)
-        {
-        }
+        public SensorLogRepository(AppDbContext context)
+            : base(context) { }
 
-        public async Task<IReadOnlyList<SensorLogDto>> GetLatestLogPerSensorByTankId(Guid fishTankId)
+        public async Task<SensorHistoryDto> GetLogsByTimeRangeAsync(Guid sensorId, DateOnly date)
         {
-            var query = GetQueryable();
-            var result = await query
-                    .AsNoTracking()
-                    .Where
-                    (
-                        sl => sl.Sensor.MasterBoard.FishTankId == fishTankId &&
-                        // Keep only the latest log for each sensor (by max CreatedAt)
-                        sl.CreatedAt == query.Where(innerSl => innerSl.SensorId == sl.SensorId)
-                            .Max(innerSl => innerSl.CreatedAt)
-                    )
-                    .Select(sl => new SensorLogDto
-                    {
-                        SensorName = sl.Sensor.Name,
-                        SensorTypeName = sl.Sensor.SensorType.Name,
-                        LastValue = sl.Data,
-                        LastUpdated = sl.CreatedAt!.Value
-                    })
-                    .ToListAsync();
-            return result;
-        }
+            var start = date;
+            var end = date.AddDays(1);
+            var query = await GetQueryable()
+                .AsNoTracking()
+                .Where(sl =>
+                    sl.SensorId == sensorId
+                    && sl.CreatedAt >= start.ToDateTime(TimeOnly.MinValue)
+                    && sl.CreatedAt < end.ToDateTime(TimeOnly.MinValue)
+                )
+                .GroupBy(x => (x.CreatedAt.Value.Hour / 4) * 4)
+                .OrderBy(g => g.Key)
+                .Select(g => new { Bucket = g.Key, Avg = g.Average(x => x.Data) })
+                .ToListAsync();
 
-        public async Task<IReadOnlyList<SensorLogDto>> GetLatestLogPerSensorByFarm(Guid farmId)
-        {
-            var query = GetQueryable();
-            var result = await query
-                    .AsNoTracking()
-                    .Where
-                    (
-                        sl => sl.Sensor.MasterBoard.FishTank.FarmId == farmId &&
-                        // Keep only the latest log for each sensor (by max CreatedAt)
-                        sl.CreatedAt == query.Where(innerSl => innerSl.SensorId == sl.SensorId)
-                            .Max(innerSl => innerSl.CreatedAt)
-                    )
-                    .Select(sl => new SensorLogDto
-                    {
-                        SensorName = sl.Sensor.Name,
-                        SensorTypeName = sl.Sensor.SensorType.Name,
-                        LastValue = sl.Data,
-                        LastUpdated = sl.CreatedAt!.Value
-                    })
-                    .ToListAsync();
-            return result;
+            var fixedBuckets = new[] { 0, 4, 8, 12, 16, 20 };
+
+            var dataset = fixedBuckets
+                .Select(hour => query.FirstOrDefault(x => x.Bucket == hour)?.Avg ?? 0)
+                .ToList();
+
+            return new SensorHistoryDto { Datasets = dataset };
         }
     }
 }

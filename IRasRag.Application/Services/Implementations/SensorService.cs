@@ -80,22 +80,37 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsAsync(Guid fishTankId)
-        {
-            var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
-            if(fishTank == null)
-            {
-                _logger.LogWarning("Không tìm thấy bể cá với Id: {FishTankId}", fishTankId);
-                return Result<IReadOnlyList<SensorLogDto>>.Failure(
-                    $"Không tìm thấy bể cá với Id: {fishTankId}",
-                    ResultType.NotFound
-                );
-            }
+        //public async Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByTankAsync(Guid fishTankId)
+        //{
+        //    var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
+        //    if(fishTank == null)
+        //    {
+        //        _logger.LogWarning("Không tìm thấy bể cá với Id: {FishTankId}", fishTankId);
+        //        return Result<IReadOnlyList<SensorLogDto>>.Failure(
+        //            $"Không tìm thấy bể cá với Id: {fishTankId}",
+        //            ResultType.NotFound
+        //        );
+        //    }
 
-            var result = await _unitOfWork.SensorLogs.GetLatestLogPerSensorByTankId(fishTankId);
-            return Result<IReadOnlyList<SensorLogDto>>.Success(result, "Lấy nhật ký cảm biến thành công");
-        }
+        //    var result = await _unitOfWork.SensorLogs.GetLatestLogPerSensorByTank(fishTankId);
+        //    return Result<IReadOnlyList<SensorLogDto>>.Success(result, "Lấy nhật ký cảm biến thành công");
+        //}
 
+        //public async Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByFarmAsync(Guid farmId)
+        //{
+        //    var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(farmId);
+        //    if (farm == null)
+        //    {
+        //        _logger.LogWarning("Không tìm thấy trang trại với Id: {FishTankId}", farm);
+        //        return Result<IReadOnlyList<SensorLogDto>>.Failure(
+        //            $"Không tìm thấy trang trại với Id: {farmId}",
+        //            ResultType.NotFound
+        //        );
+        //    }
+
+        //    var result = await _unitOfWork.SensorLogs.GetLatestLogPerSensorByFarm(farmId);
+        //    return Result<IReadOnlyList<SensorLogDto>>.Success(result, "Lấy nhật ký cảm biến thành công");
+        //}
 
         public async Task<Result<SensorDto>> GetSensorByIdAsync(Guid id)
         {
@@ -125,6 +140,36 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi lấy cảm biến với Id: {Id}", id);
                 return Result<SensorDto>.Failure(
                     "Đã xảy ra lỗi khi lấy cảm biến",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
+        public async Task<Result<SensorHistoryDto>> GetSensorHistoryAsync(
+            Guid sensorId,
+            DateOnly date
+        )
+        {
+            try
+            {
+                var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(sensorId);
+                if (sensor == null)
+                {
+                    _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
+                    return Result<SensorHistoryDto>.Failure(
+                        $"Không tìm thấy cảm biến với Id: {sensorId}",
+                        ResultType.NotFound
+                    );
+                }
+                var result = await _unitOfWork.SensorLogs.GetLogsByTimeRangeAsync(sensorId, date);
+
+                return Result<SensorHistoryDto>.Success(result, "Lấy lịch sử cảm biến thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy lịch sử cảm biến với Id: {SensorId}", sensorId);
+                return Result<SensorHistoryDto>.Failure(
+                    "Đã xảy ra lỗi khi lấy lịch sử cảm biến",
                     ResultType.Unexpected
                 );
             }
@@ -381,16 +426,6 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi xóa cảm biến với Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa cảm biến", ResultType.Unexpected);
             }
-        }
-
-        public Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByTankAsync(Guid fishTankId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Result<IReadOnlyList<SensorLogDto>>> GetLatestSensorLogsByFarmAsync(Guid farmId)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }
