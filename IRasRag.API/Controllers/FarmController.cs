@@ -1,6 +1,7 @@
 using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
+using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,18 +14,21 @@ namespace IRasRag.API.Controllers
     public class FarmController : ControllerBase
     {
         private readonly IFarmService _farmService;
+        private readonly ISensorService _sensorService;
         private readonly IFishTankService _fishTankService;
         private readonly ILogger<FarmController> _logger;
         private readonly HttpContextUtils _httpContextUtils;
 
         public FarmController(
             IFarmService farmService,
+            ISensorService sensorService,
             IFishTankService fishTankService,
             ILogger<FarmController> logger,
             HttpContextUtils httpContextUtils
         )
         {
             _farmService = farmService;
+            _sensorService = sensorService;
             _fishTankService = fishTankService;
             _logger = logger;
             _httpContextUtils = httpContextUtils;
@@ -59,7 +63,7 @@ namespace IRasRag.API.Controllers
             try
             {
                 request.UserId = _httpContextUtils.GetUserId();
-                if(request.UserId == null)
+                if (request.UserId == null)
                 {
                     return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
                 }
@@ -131,35 +135,8 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("{farmId}/tanks")]
-        public async Task<IActionResult> GetAllFishTanksByFarm(Guid farmId, [FromQuery] FishTankListRequest request)
-        {
-            try
-            {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-
-                var result = await _fishTankService.GetAllFishTanksByFarmAsync(farmId, request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy danh sách bể cá.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
         [HttpGet("{farmId}/tanks/status-summary")]
-        public async Task<IActionResult> GetLatestFishTankMetricsByFarm([FromQuery] Guid farmId)
+        public async Task<IActionResult> GetLatestFishTankMetricsByFarm(Guid farmId)
         {
             try
             {
@@ -173,7 +150,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy thông tin bể cá cho nông trại với ID: {FarmId}", farmId);
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy thông tin bể cá cho nông trại với ID: {FarmId}",
+                    farmId
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
