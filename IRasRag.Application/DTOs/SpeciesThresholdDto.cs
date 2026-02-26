@@ -7,9 +7,9 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public string SpeciesName { get; set; }
         public string GrowthStageName { get; set; }
-        public string SensorTypeName { get; set; }
-        public float MinValue { get; set; }
-        public float MaxValue { get; set; }
+        public float Low { get; set; }
+        public float High { get; set; }
+        public string Unit { get; set; }
     }
 
     public class CreateSpeciesThresholdDto
@@ -40,3 +40,4 @@ namespace IRasRag.Application.DTOs
     // List Request DTO
     public class SpeciesThresholdListRequest : BasePaginatedListRequest { }
 }
+

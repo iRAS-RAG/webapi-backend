@@ -351,7 +351,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -371,7 +371,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -390,7 +390,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -491,7 +491,13 @@ namespace IRasRag.Test.UnitTests.Application
                         int page,
                         int pageSize,
                         QueryType _
-                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(list, spec, page, pageSize)
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            list,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
@@ -502,10 +508,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách ngưỡng sinh trưởng thành công");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result
-                .Data.Select(x => x.SensorTypeName)
-                .Should()
-                .ContainInOrder("Temperature", "PH");
+            result.Data.Select(x => x.Unit).Should().ContainInOrder("Temperature", "PH");
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
@@ -583,7 +586,13 @@ namespace IRasRag.Test.UnitTests.Application
                         int page,
                         int pageSize,
                         QueryType _
-                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(list, spec, page, pageSize)
+                    ) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            list,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
@@ -640,7 +649,9 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock.Verify(
                 r =>
                     r.GetPagedAsync<SpeciesThresholdDto>(
-                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s => s != null),
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s != null
+                        ),
                         request.Page,
                         request.PageSize,
                         It.IsAny<QueryType>()
@@ -690,7 +701,9 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock.Verify(
                 r =>
                     r.GetPagedAsync<SpeciesThresholdDto>(
-                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s => s != null),
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s != null
+                        ),
                         request.Page,
                         request.PageSize,
                         It.IsAny<QueryType>()

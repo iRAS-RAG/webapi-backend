@@ -129,7 +129,38 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(new SpeciesThresholdByIdSpec(id));
+                    .FirstOrDefaultAsync(new SpeciesThresholdFilteredDtoSpec(st => st.Id == id));
+
+                if (threshold == null)
+                    return Result<SpeciesThresholdDto>.Failure(
+                        "Ngưỡng sinh trưởng không tồn tại.",
+                        ResultType.NotFound
+                    );
+
+                return Result<SpeciesThresholdDto>.Success(
+                    threshold,
+                    "Lấy ngưỡng sinh trưởng thành công."
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving species threshold by ID");
+                return Result<SpeciesThresholdDto>.Failure(
+                    "Lỗi khi truy xuất ngưỡng sinh trưởng.",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
+        public async Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdBySpecies(Guid speciesId)
+        {
+            try
+            {
+                var threshold = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(
+                        new SpeciesThresholdFilteredDtoSpec(st => st.Species.Id == speciesId)
+                    );
 
                 if (threshold == null)
                     return Result<SpeciesThresholdDto>.Failure(
