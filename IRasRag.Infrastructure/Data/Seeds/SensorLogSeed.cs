@@ -4,8 +4,16 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class SensorLogSeed
     {
-        // Base date: today at midnight UTC so logs always fall within a 24-hour query window.
-        private static readonly DateTime SeedBase = DateTime.UtcNow.Date;
+        // Base date: fixed at midnight UTC for consistent manual testing.
+        private static readonly DateTime SeedBase = new DateTime(
+            2026,
+            1,
+            1,
+            0,
+            0,
+            0,
+            DateTimeKind.Utc
+        );
 
         public static readonly Guid TempLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001401");
         public static readonly Guid TempLog2Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001402");
@@ -157,7 +165,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Data = 6.8,
                     IsWarning = false,
                     DataJson = "{\"dissolvedOxygen\": 6.8, \"unit\": \"mg/L\"}",
-                    CreatedAt = SeedTimestamp,
+                    CreatedAt = SeedBase.AddHours(21),
                 },
             };
     }
