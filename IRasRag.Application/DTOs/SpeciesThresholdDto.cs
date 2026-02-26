@@ -38,6 +38,8 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class SpeciesThresholdListRequest : BasePaginatedListRequest { }
+    public class SpeciesThresholdListRequest : BasePaginatedListRequest
+    {
+        public Guid? SpeciesId { get; set; }
+    }
 }
-
