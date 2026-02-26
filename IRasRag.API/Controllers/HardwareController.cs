@@ -573,6 +573,31 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Manual Override: Bật/tắt thiết bị điều khiển theo yêu cầu thủ công.
+        /// </summary>
+        [HttpPost("control-devices/{id}/toggle")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> ToggleControlDevice(Guid id,[FromBody] ToggleControlDeviceDto dto)
+        {
+            try
+            {
+                var result = await _controlDeviceService.ToggleControlDeviceAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Đã xảy ra lỗi khi chuyển đổi trạng thái thiết bị điều khiển: {ControlDeviceId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         #endregion
 
         #region Control Device Types

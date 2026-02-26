@@ -91,20 +91,17 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy công việc với Id: {Id}", id);
 
                 var jobRepository = _unitOfWork.GetRepository<Job>();
-                var job = await jobRepository.GetByIdAsync(id);
 
-                if (job == null)
+                // Dùng spec để projection kèm danh sách Mappings ngay trong query
+                var jobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(id));
+
+                if (jobDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy công việc với Id: {Id}", id);
-                    return Result<JobDto>.Failure(
-                        $"Không tìm thấy công việc với Id: {id}",
-                        ResultType.NotFound
-                    );
+                    return Result<JobDto>.Failure($"Không tìm thấy công việc với Id: {id}", ResultType.NotFound);
                 }
 
-                var jobDto = _mapper.Map<JobDto>(job);
                 _logger.LogInformation("Lấy công việc thành công: {Id}", id);
-
                 return Result<JobDto>.Success(jobDto, "Lấy công việc thành công");
             }
             catch (Exception ex)
@@ -125,35 +122,24 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogInformation("Bắt đầu tạo công việc mới: {Name}", createDto.Name);
 
-                // Validate Name
+                // 1. Validate tên công việc
                 if (string.IsNullOrWhiteSpace(createDto.Name))
                 {
                     _logger.LogWarning("Tên công việc không được để trống");
-                    return Result<JobDto>.Failure(
-                        "Tên công việc là bắt buộc",
-                        ResultType.BadRequest
-                    );
+                    return Result<JobDto>.Failure("Tên công việc là bắt buộc", ResultType.BadRequest);
                 }
 
-                var jobRepository = _unitOfWork.GetRepository<Job>();
-
-                // Check if JobType exists
+                // 2. Kiểm tra loại công việc tồn tại
                 var jobTypeRepository = _unitOfWork.GetRepository<JobType>();
                 var jobType = await jobTypeRepository.GetByIdAsync(createDto.JobTypeId);
 
                 if (jobType == null)
                 {
-                    _logger.LogWarning(
-                        "Không tìm thấy loại công việc với Id: {JobTypeId}",
-                        createDto.JobTypeId
-                    );
-                    return Result<JobDto>.Failure(
-                        $"Không tìm thấy loại công việc với Id: {createDto.JobTypeId}",
-                        ResultType.NotFound
-                    );
+                    _logger.LogWarning("Không tìm thấy loại công việc với Id: {JobTypeId}", createDto.JobTypeId);
+                    return Result<JobDto>.Failure($"Không tìm thấy loại công việc với Id: {createDto.JobTypeId}", ResultType.NotFound);
                 }
 
-                // Check if Sensor exists (if SensorId is provided)
+                // 3. Kiểm tra cảm biến tồn tại (nếu có SensorId)
                 if (createDto.SensorId.HasValue)
                 {
                     var sensorRepository = _unitOfWork.GetRepository<Sensor>();
@@ -161,84 +147,135 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (sensor == null)
                     {
-                        _logger.LogWarning(
-                            "Không tìm thấy cảm biến với Id: {SensorId}",
-                            createDto.SensorId.Value
-                        );
-                        return Result<JobDto>.Failure(
-                            $"Không tìm thấy cảm biến với Id: {createDto.SensorId.Value}",
-                            ResultType.NotFound
-                        );
+                        _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", createDto.SensorId.Value);
+                        return Result<JobDto>.Failure($"Không tìm thấy cảm biến với Id: {createDto.SensorId.Value}", ResultType.NotFound);
                     }
                 }
 
-                // Validate time range if both StartTime and EndTime are provided
+                // 4. Validate khoảng thời gian StartTime < EndTime
                 if (createDto.StartTime.HasValue && createDto.EndTime.HasValue)
                 {
                     if (createDto.StartTime.Value >= createDto.EndTime.Value)
                     {
                         _logger.LogWarning("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
-                        return Result<JobDto>.Failure(
-                            "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
-                            ResultType.BadRequest
-                        );
+                        return Result<JobDto>.Failure("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc", ResultType.BadRequest);
                     }
                 }
 
-                // Create new Job
+                // 5. Validate MinValue <= MaxValue (nếu cả hai được cung cấp)
+                if (createDto.MinValue.HasValue && createDto.MaxValue.HasValue)
+                {
+                    if (createDto.MinValue.Value > createDto.MaxValue.Value)
+                    {
+                        _logger.LogWarning("Giá trị min không được lớn hơn giá trị max");
+                        return Result<JobDto>.Failure("Giá trị min không được lớn hơn giá trị max", ResultType.BadRequest);
+                    }
+                }
+
+                // 6. Validate danh sách mappings 
+                if (createDto.Mappings != null && createDto.Mappings.Count > 0)
+                {
+                    // Kiểm tra trùng ControlDeviceId trong danh sách đầu vào
+                    var duplicateDeviceIds = createDto.Mappings
+                        .GroupBy(m => m.ControlDeviceId)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key)
+                        .ToList();
+
+                    if (duplicateDeviceIds.Count > 0)
+                    {
+                        _logger.LogWarning("Danh sách mappings có ControlDeviceId bị trùng: {Ids}", string.Join(", ", duplicateDeviceIds));
+                        return Result<JobDto>.Failure("Danh sách mappings không được có thiết bị điều khiển trùng nhau", ResultType.BadRequest);
+                    }
+
+                    // Kiểm tra từng ControlDevice có tồn tại không
+                    var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
+                    foreach (var mappingItem in createDto.Mappings)
+                    {
+                        var deviceExists = await controlDeviceRepository.AnyAsync(
+                            cd => cd.Id == mappingItem.ControlDeviceId
+                        );
+
+                        if (!deviceExists)
+                        {
+                            _logger.LogWarning("Không tìm thấy thiết bị điều khiển với Id: {ControlDeviceId}", mappingItem.ControlDeviceId);
+                            return Result<JobDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}", ResultType.NotFound);
+                        }
+                    }
+                }
+
+                // 7. Bắt đầu transaction - toàn bộ thao tác ghi được thực hiện nguyên tử
+                await _unitOfWork.BeginTransactionAsync();
+
+                // 8. Tạo mới Job
+                var jobRepository = _unitOfWork.GetRepository<Job>();
                 var job = _mapper.Map<Job>(createDto);
+                job.Name = createDto.Name.Trim();
                 await jobRepository.AddAsync(job);
-                await _unitOfWork.SaveChangesAsync();
 
-                var jobDto = _mapper.Map<JobDto>(job);
+                // 9. Tạo các JobControlMapping kèm theo (nếu có)
+                if (createDto.Mappings != null && createDto.Mappings.Count > 0)
+                {
+                    var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
+                    foreach (var mappingItem in createDto.Mappings)
+                    {
+                        await mappingRepository.AddAsync(new JobControlMapping {
+                            JobId = job.Id,
+                            ControlDeviceId = mappingItem.ControlDeviceId,
+                            TargetState = mappingItem.TargetState,
+                            TriggerCondition = mappingItem.TriggerCondition,
+                        });
+                    }
+                    _logger.LogInformation("Chuẩn bị tạo {Count} mapping(s) cho công việc: {JobId}", createDto.Mappings.Count, job.Id);
+                }
+
+                // 10. Commit transaction - lưu Job + Mappings trong một lần duy nhất
+                await _unitOfWork.CommitTransactionAsync();
+
+                // 11. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
+                var jobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(job.Id));
+
                 _logger.LogInformation("Tạo công việc thành công: {Id}", job.Id);
-
-                return Result<JobDto>.Success(jobDto, "Tạo công việc thành công");
+                return Result<JobDto>.Success(jobDto!, "Tạo công việc thành công");
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Lỗi khi tạo công việc");
-                return Result<JobDto>.Failure(
-                    "Đã xảy ra lỗi khi tạo công việc",
-                    ResultType.Unexpected
-                );
+                return Result<JobDto>.Failure("Đã xảy ra lỗi khi tạo công việc", ResultType.Unexpected);
             }
         }
         #endregion
 
         #region Update Method
-        public async Task<Result> UpdateJobAsync(Guid id, UpdateJobDto updateDto)
+        public async Task<Result<JobDto>> UpdateJobAsync(Guid id, UpdateJobDto updateDto)
         {
             try
             {
                 _logger.LogInformation("Bắt đầu cập nhật công việc: {Id}", id);
 
-                // Check if Job exists
+                // 1. Kiểm tra công việc tồn tại
                 var jobRepository = _unitOfWork.GetRepository<Job>();
                 var job = await jobRepository.GetByIdAsync(id);
 
                 if (job == null)
                 {
                     _logger.LogWarning("Không tìm thấy công việc với Id: {Id}", id);
-                    return Result.Failure(
-                        $"Không tìm thấy công việc với Id: {id}",
-                        ResultType.NotFound
-                    );
+                    return Result<JobDto>.Failure($"Không tìm thấy công việc với Id: {id}", ResultType.NotFound);
                 }
 
-                // Validate and update Name if provided
+                // 2. Áp dụng các giá trị cập nhật vào đối tượng in-memory để validate
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
                 {
                     job.Name = updateDto.Name.Trim();
                 }
 
-                // Update Description
                 if (updateDto.Description != null)
                 {
                     job.Description = updateDto.Description.Trim();
                 }
 
-                // Validate and update JobTypeId if provided
+                // 3. Kiểm tra loại công việc mới (nếu có)
                 if (updateDto.JobTypeId.HasValue)
                 {
                     var jobTypeRepository = _unitOfWork.GetRepository<JobType>();
@@ -246,20 +283,14 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (jobType == null)
                     {
-                        _logger.LogWarning(
-                            "Không tìm thấy loại công việc với Id: {JobTypeId}",
-                            updateDto.JobTypeId.Value
-                        );
-                        return Result.Failure(
-                            $"Không tìm thấy loại công việc với Id: {updateDto.JobTypeId.Value}",
-                            ResultType.NotFound
-                        );
+                        _logger.LogWarning("Không tìm thấy loại công việc với Id: {JobTypeId}", updateDto.JobTypeId.Value);
+                        return Result<JobDto>.Failure($"Không tìm thấy loại công việc với Id: {updateDto.JobTypeId.Value}", ResultType.NotFound);
                     }
 
                     job.JobTypeId = updateDto.JobTypeId.Value;
                 }
 
-                // Validate and update SensorId if provided
+                // 4. Kiểm tra cảm biến mới (nếu có)
                 if (updateDto.SensorId.HasValue)
                 {
                     var sensorRepository = _unitOfWork.GetRepository<Sensor>();
@@ -267,92 +298,123 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (sensor == null)
                     {
-                        _logger.LogWarning(
-                            "Không tìm thấy cảm biến với Id: {SensorId}",
-                            updateDto.SensorId.Value
-                        );
-                        return Result.Failure(
-                            $"Không tìm thấy cảm biến với Id: {updateDto.SensorId.Value}",
-                            ResultType.NotFound
-                        );
+                        _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", updateDto.SensorId.Value);
+                        return Result<JobDto>.Failure($"Không tìm thấy cảm biến với Id: {updateDto.SensorId.Value}", ResultType.NotFound);
                     }
 
                     job.SensorId = updateDto.SensorId.Value;
                 }
 
-                // Update MinValue and MaxValue
-                if (updateDto.MinValue.HasValue)
-                {
-                    job.MinValue = updateDto.MinValue.Value;
-                }
+                // 5. Áp dụng các trường số và trạng thái
+                if (updateDto.MinValue.HasValue) job.MinValue = updateDto.MinValue.Value;
+                if (updateDto.MaxValue.HasValue) job.MaxValue = updateDto.MaxValue.Value;
+                if (updateDto.DefaultState.HasValue) job.DefaultState = updateDto.DefaultState.Value;
+                if (updateDto.IsActive.HasValue) job.IsActive = updateDto.IsActive.Value;
+                if (updateDto.StartTime.HasValue) job.StartTime = updateDto.StartTime.Value;
+                if (updateDto.EndTime.HasValue) job.EndTime = updateDto.EndTime.Value;
+                if (updateDto.RepeatIntervalMinutes.HasValue) job.RepeatIntervalMinutes = updateDto.RepeatIntervalMinutes.Value;
+                if (updateDto.ExecutionDays != null) job.ExecutionDays = updateDto.ExecutionDays.Trim();
 
-                if (updateDto.MaxValue.HasValue)
-                {
-                    job.MaxValue = updateDto.MaxValue.Value;
-                }
-
-                // Update DefaultState
-                if (updateDto.DefaultState.HasValue)
-                {
-                    job.DefaultState = updateDto.DefaultState.Value;
-                }
-
-                // Update IsActive
-                if (updateDto.IsActive.HasValue)
-                {
-                    job.IsActive = updateDto.IsActive.Value;
-                }
-
-                // Update StartTime and EndTime
-                if (updateDto.StartTime.HasValue)
-                {
-                    job.StartTime = updateDto.StartTime.Value;
-                }
-
-                if (updateDto.EndTime.HasValue)
-                {
-                    job.EndTime = updateDto.EndTime.Value;
-                }
-
-                // Validate time range if both are set
+                // 6. Validate khoảng thời gian sau khi áp dụng giá trị mới
                 if (job.StartTime.HasValue && job.EndTime.HasValue)
                 {
                     if (job.StartTime.Value >= job.EndTime.Value)
                     {
                         _logger.LogWarning("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
-                        return Result.Failure(
-                            "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
-                            ResultType.BadRequest
-                        );
+                        return Result<JobDto>.Failure("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",ResultType.BadRequest);
                     }
                 }
 
-                // Update RepeatIntervalMinutes
-                if (updateDto.RepeatIntervalMinutes.HasValue)
+                // 7. Validate MinValue <= MaxValue (dùng giá trị đã được áp dụng)
+                if (job.MinValue.HasValue && job.MaxValue.HasValue)
                 {
-                    job.RepeatIntervalMinutes = updateDto.RepeatIntervalMinutes.Value;
+                    if (job.MinValue.Value > job.MaxValue.Value)
+                    {
+                        _logger.LogWarning("Giá trị min không được lớn hơn giá trị max");
+                        return Result<JobDto>.Failure("Giá trị min không được lớn hơn giá trị max", ResultType.BadRequest);
+                    }
                 }
 
-                // Update ExecutionDays
-                if (updateDto.ExecutionDays != null)
+                // 8. Validate danh sách mappings TRƯỚC KHI ghi DB
+                if (updateDto.Mappings != null)
                 {
-                    job.ExecutionDays = updateDto.ExecutionDays.Trim();
+                    // Kiểm tra trùng ControlDeviceId trong danh sách mới
+                    var duplicateDeviceIds = updateDto.Mappings
+                        .GroupBy(m => m.ControlDeviceId)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key)
+                        .ToList();
+
+                    if (duplicateDeviceIds.Count > 0)
+                    {
+                        _logger.LogWarning("Danh sách mappings có ControlDeviceId bị trùng: {Ids}", string.Join(", ", duplicateDeviceIds));
+                        return Result<JobDto>.Failure("Danh sách mappings không được có thiết bị điều khiển trùng nhau", ResultType.BadRequest);
+                    }
+
+                    // Kiểm tra từng ControlDevice có tồn tại không
+                    var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
+                    foreach (var mappingItem in updateDto.Mappings)
+                    {
+                        var deviceExists = await controlDeviceRepository.AnyAsync(cd => cd.Id == mappingItem.ControlDeviceId);
+
+                        if (!deviceExists)
+                        {
+                            _logger.LogWarning("Không tìm thấy thiết bị điều khiển với Id: {ControlDeviceId}", mappingItem.ControlDeviceId);
+                            return Result<JobDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}", ResultType.NotFound);
+                        }
+                    }
                 }
 
+                // 9. Bắt đầu transaction - toàn bộ thao tác ghi được thực hiện nguyên tử
+                await _unitOfWork.BeginTransactionAsync();
+
+                // 10. Lưu cập nhật job
                 jobRepository.Update(job);
-                await _unitOfWork.SaveChangesAsync();
+
+                // 11. Xử lý cập nhật mappings nếu được cung cấp (chiến lược thay thế toàn bộ)
+                if (updateDto.Mappings != null)
+                {
+                    var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
+
+                    // Xóa toàn bộ mappings hiện tại của job này
+                    var existingMappings = await mappingRepository.FindAllAsync(m => m.JobId == id);
+                    foreach (var existing in existingMappings)
+                    {
+                        mappingRepository.Delete(existing);
+                    }
+
+                    // Thêm danh sách mappings mới
+                    foreach (var mappingItem in updateDto.Mappings)
+                    {
+                        await mappingRepository.AddAsync(new JobControlMapping {
+                            JobId = id,
+                            ControlDeviceId = mappingItem.ControlDeviceId,
+                            TargetState = mappingItem.TargetState,
+                            TriggerCondition = mappingItem.TriggerCondition,
+                        });
+                    }
+
+                    _logger.LogInformation(
+                        "Chuẩn bị cập nhật {Count} mapping(s) cho công việc: {JobId}",
+                        updateDto.Mappings.Count,
+                        id
+                    );
+                }
+
+                // 12. Commit transaction - lưu Job + Mappings trong một lần duy nhất
+                await _unitOfWork.CommitTransactionAsync();
+
+                // 13. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
+                var updatedJobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(id));
 
                 _logger.LogInformation("Cập nhật công việc thành công: {Id}", id);
-
-                return Result.Success("Cập nhật công việc thành công");
+                return Result<JobDto>.Success(updatedJobDto!, "Cập nhật công việc thành công");
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Lỗi khi cập nhật công việc với Id: {Id}", id);
-                return Result.Failure(
-                    "Đã xảy ra lỗi khi cập nhật công việc",
-                    ResultType.Unexpected
-                );
+                return Result<JobDto>.Failure("Đã xảy ra lỗi khi cập nhật công việc", ResultType.Unexpected);
             }
         }
         #endregion
@@ -376,27 +438,19 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Check if Job has related JobControlMappings
-                var hasJobControlMappings = await jobRepository.AnyAsync(j =>
-                    j.Id == id && j.JobControlMappings.Any()
-                );
-
-                if (hasJobControlMappings)
+                // Xóa tất cả JobControlMappings liên quan trước khi xóa job.
+                var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
+                var relatedMappings = (await mappingRepository.FindAllAsync(m => m.JobId == id)).ToList();
+                foreach (var mapping in relatedMappings)
                 {
-                    _logger.LogWarning(
-                        "Không thể xóa công việc {Id} vì đang có liên kết với thiết bị điều khiển",
-                        id
-                    );
-                    return Result.Failure(
-                        "Không thể xóa công việc vì đang có liên kết với thiết bị điều khiển",
-                        ResultType.Conflict
-                    );
+                    mappingRepository.Delete(mapping);
                 }
 
+                // Soft-delete job
                 jobRepository.Delete(job);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Xóa công việc thành công: {Id}", id);
+                _logger.LogInformation("Xóa công việc thành công: {Id} (kèm {Count} mapping(s))", id, relatedMappings.Count);
                 return Result.Success("Xóa công việc thành công");
             }
             catch (Exception ex)

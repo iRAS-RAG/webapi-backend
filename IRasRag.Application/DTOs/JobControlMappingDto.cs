@@ -17,6 +17,18 @@ namespace IRasRag.Application.DTOs
         public DateTime? ModifiedAt { get; set; }
     }
 
+    // DTO dùng khi tạo Job kèm mappings (không có JobId vì dùng Id của job vừa tạo)
+    public class CreateJobMappingItemDto
+    {
+        [Required(ErrorMessage = "ControlDeviceId là bắt buộc")]
+        public Guid ControlDeviceId { get; set; }
+
+        [Required(ErrorMessage = "TargetState là bắt buộc")]
+        public bool TargetState { get; set; }
+
+        public JobTriggerCondition TriggerCondition { get; set; } = JobTriggerCondition.ALWAYS;
+    }
+
     // Create DTO
     public class CreateJobControlMappingDto
     {

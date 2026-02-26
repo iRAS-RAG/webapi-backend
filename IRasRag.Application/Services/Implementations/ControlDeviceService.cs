@@ -428,5 +428,41 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        #region Toggle Method
+        public async Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(Guid id,ToggleControlDeviceDto toggleDto)
+        {
+            try
+            {
+                _logger.LogInformation("Bắt đầu bật/tắt thiết bị điều khiển: {Id}, trạng thái mới: {State}", id, toggleDto.State);
+
+                var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
+                var controlDevice = await controlDeviceRepository.GetByIdAsync(id);
+
+                if (controlDevice == null)
+                {
+                    _logger.LogWarning("Không tìm thấy thiết bị điều khiển với Id: {Id}", id);
+                    return Result<ControlDeviceDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {id}", ResultType.NotFound);
+                }
+
+                // Cập nhật trạng thái thiết bị (manual override)
+                controlDevice.State = toggleDto.State;
+                controlDeviceRepository.Update(controlDevice);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Truy vấn lại để trả về DTO đầy đủ (bao gồm MasterBoardName, ControlDeviceTypeName)
+                var dto = await controlDeviceRepository.FirstOrDefaultAsync(new ControlDeviceDtoByIdSpec(id));
+
+                _logger.LogInformation("Bật/tắt thiết bị điều khiển thành công: {Id}, trạng thái: {State}", id, toggleDto.State);
+
+                return Result<ControlDeviceDto>.Success(dto!, toggleDto.State ? "Bật thiết bị điều khiển thành công" : "Tắt thiết bị điều khiển thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bật/tắt thiết bị điều khiển với Id: {Id}", id);
+                return Result<ControlDeviceDto>.Failure("Đã xảy ra lỗi khi bật/tắt thiết bị điều khiển", ResultType.Unexpected);
+            }
+        }
+        #endregion
     }
 }
