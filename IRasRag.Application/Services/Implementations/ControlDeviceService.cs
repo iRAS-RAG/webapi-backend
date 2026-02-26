@@ -43,7 +43,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
                 var pagedResult = await controlDeviceRepository.GetPagedAsync(
-                    new ControlDeviceDtoListByTankSpec(request),
+                    new ControlDeviceDtoListSpec(request),
                     request.Page,
                     request.PageSize
                 );
@@ -86,7 +86,10 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesByTankAsync(Guid FishTankId, ControlDeviceListRequest request)
+        public async Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesByTankAsync(
+            Guid FishTankId,
+            ControlDeviceListRequest request
+        )
         {
             var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(FishTankId);
             if (fishTank == null)
@@ -100,19 +103,36 @@ namespace IRasRag.Application.Services.Implementations
                     Links = null,
                 };
             }
-            
-            var pagedResult = await _unitOfWork.GetRepository<ControlDevice>().GetPagedAsync(new ControlDeviceDtoListByTankSpec(request, FishTankId), request.Page, request.PageSize);
-            var meta = PaginationBuilder.BuildPaginationMetadata(request.Page, request.PageSize, pagedResult.TotalItems);
-            var links = PaginationBuilder.BuildPaginationLinks(request.Page, request.PageSize, pagedResult.TotalItems);
+
+            var pagedResult = await _unitOfWork
+                .GetRepository<ControlDevice>()
+                .GetPagedAsync(
+                    new ControlDeviceDtoListByTankSpec(request, FishTankId),
+                    request.Page,
+                    request.PageSize
+                );
+            var meta = PaginationBuilder.BuildPaginationMetadata(
+                request.Page,
+                request.PageSize,
+                pagedResult.TotalItems
+            );
+            var links = PaginationBuilder.BuildPaginationLinks(
+                request.Page,
+                request.PageSize,
+                pagedResult.TotalItems
+            );
             return new PaginatedResult<ControlDeviceDto>
             {
-                Message = pagedResult.Items.Count == 0 ? "Không có thiết bị điều khiển nào trong bể cá này" : "Lấy danh sách thiết bị điều khiển thành công",
+                Message =
+                    pagedResult.Items.Count == 0
+                        ? "Không có thiết bị điều khiển nào trong bể cá này"
+                        : "Lấy danh sách thiết bị điều khiển thành công",
                 Data = pagedResult.Items,
                 Meta = meta,
-                Links = links
+                Links = links,
             };
-
         }
+
         public async Task<Result<ControlDeviceDto>> GetControlDeviceByIdAsync(Guid id)
         {
             try
