@@ -28,12 +28,30 @@ namespace IRasRag.Infrastructure.Repositories
                 .Select(t => new { t.Id, t.Name })
                 .ToListAsync();
 
-            // 2. Fetch the single most recent log per sensor across the entire farm
-            //    GroupBy SensorId → take the latest CreatedAt entry from each group
-            var latestLogs = await _context
+            // 2. Fetch the single most recent log per sensor across the entire farm.
+            //    Two-step approach:
+            //      2a. Resolve the latest log ID per sensor entirely in the DB.
+            //      2b. Re-query only those rows and project the required navigation fields
+            //          inside the SELECT so EF translates them to SQL JOINs — no .Include() needed,
+            //          and no navigation properties are accessed on materialized C# objects.
+            var latestLogIds = await _context
                 .SensorLogs.Where(sl => sl.Sensor.MasterBoard.FishTank.FarmId == farmId)
                 .GroupBy(sl => sl.SensorId)
-                .Select(g => g.OrderByDescending(sl => sl.CreatedAt).First())
+                .Select(g => g.OrderByDescending(sl => sl.CreatedAt).First().Id)
+                .ToListAsync();
+
+            var latestLogs = await _context
+                .SensorLogs.Where(sl => latestLogIds.Contains(sl.Id))
+                .Select(sl => new
+                {
+                    FishTankId = sl.Sensor.MasterBoard.FishTankId,
+                    sl.SensorId,
+                    SensorTypeId = sl.Sensor.SensorTypeId,
+                    SensorTypeName = sl.Sensor.SensorType.Name,
+                    UnitOfMeasure = sl.Sensor.SensorType.UnitOfMeasure,
+                    sl.Data,
+                    sl.CreatedAt,
+                })
                 .ToListAsync();
 
             // 3. Fetch warning thresholds from the species of each tank's currently ACTIVE farming batch
@@ -44,13 +62,16 @@ namespace IRasRag.Infrastructure.Repositories
                 .SelectMany(ft =>
                     ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
                         .SelectMany(fb =>
-                            fb.Species.SpeciesThresholds.Select(st => new
-                            {
-                                st.SensorTypeId,
-                                st.MinValue,
-                                st.MaxValue,
-                                fb.FishTankId,
-                            })
+                            fb.CurrentStageConfig.Species.SpeciesThresholds.Where(st =>
+                                    st.GrowthStageId == fb.CurrentStageConfig.GrowthStageId
+                                )
+                                .Select(st => new
+                                {
+                                    st.SensorTypeId,
+                                    st.MinValue,
+                                    st.MaxValue,
+                                    fb.FishTankId,
+                                })
                         )
                 )
                 .ToListAsync();
@@ -59,12 +80,17 @@ namespace IRasRag.Infrastructure.Repositories
             //    logsByTank:       TankId → list of latest sensor logs for that tank
             //    thresholdsByTank: TankId → (SensorTypeId → threshold) for O(1) threshold lookup per log
             var logsByTank = latestLogs
-                .GroupBy(sl => sl.Sensor.MasterBoard.FishTankId)
+                .GroupBy(sl => sl.FishTankId)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             var thresholdsByTank = thresholds
                 .GroupBy(t => t.FishTankId)
-                .ToDictionary(g => g.Key, g => g.ToDictionary(st => st.SensorTypeId));
+                .ToDictionary(
+                    g => g.Key,
+                    g =>
+                        g.GroupBy(st => st.SensorTypeId)
+                            .ToDictionary(sg => sg.Key, sg => sg.First())
+                );
 
             // 5. Project each tank into a FishTankMetricDto
             //    For each log, look up the matching threshold by SensorTypeId and compute IsWarning
@@ -82,17 +108,14 @@ namespace IRasRag.Infrastructure.Repositories
                             .Select(log =>
                             {
                                 // O(1) lookup — threshold may be null if no threshold is defined for this sensor type
-                                tankThresholds.TryGetValue(
-                                    log.Sensor.SensorTypeId,
-                                    out var threshold
-                                );
+                                tankThresholds.TryGetValue(log.SensorTypeId, out var threshold);
                                 return new SensorMetricDto
                                 {
-                                    SensorTypeName = log.Sensor.SensorType.Name,
+                                    SensorTypeName = log.SensorTypeName,
                                     Value = new SensorMetricValueDto
                                     {
                                         Value = log.Data,
-                                        UnitOfMeasure = log.Sensor.SensorType.UnitOfMeasure,
+                                        UnitOfMeasure = log.UnitOfMeasure,
                                         LastUpdated = log.CreatedAt ?? DateTime.MinValue,
                                         // Warning only fires when a threshold exists and the value is out of range
                                         IsWarning =
@@ -119,12 +142,29 @@ namespace IRasRag.Infrastructure.Repositories
             if (tank == null)
                 throw new Exception();
 
-            // 2. Fetch the single most recent log per sensor for this tank
-            //    GroupBy SensorId → take the latest CreatedAt entry from each group
-            var latestLogs = await _context
+            // 2. Fetch the single most recent log per sensor for this tank.
+            //    Two-step approach:
+            //      2a. Resolve the latest log ID per sensor entirely in the DB.
+            //      2b. Re-query only those rows and project the required navigation fields
+            //          inside the SELECT so EF translates them to SQL JOINs — no .Include() needed,
+            //          and no navigation properties are accessed on materialized C# objects.
+            var latestLogIds = await _context
                 .SensorLogs.Where(sl => sl.Sensor.MasterBoard.FishTankId == tankId)
                 .GroupBy(sl => sl.SensorId)
-                .Select(g => g.OrderByDescending(sl => sl.CreatedAt).First())
+                .Select(g => g.OrderByDescending(sl => sl.CreatedAt).First().Id)
+                .ToListAsync();
+
+            var latestLogs = await _context
+                .SensorLogs.Where(sl => latestLogIds.Contains(sl.Id))
+                .Select(sl => new
+                {
+                    sl.SensorId,
+                    SensorTypeId = sl.Sensor.SensorTypeId,
+                    SensorTypeName = sl.Sensor.SensorType.Name,
+                    UnitOfMeasure = sl.Sensor.SensorType.UnitOfMeasure,
+                    sl.Data,
+                    sl.CreatedAt,
+                })
                 .ToListAsync();
 
             // 3. Fetch warning thresholds from the species of this tank's currently ACTIVE farming batch
@@ -136,18 +176,23 @@ namespace IRasRag.Infrastructure.Repositories
                     ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
                 )
                 .SelectMany(fb =>
-                    fb.Species.SpeciesThresholds.Select(st => new
-                    {
-                        st.SensorTypeId,
-                        st.MinValue,
-                        st.MaxValue,
-                    })
+                    fb.CurrentStageConfig.Species.SpeciesThresholds.Where(st =>
+                            st.GrowthStageId == fb.CurrentStageConfig.GrowthStageId
+                        )
+                        .Select(st => new
+                        {
+                            st.SensorTypeId,
+                            st.MinValue,
+                            st.MaxValue,
+                        })
                 )
                 .ToListAsync();
 
             // 4. Index thresholds by SensorTypeId for O(1) lookup during projection
             //    No per-tank grouping needed — already scoped to one tank
-            var thresholdsBySensorType = thresholds.ToDictionary(st => st.SensorTypeId);
+            var thresholdsBySensorType = thresholds
+                .GroupBy(st => st.SensorTypeId)
+                .ToDictionary(g => g.Key, g => g.First());
 
             // 5. Project into FishTankMetricDto
             //    For each log, look up the matching threshold by SensorTypeId and compute IsWarning
@@ -159,17 +204,14 @@ namespace IRasRag.Infrastructure.Repositories
                     .Select(log =>
                     {
                         // O(1) lookup — threshold may be null if no threshold defined for this sensor type
-                        thresholdsBySensorType.TryGetValue(
-                            log.Sensor.SensorTypeId,
-                            out var threshold
-                        );
+                        thresholdsBySensorType.TryGetValue(log.SensorTypeId, out var threshold);
                         return new SensorMetricDto
                         {
-                            SensorTypeName = log.Sensor.SensorType.Name,
+                            SensorTypeName = log.SensorTypeName,
                             Value = new SensorMetricValueDto
                             {
                                 Value = log.Data,
-                                UnitOfMeasure = log.Sensor.SensorType.UnitOfMeasure,
+                                UnitOfMeasure = log.UnitOfMeasure,
                                 LastUpdated = log.CreatedAt ?? DateTime.MinValue,
                                 // Warning only fires when a threshold exists and the value is out of range
                                 IsWarning =
