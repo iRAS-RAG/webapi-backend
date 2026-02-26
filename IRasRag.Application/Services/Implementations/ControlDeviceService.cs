@@ -434,14 +434,14 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                _logger.LogInformation("Bắt đầu bật/tắt thiết bị điều khiển: {Id}, trạng thái mới: {State}", id, toggleDto.State);
+                _logger.LogInformation("Starting to toggle control device: {Id}, new state: {State}", id, toggleDto.State);
 
                 var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
                 var controlDevice = await controlDeviceRepository.GetByIdAsync(id);
 
                 if (controlDevice == null)
                 {
-                    _logger.LogWarning("Không tìm thấy thiết bị điều khiển với Id: {Id}", id);
+                    _logger.LogWarning("Control device not found with Id: {Id}", id);
                     return Result<ControlDeviceDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {id}", ResultType.NotFound);
                 }
 
@@ -453,13 +453,13 @@ namespace IRasRag.Application.Services.Implementations
                 // Truy vấn lại để trả về DTO đầy đủ (bao gồm MasterBoardName, ControlDeviceTypeName)
                 var dto = await controlDeviceRepository.FirstOrDefaultAsync(new ControlDeviceDtoByIdSpec(id));
 
-                _logger.LogInformation("Bật/tắt thiết bị điều khiển thành công: {Id}, trạng thái: {State}", id, toggleDto.State);
+                _logger.LogInformation("Successfully toggled control device: {Id}, state: {State}", id, toggleDto.State);
 
                 return Result<ControlDeviceDto>.Success(dto!, toggleDto.State ? "Bật thiết bị điều khiển thành công" : "Tắt thiết bị điều khiển thành công");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi bật/tắt thiết bị điều khiển với Id: {Id}", id);
+                _logger.LogError(ex, "Error toggling control device with Id: {Id}", id);
                 return Result<ControlDeviceDto>.Failure("Đã xảy ra lỗi khi bật/tắt thiết bị điều khiển", ResultType.Unexpected);
             }
         }

@@ -593,7 +593,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi chuyển đổi trạng thái thiết bị điều khiển: {ControlDeviceId}", id);
+                _logger.LogError(ex, "Error toggling control device with: {ControlDeviceId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
