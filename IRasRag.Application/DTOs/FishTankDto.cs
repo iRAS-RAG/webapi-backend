@@ -13,7 +13,7 @@ namespace IRasRag.Application.DTOs
         public string CameraUrl { get; set; }
         public string CurrentSpecies { get; set; }
         public float? CurrentCount { get; set; }
-        public string LatestStatus { get; set; }
+        public bool HasOpenAlert { get; set; }
     }
 
     public class FishTankDashboardDto
@@ -80,5 +80,6 @@ namespace IRasRag.Application.DTOs
     // List Request DTO
     public class FishTankListRequest : BasePaginatedListRequest
     {
+        public Guid? FarmId { get; set; }
     }
 }

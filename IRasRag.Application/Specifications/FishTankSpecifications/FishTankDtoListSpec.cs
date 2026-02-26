@@ -9,11 +9,12 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
 {
     public class FishTankDtoListSpec : BaseListSpec<FishTank, FishTankDto>
     {
-        public FishTankDtoListSpec(FishTankListRequest request, Guid? farmId = null)
+        public FishTankDtoListSpec(FishTankListRequest request)
         {
             Query.AsNoTracking();
 
-            ApplyFilter(farmId, ft => ft.FarmId == farmId!.Value);
+            var farmId = request.FarmId;
+            ApplyFilter(farmId, ft => ft.FarmId == farmId);
 
             var sortMap = new Dictionary<string, Expression<Func<FishTank, object?>>>
             {
@@ -21,13 +22,7 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 ["volume"] = ft => ft.Height * ft.Radius * ft.Radius,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    ft => ft.Name,
-                    ft => ft.Farm.Name
-                ]
-            );
+            ApplySearch(request.SearchTerm, [ft => ft.Name, ft => ft.Farm.Name]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 
@@ -40,9 +35,18 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 FarmName = ft.Farm.Name,
                 TopicCode = ft.TopicCode,
                 CameraUrl = ft.CameraUrl,
-                CurrentSpecies = ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE).Select(fb => fb.Species.Name).FirstOrDefault() ?? "N/A",
-                CurrentCount = ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE).Select(fb => fb.CurrentQuantity).FirstOrDefault(),
-                LatestStatus = ft.Alerts.Any(a => a.Status == AlertStatus.OPEN) ? "warning" : "safe"
+                CurrentSpecies =
+                    ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
+                        .Select(fb => fb.Species.Name)
+                        .FirstOrDefault()
+                    ?? "N/A",
+                CurrentCount = ft
+                    .FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
+                    .Select(fb => fb.CurrentQuantity)
+                    .FirstOrDefault(),
+
+                //Check Status using Alerts with OPEN status
+                HasOpenAlert = ft.Alerts.Any(a => a.Status == AlertStatus.OPEN),
             });
         }
     }

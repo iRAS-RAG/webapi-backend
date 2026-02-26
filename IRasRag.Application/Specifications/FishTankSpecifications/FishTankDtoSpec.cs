@@ -13,18 +13,25 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 .AsNoTracking()
                 .Where(ft => ft.Id == fishTankId)
                 .Select(ft => new FishTankDto
-            {
-                Id = ft.Id,
-                Name = ft.Name,
-                Volume = Math.Round((Math.PI * ft.Radius * ft.Radius * ft.Height), 2),
-                FarmId = ft.FarmId,
-                FarmName = ft.Farm.Name,
-                TopicCode = ft.TopicCode,
-                CameraUrl = ft.CameraUrl,
-                CurrentSpecies = ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE).Select(fb => fb.Species.Name).FirstOrDefault() ?? "N/A",
-                CurrentCount = ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE).Select(fb => fb.CurrentQuantity).FirstOrDefault(),
-                LatestStatus = ft.Alerts.Any(a => a.Status == AlertStatus.OPEN) ? "warning" : "safe"
-            });
+                {
+                    Id = ft.Id,
+                    Name = ft.Name,
+                    Volume = Math.Round((Math.PI * ft.Radius * ft.Radius * ft.Height), 2),
+                    FarmId = ft.FarmId,
+                    FarmName = ft.Farm.Name,
+                    TopicCode = ft.TopicCode,
+                    CameraUrl = ft.CameraUrl,
+                    CurrentSpecies =
+                        ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
+                            .Select(fb => fb.Species.Name)
+                            .FirstOrDefault()
+                        ?? "N/A",
+                    CurrentCount = ft
+                        .FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
+                        .Select(fb => fb.CurrentQuantity)
+                        .FirstOrDefault(),
+                    HasOpenAlert = ft.Alerts.Any(a => a.Status == AlertStatus.OPEN),
+                });
         }
     }
 }
