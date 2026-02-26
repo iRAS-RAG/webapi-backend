@@ -6,6 +6,7 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
+using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -82,7 +83,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = newFishTank.Id,
                     Name = newFishTank.Name,
-                    Volume = (float)(Math.PI * newFishTank.Radius * newFishTank.Radius * newFishTank.Height),
+                    Volume = (float)(
+                        Math.PI * newFishTank.Radius * newFishTank.Radius * newFishTank.Height
+                    ),
                     FarmId = newFishTank.FarmId,
                     FarmName = farm.Name,
                     TopicCode = newFishTank.TopicCode,
@@ -172,61 +175,49 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<FishTankDto>> GetAllFishTanksByFarmAsync(Guid farmId, FishTankListRequest request)
-        {
-            try
-            {
-                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var spec = new FishTankDtoListSpec(request, farmId);
-                var pagedResult = await fishTankRepo.GetPagedAsync(spec, request.Page, request.PageSize);
-
-                return new PaginatedResult<FishTankDto>
-                {
-                    Message =
-                        pagedResult.TotalItems == 0
-                            ? "Không có bể cá nào"
-                            : "Lấy danh sách bể cá thành công.",
-                    Data = pagedResult.Items,
-                    Meta = PaginationBuilder.BuildPaginationMetadata(
-                        request.Page,
-                        request.PageSize,
-                        pagedResult.TotalItems
-                    ),
-                    Links = PaginationBuilder.BuildPaginationLinks(
-                        request.Page,
-                        request.PageSize,
-                        pagedResult.TotalItems
-                    ),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi truy xuất danh sách bể cá");
-
-                return new PaginatedResult<FishTankDto>
-                {
-                    Message = "Lỗi khi truy xuất danh sách bể cá.",
-                    Data = Array.Empty<FishTankDto>(),
-                    Meta = null,
-                    Links = null,
-                };
-            }
-        }
-
-        public async Task<Result<IReadOnlyList<FishTankMetricDto>>> GetLatestFishTankMetricsByFarmAsync(Guid farmId)
+        public async Task<
+            Result<IReadOnlyList<FishTankMetricDto>>
+        > GetLatestFishTankMetricsByFarmAsync(Guid farmId)
         {
             var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(farmId);
             if (farm == null)
             {
-                return Result<IReadOnlyList<FishTankMetricDto>>.Failure("Trang trại không tồn tại.", ResultType.NotFound);
+                return Result<IReadOnlyList<FishTankMetricDto>>.Failure(
+                    "Trang trại không tồn tại.",
+                    ResultType.NotFound
+                );
             }
-            var result = await _unitOfWork.GetRepository<FishTank>().ListAsync(new LatestFishTankMetricByFarmSpec(farmId));
-            return Result<IReadOnlyList<FishTankMetricDto>>.Success(result, "Lấy thông tin bể cá và chỉ số thành công.");
+            var result = await _unitOfWork.FishTanks.GetLatestFishTankMetricsByFarmIdAsync(farmId);
+            return Result<IReadOnlyList<FishTankMetricDto>>.Success(
+                result,
+                "Lấy thông tin chỉ số các bể cá thành công."
+            );
+        }
+
+        public async Task<
+            Result<FishTankMetricDto>    
+        > GetLatestFishTankMetricsByTankAsync(Guid tankId)
+        {
+            var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
+            if (tank == null)
+            {
+                return Result<FishTankMetricDto>.Failure(
+                    "Bể cá không tồn tại.",
+                    ResultType.NotFound
+                );
+            }
+            var result = await _unitOfWork.FishTanks.GetLatestFishTankMetricsByTankIdAsync(tankId);
+            return Result<FishTankMetricDto>.Success(
+                result,
+                "Lấy thông tin chỉ số của bể cá thành công."
+            );
         }
 
         public async Task<Result<FishTankDto>> GetFishTankByIdAsync(Guid id)
         {
-            var dto = await _unitOfWork.GetRepository<FishTank>().FirstOrDefaultAsync(new FishTankDtoSpec(id));
+            var dto = await _unitOfWork
+                .GetRepository<FishTank>()
+                .FirstOrDefaultAsync(new FishTankDtoSpec(id));
             if (dto == null)
                 return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
 

@@ -9,20 +9,23 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/tanks")]
+    [Route("api/fish-tanks")]
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
+        private readonly ISensorService _sensorService;
         private readonly ILogger<FishTankController> _logger;
         private readonly IControlDeviceService _controlDeviceService;
 
         public FishTankController(
             IFishTankService fishTankService,
+            ISensorService sensorService,
             ILogger<FishTankController> logger,
             IControlDeviceService controlDeviceService
         )
         {
             _fishTankService = fishTankService;
+            _sensorService = sensorService;
             _logger = logger;
             _controlDeviceService = controlDeviceService;
         }
@@ -77,29 +80,17 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("/{id}/control-devices")]
-        public async Task<IActionResult> GetAllControlDevicesByTank(Guid id, [FromQuery] ControlDeviceListRequest request)
+        [HttpGet("{id}/logs/latest")]
+        public async Task<IActionResult> GetLatestLogsPerSensorByTank(Guid id)
         {
-            try
+            var result = await _fishTankService.GetLatestFishTankMetricsByTankAsync(id);
+            return result.Type switch
             {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-                var result = await _controlDeviceService.GetAllControlDevicesByTankAsync(id, request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving control devices.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
+                ResultType.Ok => Ok(new { result.Message, result.Data }),
+                ResultType.NotFound => NotFound(new { result.Message }),
+                ResultType.BadRequest => BadRequest(new { result.Message }),
+                _ => StatusCode(500, new { result.Message }),
+            };
         }
 
         [HttpGet("{id}")]
