@@ -8,7 +8,7 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/species-threshholds")]
+    [Route("api/species-thresholds")]
     public class SpeciesThresholdController : ControllerBase
     {
         private readonly ILogger<SpeciesThresholdController> _logger;
