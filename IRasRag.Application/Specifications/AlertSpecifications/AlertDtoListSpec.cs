@@ -17,7 +17,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 ["raisedat"] = a => a.RaisedAt,
                 ["status"] = a => a.Status,
                 ["value"] = a => a.Value,
-                ["fishtankname"] = a => a.FishTank.Name
+                ["fishtankname"] = a => a.FishTank.Name,
             };
 
             ApplySearch(
@@ -30,6 +30,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
             );
 
             ApplyFilter(request.Status, a => a.Status == request.Status);
+            ApplyFilter(request.TankId, a => a.FishTankId == request.TankId);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "raisedat");
 
@@ -42,14 +43,14 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 FarmingBatchName = a.FarmingBatch != null ? a.FarmingBatch.Name : null,
                 FishTankId = a.FishTankId,
                 FishTankName = a.FishTank.Name,
-                SensorTypeId = a.SensorTypeId,
                 SensorTypeName = a.SensorType.Name,
                 Value = a.Value,
                 RaisedAt = a.RaisedAt,
                 ResolvedAt = a.ResolvedAt,
                 Status = a.Status,
-                CreatedAt = a.CreatedAt,
-                ModifiedAt = a.ModifiedAt,
+                Unit = a.SensorType.UnitOfMeasure,
+                MinThreshold = a.SpeciesThreshold.MinValue,
+                MaxThreshold = a.SpeciesThreshold.MaxValue,
             });
         }
     }
