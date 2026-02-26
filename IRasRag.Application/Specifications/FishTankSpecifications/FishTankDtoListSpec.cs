@@ -37,7 +37,7 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 CameraUrl = ft.CameraUrl,
                 CurrentSpecies =
                     ft.FarmingBatches.Where(fb => fb.Status == FarmingBatchStatus.ACTIVE)
-                        .Select(fb => fb.Species.Name)
+                        .Select(fb => fb.CurrentStageConfig.Species.Name)
                         .FirstOrDefault()
                     ?? "N/A",
                 CurrentCount = ft
