@@ -8,6 +8,7 @@ using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -310,5 +311,103 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
+        #region Tank Status & Latest Data
+        public async Task<Result<List<TankSensorLatestDataDto>>> GetTankLatestDataAsync(Guid tankId)
+        {
+            try
+            {
+                _logger.LogInformation("Bắt đầu lấy dữ liệu mới nhất của bể: {TankId}", tankId);
+
+                var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
+
+                if (tank == null)
+                {
+                    _logger.LogWarning("Không tìm thấy bể cá với Id: {TankId}", tankId);
+                    return Result<List<TankSensorLatestDataDto>>.Failure(
+                        $"Không tìm thấy bể cá với Id: {tankId}",
+                        ResultType.NotFound
+                    );
+                }
+
+                var result = (await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .ListAsync(new TankSensorLatestDataSpec(tankId)))
+                    .ToList();
+
+                _logger.LogInformation(
+                    "Lấy dữ liệu mới nhất thành công: {Count} cảm biến cho bể {TankId}",
+                    result.Count,
+                    tankId
+                );
+
+                return Result<List<TankSensorLatestDataDto>>.Success(
+                    result,
+                    result.Count == 0
+                        ? "Bể cá chưa có cảm biến nào"
+                        : $"Lấy dữ liệu mới nhất thành công: {result.Count} cảm biến"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu mới nhất của bể: {TankId}", tankId);
+                return Result<List<TankSensorLatestDataDto>>.Failure(
+                    "Đã xảy ra lỗi khi lấy dữ liệu mới nhất",
+                    ResultType.Unexpected
+                );
+            }
+        }
+        public async Task<Result<TankStatusDto>> GetTankStatusAsync(Guid tankId)
+        {
+            try
+            {
+                _logger.LogInformation("Bắt đầu lấy trạng thái bể: {TankId}", tankId);
+
+                var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
+
+                if (tank == null)
+                {
+                    _logger.LogWarning("Không tìm thấy bể cá với Id: {TankId}", tankId);
+                    return Result<TankStatusDto>.Failure(
+                        $"Không tìm thấy bể cá với Id: {tankId}",
+                        ResultType.NotFound
+                    );
+                }
+
+                var sensors = (await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .ListAsync(new TankSensorLatestDataSpec(tankId)))
+                    .ToList();
+
+                var totalSensors = sensors.Count;
+                var warningSensors = sensors.Count(s => s.IsWarning == true);
+
+                var statusDto = new TankStatusDto
+                {
+                    TankId = tank.Id,
+                    TankName = tank.Name,
+                    Status = warningSensors > 0 ? TankStatus.Warning : TankStatus.Normal,
+                    TotalSensors = totalSensors,
+                    WarningSensors = warningSensors,
+                };
+
+                _logger.LogInformation(
+                    "Lấy trạng thái bể thành công: {TankId} - {Status}",
+                    tankId,
+                    statusDto.Status
+                );
+
+                return Result<TankStatusDto>.Success(statusDto, $"Trạng thái bể: {statusDto.Status}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy trạng thái bể: {TankId}", tankId);
+                return Result<TankStatusDto>.Failure(
+                    "Đã xảy ra lỗi khi lấy trạng thái bể",
+                    ResultType.Unexpected
+                );
+            }
+        }
+        #endregion
     }
 }

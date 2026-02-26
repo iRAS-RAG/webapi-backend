@@ -21,44 +21,15 @@ namespace IRasRag.API.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả cảm biến
+        /// Nhập dữ liệu cảm biến thủ công
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAllSensors([FromQuery] SensorListRequest request)
+        [Authorize(Roles = "Supervisor")]
+        [HttpPost("{id}/logs")]
+        public async Task<IActionResult> CreateSensorLog(Guid id, [FromBody] CreateSensorLogDto dto)
         {
             try
             {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-
-                var result = await _sensorService.GetAllSensorsAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving sensors.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        /// <summary>
-        /// Lấy thông tin cảm biến theo Id
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetSensorById(Guid id)
-        {
-            try
-            {
-                var result = await _sensorService.GetSensorByIdAsync(id);
+                var result = await _sensorService.CreateSensorLogAsync(id, dto);
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),
@@ -69,92 +40,31 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving sensor: {SensorId}", id);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         /// <summary>
-        /// Tạo cảm biến mới
+        /// Lấy lịch sử dữ liệu cảm biến cho biểu đồ (có phân trang)
         /// </summary>
-        [Authorize(Roles = "Supervisor")]
-        [HttpPost]
-        public async Task<IActionResult> CreateSensor([FromBody] CreateSensorDto dto)
+        [HttpGet("{id}/logs")]
+        public async Task<IActionResult> GetSensorLogs(Guid id, [FromQuery] SensorLogListRequest request)
         {
             try
             {
-                var result = await _sensorService.CreateSensorAsync(dto);
-
+                var result = await _sensorService.GetSensorLogsAsync(id, request);
                 return result.Type switch
                 {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.Conflict => Conflict(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    ResultType.Ok => Ok(result.Data),
                     ResultType.NotFound => NotFound(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while creating sensor: {SensorName}",
-                    dto.Name
-                );
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        /// <summary>
-        /// Cập nhật thông tin cảm biến
-        /// </summary>
-        [Authorize(Roles = "Supervisor")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSensor(Guid id, [FromBody] UpdateSensorDto dto)
-        {
-            try
-            {
-                var result = await _sensorService.UpdateSensorAsync(id, dto);
-
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
-                    ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while updating sensor: {SensorId}", id);
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        /// <summary>
-        /// Xóa cảm biến
-        /// </summary>
-        [Authorize(Roles = "Supervisor")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSensor(Guid id)
-        {
-            try
-            {
-                var result = await _sensorService.DeleteSensorAsync(id);
-
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
-                    ResultType.Conflict => Conflict(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while deleting sensor: {SensorId}", id);
+                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}", id);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

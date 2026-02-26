@@ -4,12 +4,19 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class SpeciesStageConfigSeed
     {
+        public static readonly Guid FryStageConfigId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000601"
+        );
+        public static readonly Guid JuvenileStageConfigId = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000000602"
+        );
+
         public static List<SpeciesStageConfig> SpeciesStageConfigs =>
             new()
             {
                 new SpeciesStageConfig
                 {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000601"),
+                    Id = FryStageConfigId,
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.FryStageId,
                     FeedTypeId = FeedTypeSeed.StarterFeedId,
@@ -20,7 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 },
                 new SpeciesStageConfig
                 {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000602"),
+                    Id = JuvenileStageConfigId,
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.JuvenileStageId,
                     FeedTypeId = FeedTypeSeed.GrowerFeedId,

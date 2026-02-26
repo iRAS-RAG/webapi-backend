@@ -12,6 +12,10 @@ namespace IRasRag.Infrastructure.Data.Seeds
             "eeeeeeee-0000-0000-0000-000000000002"
         );
 
+        public static readonly Guid DoSensorTypeId = Guid.Parse(
+            "eeeeeeee-0000-0000-0000-000000000003"
+        );
+
         public static List<SensorType> SensorTypes =>
             new()
             {
@@ -28,6 +32,13 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Độ pH",
                     MeasureType = "Tính axit",
                     UnitOfMeasure = "pH",
+                },
+                new SensorType
+                {
+                    Id = DoSensorTypeId,
+                    Name = "Oxy hòa tan",
+                    MeasureType = "Nồng độ oxy",
+                    UnitOfMeasure = "mg/L",
                 },
             };
     }

@@ -37,6 +37,7 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
                 Id = s.Id,
                 Name = s.Name,
                 PinCode = s.PinCode,
+                SensorTypeId = s.SensorTypeId,
                 SensorTypeName = s.SensorType.Name,
                 MasterBoardId = s.MasterBoardId,
                 MasterBoardName = s.MasterBoard.Name,

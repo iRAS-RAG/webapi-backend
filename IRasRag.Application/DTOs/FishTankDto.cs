@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs
 {
@@ -81,5 +82,29 @@ namespace IRasRag.Application.DTOs
     public class FishTankListRequest : BasePaginatedListRequest
     {
         public Guid? FarmId { get; set; }
+    }
+
+    // Quick status for a tank based on sensor warning flags
+    public class TankStatusDto
+    {
+        public Guid TankId { get; set; }
+        public string TankName { get; set; } = string.Empty;
+        public TankStatus Status { get; set; }
+        public int TotalSensors { get; set; }
+        public int WarningSensors { get; set; }
+    }
+
+    // Latest sensor reading per sensor in a tank
+    public class TankSensorLatestDataDto
+    {
+        public Guid SensorId { get; set; }
+        public string SensorName { get; set; } = string.Empty;
+        public string SensorTypeName { get; set; } = string.Empty;
+        public string MeasureType { get; set; } = string.Empty;
+        public string UnitOfMeasure { get; set; } = string.Empty;
+        public string MasterBoardName { get; set; } = string.Empty;
+        public double? LatestValue { get; set; }
+        public bool? IsWarning { get; set; }
+        public DateTime? RecordedAt { get; set; }
     }
 }

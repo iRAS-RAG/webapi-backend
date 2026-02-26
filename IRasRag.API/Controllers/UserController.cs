@@ -168,6 +168,19 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}/hard")]
+        public async Task<IActionResult> HardDeleteUser(Guid id)
+        {
+            var result = await _userService.HardDeleteUserAsync(id);
+            return result.Type switch
+            {
+                ResultType.Ok => Ok(new { result.Message }),
+                ResultType.NotFound => NotFound(new { result.Message }),
+                _ => StatusCode(500, new { result.Message }),
+            };
+        }
+
         [HttpGet("me")]
         public async Task<IActionResult> GetUserProfile()
         {
