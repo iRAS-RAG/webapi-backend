@@ -42,7 +42,9 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(x => x.GetRepository<FishTank>())
                 .Returns(_fishTankRepositoryMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<Farm>()).Returns(_farmRepositoryMock.Object);
-            _unitOfWorkMock.Setup(x => x.GetRepository<Sensor>()).Returns(_sensorRepositoryMock.Object);
+            _unitOfWorkMock
+                .Setup(x => x.GetRepository<Sensor>())
+                .Returns(_sensorRepositoryMock.Object);
 
             _sut = new FishTankService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
         }
@@ -1475,19 +1477,30 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể A", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể A",
+                IsDeleted = false,
+            };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto
                 {
-                    SensorId = Guid.NewGuid(), SensorName = "Nhiệt độ 1",
-                    SensorTypeName = "Nhiệt độ", LatestValue = 28.5, IsWarning = false,
+                    SensorId = Guid.NewGuid(),
+                    SensorName = "Nhiệt độ 1",
+                    SensorTypeName = "Nhiệt độ",
+                    LatestValue = 28.5,
+                    IsWarning = false,
                     RecordedAt = DateTime.UtcNow,
                 },
                 new TankSensorLatestDataDto
                 {
-                    SensorId = Guid.NewGuid(), SensorName = "pH 1",
-                    SensorTypeName = "pH", LatestValue = 7.2, IsWarning = false,
+                    SensorId = Guid.NewGuid(),
+                    SensorName = "pH 1",
+                    SensorTypeName = "pH",
+                    LatestValue = 7.2,
+                    IsWarning = false,
                     RecordedAt = DateTime.UtcNow,
                 },
             };
@@ -1496,7 +1509,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1514,13 +1532,23 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể Trống",
+                IsDeleted = false,
+            };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(new List<TankSensorLatestDataDto>());
 
             // Act
@@ -1548,8 +1576,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
             _sensorRepositoryMock.Verify(
-                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
-                Times.Never);
+                r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -1578,7 +1611,12 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể Bình Thường",
+                IsDeleted = false,
+            };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
@@ -1590,7 +1628,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1610,7 +1653,12 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể Cảnh Báo",
+                IsDeleted = false,
+            };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
@@ -1622,7 +1670,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1640,7 +1693,12 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể Nguy Hiểm",
+                IsDeleted = false,
+            };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
@@ -1651,7 +1709,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1669,13 +1732,23 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+            var tank = new FishTank
+            {
+                Id = tankId,
+                Name = "Bể Trống",
+                IsDeleted = false,
+            };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(new List<TankSensorLatestDataDto>());
 
             // Act
@@ -1704,8 +1777,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
             _sensorRepositoryMock.Verify(
-                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
-                Times.Never);
+                r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
         }
 
         [Fact]
