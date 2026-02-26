@@ -8,7 +8,7 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/hardware")]
+    [Route("api/hardwares")]
     public class HardwareController : ControllerBase
     {
         private ILogger<HardwareController> _logger;
@@ -56,10 +56,7 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving sensor types.");
-                return StatusCode(
-                    500,
-                    new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." }
-                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
@@ -116,7 +113,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("control-devices")]
-        public async Task<IActionResult> GetAllControlDevicesByTank([FromQuery] ControlDeviceListRequest request)
+        public async Task<IActionResult> GetAllControlDevicesByTank(
+            [FromQuery] ControlDeviceListRequest request
+        )
         {
             try
             {
@@ -211,6 +210,34 @@ namespace IRasRag.API.Controllers
                     "An error occurred while creating sensor: {SensorName}",
                     dto.Name
                 );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("sensors/{id}/history")]
+        public async Task<IActionResult> GetSensorHistory(Guid id, [FromQuery] DateOnly? date)
+        {
+            try
+            {
+                var targetDate = date ?? DateOnly.FromDateTime(DateTime.Today);
+
+                var result = await _sensorService.GetSensorHistoryAsync(id, targetDate);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving sensor history: {SensorId}",
+                    id
+                );
+
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

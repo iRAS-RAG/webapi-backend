@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.JobTypeSpecifications
@@ -17,13 +17,7 @@ namespace IRasRag.Application.Specifications.JobTypeSpecifications
                 ["name"] = jt => jt.Name,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    jt => jt.Name,
-                    jt => jt.Description,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [jt => jt.Name, jt => jt.Description]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 

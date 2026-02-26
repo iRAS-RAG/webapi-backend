@@ -36,14 +36,12 @@ namespace IRasRag.Test.UnitTests.Helpers
                     OrderTypeEnum.OrderByDescending => query.OrderByDescending(
                         orderExpression.KeySelector
                     ),
-                    OrderTypeEnum.ThenBy =>
-                        orderedQuery is null
-                            ? query.OrderBy(orderExpression.KeySelector)
-                            : orderedQuery.ThenBy(orderExpression.KeySelector),
-                    OrderTypeEnum.ThenByDescending =>
-                        orderedQuery is null
-                            ? query.OrderByDescending(orderExpression.KeySelector)
-                            : orderedQuery.ThenByDescending(orderExpression.KeySelector),
+                    OrderTypeEnum.ThenBy => orderedQuery is null
+                        ? query.OrderBy(orderExpression.KeySelector)
+                        : orderedQuery.ThenBy(orderExpression.KeySelector),
+                    OrderTypeEnum.ThenByDescending => orderedQuery is null
+                        ? query.OrderByDescending(orderExpression.KeySelector)
+                        : orderedQuery.ThenByDescending(orderExpression.KeySelector),
                     _ => orderedQuery,
                 };
             }
@@ -57,7 +55,9 @@ namespace IRasRag.Test.UnitTests.Helpers
             // Ensure the specification defines a projection
             if (specification.Selector is null)
             {
-                throw new InvalidOperationException("Projected specification must define Selector.");
+                throw new InvalidOperationException(
+                    "Projected specification must define Selector."
+                );
             }
 
             // Apply projection
@@ -67,16 +67,9 @@ namespace IRasRag.Test.UnitTests.Helpers
             var totalItems = projectedQuery.Count();
 
             // Apply manual pagination
-            var items = projectedQuery
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            var items = projectedQuery.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
-            return new PagedResult<TResult>
-            {
-                Items = items,
-                TotalItems = totalItems
-            };
+            return new PagedResult<TResult> { Items = items, TotalItems = totalItems };
         }
     }
 }

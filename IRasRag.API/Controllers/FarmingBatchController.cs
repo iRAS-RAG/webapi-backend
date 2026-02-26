@@ -61,13 +61,18 @@ namespace IRasRag.API.Controllers
         {
             try
             {
-                var result = await _farmingBatchService.GetActiveFarmingBatchByFishTankIdAsync(fishTankId);
+                var result = await _farmingBatchService.GetActiveFarmingBatchByFishTankIdAsync(
+                    fishTankId
+                );
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách lô nuôi đang hoạt động");
-                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy danh sách lô nuôi đang hoạt động" });
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi lấy danh sách lô nuôi đang hoạt động" }
+                );
             }
         }
 

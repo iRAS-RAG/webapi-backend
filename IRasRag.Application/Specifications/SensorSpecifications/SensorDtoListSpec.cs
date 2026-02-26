@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SensorSpecifications
@@ -12,7 +12,10 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
         {
             Query.AsNoTracking();
 
-            ApplyFilter(request.MasterBoardId, s => s.MasterBoardId == request.MasterBoardId!.Value);
+            ApplyFilter(
+                request.MasterBoardId,
+                s => s.MasterBoardId == request.MasterBoardId!.Value
+            );
 
             var sortMap = new Dictionary<string, Expression<Func<Sensor, object?>>>
             {
@@ -24,11 +27,7 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
 
             ApplySearch(
                 request.SearchTerm,
-                [
-                    s => s.Name,
-                    s => s.SensorType.Name,
-                    s => s.MasterBoard.Name,
-                ]
+                [s => s.Name, s => s.SensorType.Name, s => s.MasterBoard.Name]
             );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");

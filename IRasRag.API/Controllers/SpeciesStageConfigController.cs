@@ -24,7 +24,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllSpeciesStageConfigs([FromQuery] SpeciesStageConfigListRequest request)
+        public async Task<IActionResult> GetAllSpeciesStageConfigs(
+            [FromQuery] SpeciesStageConfigListRequest request
+        )
         {
             try
             {
@@ -40,7 +42,9 @@ namespace IRasRag.API.Controllers
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
-                var result = await _speciesStageConfigService.GetAllSpeciesStageConfigsAsync(request);
+                var result = await _speciesStageConfigService.GetAllSpeciesStageConfigsAsync(
+                    request
+                );
                 return Ok(result);
             }
             catch (Exception ex)

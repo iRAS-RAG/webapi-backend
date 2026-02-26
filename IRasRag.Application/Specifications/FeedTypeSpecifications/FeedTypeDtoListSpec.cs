@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.FeedTypeSpecifications
@@ -21,11 +21,7 @@ namespace IRasRag.Application.Specifications.FeedTypeSpecifications
 
             ApplySearch(
                 request.SearchTerm,
-                [
-                    ft => ft.Name,
-                    ft => ft.Description,
-                    ft => ft.Manufacturer,
-                ]
+                [ft => ft.Name, ft => ft.Description, ft => ft.Manufacturer]
             );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");

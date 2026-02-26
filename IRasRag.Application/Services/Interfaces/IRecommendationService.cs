@@ -6,7 +6,9 @@ namespace IRasRag.Application.Services.Interfaces
 {
     public interface IRecommendationService
     {
-        Task<PaginatedResult<RecommendationDto>> GetAllRecommendationsAsync(RecommendationListRequest request);
+        Task<PaginatedResult<RecommendationDto>> GetAllRecommendationsAsync(
+            RecommendationListRequest request
+        );
         Task<Result<RecommendationDto>> GetRecommendationByIdAsync(Guid id);
         Task<Result<RecommendationDto>> CreateRecommendationAsync(
             CreateRecommendationDto createDto

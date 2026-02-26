@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SensorTypeSpecifications
@@ -21,11 +21,7 @@ namespace IRasRag.Application.Specifications.SensorTypeSpecifications
 
             ApplySearch(
                 request.SearchTerm,
-                [
-                    st => st.Name,
-                    st => st.MeasureType,
-                    st => st.UnitOfMeasure,
-                ]
+                [st => st.Name, st => st.MeasureType, st => st.UnitOfMeasure]
             );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");

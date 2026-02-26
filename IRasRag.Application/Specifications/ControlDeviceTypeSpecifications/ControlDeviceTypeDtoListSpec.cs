@@ -6,7 +6,8 @@ using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.ControlDeviceTypeSpecifications
 {
-    public class ControlDeviceTypeDtoListSpec : BaseListSpec<ControlDeviceType, ControlDeviceTypeDto>
+    public class ControlDeviceTypeDtoListSpec
+        : BaseListSpec<ControlDeviceType, ControlDeviceTypeDto>
     {
         public ControlDeviceTypeDtoListSpec(ControlDeviceTypeListRequest request)
         {
@@ -17,20 +18,11 @@ namespace IRasRag.Application.Specifications.ControlDeviceTypeSpecifications
                 ["name"] = cdt => cdt.Name,
             };
 
-            ApplySearch(
-                request.SearchTerm,
-                [
-                    cdt => cdt.Name,
-                ]
-            );
+            ApplySearch(request.SearchTerm, [cdt => cdt.Name]);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 
-            Query.Select(cdt => new ControlDeviceTypeDto
-            {
-                Id = cdt.Id,
-                Name = cdt.Name,
-            });
+            Query.Select(cdt => new ControlDeviceTypeDto { Id = cdt.Id, Name = cdt.Name });
         }
     }
 }

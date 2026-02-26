@@ -73,7 +73,9 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>> GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
+        public async Task<
+            Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>
+        > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
         {
             try
             {
@@ -86,7 +88,9 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var list = await _unitOfWork.GetRepository<FarmingBatch>().ListAsync(new ActiveFarmingBatchDtoListSpec(fishTankId));
+                var list = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .ListAsync(new ActiveFarmingBatchDtoListSpec(fishTankId));
                 return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Success(
                     list,
                     "Lấy danh sách lô nuôi đang hoạt động thành công"
@@ -94,13 +98,16 @@ namespace IRasRag.Application.Services.Implementations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách lô nuôi đang hoạt động cho bể cá với ID {FishTankId}", fishTankId);
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi lấy danh sách lô nuôi đang hoạt động cho bể cá với ID {FishTankId}",
+                    fishTankId
+                );
                 return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
                     "Lỗi khi lấy danh sách lô nuôi đang hoạt động",
                     ResultType.Unexpected
                 );
             }
-
         }
 
         public async Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id)

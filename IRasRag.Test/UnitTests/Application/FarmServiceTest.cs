@@ -424,14 +424,18 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .Callback((ISpecification<Farm, FarmDto> spec, int _, int _, QueryType _) => capturedSpec = spec)
+                .Callback(
+                    (ISpecification<Farm, FarmDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
+                )
                 .ReturnsAsync(
-                    (
-                        ISpecification<Farm, FarmDto> spec,
-                        int page,
-                        int pageSize,
-                        QueryType _
-                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(farms, spec, page, pageSize)
+                    (ISpecification<Farm, FarmDto> spec, int page, int pageSize, QueryType _) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            farms,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act
@@ -440,7 +444,10 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.Should().NotBeNull();
             result.Data.Should().HaveCount(2);
-            result.Data.Select(x => x.Email).Should().ContainInOrder("farm2@test.com", "farm1@test.com");
+            result
+                .Data.Select(x => x.Email)
+                .Should()
+                .ContainInOrder("farm2@test.com", "farm1@test.com");
             result.Meta.Should().NotBeNull();
             result.Meta!.TotalItems.Should().Be(2);
             capturedSpec.Should().NotBeNull();
@@ -501,12 +508,13 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (
-                        ISpecification<Farm, FarmDto> spec,
-                        int page,
-                        int pageSize,
-                        QueryType _
-                    ) => SpecificationTestHelper.ApplySpecificationWithPaging(farms, spec, page, pageSize)
+                    (ISpecification<Farm, FarmDto> spec, int page, int pageSize, QueryType _) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            farms,
+                            spec,
+                            page,
+                            pageSize
+                        )
                 );
 
             // Act

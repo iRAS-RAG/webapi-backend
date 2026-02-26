@@ -53,7 +53,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllControlDeviceTypes([FromQuery] ControlDeviceTypeListRequest request)
+        public async Task<IActionResult> GetAllControlDeviceTypes(
+            [FromQuery] ControlDeviceTypeListRequest request
+        )
         {
             try
             {

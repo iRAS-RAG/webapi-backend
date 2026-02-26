@@ -135,8 +135,11 @@ namespace IRasRag.Infrastructure.Repositories
             var query = GetQueryable(type);
 
             // Count query (criteria only)
-            var filteredQuery = SpecificationEvaluator.Default
-                .GetQuery(query, spec, evaluateCriteriaOnly: true);
+            var filteredQuery = SpecificationEvaluator.Default.GetQuery(
+                query,
+                spec,
+                evaluateCriteriaOnly: true
+            );
 
             var count = await filteredQuery.CountAsync();
 
@@ -161,8 +164,11 @@ namespace IRasRag.Infrastructure.Repositories
         {
             var query = GetQueryable(type);
 
-            var filteredQuery = SpecificationEvaluator.Default
-                .GetQuery(query, spec, evaluateCriteriaOnly: true);
+            var filteredQuery = SpecificationEvaluator.Default.GetQuery(
+                query,
+                spec,
+                evaluateCriteriaOnly: true
+            );
             var count = await filteredQuery.CountAsync();
 
             var specQuery = SpecificationEvaluator.Default.GetQuery(query, spec);

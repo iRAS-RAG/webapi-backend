@@ -86,10 +86,12 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Tạo bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
-            result.Data.Volume.Should().BeApproximately(
-                (float)(Math.PI * createDto.Radius * createDto.Radius * createDto.Height),
-                0.001f
-            );
+            result
+                .Data.Volume.Should()
+                .BeApproximately(
+                    (float)(Math.PI * createDto.Radius * createDto.Radius * createDto.Height),
+                    0.001f
+                );
             result.Data.FarmId.Should().Be(createDto.FarmId);
             result.Data.FarmName.Should().Be(farm.Name);
             result.Data.TopicCode.Should().Be(createDto.TopicCode);
@@ -474,10 +476,12 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Id.Should().Be(fishTankId);
             result.Data.Name.Should().Be(fishTank.Name);
-            result.Data.Volume.Should().BeApproximately(
-                (float)(Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height),
-                0.001f
-            );
+            result
+                .Data.Volume.Should()
+                .BeApproximately(
+                    (float)(Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height),
+                    0.001f
+                );
             result.Data.FarmId.Should().Be(fishTank.FarmId);
             result.Data.FarmName.Should().Be(farm.Name);
             result.Data.TopicCode.Should().Be(fishTank.TopicCode);
@@ -685,10 +689,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result.Data.Select(x => x.Volume).Should().ContainInOrder(
-                (float)(Math.PI * 4.5f * 4.5f * 5.0f),
-                (float)(Math.PI * 4.0f * 4.0f * 3.0f)
-            );
+            result
+                .Data.Select(x => x.Volume)
+                .Should()
+                .ContainInOrder(
+                    (float)(Math.PI * 4.5f * 4.5f * 5.0f),
+                    (float)(Math.PI * 4.0f * 4.0f * 3.0f)
+                );
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
@@ -831,7 +838,11 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new PagedResult<FishTankDto> { Items = Array.Empty<FishTankDto>(), TotalItems = 0 }
+                    new PagedResult<FishTankDto>
+                    {
+                        Items = Array.Empty<FishTankDto>(),
+                        TotalItems = 0,
+                    }
                 );
 
             // Act

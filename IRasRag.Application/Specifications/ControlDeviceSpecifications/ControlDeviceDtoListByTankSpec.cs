@@ -1,17 +1,19 @@
+using System.Linq.Expressions;
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
 using IRasRag.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
 {
     public class ControlDeviceDtoListByTankSpec : BaseListSpec<ControlDevice, ControlDeviceDto>
     {
-        public ControlDeviceDtoListByTankSpec(ControlDeviceListRequest request, Guid? fishTankId = null)
+        public ControlDeviceDtoListByTankSpec(
+            ControlDeviceListRequest request,
+            Guid? fishTankId = null
+        )
         {
-            Query
-                .AsNoTracking();
+            Query.AsNoTracking();
 
             if (fishTankId.HasValue)
             {
@@ -21,7 +23,7 @@ namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
             var sortKeyMap = new Dictionary<string, Expression<Func<ControlDevice, object?>>>
             {
                 ["state"] = cd => cd.State,
-                ["name"] = cd => cd.Name
+                ["name"] = cd => cd.Name,
             };
 
             ApplySearch(

@@ -1,7 +1,8 @@
-﻿using AutoMapper;
-using Ardalis.Specification;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -13,7 +14,6 @@ using IRasRag.Domain.Enums;
 using IRasRag.Test.UnitTests.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
-using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 
 namespace IRasRag.Test.UnitTests.Application
 {
@@ -310,12 +310,8 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .Callback(
-                    (
-                        ISpecification<GrowthStage, GrowthStageDto> spec,
-                        int _,
-                        int _,
-                        QueryType _
-                    ) => capturedSpec = spec
+                    (ISpecification<GrowthStage, GrowthStageDto> spec, int _, int _, QueryType _) =>
+                        capturedSpec = spec
                 )
                 .ReturnsAsync(
                     (
@@ -374,9 +370,24 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
             var entities = new List<GrowthStage>
             {
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Zulu", Description = "d1" },
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Alpha", Description = "d2" },
-                new GrowthStage { Id = Guid.NewGuid(), Name = "Beta", Description = "d3" },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Zulu",
+                    Description = "d1",
+                },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Alpha",
+                    Description = "d2",
+                },
+                new GrowthStage
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Beta",
+                    Description = "d3",
+                },
             };
 
             _repositoryMock

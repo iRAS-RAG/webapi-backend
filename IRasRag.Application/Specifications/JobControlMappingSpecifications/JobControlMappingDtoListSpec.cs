@@ -1,12 +1,13 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.JobControlMappingSpecifications
 {
-    public class JobControlMappingDtoListSpec : BaseListSpec<JobControlMapping, JobControlMappingDto>
+    public class JobControlMappingDtoListSpec
+        : BaseListSpec<JobControlMapping, JobControlMappingDto>
     {
         public JobControlMappingDtoListSpec(JobControlMappingListRequest request)
         {
@@ -21,14 +22,13 @@ namespace IRasRag.Application.Specifications.JobControlMappingSpecifications
                 ["createdat"] = jcm => jcm.CreatedAt,
             };
 
-            ApplySearch(request.SearchTerm,
-                [
-                    jcm => jcm.Job.Name,
-                    jcm => jcm.ControlDevice.Name,
-                ]);
+            ApplySearch(request.SearchTerm, [jcm => jcm.Job.Name, jcm => jcm.ControlDevice.Name]);
 
             ApplyFilter(request.TargetState, jcm => jcm.TargetState == request.TargetState);
-            ApplyFilter(request.TriggerCondition, jcm => jcm.TriggerCondition == request.TriggerCondition);
+            ApplyFilter(
+                request.TriggerCondition,
+                jcm => jcm.TriggerCondition == request.TriggerCondition
+            );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "createdat");
 

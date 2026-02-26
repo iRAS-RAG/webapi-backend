@@ -51,7 +51,9 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllSensorTypes([FromQuery] SensorTypeListRequest request)
+        public async Task<IActionResult> GetAllSensorTypes(
+            [FromQuery] SensorTypeListRequest request
+        )
         {
             try
             {

@@ -27,7 +27,9 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả thiết bị điều khiển
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllControlDevices([FromQuery] ControlDeviceListRequest request)
+        public async Task<IActionResult> GetAllControlDevices(
+            [FromQuery] ControlDeviceListRequest request
+        )
         {
             try
             {

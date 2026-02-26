@@ -691,7 +691,9 @@ namespace IRasRag.Test.UnitTests.Application
             _configRepoMock.Verify(
                 r =>
                     r.GetPagedAsync<SpeciesStageConfigDto>(
-                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s => s != null),
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
+                            s != null
+                        ),
                         request.Page,
                         request.PageSize,
                         It.IsAny<QueryType>()
@@ -735,7 +737,9 @@ namespace IRasRag.Test.UnitTests.Application
             _configRepoMock.Verify(
                 r =>
                     r.GetPagedAsync<SpeciesStageConfigDto>(
-                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s => s != null),
+                        It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
+                            s != null
+                        ),
                         request.Page,
                         request.PageSize,
                         It.IsAny<QueryType>()

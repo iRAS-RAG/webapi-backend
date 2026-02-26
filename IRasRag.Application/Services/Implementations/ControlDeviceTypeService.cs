@@ -43,7 +43,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 var repository = _unitOfWork.GetRepository<ControlDeviceType>();
                 var spec = new ControlDeviceTypeDtoListSpec(request);
-                var pagedResult = await repository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await repository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách loại thiết bị điều khiển thành công: {Count} loại",

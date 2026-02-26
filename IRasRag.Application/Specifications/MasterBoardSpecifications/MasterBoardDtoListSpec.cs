@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
-using Ardalis.Specification;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.MasterBoardSpecifications
@@ -23,11 +23,7 @@ namespace IRasRag.Application.Specifications.MasterBoardSpecifications
 
             ApplySearch(
                 request.SearchTerm,
-                [
-                    mb => mb.Name,
-                    mb => mb.MacAddress,
-                    mb => mb.FishTank.Name,
-                ]
+                [mb => mb.Name, mb => mb.MacAddress, mb => mb.FishTank.Name]
             );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
