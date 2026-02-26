@@ -192,15 +192,40 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
-                // Validate SpeciesStageConfig exists
-                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var stageConfigExists = await stageConfigRepo.AnyAsync(sc =>
-                    sc.Id == createDto.SpeciesStageConfigId
-                );
-                if (!stageConfigExists)
+                // Validate Species exists
+                var speciesRepo = _unitOfWork.GetRepository<Species>();
+                var speciesExists = await speciesRepo.AnyAsync(s => s.Id == createDto.SpeciesId);
+                if (!speciesExists)
                 {
                     return Result<FarmingBatchDto>.Failure(
-                        "Cấu hình giai đoạn không tồn tại",
+                        "Loài cá không tồn tại",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Validate GrowthStage exists
+                var growthStageRepo = _unitOfWork.GetRepository<GrowthStage>();
+                var growthStageExists = await growthStageRepo.AnyAsync(gs =>
+                    gs.Id == createDto.GrowthStageId
+                );
+                if (!growthStageExists)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Giai đoạn tăng trưởng không tồn tại",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Resolve SpeciesStageConfig from Species + GrowthStage
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var stageConfig = await stageConfigRepo.FirstOrDefaultAsync(sc =>
+                    sc.SpeciesId == createDto.SpeciesId
+                    && sc.GrowthStageId == createDto.GrowthStageId
+                );
+                if (stageConfig == null)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy cấu hình cho loài và giai đoạn này",
                         ResultType.BadRequest
                     );
                 }
@@ -236,6 +261,7 @@ namespace IRasRag.Application.Services.Implementations
                 var farmingBatch = _mapper.Map<FarmingBatch>(createDto);
                 farmingBatch.Name = trimmedName;
                 farmingBatch.UnitOfMeasure = trimmedUnitOfMeasure;
+                farmingBatch.CurrentStageConfigId = stageConfig.Id;
 
                 await farmingBatchRepo.AddAsync(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();

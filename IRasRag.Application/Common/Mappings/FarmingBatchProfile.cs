@@ -26,11 +26,8 @@ namespace IRasRag.Application.Common.Mappings
                 );
 
             // Create DTO to Entity
-            CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.Source)
-                .ForMember(
-                    dest => dest.CurrentStageConfigId,
-                    opt => opt.MapFrom(src => src.SpeciesStageConfigId)
-                )
+            CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.None)
+                .ForMember(dest => dest.CurrentStageConfigId, opt => opt.Ignore())
                 .ForMember(
                     dest => dest.Status,
                     opt => opt.MapFrom(src => FarmingBatchStatus.ACTIVE)
