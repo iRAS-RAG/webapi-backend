@@ -147,7 +147,7 @@ namespace IRasRag.API.Controllers
                     };
                 }
 
-                return Ok(new { result.Message });
+                return Ok(new { result.Message, result.Data });
             }
             catch (Exception ex)
             {

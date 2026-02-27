@@ -71,4 +71,11 @@ namespace IRasRag.Application.DTOs
     {
         public bool? State { get; set; }
     }
+
+    // DTO dùng cho Manual Override: bật/tắt thiết bị
+    public class ToggleControlDeviceDto
+    {
+        [Required(ErrorMessage = "Trạng thái là bắt buộc")]
+        public bool State { get; set; }
+    }
 }
