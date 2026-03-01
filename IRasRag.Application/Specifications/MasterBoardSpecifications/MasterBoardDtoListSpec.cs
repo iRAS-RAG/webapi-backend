@@ -33,6 +33,7 @@ namespace IRasRag.Application.Specifications.MasterBoardSpecifications
                 Id = mb.Id,
                 Name = mb.Name,
                 MacAddress = mb.MacAddress,
+                FishTankId = mb.FishTankId,
                 FishTankName = mb.FishTank.Name,
             });
         }
