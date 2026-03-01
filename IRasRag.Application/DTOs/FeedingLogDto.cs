@@ -7,6 +7,7 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public Guid FarmingBatchId { get; set; }
+        public string FarmingBatchName { get; set; } = string.Empty;
         public float Amount { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? CreatedAt { get; set; }
@@ -51,13 +52,5 @@ namespace IRasRag.Application.DTOs
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
         [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
         public float Amount { get; set; }
-    }
-
-    public class BatchFeedingLogQuery
-    {
-        public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
-        public string? SortBy { get; set; }
-        public string SortDir { get; set; } = "asc";
     }
 }

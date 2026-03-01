@@ -9,6 +9,7 @@ namespace IRasRag.Application.DTOs
         public string Name { get; set; }
         public string Url { get; set; }
         public Guid FarmId { get; set; }
+        public string FarmName { get; set; } = string.Empty;
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
     }
