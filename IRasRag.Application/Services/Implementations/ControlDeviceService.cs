@@ -93,9 +93,9 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy thiết bị điều khiển với Id: {Id}", id);
 
                 var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
-                var controlDevice = await controlDeviceRepository.GetByIdAsync(id);
+                var controlDeviceDto = await controlDeviceRepository.FirstOrDefaultAsync(new ControlDeviceDtoByIdSpec(id));
 
-                if (controlDevice == null)
+                if (controlDeviceDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy thiết bị điều khiển với Id: {Id}", id);
                     return Result<ControlDeviceDto>.Failure(
@@ -104,7 +104,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var controlDeviceDto = _mapper.Map<ControlDeviceDto>(controlDevice);
                 _logger.LogInformation("Lấy thiết bị điều khiển thành công: {Id}", id);
 
                 return Result<ControlDeviceDto>.Success(

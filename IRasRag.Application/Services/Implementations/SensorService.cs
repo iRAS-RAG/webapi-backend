@@ -177,12 +177,10 @@ namespace IRasRag.Application.Services.Implementations
                 await sensorRepository.AddAsync(sensor);
                 await _unitOfWork.SaveChangesAsync();
 
-                var sensorDto = _mapper.Map<SensorDto>(sensor);
-                sensorDto.SensorTypeName = sensorType.Name;
-                sensorDto.MasterBoardName = masterBoard.Name;
+                var sensorDto = await sensorRepository.FirstOrDefaultAsync(new SensorDtoByIdSpec(sensor.Id));
                 _logger.LogInformation("Tạo cảm biến thành công: {Id}", sensor.Id);
 
-                return Result<SensorDto>.Success(sensorDto, "Tạo cảm biến thành công");
+                return Result<SensorDto>.Success(sensorDto!, "Tạo cảm biến thành công");
             }
             catch (Exception ex)
             {
@@ -404,14 +402,14 @@ namespace IRasRag.Application.Services.Implementations
                 await logRepository.AddAsync(sensorLog);
                 await _unitOfWork.SaveChangesAsync();
 
-                var logDto = _mapper.Map<SensorLogDto>(sensorLog);
+                var logDto = await logRepository.FirstOrDefaultAsync(new SensorLogDtoByIdSpec(sensorLog.Id));
                 _logger.LogInformation(
                     "Thêm dữ liệu thủ công thành công: {LogId} cho cảm biến {SensorId}",
                     sensorLog.Id,
                     sensorId
                 );
 
-                return Result<SensorLogDto>.Success(logDto, "Thêm dữ liệu cảm biến thành công");
+                return Result<SensorLogDto>.Success(logDto!, "Thêm dữ liệu cảm biến thành công");
             }
             catch (Exception ex)
             {

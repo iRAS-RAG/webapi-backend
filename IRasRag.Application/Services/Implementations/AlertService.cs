@@ -193,14 +193,12 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var alert = _mapper.Map<Alert>(createDto);
-                alert.FishTank = fishTank!;
-                alert.SensorType = sensorType!;
 
                 await _unitOfWork.GetRepository<Alert>().AddAsync(alert);
                 await _unitOfWork.SaveChangesAsync();
 
-                var alertDto = _mapper.Map<AlertDto>(alert);
-                return Result<AlertDto>.Success(alertDto, "Tạo cảnh báo thành công");
+                var alertDto = await _unitOfWork.GetRepository<Alert>().FirstOrDefaultAsync(new AlertDtoByIdSpec(alert.Id));
+                return Result<AlertDto>.Success(alertDto!, "Tạo cảnh báo thành công");
             }
             catch (Exception ex)
             {
