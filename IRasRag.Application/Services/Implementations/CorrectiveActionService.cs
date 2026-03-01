@@ -94,9 +94,9 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy hành động khắc phục với Id: {Id}", id);
 
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
-                var correctiveAction = await correctiveActionRepository.GetByIdAsync(id);
+                var correctiveActionDto = await correctiveActionRepository.FirstOrDefaultAsync(new CorrectiveActionDtoByIdSpec(id));
 
-                if (correctiveAction == null)
+                if (correctiveActionDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy hành động khắc phục với Id: {Id}", id);
                     return Result<CorrectiveActionDto>.Failure(
@@ -105,7 +105,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var correctiveActionDto = _mapper.Map<CorrectiveActionDto>(correctiveAction);
                 _logger.LogInformation("Lấy hành động khắc phục thành công với Id: {Id}", id);
 
                 return Result<CorrectiveActionDto>.Success(

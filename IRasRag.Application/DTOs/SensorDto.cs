@@ -57,6 +57,7 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public Guid SensorId { get; set; }
+        public string SensorName { get; set; } = string.Empty;
         public double Data { get; set; }
         public bool IsWarning { get; set; }
         public string DataJson { get; set; } = "{}";
@@ -64,7 +65,7 @@ namespace IRasRag.Application.DTOs
     }
 
     // SensorLog List Request (chart query)
-    public class SensorLogListRequest
+    public class SensorLogListRequest : BasePaginatedListRequest
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
@@ -73,13 +74,9 @@ namespace IRasRag.Application.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Interval phải là số nguyên dương (tối thiểu 1 phút)")]
         public int? Interval { get; set; }
 
-        /// <summary>Số trang hiện tại (mặc định: 1).</summary>
-        [Range(1, int.MaxValue, ErrorMessage = "Page phải lớn hơn 0")]
-        public int Page { get; set; } = 1;
-
         /// <summary>Số bản ghi mỗi trang (mặc định: 50, tối đa: 500).</summary>
         [Range(1, 500, ErrorMessage = "PageSize phải từ 1 đến 500")]
-        public int PageSize { get; set; } = 50;
+        public new int PageSize { get; set; } = 50;
     }
 
     // Create SensorLog DTO (manual entry)

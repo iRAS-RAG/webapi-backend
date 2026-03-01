@@ -171,16 +171,10 @@ namespace IRasRag.Application.Services.Implementations
                 await mappingRepo.AddAsync(mapping);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Load related entities for response
-                var job = await jobRepo.GetByIdAsync(mapping.JobId);
-                var controlDevice = await controlDeviceRepo.GetByIdAsync(mapping.ControlDeviceId);
-                mapping.Job = job!;
-                mapping.ControlDevice = controlDevice!;
-
-                var mappingDto = _mapper.Map<JobControlMappingDto>(mapping);
+                var mappingDto = await mappingRepo.FirstOrDefaultAsync(new JobControlMappingDtoByIdSpec(mapping.Id));
 
                 return Result<JobControlMappingDto>.Success(
-                    mappingDto,
+                    mappingDto!,
                     "Tạo ánh xạ job-thiết bị điều khiển thành công"
                 );
             }

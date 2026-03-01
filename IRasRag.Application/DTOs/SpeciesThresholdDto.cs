@@ -5,8 +5,11 @@ namespace IRasRag.Application.DTOs
     public class SpeciesThresholdDto
     {
         public Guid Id { get; set; }
+        public Guid SpeciesId { get; set; }
         public string SpeciesName { get; set; }
+        public Guid GrowthStageId { get; set; }
         public string GrowthStageName { get; set; }
+        public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; }
         public float MinValue { get; set; }
         public float MaxValue { get; set; }
