@@ -8,18 +8,19 @@ namespace IRasRag.Application.Specifications.DocumentSpecifications
     /// Specification chiếu một Document theo Id thành DocumentDto,
     /// bao gồm cả thông tin User (UploadedByUserEmail).
     /// </summary>
-    public class DocumentDtoByIdSpec : Specification<Document, DocumentDto>
+    public class DocumentDtoByIdSpec : Specification<Document, DocumentDetailDto>
     {
         public DocumentDtoByIdSpec(Guid id)
         {
             Query
                 .AsNoTracking()
                 .Where(d => d.Id == id)
-                .Select(d => new DocumentDto
+                .Select(d => new DocumentDetailDto
                 {
                     Id = d.Id,
                     Title = d.Title,
                     Content = d.Content,
+                    FileUrl = d.FileUrl,
                     UploadedByUserId = d.UploadedByUserId,
                     UploadedByUserEmail = d.UploadedByUser.Email,
                     UploadedAt = d.UploadedAt,
