@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs
 {
@@ -164,7 +165,7 @@ namespace IRasRag.Application.DTOs
         public Guid SensorTypeId { get; set; }
         public Guid FishTankId { get; set; }
         public string FishTankName { get; set; } = string.Empty;
-        public string StatusStr { get; set; } = string.Empty;
+        public AlertStatus Status { get; set; }
         public DateTime RaisedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
     }

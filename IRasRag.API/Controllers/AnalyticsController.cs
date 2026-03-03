@@ -43,8 +43,9 @@ namespace IRasRag.API.Controllers
         {
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
+            {
                 return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
-
+            }
             request.UserId = userId.Value;
 
             try
@@ -71,10 +72,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An unexpected error occurred in the alert-frequency endpoint."
-                );
+                _logger.LogError(ex, "An unexpected error occurred in the alert-frequency endpoint.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -93,14 +91,15 @@ namespace IRasRag.API.Controllers
         {
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
+            {
                 return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
+            }
 
             request.UserId = userId.Value;
 
             try
             {
-                _logger.LogInformation(
-                    "Batch comparison endpoint called. BatchIds: [{Ids}], Metrics: [{Metrics}]",
+                _logger.LogInformation("Batch comparison endpoint called. BatchIds: [{Ids}], Metrics: [{Metrics}]",
                     string.Join(", ", request.BatchIds ?? new List<Guid>()),
                     string.Join(", ", request.Metrics ?? new List<string>())
                 );
@@ -118,10 +117,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An unexpected error occurred in the batch comparison endpoint."
-                );
+                _logger.LogError(ex, "An unexpected error occurred in the batch comparison endpoint.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

@@ -39,16 +39,14 @@ namespace IRasRag.API.Controllers
         {
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
+            {
                 return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
-
+            }
             request.UserId = userId.Value;
 
             try
             {
-                _logger.LogInformation(
-                    "Dashboard summary requested with period: {Period}",
-                    request.Period
-                );
+                _logger.LogInformation("Dashboard summary requested with period: {Period}", request.Period);
 
                 var result = await _reportService.GetDashboardSummaryAsync(request);
 
@@ -61,11 +59,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while fetching dashboard summary for period: {Period}",
-                    request.Period
-                );
+                _logger.LogError(ex, "An error occurred while fetching dashboard summary for period: {Period}", request.Period);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -83,16 +77,14 @@ namespace IRasRag.API.Controllers
         {
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
+            {
                 return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
-
+            }
             request.UserId = userId.Value;
 
             try
             {
-                _logger.LogInformation(
-                    "Weekly report requested with period: {Period}",
-                    request.Period
-                );
+                _logger.LogInformation("Weekly report requested with period: {Period}", request.Period);
 
                 var result = await _reportService.GetWeeklyReportAsync(request);
 
@@ -105,11 +97,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while generating weekly report for period: {Period}",
-                    request.Period
-                );
+                _logger.LogError(ex, "An error occurred while generating weekly report for period: {Period}", request.Period);
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

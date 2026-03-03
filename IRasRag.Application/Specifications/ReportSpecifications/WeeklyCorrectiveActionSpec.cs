@@ -15,7 +15,7 @@ namespace IRasRag.Application.Specifications.ReportSpecifications
         {
             Query
                 .AsNoTracking()
-                .Where(ca => ca.Timestamp >= from && ca.Timestamp <= to
+                .Where(ca => ca.Timestamp >= from && ca.Timestamp < to
                              && tankIds.Contains(ca.Alert.FishTankId))
                 .OrderByDescending(ca => ca.Timestamp)
                 .Select(ca => new WeeklyCorrectiveActionItem

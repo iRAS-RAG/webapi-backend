@@ -23,6 +23,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<MortalityLog>> _mortalityRepoMock;
         private readonly Mock<IRepository<CorrectiveAction>> _correctiveActionRepoMock;
         private readonly Mock<IRepository<Recommendation>> _recommendationRepoMock;
+        private readonly Mock<IRepository<UserFarm>> _userFarmRepoMock;
+        private readonly Mock<IRepository<FishTank>> _fishTankRepoMock;
 
         private readonly ReportService _sut;
 
@@ -36,12 +38,16 @@ namespace IRasRag.Test.UnitTests.Application
             _mortalityRepoMock = new Mock<IRepository<MortalityLog>>();
             _correctiveActionRepoMock = new Mock<IRepository<CorrectiveAction>>();
             _recommendationRepoMock = new Mock<IRepository<Recommendation>>();
+            _userFarmRepoMock = new Mock<IRepository<UserFarm>>();
+            _fishTankRepoMock = new Mock<IRepository<FishTank>>();
 
             _unitOfWorkMock.Setup(u => u.GetRepository<Alert>()).Returns(_alertRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<FarmingBatch>()).Returns(_batchRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<MortalityLog>()).Returns(_mortalityRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<CorrectiveAction>()).Returns(_correctiveActionRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<Recommendation>()).Returns(_recommendationRepoMock.Object);
+            _unitOfWorkMock.Setup(u => u.GetRepository<UserFarm>()).Returns(_userFarmRepoMock.Object);
+            _unitOfWorkMock.Setup(u => u.GetRepository<FishTank>()).Returns(_fishTankRepoMock.Object);
 
             _sut = new ReportService(_unitOfWorkMock.Object, _loggerMock.Object);
         }
@@ -92,15 +98,44 @@ namespace IRasRag.Test.UnitTests.Application
             IEnumerable<BatchSurvivalProjection>? survivalData = null,
             IEnumerable<MortalityLog>? mortalityLogs = null)
         {
-            _alertRepoMock
-                .SetupSequence(r => r.CountAsync(
-                    It.IsAny<Expression<Func<Alert, bool>>>(),
+            // ── Scope: return one dummy UserFarm → one dummy FishTank so the service
+            //    proceeds past the early-exit guard (tankIds.Count == 0).
+            var dummyFarmId = Guid.NewGuid();
+            var dummyTankId = Guid.NewGuid();
+
+            _userFarmRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
                     It.IsAny<QueryType>()))
-                .ReturnsAsync(totalAlerts)
-                .ReturnsAsync(openAlerts)
-                .ReturnsAsync(acknowledgedAlerts)
-                .ReturnsAsync(resolvedAlerts)
-                .ReturnsAsync(dismissedAlerts);
+                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+
+            _fishTankRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FishTank, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+
+            // batchRepo.FindAllAsync is used to build dashboardBatchIds before querying mortality.
+            _batchRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FarmingBatch>());
+
+            var alertList = new List<AlertStatus>();
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.ACKNOWLEDGED, acknowledgedAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.RESOLVED, resolvedAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.DISMISSED, dismissedAlerts));
+            int remaining = totalAlerts - alertList.Count;
+            if (remaining > 0)
+                alertList.AddRange(Enumerable.Repeat((AlertStatus)999, remaining));
+
+            _alertRepoMock
+                .Setup(r => r.ListAsync(
+                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(alertList);
 
             _batchRepoMock
                 .SetupSequence(r => r.CountAsync(
@@ -142,15 +177,44 @@ namespace IRasRag.Test.UnitTests.Application
             int activeBatches = 0,
             IEnumerable<BatchSurvivalProjection>? survivalData = null)
         {
-            _alertRepoMock
-                .SetupSequence(r => r.CountAsync(
-                    It.IsAny<Expression<Func<Alert, bool>>>(),
+            // ── Scope: return one dummy UserFarm → one dummy FishTank so the service
+            //    proceeds past the early-exit guard (tankIds.Count == 0).
+            var dummyFarmId = Guid.NewGuid();
+            var dummyTankId = Guid.NewGuid();
+
+            _userFarmRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
                     It.IsAny<QueryType>()))
-                .ReturnsAsync(totalAlerts)
-                .ReturnsAsync(openAlerts)
-                .ReturnsAsync(acknowledgedAlerts)
-                .ReturnsAsync(resolvedAlerts)
-                .ReturnsAsync(dismissedAlerts);
+                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+
+            _fishTankRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FishTank, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+
+            // batchRepo.FindAllAsync is used to build weeklyBatchIds before querying mortality.
+            _batchRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FarmingBatch>());
+
+            var alertList = new List<AlertStatus>();
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.ACKNOWLEDGED, acknowledgedAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.RESOLVED, resolvedAlerts));
+            alertList.AddRange(Enumerable.Repeat(AlertStatus.DISMISSED, dismissedAlerts));
+            int remaining = totalAlerts - alertList.Count;
+            if (remaining > 0)
+                alertList.AddRange(Enumerable.Repeat((AlertStatus)999, remaining));
+
+            _alertRepoMock
+                .Setup(r => r.ListAsync(
+                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(alertList);
 
             _alertRepoMock
                 .Setup(r => r.ListAsync(
@@ -208,7 +272,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.PeriodFrom.Should().Be(
                 new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month), 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1));
         }
 
         [Fact]
@@ -224,7 +288,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.PeriodFrom.Should().Be(
                 new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, now.Day, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
         }
 
         [Fact]
@@ -239,7 +303,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.PeriodLabel.Should().Be("7 ngày qua");
             // PeriodTo should be end of today
             result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, now.Day, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
             // PeriodFrom should be 6 calendar days ago at midnight UTC
             result.Data.PeriodFrom.Date.Should().Be(now.AddDays(-6).Date);
         }
@@ -257,7 +321,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.PeriodFrom.Should().Be(
                 new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, 12, 31, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         }
 
         [Theory]
@@ -486,9 +550,25 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetDashboardSummaryAsync_ShouldReturnUnexpected_WhenRepositoryThrows()
         {
+            // Ensure the service passes the UserFarm/FishTank early-exit guard
+            // so it reaches the alert repository call.
+            var dummyFarmId = Guid.NewGuid();
+            var dummyTankId = Guid.NewGuid();
+            _userFarmRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+            _fishTankRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FishTank, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+
+            // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.
             _alertRepoMock
-                .Setup(r => r.CountAsync(
-                    It.IsAny<Expression<Func<Alert, bool>>>(),
+                .Setup(r => r.ListAsync(
+                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
                     It.IsAny<QueryType>()))
                 .ThrowsAsync(new InvalidOperationException("DB connection failure"));
 
@@ -525,7 +605,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.PeriodFrom.Should().Be(
                 new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
         }
 
         [Fact]
@@ -545,7 +625,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.PeriodFrom.Should().Be(
                 new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
         }
 
         [Fact]
@@ -565,7 +645,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.PeriodFrom.Should().Be(
                 new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
             result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 23, 59, 59, DateTimeKind.Utc));
+                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
         }
 
         [Theory]
@@ -914,9 +994,25 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetWeeklyReportAsync_ShouldReturnUnexpected_WhenRepositoryThrows()
         {
+            // Ensure the service passes the UserFarm/FishTank early-exit guard
+            // so it reaches the alert repository call.
+            var dummyFarmId = Guid.NewGuid();
+            var dummyTankId = Guid.NewGuid();
+            _userFarmRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+            _fishTankRepoMock
+                .Setup(r => r.FindAllAsync(
+                    It.IsAny<Expression<Func<FishTank, bool>>>(),
+                    It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+
+            // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.
             _alertRepoMock
-                .Setup(r => r.CountAsync(
-                    It.IsAny<Expression<Func<Alert, bool>>>(),
+                .Setup(r => r.ListAsync(
+                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
                     It.IsAny<QueryType>()))
                 .ThrowsAsync(new InvalidOperationException("DB connection failure"));
 

@@ -15,7 +15,7 @@ namespace IRasRag.Application.Specifications.ReportSpecifications
         {
             Query
                 .AsNoTracking()
-                .Where(r => r.Alert.RaisedAt >= from && r.Alert.RaisedAt <= to
+                .Where(r => r.Alert.RaisedAt >= from && r.Alert.RaisedAt < to
                             && tankIds.Contains(r.Alert.FishTankId))
                 .OrderByDescending(r => r.Alert.RaisedAt)
                 .Select(r => new WeeklyRecommendationItem

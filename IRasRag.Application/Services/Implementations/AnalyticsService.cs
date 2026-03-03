@@ -4,6 +4,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.AnalyticsSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -43,24 +44,44 @@ namespace IRasRag.Application.Services.Implementations
 
                 // ── 1. Validate input ────────────────────────────────────────
                 if (request.BatchIds == null || request.BatchIds.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "CompareBatches: User {UserId} sent request with no batch IDs.",
+                        request.UserId
+                    );
                     return Result<BatchCompareResponseDto>.Failure(
                         "Vui lòng cung cấp ít nhất hai lô nuôi để so sánh.",
                         ResultType.BadRequest
                     );
+                }
 
                 var distinctBatchIds = request.BatchIds.Distinct().ToList();
 
                 if (distinctBatchIds.Count < 2)
+                {
+                    _logger.LogWarning(
+                        "CompareBatches: User {UserId} provided only {Count} distinct batch ID(s), minimum 2 required.",
+                        request.UserId,
+                        distinctBatchIds.Count
+                    );
                     return Result<BatchCompareResponseDto>.Failure(
                         "Cần ít nhất hai lô nuôi khác nhau để thực hiện so sánh.",
                         ResultType.BadRequest
                     );
+                }
 
                 if (distinctBatchIds.Count > 10)
+                {
+                    _logger.LogWarning(
+                        "CompareBatches: User {UserId} requested {Count} batches, exceeds limit of 10.",
+                        request.UserId,
+                        distinctBatchIds.Count
+                    );
                     return Result<BatchCompareResponseDto>.Failure(
                         "Tối đa 10 lô nuôi có thể được so sánh trong một lần.",
                         ResultType.BadRequest
                     );
+                }
 
                 // ── 2. Normalise requested metrics ───────────────────────────
                 var requestedMetrics = (request.Metrics ?? new List<string>())
@@ -120,10 +141,17 @@ namespace IRasRag.Application.Services.Implementations
                     .ToList();
 
                 if (unauthorizedBatchIds.Count > 0)
+                {
+                    _logger.LogWarning(
+                        "CompareBatches: User {UserId} attempted to access unauthorized batch(es): [{Ids}].",
+                        request.UserId,
+                        string.Join(", ", unauthorizedBatchIds)
+                    );
                     return Result<BatchCompareResponseDto>.Failure(
                         "Bạn không có quyền truy cập vào một hoặc nhiều lô nuôi đã chọn.",
                         ResultType.Unauthorized
                     );
+                }
 
                 var batchResults = new List<BatchMetricsDto>(distinctBatchIds.Count);
 
@@ -356,16 +384,31 @@ namespace IRasRag.Application.Services.Implementations
                 var from = request.From?.ToUniversalTime() ?? to.AddDays(-30);
 
                 if (from >= to)
+                {
+                    _logger.LogWarning(
+                        "GetAlertFrequency: User {UserId} provided invalid date range: From={From} is not before To={To}.",
+                        request.UserId,
+                        from,
+                        to
+                    );
                     return Result<AlertFrequencyResponseDto>.Failure(
                         "Thời điểm bắt đầu phải trước thời điểm kết thúc.",
                         ResultType.BadRequest
                     );
+                }
 
                 if ((to - from).TotalDays > 365)
+                {
+                    _logger.LogWarning(
+                        "GetAlertFrequency: User {UserId} requested {Days} days of data, exceeds 365-day limit.",
+                        request.UserId,
+                        (int)(to - from).TotalDays
+                    );
                     return Result<AlertFrequencyResponseDto>.Failure(
                         "Khoảng thời gian thống kê tối đa là 365 ngày.",
                         ResultType.BadRequest
                     );
+                }
 
                 _logger.LogInformation(
                     "Alert frequency requested. From={From}, To={To}, FishTankId={TankId}, FarmId={FarmId}, TopN={TopN}",
@@ -383,10 +426,17 @@ namespace IRasRag.Application.Services.Implementations
                 if (request.FishTankId.HasValue)
                 {
                     if (!userTankIds.Contains(request.FishTankId.Value))
+                    {
+                        _logger.LogWarning(
+                            "GetAlertFrequency: User {UserId} attempted access to unauthorized FishTank {FishTankId}.",
+                            request.UserId,
+                            request.FishTankId.Value
+                        );
                         return Result<AlertFrequencyResponseDto>.Failure(
                             "Bạn không có quyền truy cập bể nuôi với ID đã cung cấp.",
                             ResultType.Unauthorized
                         );
+                    }
                 }
 
                 if (request.FarmId.HasValue)
@@ -395,10 +445,17 @@ namespace IRasRag.Application.Services.Implementations
                         .GetRepository<UserFarm>()
                         .AnyAsync(uf => uf.UserId == request.UserId && uf.FarmId == request.FarmId.Value);
                     if (!hasAccess)
+                    {
+                        _logger.LogWarning(
+                            "GetAlertFrequency: User {UserId} attempted access to unauthorized Farm {FarmId}.",
+                            request.UserId,
+                            request.FarmId.Value
+                        );
                         return Result<AlertFrequencyResponseDto>.Failure(
                             "Bạn không có quyền truy cập trang trại với ID đã cung cấp.",
                             ResultType.Unauthorized
                         );
+                    }
                 }
 
                 // ── 3. Load projected alerts (scoped to user's tanks) ────────
@@ -427,14 +484,14 @@ namespace IRasRag.Application.Services.Implementations
 
                         foreach (var item in items)
                         {
-                            switch (item.StatusStr)
+                            switch (item.Status)
                             {
-                                case "OPEN":         openCount++;         break;
-                                case "ACKNOWLEDGED": ackCount++;          break;
-                                case "RESOLVED":     resolvedCount++;     break;
-                                case "DISMISSED":    dismissedCount++;    break;
+                                case AlertStatus.OPEN:         openCount++;         break;
+                                case AlertStatus.ACKNOWLEDGED: ackCount++;          break;
+                                case AlertStatus.RESOLVED:     resolvedCount++;     break;
+                                case AlertStatus.DISMISSED:    dismissedCount++;    break;
                             }
-                            if (item.StatusStr == "RESOLVED" && item.ResolvedAt.HasValue)
+                            if (item.Status == AlertStatus.RESOLVED && item.ResolvedAt.HasValue)
                                 resolvedItems.Add(item);
                         }
 

@@ -113,6 +113,10 @@ namespace IRasRag.Application.DTOs
         /// Dùng để lọc dữ liệu theo farm thuộc về user.
         /// </summary>
         public Guid UserId { get; set; }
+
+        public Guid? FarmId { get; set; }
+
+        public Guid? BatchId { get; set; }
     }
 
     /// <summary>Phân tích tần suất cảnh báo theo loại cảm biến.</summary>

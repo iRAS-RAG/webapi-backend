@@ -1,6 +1,7 @@
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Specifications.AnalyticsSpecifications
 {
@@ -36,7 +37,7 @@ namespace IRasRag.Application.Specifications.AnalyticsSpecifications
                 SensorTypeId = a.SensorTypeId,
                 FishTankId = a.FishTankId,
                 FishTankName = a.FishTank.Name,
-                StatusStr = a.Status.ToString(),
+                Status = a.Status,
                 RaisedAt = a.RaisedAt,
                 ResolvedAt = a.ResolvedAt,
             });

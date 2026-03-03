@@ -28,6 +28,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<SensorLog>> _sensorLogRepoMock;
         private readonly Mock<IRepository<SensorType>> _sensorTypeRepoMock;
         private readonly Mock<IRepository<Farm>> _farmRepoMock;
+        private readonly Mock<IRepository<UserFarm>> _userFarmRepoMock;
 
         private readonly AnalyticsService _sut;
 
@@ -46,6 +47,7 @@ namespace IRasRag.Test.UnitTests.Application
             _sensorLogRepoMock = new Mock<IRepository<SensorLog>>();
             _sensorTypeRepoMock = new Mock<IRepository<SensorType>>();
             _farmRepoMock = new Mock<IRepository<Farm>>();
+            _userFarmRepoMock = new Mock<IRepository<UserFarm>>();
 
             _unitOfWorkMock.Setup(u => u.GetRepository<FarmingBatch>()).Returns(_batchRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<FishTank>()).Returns(_fishTankRepoMock.Object);
@@ -57,6 +59,19 @@ namespace IRasRag.Test.UnitTests.Application
             _unitOfWorkMock.Setup(u => u.GetRepository<SensorLog>()).Returns(_sensorLogRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<SensorType>()).Returns(_sensorTypeRepoMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<Farm>()).Returns(_farmRepoMock.Object);
+            _unitOfWorkMock.Setup(u => u.GetRepository<UserFarm>()).Returns(_userFarmRepoMock.Object);
+
+            // ── Default setups so GetUserTankIdsAsync never throws ────────────
+            // UserFarm returns one record so farmIds is non-empty and FishTank query is reached.
+            _userFarmRepoMock
+                .Setup(r => r.FindAllAsync(It.IsAny<Expression<Func<UserFarm, bool>>>(), It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<UserFarm> { new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() } });
+
+            // FishTank returns an empty list by default; individual tests override this as needed.
+            // When overridden, the returned tank IDs become userTankIds via GetUserTankIdsAsync.
+            _fishTankRepoMock
+                .Setup(r => r.FindAllAsync(It.IsAny<Expression<Func<FishTank, bool>>>(), It.IsAny<QueryType>()))
+                .ReturnsAsync(new List<FishTank>());
 
             _sut = new AnalyticsService(_unitOfWorkMock.Object, _loggerMock.Object);
         }
@@ -673,27 +688,23 @@ namespace IRasRag.Test.UnitTests.Application
         #region GetAlertFrequencyAsync – Filter Validation
 
         [Fact]
-        public async Task GetAlertFrequencyAsync_ShouldReturnNotFound_WhenFishTankIdDoesNotExist()
+        public async Task GetAlertFrequencyAsync_ShouldReturnUnauthorized_WhenFishTankIdNotOwnedByUser()
         {
             var request = new AlertFrequencyRequest
             {
                 From = DateTime.UtcNow.AddDays(-7),
                 To = DateTime.UtcNow,
-                FishTankId = Guid.NewGuid(),
+                FishTankId = Guid.NewGuid(), // not in userTankIds (FishTank default returns empty)
             };
-
-            _fishTankRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<FishTank, bool>>>(), It.IsAny<QueryType>()))
-                .ReturnsAsync(false);
 
             var result = await _sut.GetAlertFrequencyAsync(request);
 
-            result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Không tìm thấy bể nuôi với ID đã cung cấp.");
+            result.Type.Should().Be(ResultType.Unauthorized);
+            result.Message.Should().Be("Bạn không có quyền truy cập bể nuôi với ID đã cung cấp.");
         }
 
         [Fact]
-        public async Task GetAlertFrequencyAsync_ShouldReturnNotFound_WhenFarmIdDoesNotExist()
+        public async Task GetAlertFrequencyAsync_ShouldReturnUnauthorized_WhenFarmIdNotOwnedByUser()
         {
             var request = new AlertFrequencyRequest
             {
@@ -702,14 +713,15 @@ namespace IRasRag.Test.UnitTests.Application
                 FarmId = Guid.NewGuid(),
             };
 
-            _farmRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Farm, bool>>>(), It.IsAny<QueryType>()))
+            // Override AnyAsync so the FarmId ownership check returns false
+            _userFarmRepoMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<UserFarm, bool>>>(), It.IsAny<QueryType>()))
                 .ReturnsAsync(false);
 
             var result = await _sut.GetAlertFrequencyAsync(request);
 
-            result.Type.Should().Be(ResultType.NotFound);
-            result.Message.Should().Be("Không tìm thấy trang trại với ID đã cung cấp.");
+            result.Type.Should().Be(ResultType.Unauthorized);
+            result.Message.Should().Be("Bạn không có quyền truy cập trang trại với ID đã cung cấp.");
         }
 
         #endregion
@@ -780,10 +792,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             var projections = new List<AlertFrequencyProjection>
             {
-                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", StatusStr = "OPEN",         RaisedAt = raisedAt, ResolvedAt = null },
-                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", StatusStr = "ACKNOWLEDGED", RaisedAt = raisedAt, ResolvedAt = null },
-                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", StatusStr = "RESOLVED",     RaisedAt = raisedAt, ResolvedAt = resolvedAt },
-                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", StatusStr = "DISMISSED",    RaisedAt = raisedAt, ResolvedAt = null },
+                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", Status = AlertStatus.OPEN,         RaisedAt = raisedAt, ResolvedAt = null },
+                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", Status = AlertStatus.ACKNOWLEDGED, RaisedAt = raisedAt, ResolvedAt = null },
+                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", Status = AlertStatus.RESOLVED,     RaisedAt = raisedAt, ResolvedAt = resolvedAt },
+                new() { SensorTypeId = sensorTypeId, FishTankId = fishTankId, FishTankName = "Tank A", Status = AlertStatus.DISMISSED,    RaisedAt = raisedAt, ResolvedAt = null },
             };
 
             var sensorTypes = new List<SensorType>
@@ -834,10 +846,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             var projections = new List<AlertFrequencyProjection>
             {
-                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId2, FishTankId = tankId, FishTankName = "T", StatusStr = "OPEN", RaisedAt = raisedAt },
+                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId1, FishTankId = tankId, FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId2, FishTankId = tankId, FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
             };
 
             var sensorTypes = new List<SensorType>
@@ -879,7 +891,7 @@ namespace IRasRag.Test.UnitTests.Application
                 SensorTypeId = Guid.NewGuid(),
                 FishTankId = fishTankId,
                 FishTankName = "Tank X",
-                StatusStr = "OPEN",
+                Status = AlertStatus.OPEN,
                 RaisedAt = raisedAt,
             }).ToList();
 
@@ -920,7 +932,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var projections = new List<AlertFrequencyProjection>
             {
-                new() { SensorTypeId = stId, FishTankId = tankId, FishTankName = "T", StatusStr = "OPEN", RaisedAt = raisedAt },
+                new() { SensorTypeId = stId, FishTankId = tankId, FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
             };
 
             var request = new AlertFrequencyRequest
@@ -955,7 +967,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var projections = new List<AlertFrequencyProjection>
             {
-                new() { SensorTypeId = Guid.NewGuid(), FishTankId = Guid.NewGuid(), FishTankName = "T", StatusStr = "OPEN", RaisedAt = from.AddDays(1) },
+                new() { SensorTypeId = Guid.NewGuid(), FishTankId = Guid.NewGuid(), FishTankName = "T", Status = AlertStatus.OPEN, RaisedAt = from.AddDays(1) },
             };
 
             _alertRepoMock
@@ -987,10 +999,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             var projections = new List<AlertFrequencyProjection>
             {
-                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", StatusStr = "OPEN", RaisedAt = raisedAt },
-                new() { SensorTypeId = stId, FishTankId = tankId2, FishTankName = "Tank B", StatusStr = "OPEN", RaisedAt = raisedAt },
+                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId, FishTankId = tankId1, FishTankName = "Tank A", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
+                new() { SensorTypeId = stId, FishTankId = tankId2, FishTankName = "Tank B", Status = AlertStatus.OPEN, RaisedAt = raisedAt },
             };
 
             var request = new AlertFrequencyRequest

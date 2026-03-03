@@ -27,47 +27,34 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                _logger.LogInformation(
-                    "Fetching dashboard summary for period: {Period}",
-                    request.Period
-                );
+                _logger.LogInformation("Fetching dashboard summary for period: {Period}", request.Period);
 
                 var (periodFrom, periodTo, periodLabel) = ResolvePeriod(request.Period);
 
                 // ── Resolve fish tanks belonging to this user ────────────────────
                 var tankIds = await GetUserTankIdsAsync(request.UserId);
 
+                if (tankIds.Count == 0)
+                {
+                    return Result<DashboardSummaryDto>.Success(new DashboardSummaryDto
+                    {
+                        PeriodFrom = periodFrom,
+                        PeriodTo = periodTo,
+                        PeriodLabel = periodLabel
+                    }, "Lấy dữ liệu tổng quan thành công.");
+                }
+
                 // ── Alert KPIs — use CountAsync per status (no entity loading) ──────
                 var alertRepo = _unitOfWork.GetRepository<Alert>();
 
-                int totalAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= periodFrom && a.RaisedAt <= periodTo
-                );
-                int openAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= periodFrom
-                    && a.RaisedAt <= periodTo
-                    && a.Status == AlertStatus.OPEN
-                );
-                int acknowledgedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= periodFrom
-                    && a.RaisedAt <= periodTo
-                    && a.Status == AlertStatus.ACKNOWLEDGED
-                );
-                int resolvedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= periodFrom
-                    && a.RaisedAt <= periodTo
-                    && a.Status == AlertStatus.RESOLVED
-                );
-                int dismissedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= periodFrom
-                    && a.RaisedAt <= periodTo
-                    && a.Status == AlertStatus.DISMISSED
-                );
+                var statusSpec = new AlertStatusCountSpec(periodFrom, periodTo, tankIds);
+                var alertStatuses = (await alertRepo.ListAsync(statusSpec)).ToList();
+
+                int totalAlerts = alertStatuses.Count;
+                int openAlerts = alertStatuses.Count(s => s == AlertStatus.OPEN);
+                int acknowledgedAlerts = alertStatuses.Count(s => s == AlertStatus.ACKNOWLEDGED);
+                int resolvedAlerts = alertStatuses.Count(s => s == AlertStatus.RESOLVED);
+                int dismissedAlerts = alertStatuses.Count(s => s == AlertStatus.DISMISSED);
 
                 // ── Farming batch KPIs — CountAsync for pure counts ───────────────
                 var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
@@ -81,11 +68,11 @@ namespace IRasRag.Application.Services.Implementations
                     && b.Status == FarmingBatchStatus.HARVESTED
                     && b.ActualHarvestDate.HasValue
                     && b.ActualHarvestDate.Value >= periodFrom
-                    && b.ActualHarvestDate.Value <= periodTo
+                    && b.ActualHarvestDate.Value < periodTo
                 );
                 int batchesInPeriod = await batchRepo.CountAsync(b =>
                     tankIds.Contains(b.FishTankId)
-                    && b.StartDate >= periodFrom && b.StartDate <= periodTo
+                    && b.StartDate >= periodFrom && b.StartDate < periodTo
                 );
 
                 // ── Survival rate — projection spec fetches only quantity columns ─
@@ -109,7 +96,7 @@ namespace IRasRag.Application.Services.Implementations
                 var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
                 var mortalityLogs = await mortalityRepo.FindAllAsync(m =>
                     dashboardBatchIds.Contains(m.BatchId)
-                    && m.Date >= periodFrom && m.Date <= periodTo
+                    && m.Date >= periodFrom && m.Date < periodTo
                 );
                 double totalMortality = mortalityLogs.Sum(m => (double)m.Quantity);
 
@@ -180,39 +167,31 @@ namespace IRasRag.Application.Services.Implementations
                 var (weekFrom, weekTo, weekLabel) = ResolveWeekPeriod(request.Period);
 
                 // ── Resolve fish tanks belonging to this user ────────────────────────
-                var tankIds = await GetUserTankIdsAsync(request.UserId);
+                var tankIds = await GetUserTankIdsAsync(request.UserId, request.FarmId, request.BatchId);
+
+                // Nếu không có tank nào, trả về report với các số liệu tự động bằng 0.
+                if (tankIds.Count == 0)
+                {
+                    return Result<WeeklyReportDto>.Success(new WeeklyReportDto
+                    {
+                        GeneratedAt = DateTime.UtcNow,
+                        PeriodFrom = weekFrom,
+                        PeriodTo = weekTo,
+                        PeriodLabel = weekLabel
+                    }, "Lấy báo cáo tuần thành công.");
+                }
 
                 // ── Alert KPIs ────────────────────────────────────────────────
                 var alertRepo = _unitOfWork.GetRepository<Alert>();
 
-                int totalAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= weekFrom && a.RaisedAt <= weekTo
-                );
-                int openAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= weekFrom
-                    && a.RaisedAt <= weekTo
-                    && a.Status == AlertStatus.OPEN
-                );
-                int acknowledgedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= weekFrom
-                    && a.RaisedAt <= weekTo
-                    && a.Status == AlertStatus.ACKNOWLEDGED
-                );
-                int resolvedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= weekFrom
-                    && a.RaisedAt <= weekTo
-                    && a.Status == AlertStatus.RESOLVED
-                );
-                int dismissedAlerts = await alertRepo.CountAsync(a =>
-                    tankIds.Contains(a.FishTankId)
-                    && a.RaisedAt >= weekFrom
-                    && a.RaisedAt <= weekTo
-                    && a.Status == AlertStatus.DISMISSED
-                );
+                var statusSpec = new AlertStatusCountSpec(weekFrom, weekTo, tankIds);
+                var alertStatuses = (await alertRepo.ListAsync(statusSpec)).ToList();
+
+                int totalAlerts = alertStatuses.Count;
+                int openAlerts = alertStatuses.Count(s => s == AlertStatus.OPEN);
+                int acknowledgedAlerts = alertStatuses.Count(s => s == AlertStatus.ACKNOWLEDGED);
+                int resolvedAlerts = alertStatuses.Count(s => s == AlertStatus.RESOLVED);
+                int dismissedAlerts = alertStatuses.Count(s => s == AlertStatus.DISMISSED);
 
                 // ── Alert breakdown by sensor type ────────────────────────────
                 var sensorTypeSpec = new WeeklyAlertSensorTypeSpec(weekFrom, weekTo, tankIds);
@@ -247,7 +226,7 @@ namespace IRasRag.Application.Services.Implementations
                 var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
                 var mortalityLogs = await mortalityRepo.FindAllAsync(m =>
                     weeklyBatchIds.Contains(m.BatchId)
-                    && m.Date >= weekFrom && m.Date <= weekTo
+                    && m.Date >= weekFrom && m.Date < weekTo
                 );
                 var mortalityList = mortalityLogs.ToList();
                 double totalMortality = mortalityList.Sum(m => (double)m.Quantity);
@@ -324,21 +303,42 @@ namespace IRasRag.Application.Services.Implementations
         /// <summary>
         /// Trả về tập hợp FishTankId mà user được phép truy cập.
         /// Dượng đi: User → UserFarm → Farm → FishTank
+        /// Nếu farmId được cung cấp, lọc thêm theo farmId.
+        /// Nếu batchId được cung cấp, lọc để chỉ lấy tank của batch đó.
         /// </summary>
-        private async Task<HashSet<Guid>> GetUserTankIdsAsync(Guid userId)
+        private async Task<HashSet<Guid>> GetUserTankIdsAsync(Guid userId, Guid? farmId = null, Guid? batchId = null)
         {
             var userFarmRepo = _unitOfWork.GetRepository<UserFarm>();
-            var farmIds = (await userFarmRepo.FindAllAsync(uf => uf.UserId == userId))
-                .Select(uf => uf.FarmId)
-                .ToHashSet();
+            var userFarmQuery = await userFarmRepo.FindAllAsync(uf => uf.UserId == userId);
+            var farmIds = userFarmQuery.Select(uf => uf.FarmId).ToHashSet();
+
+            if (farmId.HasValue)
+            {
+                if (!farmIds.Contains(farmId.Value))
+                    return new HashSet<Guid>();
+                farmIds = new HashSet<Guid> { farmId.Value };
+            }
 
             if (farmIds.Count == 0)
                 return new HashSet<Guid>();
 
             var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-            return (await fishTankRepo.FindAllAsync(t => farmIds.Contains(t.FarmId)))
+            var allowedTankIds = (await fishTankRepo.FindAllAsync(t => farmIds.Contains(t.FarmId)))
                 .Select(t => t.Id)
                 .ToHashSet();
+
+            if (batchId.HasValue)
+            {
+                var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await batchRepo.FirstOrDefaultAsync(b => b.Id == batchId.Value);
+                if (batch != null && allowedTankIds.Contains(batch.FishTankId))
+                {
+                    return new HashSet<Guid> { batch.FishTankId };
+                }
+                return new HashSet<Guid>();
+            }
+
+            return allowedTankIds;
         }
         // ── Period resolution helpers ─────────────────────────────────────────
 
@@ -350,31 +350,23 @@ namespace IRasRag.Application.Services.Implementations
             {
                 "today" => (
                     new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc),
-                    new DateTime(now.Year, now.Month, now.Day, 23, 59, 59, DateTimeKind.Utc),
+                    new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1),
                     "Hôm nay"
                 ),
                 "week" => (
-                    now.AddDays(-6).Date.ToUniversalTime(),
-                    new DateTime(now.Year, now.Month, now.Day, 23, 59, 59, DateTimeKind.Utc),
+                    now.AddDays(-6).Date,
+                    new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1),
                     "7 ngày qua"
                 ),
                 "year" => (
                     new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                    new DateTime(now.Year, 12, 31, 23, 59, 59, DateTimeKind.Utc),
+                    new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     $"Năm {now.Year}"
                 ),
                 // "month" is the default
                 _ => (
                     new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-                    new DateTime(
-                        now.Year,
-                        now.Month,
-                        DateTime.DaysInMonth(now.Year, now.Month),
-                        23,
-                        59,
-                        59,
-                        DateTimeKind.Utc
-                    ),
+                    new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1),
                     $"Tháng {now.Month}/{now.Year}"
                 ),
             };
@@ -420,7 +412,7 @@ namespace IRasRag.Application.Services.Implementations
             );
 
             var from = new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc);
-            var to   = new DateTime(sunday.Year, sunday.Month, sunday.Day, 23, 59, 59, DateTimeKind.Utc);
+            var to   = new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1);
             var label = $"Tuần {weekNumber}/{monday.Year} ({monday:dd/MM} – {sunday:dd/MM})";
 
             return (from, to, label);
