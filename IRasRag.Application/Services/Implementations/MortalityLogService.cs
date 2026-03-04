@@ -105,9 +105,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
-                var mortalityLog = await mortalityLogRepository.GetByIdAsync(id);
+                var mortalityLogDto = await mortalityLogRepository.FirstOrDefaultAsync(new MortalityLogDtoByIdSpec(id));
 
-                if (mortalityLog == null)
+                if (mortalityLogDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy nhật ký tử vong với Id: {Id}", id);
                     return Result<MortalityLogDto>.Failure(
@@ -116,7 +116,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var mortalityLogDto = _mapper.Map<MortalityLogDto>(mortalityLog);
                 _logger.LogInformation("Lấy nhật ký tử vong thành công: {Id}", id);
 
                 return Result<MortalityLogDto>.Success(

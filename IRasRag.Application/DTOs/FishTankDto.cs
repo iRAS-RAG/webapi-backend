@@ -99,9 +99,11 @@ namespace IRasRag.Application.DTOs
     {
         public Guid SensorId { get; set; }
         public string SensorName { get; set; } = string.Empty;
+        public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; } = string.Empty;
         public string MeasureType { get; set; } = string.Empty;
         public string UnitOfMeasure { get; set; } = string.Empty;
+        public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
         public double? LatestValue { get; set; }
         public bool? IsWarning { get; set; }

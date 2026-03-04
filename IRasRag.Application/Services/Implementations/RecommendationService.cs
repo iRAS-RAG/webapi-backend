@@ -183,14 +183,14 @@ namespace IRasRag.Application.Services.Implementations
                 await recommendationRepository.AddAsync(recommendation);
                 await _unitOfWork.SaveChangesAsync();
 
-                var recommendationDto = _mapper.Map<RecommendationDto>(recommendation);
+                var recommendationDto = await recommendationRepository.FirstOrDefaultAsync(new RecommendationDtoByIdSpec(recommendation.Id));
                 _logger.LogInformation(
                     "Tạo khuyến nghị thành công với Id: {Id}",
                     recommendation.Id
                 );
 
                 return Result<RecommendationDto>.Success(
-                    recommendationDto,
+                    recommendationDto!,
                     "Tạo khuyến nghị thành công"
                 );
             }

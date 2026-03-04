@@ -7,6 +7,7 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public Guid BatchId { get; set; }
+        public string BatchName { get; set; } = string.Empty;
         public float Quantity { get; set; }
         public DateTime Date { get; set; }
         public DateTime? CreatedAt { get; set; }

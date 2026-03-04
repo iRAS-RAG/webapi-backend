@@ -176,10 +176,10 @@ namespace IRasRag.Application.Services.Implementations
                 await documentRepository.AddAsync(document);
                 await _unitOfWork.SaveChangesAsync();
 
-                var documentDto = _mapper.Map<DocumentDto>(document);
+                var documentDto = await documentRepository.FirstOrDefaultAsync(new DocumentDtoByIdSpec(document.Id));
                 _logger.LogInformation("Tạo tài liệu thành công với Id: {Id}", document.Id);
 
-                return Result<DocumentDto>.Success(documentDto, "Tạo tài liệu thành công");
+                return Result<DocumentDto>.Success(documentDto!, "Tạo tài liệu thành công");
             }
             catch (Exception ex)
             {

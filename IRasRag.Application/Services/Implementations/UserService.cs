@@ -309,6 +309,7 @@ namespace IRasRag.Application.Services.Implementations
                 var dto = new UserDto
                 {
                     Id = user.Id,
+                    RoleId = user.RoleId,
                     RoleName = role?.Name ?? "Unknown",
                     Email = user.Email,
                     FirstName = user.FirstName,

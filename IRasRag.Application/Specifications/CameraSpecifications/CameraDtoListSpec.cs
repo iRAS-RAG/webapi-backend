@@ -28,6 +28,7 @@ namespace IRasRag.Application.Specifications.CameraSpecifications
                 Name = c.Name,
                 Url = c.Url,
                 FarmId = c.FarmId,
+                FarmName = c.Farm.Name,
                 CreatedAt = c.CreatedAt,
                 ModifiedAt = c.ModifiedAt,
             });

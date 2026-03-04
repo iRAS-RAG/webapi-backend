@@ -166,16 +166,10 @@ namespace IRasRag.Application.Services.Implementations
                 await userFarmRepo.AddAsync(userFarm);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Load related entities for response
-                var user = await userRepo.GetByIdAsync(userFarm.UserId);
-                var farm = await farmRepo.GetByIdAsync(userFarm.FarmId);
-                userFarm.User = user!;
-                userFarm.Farm = farm!;
-
-                var userFarmDto = _mapper.Map<UserFarmDto>(userFarm);
+                var userFarmDto = await userFarmRepo.FirstOrDefaultAsync(new UserFarmDtoByIdSpec(userFarm.Id));
 
                 return Result<UserFarmDto>.Success(
-                    userFarmDto,
+                    userFarmDto!,
                     "Tạo phân quyền người dùng-trang trại thành công"
                 );
             }

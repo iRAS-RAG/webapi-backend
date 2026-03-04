@@ -38,6 +38,7 @@ namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
                 CommandOff = cd.CommandOff,
                 MasterBoardId = cd.MasterBoardId,
                 MasterBoardName = cd.MasterBoard.Name,
+                ControlDeviceTypeId = cd.ControlDeviceTypeId,
                 ControlDeviceTypeName = cd.ControlDeviceType.Name,
             });
         }

@@ -93,9 +93,9 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy bảng mạch với Id: {Id}", id);
 
                 var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
-                var masterBoard = await masterBoardRepository.GetByIdAsync(id);
+                var masterBoardDto = await masterBoardRepository.FirstOrDefaultAsync(new MasterBoardDtoByIdSpec(id));
 
-                if (masterBoard == null)
+                if (masterBoardDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy bảng mạch với Id: {Id}", id);
                     return Result<MasterBoardDto>.Failure(
@@ -104,7 +104,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var masterBoardDto = _mapper.Map<MasterBoardDto>(masterBoard);
                 _logger.LogInformation("Lấy bảng mạch thành công: {Id}", id);
 
                 return Result<MasterBoardDto>.Success(masterBoardDto, "Lấy bảng mạch thành công");

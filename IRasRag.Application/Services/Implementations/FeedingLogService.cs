@@ -105,9 +105,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
-                var feedingLog = await feedingLogRepository.GetByIdAsync(id);
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(new FeedingLogDtoByIdSpec(id));
 
-                if (feedingLog == null)
+                if (feedingLogDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy nhật ký cho ăn với Id: {Id}", id);
                     return Result<FeedingLogDto>.Failure(
@@ -116,7 +116,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var feedingLogDto = _mapper.Map<FeedingLogDto>(feedingLog);
                 _logger.LogInformation("Lấy nhật ký cho ăn thành công: {Id}", id);
 
                 return Result<FeedingLogDto>.Success(

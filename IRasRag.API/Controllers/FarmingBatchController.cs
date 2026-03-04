@@ -219,25 +219,18 @@ namespace IRasRag.API.Controllers
         [HttpGet("{id}/feeding-logs")]
         public async Task<IActionResult> GetFeedingLogs(
             Guid id,
-            [FromQuery] BatchFeedingLogQuery query
+            [FromQuery] FeedingLogListRequest request
         )
         {
             try
             {
-                if (query.Page <= 0 || query.PageSize <= 0)
+                if (request.Page <= 0 || request.PageSize <= 0)
                     return BadRequest(new { Message = "Page và PageSize phải lớn hơn 0." });
 
-                if (query.PageSize > 100)
+                if (request.PageSize > 100)
                     return BadRequest(new { Message = "PageSize không được vượt quá 100." });
 
-                var request = new FeedingLogListRequest
-                {
-                    FarmingBatchId = id,
-                    Page = query.Page,
-                    PageSize = query.PageSize,
-                    SortBy = query.SortBy,
-                    SortDir = query.SortDir,
-                };
+                request.FarmingBatchId = id;
 
                 var result = await _feedingLogService.GetAllFeedingLogsAsync(request);
                 return Ok(result);

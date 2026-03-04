@@ -27,6 +27,7 @@ namespace IRasRag.Application.Specifications.FeedingLogSpecifications
             {
                 Id = fl.Id,
                 FarmingBatchId = fl.FarmingBatchId,
+                FarmingBatchName = fl.FarmingBatch.Name,
                 Amount = fl.Amount,
                 CreatedDate = fl.CreatedDate,
                 CreatedAt = fl.CreatedAt,

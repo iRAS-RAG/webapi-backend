@@ -13,6 +13,7 @@ namespace IRasRag.Application.DTOs
         public string CommandOff { get; set; }
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; }
+        public Guid ControlDeviceTypeId { get; set; }
         public string ControlDeviceTypeName { get; set; }
     }
 
@@ -71,5 +72,12 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? TankId { get; set; }
         public bool? State { get; set; }
+    }
+
+    // DTO dùng cho Manual Override: bật/tắt thiết bị
+    public class ToggleControlDeviceDto
+    {
+        [Required(ErrorMessage = "Trạng thái là bắt buộc")]
+        public bool State { get; set; }
     }
 }

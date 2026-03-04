@@ -5,10 +5,11 @@ namespace IRasRag.Application.DTOs
     public class SpeciesStageConfigDto
     {
         public Guid Id { get; set; }
+        public Guid SpeciesId { get; set; }
         public string SpeciesName { get; set; }
-
+        public Guid GrowthStageId { get; set; }
         public string GrowthStageName { get; set; }
-
+        public Guid FeedTypeId { get; set; }
         public string FeedTypeName { get; set; }
 
         public float AmountPer100Fish { get; set; }

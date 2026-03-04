@@ -30,8 +30,11 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
             Query.Select(s => new SpeciesStageConfigDto
             {
                 Id = s.Id,
+                SpeciesId = s.SpeciesId,
                 SpeciesName = s.Species.Name,
+                GrowthStageId = s.GrowthStageId,
                 GrowthStageName = s.GrowthStage.Name,
+                FeedTypeId = s.FeedTypeId,
                 FeedTypeName = s.FeedType.Name,
                 AmountPer100Fish = s.AmountPer100Fish,
                 FrequencyPerDay = s.FrequencyPerDay,

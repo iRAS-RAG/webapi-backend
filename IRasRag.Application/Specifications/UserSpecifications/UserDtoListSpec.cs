@@ -33,6 +33,7 @@ namespace IRasRag.Application.Specifications.UserSpecifications
             Query.Select(u => new UserDto
             {
                 Id = u.Id,
+                RoleId = u.RoleId,
                 Email = u.Email,
                 FirstName = u.FirstName,
                 LastName = u.LastName,

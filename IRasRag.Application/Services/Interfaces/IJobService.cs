@@ -9,7 +9,7 @@ namespace IRasRag.Application.Services.Interfaces
         Task<PaginatedResult<JobDto>> GetAllJobsAsync(JobListRequest request);
         Task<Result<JobDto>> GetJobByIdAsync(Guid id);
         Task<Result<JobDto>> CreateJobAsync(CreateJobDto createDto);
-        Task<Result> UpdateJobAsync(Guid id, UpdateJobDto updateDto);
+        Task<Result<JobDto>> UpdateJobAsync(Guid id, UpdateJobDto updateDto);
         Task<Result> DeleteJobAsync(Guid id);
     }
 }

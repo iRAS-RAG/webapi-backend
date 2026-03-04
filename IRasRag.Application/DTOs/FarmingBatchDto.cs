@@ -11,7 +11,9 @@ namespace IRasRag.Application.DTOs
         public string FishTankName { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public Guid SpeciesStageConfigId { get; set; }
+        public Guid SpeciesId { get; set; }
         public string SpeciesName { get; set; } = string.Empty;
+        public Guid GrowthStageId { get; set; }
         public string StageName { get; set; } = string.Empty;
         public FarmingBatchStatus Status { get; set; }
         public BatchPausedReason? PausedReason { get; set; }
