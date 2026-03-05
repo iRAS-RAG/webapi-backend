@@ -48,7 +48,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 RaisedAt = a.RaisedAt,
                 ResolvedAt = a.ResolvedAt,
                 Status = a.Status,
-                Unit = a.SensorType.UnitOfMeasure,
+                UnitOfMeasure = a.SensorType.UnitOfMeasure,
                 MinThreshold = a.SpeciesThreshold.MinValue,
                 MaxThreshold = a.SpeciesThreshold.MaxValue,
             });
