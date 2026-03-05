@@ -13,12 +13,13 @@ namespace IRasRag.Application.DTOs
         public string? FarmingBatchName { get; set; }
         public Guid FishTankId { get; set; }
         public string FishTankName { get; set; } = string.Empty;
+        public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; } = string.Empty;
         public float Value { get; set; }
         public DateTime RaisedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public AlertStatus Status { get; set; }
-        public string Unit { get; set; } = string.Empty;
+        public string UnitOfMeasure { get; set; } = string.Empty;
         public double MinThreshold { get; set; }
         public double MaxThreshold { get; set; }
         public bool IsWarning => Value < MinThreshold || Value > MaxThreshold;

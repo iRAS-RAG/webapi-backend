@@ -68,5 +68,30 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
+
+        /// <summary>
+        /// [LEGACY] Lấy lịch sử dữ liệu cảm biến — aggregation thực hiện trong bộ nhớ.
+        /// Dùng để so sánh kết quả với GET /logs. Xóa sau khi xác nhận.
+        /// </summary>
+        [HttpGet("{id}/logs/legacy")]
+        public async Task<IActionResult> GetSensorLogsLegacy(Guid id, [FromQuery] SensorLogListRequest request)
+        {
+            try
+            {
+                var result = await _sensorService.GetSensorLogsLegacyAsync(id, request);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(result.Data),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[Legacy] Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
     }
 }
