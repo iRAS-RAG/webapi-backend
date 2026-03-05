@@ -250,13 +250,18 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensors/{id}/history")]
-        public async Task<IActionResult> GetSensorHistory(Guid id, [FromQuery] DateOnly? date)
+        public async Task<IActionResult> GetSensorHistory(
+            Guid id,
+            [FromQuery] DateTime? from,
+            [FromQuery] DateTime? to,
+            [FromQuery] int interval = 60)
         {
             try
             {
-                var targetDate = date ?? DateOnly.FromDateTime(DateTime.Today);
+                var fromDt = from ?? DateTime.Today;
+                var toDt = to ?? DateTime.Today.AddDays(1);
 
-                var result = await _sensorService.GetSensorHistoryAsync(id, targetDate);
+                var result = await _sensorService.GetSensorHistoryAsync(id, fromDt, toDt, interval);
 
                 return result.Type switch
                 {
