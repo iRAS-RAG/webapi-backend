@@ -1,13 +1,21 @@
 ﻿using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
+using IRasRag.Application.Common.Interfaces.Cloudinary;
 using IRasRag.Application.Common.Interfaces.Email;
+using IRasRag.Application.Common.Interfaces.FileExtraction;
+using IRasRag.Application.Common.Interfaces.FileExtractor;
+using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services.Auth;
 using IRasRag.Infrastructure.Services.BackgroundJobs;
+using IRasRag.Infrastructure.Services.CloudFileStorage;
 using IRasRag.Infrastructure.Services.Email;
+using IRasRag.Infrastructure.Services.FileExtractors;
+using IRasRag.Infrastructure.Services.FileValidator;
+using IRasRag.Infrastructure.Services.TextExtractors;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -42,12 +50,20 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+
+            // File processing
+            services.AddScoped<IFileContentValidator, FileContentValidator>();
+            services.AddScoped<ICloudFileStorageService, CloudnaryService>();
+            services.AddScoped<IFileTextExtractorResolver, FileTextExtractorResolver>();
+            services.AddScoped<IFileTextExtractor, PdfTextExtractor>();
+            services.AddScoped<IFileTextExtractor, DocxTextExtractor>();
         }
 
         public static void AddSettings(this IServiceCollection services, IConfiguration config)
         {
             services.Configure<EmailSettings>(config.GetSection("Email"));
             services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
+            services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
         }
 
         public static void AddConnectionString(

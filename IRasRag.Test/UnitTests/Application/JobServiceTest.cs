@@ -52,9 +52,15 @@ namespace IRasRag.Test.UnitTests.Application
             _unitOfWorkMock.Setup(x => x.GetRepository<Job>()).Returns(_jobRepoMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<JobType>()).Returns(_jobTypeRepoMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<Sensor>()).Returns(_sensorRepoMock.Object);
-            _unitOfWorkMock.Setup(x => x.GetRepository<JobControlMapping>()).Returns(_mappingRepoMock.Object);
-            _unitOfWorkMock.Setup(x => x.GetRepository<ControlDevice>()).Returns(_controlDeviceRepoMock.Object);
-            _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _unitOfWorkMock
+                .Setup(x => x.GetRepository<JobControlMapping>())
+                .Returns(_mappingRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(x => x.GetRepository<ControlDevice>())
+                .Returns(_controlDeviceRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
 
             _sut = new JobService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
         }
@@ -106,13 +112,23 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _jobRepoMock
-                .Setup(r => r.GetPagedAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    request.Page,
-                    request.PageSize,
-                    It.IsAny<QueryType>()))
-                .ReturnsAsync((ISpecification<Job, JobDto> spec, int page, int pageSize, QueryType _) =>
-                    SpecificationTestHelper.ApplySpecificationWithPaging(jobs, spec, page, pageSize));
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (ISpecification<Job, JobDto> spec, int page, int pageSize, QueryType _) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            jobs,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
 
             // Act
             var result = await _sut.GetAllJobsAsync(request);
@@ -122,14 +138,24 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách công việc thành công");
             result.Data.Should().HaveCount(2);
             // Mặc định sắp xếp theo tên
-            result.Data.Select(x => x.Name).Should().ContainInOrder("Cho ăn buổi sáng", "Sục khí định kỳ");
+            result
+                .Data.Select(x => x.Name)
+                .Should()
+                .ContainInOrder("Cho ăn buổi sáng", "Sục khí định kỳ");
             result.Meta.Should().NotBeNull();
             result.Meta!.TotalItems.Should().Be(2);
             result.Links.Should().NotBeNull();
 
-            _jobRepoMock.Verify(r => r.GetPagedAsync(
-                It.Is<ISpecification<Job, JobDto>>(s => s is JobDtoListSpec),
-                request.Page, request.PageSize, It.IsAny<QueryType>()), Times.Once);
+            _jobRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.Is<ISpecification<Job, JobDto>>(s => s is JobDtoListSpec),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -139,10 +165,17 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new JobListRequest { Page = 1, PageSize = 10 };
 
             _jobRepoMock
-                .Setup(r => r.GetPagedAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    request.Page, request.PageSize, It.IsAny<QueryType>()))
-                .ReturnsAsync(new PagedResult<JobDto> { Items = new List<JobDto>(), TotalItems = 0 });
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    new PagedResult<JobDto> { Items = new List<JobDto>(), TotalItems = 0 }
+                );
 
             // Act
             var result = await _sut.GetAllJobsAsync(request);
@@ -157,7 +190,12 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetAllJobsAsync_ShouldApplyIsActiveFilter_WhenProvided()
         {
             // Arrange
-            var request = new JobListRequest { Page = 1, PageSize = 10, IsActive = true };
+            var request = new JobListRequest
+            {
+                Page = 1,
+                PageSize = 10,
+                IsActive = true,
+            };
             var jobTypeId = Guid.NewGuid();
             var jobs = new List<Job>
             {
@@ -184,11 +222,23 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _jobRepoMock
-                .Setup(r => r.GetPagedAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    request.Page, request.PageSize, It.IsAny<QueryType>()))
-                .ReturnsAsync((ISpecification<Job, JobDto> spec, int page, int pageSize, QueryType _) =>
-                    SpecificationTestHelper.ApplySpecificationWithPaging(jobs, spec, page, pageSize));
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        request.Page,
+                        request.PageSize,
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (ISpecification<Job, JobDto> spec, int page, int pageSize, QueryType _) =>
+                        SpecificationTestHelper.ApplySpecificationWithPaging(
+                            jobs,
+                            spec,
+                            page,
+                            pageSize
+                        )
+                );
 
             // Act
             var result = await _sut.GetAllJobsAsync(request);
@@ -205,9 +255,14 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new JobListRequest { Page = 1, PageSize = 10 };
 
             _jobRepoMock
-                .Setup(r => r.GetPagedAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<int>(), It.IsAny<int>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
@@ -233,9 +288,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Mock FirstOrDefaultAsync với projected spec (JobDtoByIdSpec)
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(jobDto);
 
             // Act
@@ -249,9 +307,14 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data!.Id.Should().Be(jobId);
             result.Data.Name.Should().Be(jobDto.Name);
 
-            _jobRepoMock.Verify(r => r.FirstOrDefaultAsync(
-                It.Is<ISpecification<Job, JobDto>>(s => s is JobDtoByIdSpec),
-                It.IsAny<QueryType>()), Times.Once);
+            _jobRepoMock.Verify(
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.Is<ISpecification<Job, JobDto>>(s => s is JobDtoByIdSpec),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -261,9 +324,12 @@ namespace IRasRag.Test.UnitTests.Application
             var jobId = Guid.NewGuid();
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync((JobDto?)null);
 
             // Act
@@ -282,9 +348,12 @@ namespace IRasRag.Test.UnitTests.Application
             var jobId = Guid.NewGuid();
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new Exception());
 
             // Act
@@ -323,9 +392,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(new JobType { Id = jobTypeId, Name = "Lịch trình" });
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(expectedDto);
 
             // Act
@@ -338,9 +410,15 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
 
-            _jobRepoMock.Verify(r => r.AddAsync(It.Is<Job>(j => j.Name == createDto.Name)), Times.Once);
+            _jobRepoMock.Verify(
+                r => r.AddAsync(It.Is<Job>(j => j.Name == createDto.Name)),
+                Times.Once
+            );
             // CommitTransactionAsync được gọi 1 lần — lưu Job trong transaction
-            _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(
+                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -371,13 +449,21 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Thiết bị điều khiển tồn tại — dùng AnyAsync (cách service kiểm tra hiện tại)
             _controlDeviceRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<ControlDevice, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.AnyAsync(
+                        It.IsAny<Expression<Func<ControlDevice, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(true);
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(expectedDto);
 
             // Act
@@ -387,12 +473,21 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
 
             // Phải gọi AddAsync cho mapping
-            _mappingRepoMock.Verify(r => r.AddAsync(It.Is<JobControlMapping>(
-                m => m.ControlDeviceId == deviceId && m.TargetState == true
-            )), Times.Once);
+            _mappingRepoMock.Verify(
+                r =>
+                    r.AddAsync(
+                        It.Is<JobControlMapping>(m =>
+                            m.ControlDeviceId == deviceId && m.TargetState == true
+                        )
+                    ),
+                Times.Once
+            );
 
             // CommitTransactionAsync được gọi 1 lần — lưu Job + Mappings nguyên tử
-            _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(
+                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
         }
 
         [Theory]
@@ -413,7 +508,10 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Tên công việc là bắt buộc");
 
             _jobRepoMock.Verify(r => r.AddAsync(It.IsAny<Job>()), Times.Never);
-            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -548,7 +646,9 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be("Danh sách mappings không được có thiết bị điều khiển trùng nhau");
+            result
+                .Message.Should()
+                .Be("Danh sách mappings không được có thiết bị điều khiển trùng nhau");
 
             _mappingRepoMock.Verify(r => r.AddAsync(It.IsAny<JobControlMapping>()), Times.Never);
         }
@@ -575,7 +675,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Thiết bị không tồn tại — dùng AnyAsync
             _controlDeviceRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<ControlDevice, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.AnyAsync(
+                        It.IsAny<Expression<Func<ControlDevice, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(false);
 
             // Act
@@ -626,11 +731,7 @@ namespace IRasRag.Test.UnitTests.Application
                 DefaultState = false,
                 ExecutionDays = "ALL",
             };
-            var updateDto = new UpdateJobDto
-            {
-                Name = "Job mới",
-                IsActive = false,
-            };
+            var updateDto = new UpdateJobDto { Name = "Job mới", IsActive = false };
             var expectedDto = BuildJobDto(jobId, "Job mới");
 
             _jobRepoMock
@@ -638,9 +739,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(existingJob);
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(expectedDto);
 
             // Act
@@ -659,7 +763,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock.Verify(r => r.Update(It.Is<Job>(j => j.Id == jobId)), Times.Once);
             // CommitTransactionAsync được gọi 1 lần — lưu Job trong transaction
-            _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(
+                u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -683,9 +790,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(existingJob);
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(BuildJobDto(jobId, "Tên gốc"));
 
             // Act
@@ -715,7 +825,10 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Contain(jobId.ToString());
 
             _jobRepoMock.Verify(r => r.Update(It.IsAny<Job>()), Times.Never);
-            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -727,21 +840,26 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job
-                {
-                    Id = jobId,
-                    Name = "Job",
-                    JobTypeId = Guid.NewGuid(),
-                    IsActive = true,
-                    DefaultState = false,
-                });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _jobTypeRepoMock
                 .Setup(r => r.GetByIdAsync(newJobTypeId, QueryType.ActiveOnly))
                 .ReturnsAsync((JobType?)null);
 
             // Act
-            var result = await _sut.UpdateJobAsync(jobId, new UpdateJobDto { JobTypeId = newJobTypeId });
+            var result = await _sut.UpdateJobAsync(
+                jobId,
+                new UpdateJobDto { JobTypeId = newJobTypeId }
+            );
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -758,21 +876,26 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job
-                {
-                    Id = jobId,
-                    Name = "Job",
-                    JobTypeId = Guid.NewGuid(),
-                    IsActive = true,
-                    DefaultState = false,
-                });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _sensorRepoMock
                 .Setup(r => r.GetByIdAsync(newSensorId, QueryType.ActiveOnly))
                 .ReturnsAsync((Sensor?)null);
 
             // Act
-            var result = await _sut.UpdateJobAsync(jobId, new UpdateJobDto { SensorId = newSensorId });
+            var result = await _sut.UpdateJobAsync(
+                jobId,
+                new UpdateJobDto { SensorId = newSensorId }
+            );
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -820,33 +943,64 @@ namespace IRasRag.Test.UnitTests.Application
             var newDeviceId = Guid.NewGuid();
             var existingMappings = new List<JobControlMapping>
             {
-                new JobControlMapping { Id = Guid.NewGuid(), JobId = jobId, ControlDeviceId = Guid.NewGuid() },
+                new JobControlMapping
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = jobId,
+                    ControlDeviceId = Guid.NewGuid(),
+                },
             };
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _mappingRepoMock
-                .Setup(r => r.FindAllAsync(It.IsAny<Expression<Func<JobControlMapping, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(existingMappings);
 
             // Thiết bị mới tồn tại — dùng AnyAsync
             _controlDeviceRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<ControlDevice, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.AnyAsync(
+                        It.IsAny<Expression<Func<ControlDevice, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(true);
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(BuildJobDto(jobId));
 
             var updateDto = new UpdateJobDto
             {
                 Mappings = new List<CreateJobMappingItemDto>
                 {
-                    new CreateJobMappingItemDto { ControlDeviceId = newDeviceId, TargetState = false },
+                    new CreateJobMappingItemDto
+                    {
+                        ControlDeviceId = newDeviceId,
+                        TargetState = false,
+                    },
                 },
             };
 
@@ -857,12 +1011,16 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
 
             // Phải xóa mapping cũ
-            _mappingRepoMock.Verify(r => r.Delete(It.Is<JobControlMapping>(
-                m => m.JobId == jobId)), Times.Once);
+            _mappingRepoMock.Verify(
+                r => r.Delete(It.Is<JobControlMapping>(m => m.JobId == jobId)),
+                Times.Once
+            );
 
             // Phải thêm mapping mới
-            _mappingRepoMock.Verify(r => r.AddAsync(It.Is<JobControlMapping>(
-                m => m.ControlDeviceId == newDeviceId)), Times.Once);
+            _mappingRepoMock.Verify(
+                r => r.AddAsync(It.Is<JobControlMapping>(m => m.ControlDeviceId == newDeviceId)),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -872,22 +1030,49 @@ namespace IRasRag.Test.UnitTests.Application
             var jobId = Guid.NewGuid();
             var existingMappings = new List<JobControlMapping>
             {
-                new JobControlMapping { Id = Guid.NewGuid(), JobId = jobId, ControlDeviceId = Guid.NewGuid() },
-                new JobControlMapping { Id = Guid.NewGuid(), JobId = jobId, ControlDeviceId = Guid.NewGuid() },
+                new JobControlMapping
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = jobId,
+                    ControlDeviceId = Guid.NewGuid(),
+                },
+                new JobControlMapping
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = jobId,
+                    ControlDeviceId = Guid.NewGuid(),
+                },
             };
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _mappingRepoMock
-                .Setup(r => r.FindAllAsync(It.IsAny<Expression<Func<JobControlMapping, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(existingMappings);
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(BuildJobDto(jobId));
 
             // Truyền mảng rỗng → xóa hết mappings
@@ -914,12 +1099,24 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _jobRepoMock
-                .Setup(r => r.FirstOrDefaultAsync(
-                    It.IsAny<ISpecification<Job, JobDto>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<Job, JobDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(BuildJobDto(jobId));
 
             // Không truyền Mappings → giữ nguyên
@@ -932,9 +1129,14 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
 
             // Không được gọi FindAllAsync hay Delete/AddAsync cho mappings
-            _mappingRepoMock.Verify(r => r.FindAllAsync(
-                It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
-                It.IsAny<QueryType>()), Times.Never);
+            _mappingRepoMock.Verify(
+                r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
             _mappingRepoMock.Verify(r => r.Delete(It.IsAny<JobControlMapping>()), Times.Never);
             _mappingRepoMock.Verify(r => r.AddAsync(It.IsAny<JobControlMapping>()), Times.Never);
         }
@@ -948,7 +1150,16 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             var updateDto = new UpdateJobDto
             {
@@ -965,7 +1176,9 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
-            result.Message.Should().Be("Danh sách mappings không được có thiết bị điều khiển trùng nhau");
+            result
+                .Message.Should()
+                .Be("Danh sách mappings không được có thiết bị điều khiển trùng nhau");
         }
 
         [Fact]
@@ -977,15 +1190,34 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             _mappingRepoMock
-                .Setup(r => r.FindAllAsync(It.IsAny<Expression<Func<JobControlMapping, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<JobControlMapping>());
 
             // Thiết bị không tồn tại — dùng AnyAsync
             _controlDeviceRepoMock
-                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<ControlDevice, bool>>>(), It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.AnyAsync(
+                        It.IsAny<Expression<Func<ControlDevice, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(false);
 
             var updateDto = new UpdateJobDto
@@ -1043,8 +1275,18 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var relatedMappings = new List<JobControlMapping>
             {
-                new JobControlMapping { Id = Guid.NewGuid(), JobId = jobId, ControlDeviceId = Guid.NewGuid() },
-                new JobControlMapping { Id = Guid.NewGuid(), JobId = jobId, ControlDeviceId = Guid.NewGuid() },
+                new JobControlMapping
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = jobId,
+                    ControlDeviceId = Guid.NewGuid(),
+                },
+                new JobControlMapping
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = jobId,
+                    ControlDeviceId = Guid.NewGuid(),
+                },
             };
 
             _jobRepoMock
@@ -1052,9 +1294,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(existingJob);
 
             _mappingRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(relatedMappings);
 
             // Act
@@ -1071,7 +1316,10 @@ namespace IRasRag.Test.UnitTests.Application
             // Sau đó mới soft-delete job
             _jobRepoMock.Verify(r => r.Delete(It.Is<Job>(j => j.Id == jobId)), Times.Once);
 
-            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
         }
 
         [Fact]
@@ -1082,13 +1330,25 @@ namespace IRasRag.Test.UnitTests.Application
 
             _jobRepoMock
                 .Setup(r => r.GetByIdAsync(jobId, QueryType.ActiveOnly))
-                .ReturnsAsync(new Job { Id = jobId, Name = "Job trống", JobTypeId = Guid.NewGuid(), IsActive = true, DefaultState = false });
+                .ReturnsAsync(
+                    new Job
+                    {
+                        Id = jobId,
+                        Name = "Job trống",
+                        JobTypeId = Guid.NewGuid(),
+                        IsActive = true,
+                        DefaultState = false,
+                    }
+                );
 
             // Không có mapping nào
             _mappingRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<JobControlMapping, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<JobControlMapping>());
 
             // Act
@@ -1124,7 +1384,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             _mappingRepoMock.Verify(r => r.Delete(It.IsAny<JobControlMapping>()), Times.Never);
             _jobRepoMock.Verify(r => r.Delete(It.IsAny<Job>()), Times.Never);
-            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -1145,7 +1408,10 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.Unexpected);
             result.Message.Should().Be("Đã xảy ra lỗi khi xóa công việc");
 
-            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            _unitOfWorkMock.Verify(
+                u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
         }
 
         #endregion

@@ -1625,9 +1625,21 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
@@ -1667,9 +1679,21 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
@@ -1707,8 +1731,16 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
             };
 
             _fishTankRepositoryMock

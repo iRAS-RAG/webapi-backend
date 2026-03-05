@@ -195,9 +195,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        public async Task<
-            Result<FishTankMetricDto>    
-        > GetLatestFishTankMetricsByTankAsync(Guid tankId)
+        public async Task<Result<FishTankMetricDto>> GetLatestFishTankMetricsByTankAsync(
+            Guid tankId
+        )
         {
             var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
             if (tank == null)
@@ -330,10 +330,11 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var result = (await _unitOfWork
-                    .GetRepository<Sensor>()
-                    .ListAsync(new TankSensorLatestDataSpec(tankId)))
-                    .ToList();
+                var result = (
+                    await _unitOfWork
+                        .GetRepository<Sensor>()
+                        .ListAsync(new TankSensorLatestDataSpec(tankId))
+                ).ToList();
 
                 _logger.LogInformation(
                     "Lấy dữ liệu mới nhất thành công: {Count} cảm biến cho bể {TankId}",
@@ -357,6 +358,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
         public async Task<Result<TankStatusDto>> GetTankStatusAsync(Guid tankId)
         {
             try
@@ -374,10 +376,11 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var sensors = (await _unitOfWork
-                    .GetRepository<Sensor>()
-                    .ListAsync(new TankSensorLatestDataSpec(tankId)))
-                    .ToList();
+                var sensors = (
+                    await _unitOfWork
+                        .GetRepository<Sensor>()
+                        .ListAsync(new TankSensorLatestDataSpec(tankId))
+                ).ToList();
 
                 var totalSensors = sensors.Count;
                 var warningSensors = sensors.Count(s => s.LatestData!.IsWarning == true);
@@ -397,7 +400,10 @@ namespace IRasRag.Application.Services.Implementations
                     statusDto.Status
                 );
 
-                return Result<TankStatusDto>.Success(statusDto, $"Trạng thái bể: {statusDto.Status}");
+                return Result<TankStatusDto>.Success(
+                    statusDto,
+                    $"Trạng thái bể: {statusDto.Status}"
+                );
             }
             catch (Exception ex)
             {

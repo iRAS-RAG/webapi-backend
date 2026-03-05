@@ -13,8 +13,17 @@ namespace IRasRag.Infrastructure.Repositories
         public SensorLogRepository(AppDbContext context)
             : base(context) { }
 
-        public async Task<(IReadOnlyList<SensorLogDto> Items, int TotalCount)> GetAggregatedLogsAsync(
-            Guid sensorId, DateTime from, DateTime to, int interval, int page, int pageSize)
+        public async Task<(
+            IReadOnlyList<SensorLogDto> Items,
+            int TotalCount
+        )> GetAggregatedLogsAsync(
+            Guid sensorId,
+            DateTime from,
+            DateTime to,
+            int interval,
+            int page,
+            int pageSize
+        )
         {
             var intervalTicks = TimeSpan.FromMinutes(interval).Ticks;
 
@@ -22,11 +31,7 @@ namespace IRasRag.Infrastructure.Repositories
             // because EF Core cannot translate Ticks arithmetic to SQL
             var filtered = await GetQueryable()
                 .AsNoTracking()
-                .Where(sl =>
-                    sl.SensorId == sensorId
-                    && sl.CreatedAt >= from
-                    && sl.CreatedAt < to
-                )
+                .Where(sl => sl.SensorId == sensorId && sl.CreatedAt >= from && sl.CreatedAt < to)
                 .ToListAsync();
 
             var grouped = filtered
@@ -59,18 +64,19 @@ namespace IRasRag.Infrastructure.Repositories
             return (items, totalCount);
         }
 
-        public async Task<SensorHistoryDto> GetLogsByTimeRangeAsync(Guid sensorId, DateTime from, DateTime to, int interval)
+        public async Task<SensorHistoryDto> GetLogsByTimeRangeAsync(
+            Guid sensorId,
+            DateTime from,
+            DateTime to,
+            int interval
+        )
         {
             var intervalTicks = TimeSpan.FromMinutes(interval).Ticks;
 
             // WHERE in DB, grouping in memory — EF Core cannot translate Ticks arithmetic to SQL
             var filtered = await GetQueryable()
                 .AsNoTracking()
-                .Where(sl =>
-                    sl.SensorId == sensorId
-                    && sl.CreatedAt >= from
-                    && sl.CreatedAt < to
-                )
+                .Where(sl => sl.SensorId == sensorId && sl.CreatedAt >= from && sl.CreatedAt < to)
                 .ToListAsync();
 
             var query = filtered
@@ -81,7 +87,8 @@ namespace IRasRag.Infrastructure.Repositories
 
             var totalMinutes = (int)(to - from).TotalMinutes;
             var bucketCount = totalMinutes / interval;
-            var fixedBuckets = Enumerable.Range(0, bucketCount)
+            var fixedBuckets = Enumerable
+                .Range(0, bucketCount)
                 .Select(i => from.AddMinutes(i * interval).Ticks)
                 .ToList();
 

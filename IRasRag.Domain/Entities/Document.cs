@@ -16,6 +16,10 @@ namespace IRasRag.Domain.Entities
         public Guid UploadedByUserId { get; set; }
 
         [Required]
+        [MaxLength(500)]
+        public string FileUrl { get; set; }
+
+        [Required]
         public DateTime UploadedAt { get; set; }
 
         // Navigation properties

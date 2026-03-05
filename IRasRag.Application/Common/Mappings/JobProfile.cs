@@ -10,8 +10,14 @@ namespace IRasRag.Application.Common.Mappings
         {
             // Entity to DTO
             CreateMap<Job, JobDto>()
-                .ForMember(dest => dest.JobTypeName, opt => opt.MapFrom(src => src.JobType != null ? src.JobType.Name : string.Empty))
-                .ForMember(dest => dest.SensorName, opt => opt.MapFrom(src => src.Sensor != null ? src.Sensor.Name : null));
+                .ForMember(
+                    dest => dest.JobTypeName,
+                    opt => opt.MapFrom(src => src.JobType != null ? src.JobType.Name : string.Empty)
+                )
+                .ForMember(
+                    dest => dest.SensorName,
+                    opt => opt.MapFrom(src => src.Sensor != null ? src.Sensor.Name : null)
+                );
 
             // Create DTO to Entity
             CreateMap<CreateJobDto, Job>()

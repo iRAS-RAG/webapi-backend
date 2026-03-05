@@ -36,15 +36,15 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 UnitOfMeasure = s.SensorType.UnitOfMeasure,
                 MasterBoardId = s.MasterBoardId,
                 MasterBoardName = s.MasterBoard.Name,
-                LatestData = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
+                LatestData = s
+                    .SensorLogs.OrderByDescending(l => l.CreatedAt)
                     .Select(l => new TankSensorLatestDataValueDto
                     {
                         LatestValue = (double?)l.Data,
                         IsWarning = (bool?)l.IsWarning,
-                        RecordedAt = l.CreatedAt
+                        RecordedAt = l.CreatedAt,
                     })
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
 
                 //// Correlated subquery: latest log value for this sensor
                 //LatestValue = s.SensorLogs

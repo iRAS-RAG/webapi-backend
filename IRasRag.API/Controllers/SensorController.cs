@@ -40,7 +40,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}", id);
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -49,7 +53,10 @@ namespace IRasRag.API.Controllers
         /// Lấy lịch sử dữ liệu cảm biến cho biểu đồ (có phân trang)
         /// </summary>
         [HttpGet("{id}/logs")]
-        public async Task<IActionResult> GetSensorLogs(Guid id, [FromQuery] SensorLogListRequest request)
+        public async Task<IActionResult> GetSensorLogs(
+            Guid id,
+            [FromQuery] SensorLogListRequest request
+        )
         {
             try
             {
@@ -64,7 +71,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}", id);
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -74,7 +85,10 @@ namespace IRasRag.API.Controllers
         /// Dùng để so sánh kết quả với GET /logs. Xóa sau khi xác nhận.
         /// </summary>
         [HttpGet("{id}/logs/legacy")]
-        public async Task<IActionResult> GetSensorLogsLegacy(Guid id, [FromQuery] SensorLogListRequest request)
+        public async Task<IActionResult> GetSensorLogsLegacy(
+            Guid id,
+            [FromQuery] SensorLogListRequest request
+        )
         {
             try
             {
@@ -89,7 +103,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[Legacy] Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}", id);
+                _logger.LogError(
+                    ex,
+                    "[Legacy] Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

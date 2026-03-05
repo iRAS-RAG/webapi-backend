@@ -254,7 +254,8 @@ namespace IRasRag.API.Controllers
             Guid id,
             [FromQuery] DateTime? from,
             [FromQuery] DateTime? to,
-            [FromQuery] int interval = 60)
+            [FromQuery] int interval = 60
+        )
         {
             try
             {
@@ -610,7 +611,10 @@ namespace IRasRag.API.Controllers
         /// </summary>
         [HttpPost("control-devices/{id}/toggle")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> ToggleControlDevice(Guid id,[FromBody] ToggleControlDeviceDto dto)
+        public async Task<IActionResult> ToggleControlDevice(
+            Guid id,
+            [FromBody] ToggleControlDeviceDto dto
+        )
         {
             try
             {
