@@ -1665,70 +1665,16 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
-                            CreatedAt = new DateTime(2026, 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 27.800000000000001,
-                            DataJson = "{\"temperature\": 27.8, \"unit\": \"C\"}",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Data = 28.5,
+                            DataJson = "{\"temperature\": 28.5, \"unit\": \"C\"}",
                             IsWarning = false,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
-                            CreatedAt = new DateTime(2026, 1, 1, 2, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 28.199999999999999,
-                            DataJson = "{\"temperature\": 28.2, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
-                            CreatedAt = new DateTime(2026, 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.0999999999999996,
-                            DataJson = "{\"ph\": 7.1}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001404"),
-                            CreatedAt = new DateTime(2026, 1, 1, 5, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 28.600000000000001,
-                            DataJson = "{\"temperature\": 28.6, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001409"),
-                            CreatedAt = new DateTime(2026, 1, 1, 5, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.2999999999999998,
-                            DataJson = "{\"ph\": 7.3}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001405"),
-                            CreatedAt = new DateTime(2026, 1, 1, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 29.399999999999999,
-                            DataJson = "{\"temperature\": 29.4, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001410"),
-                            CreatedAt = new DateTime(2026, 1, 1, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.5,
-                            DataJson = "{\"ph\": 7.5}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001406"),
-                            CreatedAt = new DateTime(2026, 1, 1, 13, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 30, 0, 0, DateTimeKind.Utc),
                             Data = 31.199999999999999,
                             DataJson = "{\"temperature\": 31.2, \"unit\": \"C\"}",
                             IsWarning = true,
@@ -1736,44 +1682,8 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001411"),
-                            CreatedAt = new DateTime(2026, 1, 1, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.4000000000000004,
-                            DataJson = "{\"ph\": 7.4}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001407"),
-                            CreatedAt = new DateTime(2026, 1, 1, 17, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 30.5,
-                            DataJson = "{\"temperature\": 30.5, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001412"),
-                            CreatedAt = new DateTime(2026, 1, 1, 17, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.5999999999999996,
-                            DataJson = "{\"ph\": 7.6}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001408"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 29.100000000000001,
-                            DataJson = "{\"temperature\": 29.1, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001413"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Data = 7.2000000000000002,
                             DataJson = "{\"ph\": 7.2}",
                             IsWarning = false,
@@ -1781,8 +1691,8 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001414"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001404"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Data = 6.7999999999999998,
                             DataJson = "{\"dissolvedOxygen\": 6.8, \"unit\": \"mg/L\"}",
                             IsWarning = false,
