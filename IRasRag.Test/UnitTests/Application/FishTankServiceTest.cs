@@ -1490,18 +1490,24 @@ namespace IRasRag.Test.UnitTests.Application
                     SensorId = Guid.NewGuid(),
                     SensorName = "Nhiệt độ 1",
                     SensorTypeName = "Nhiệt độ",
-                    LatestValue = 28.5,
-                    IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestValue = 28.5,
+                        IsWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
                     SensorName = "pH 1",
                     SensorTypeName = "pH",
-                    LatestValue = 7.2,
-                    IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestValue = 7.2,
+                        IsWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
             };
 
@@ -1524,7 +1530,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Data.Should().HaveCount(2);
             result.Data![0].SensorName.Should().Be("Nhiệt độ 1");
-            result.Data[1].LatestValue.Should().Be(7.2);
+            result.Data[1].LatestData?.LatestValue.Should().Be(7.2);
         }
 
         [Fact]
@@ -1619,9 +1625,9 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
             };
 
             _fishTankRepositoryMock
@@ -1661,9 +1667,9 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = false } },
             };
 
             _fishTankRepositoryMock
@@ -1701,8 +1707,8 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
+                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), LatestData = new TankSensorLatestDataValueDto { IsWarning = true } },
             };
 
             _fishTankRepositoryMock

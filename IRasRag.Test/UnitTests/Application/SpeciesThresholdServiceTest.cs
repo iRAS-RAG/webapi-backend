@@ -508,7 +508,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách ngưỡng sinh trưởng thành công");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result.Data.Select(x => x.Unit).Should().ContainInOrder("Temperature", "PH");
+            result.Data.Select(x => x.SensorTypeName).Should().ContainInOrder("Temperature", "PH");
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
