@@ -105,6 +105,14 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
+        //public double? LatestValue { get; set; }
+        //public bool? IsWarning { get; set; }
+        //public DateTime? RecordedAt { get; set; }
+        public TankSensorLatestDataValueDto? LatestData { get; set; }
+    }
+
+    public class TankSensorLatestDataValueDto
+    {
         public double? LatestValue { get; set; }
         public bool? IsWarning { get; set; }
         public DateTime? RecordedAt { get; set; }

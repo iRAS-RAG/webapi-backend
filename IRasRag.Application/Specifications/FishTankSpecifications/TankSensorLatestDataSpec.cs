@@ -30,26 +30,37 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
             {
                 SensorId = s.Id,
                 SensorName = s.Name,
+                SensorTypeId = s.SensorTypeId,
                 SensorTypeName = s.SensorType.Name,
                 MeasureType = s.SensorType.MeasureType,
                 UnitOfMeasure = s.SensorType.UnitOfMeasure,
+                MasterBoardId = s.MasterBoardId,
                 MasterBoardName = s.MasterBoard.Name,
-
-                // Correlated subquery: latest log value for this sensor
-                LatestValue = s.SensorLogs
+                LatestData = s.SensorLogs
                     .OrderByDescending(l => l.CreatedAt)
-                    .Select(l => (double?)l.Data)
-                    .FirstOrDefault(),
+                    .Select(l => new TankSensorLatestDataValueDto
+                    {
+                        LatestValue = (double?)l.Data,
+                        IsWarning = (bool?)l.IsWarning,
+                        RecordedAt = l.CreatedAt
+                    })
+                    .FirstOrDefault()
 
-                IsWarning = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
-                    .Select(l => (bool?)l.IsWarning)
-                    .FirstOrDefault(),
+                //// Correlated subquery: latest log value for this sensor
+                //LatestValue = s.SensorLogs
+                //    .OrderByDescending(l => l.CreatedAt)
+                //    .Select(l => (double?)l.Data)
+                //    .FirstOrDefault(),
 
-                RecordedAt = s.SensorLogs
-                    .OrderByDescending(l => l.CreatedAt)
-                    .Select(l => l.CreatedAt)
-                    .FirstOrDefault(),
+                //IsWarning = s.SensorLogs
+                //    .OrderByDescending(l => l.CreatedAt)
+                //    .Select(l => (bool?)l.IsWarning)
+                //    .FirstOrDefault(),
+
+                //RecordedAt = s.SensorLogs
+                //    .OrderByDescending(l => l.CreatedAt)
+                //    .Select(l => l.CreatedAt)
+                //    .FirstOrDefault(),
             });
         }
     }
