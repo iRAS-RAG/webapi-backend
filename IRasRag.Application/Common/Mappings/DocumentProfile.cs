@@ -18,7 +18,7 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.UploadedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<UpdateDocumentDto, Document>(MemberList.Source)
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title));
         }
     }
 }
