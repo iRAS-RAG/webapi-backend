@@ -13,13 +13,15 @@ namespace IRasRag.Infrastructure.Services.FileExtractors
         {
             using var doc = WordprocessingDocument.Open(fileStream, isEditable: false);
             var body = doc.MainDocumentPart?.Document?.Body;
-            if (body is null) return string.Empty;
+            if (body is null)
+                return string.Empty;
 
             return string.Join(
                 Environment.NewLine,
                 body.Descendants<Paragraph>()
                     .Select(p => p.InnerText)
-                    .Where(t => !string.IsNullOrWhiteSpace(t)));
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+            );
         }
     }
 }

@@ -32,8 +32,10 @@ namespace IRasRag.Application.DTOs
 
         [Required]
         public string FileTitle { get; set; }
+
         [Required]
         public string FileName { get; set; }
+
         [Required]
         public long FileSize { get; set; }
 

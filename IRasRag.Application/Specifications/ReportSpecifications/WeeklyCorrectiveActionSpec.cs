@@ -9,14 +9,18 @@ namespace IRasRag.Application.Specifications.ReportSpecifications
     /// in the given fish tanks to WeeklyCorrectiveActionItem.
     /// Ordered by most-recent first; caller may further trim the list.
     /// </summary>
-    public class WeeklyCorrectiveActionSpec : Specification<CorrectiveAction, WeeklyCorrectiveActionItem>
+    public class WeeklyCorrectiveActionSpec
+        : Specification<CorrectiveAction, WeeklyCorrectiveActionItem>
     {
         public WeeklyCorrectiveActionSpec(DateTime from, DateTime to, IEnumerable<Guid> tankIds)
         {
             Query
                 .AsNoTracking()
-                .Where(ca => ca.Timestamp >= from && ca.Timestamp < to
-                             && tankIds.Contains(ca.Alert.FishTankId))
+                .Where(ca =>
+                    ca.Timestamp >= from
+                    && ca.Timestamp < to
+                    && tankIds.Contains(ca.Alert.FishTankId)
+                )
                 .OrderByDescending(ca => ca.Timestamp)
                 .Select(ca => new WeeklyCorrectiveActionItem
                 {
@@ -24,9 +28,10 @@ namespace IRasRag.Application.Specifications.ReportSpecifications
                     AlertId = ca.AlertId,
                     ActionTaken = ca.ActionTaken,
                     Notes = ca.Notes ?? string.Empty,
-                    PerformedBy = ca.User != null
-                        ? (ca.User.FirstName + " " + ca.User.LastName).Trim()
-                        : string.Empty,
+                    PerformedBy =
+                        ca.User != null
+                            ? (ca.User.FirstName + " " + ca.User.LastName).Trim()
+                            : string.Empty,
                     Timestamp = ca.Timestamp,
                 });
         }

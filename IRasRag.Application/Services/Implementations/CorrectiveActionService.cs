@@ -94,7 +94,9 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy hành động khắc phục với Id: {Id}", id);
 
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
-                var correctiveActionDto = await correctiveActionRepository.FirstOrDefaultAsync(new CorrectiveActionDtoByIdSpec(id));
+                var correctiveActionDto = await correctiveActionRepository.FirstOrDefaultAsync(
+                    new CorrectiveActionDtoByIdSpec(id)
+                );
 
                 if (correctiveActionDto == null)
                 {

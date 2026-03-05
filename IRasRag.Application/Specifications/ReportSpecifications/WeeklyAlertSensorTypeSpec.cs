@@ -1,7 +1,7 @@
+using System.Linq;
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
-using System.Linq;
 
 namespace IRasRag.Application.Specifications.ReportSpecifications
 {

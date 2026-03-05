@@ -1,5 +1,5 @@
 ﻿using IRasRag.Application.Common.Interfaces.FileExtraction;
-using IRasRag.Application.Common.Interfaces.FileExtractor;  
+using IRasRag.Application.Common.Interfaces.FileExtractor;
 
 namespace IRasRag.Infrastructure.Services.FileExtractors
 {

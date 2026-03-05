@@ -177,7 +177,9 @@ namespace IRasRag.Application.Services.Implementations
                 await sensorRepository.AddAsync(sensor);
                 await _unitOfWork.SaveChangesAsync();
 
-                var sensorDto = await sensorRepository.FirstOrDefaultAsync(new SensorDtoByIdSpec(sensor.Id));
+                var sensorDto = await sensorRepository.FirstOrDefaultAsync(
+                    new SensorDtoByIdSpec(sensor.Id)
+                );
                 _logger.LogInformation("Tạo cảm biến thành công: {Id}", sensor.Id);
 
                 return Result<SensorDto>.Success(sensorDto!, "Tạo cảm biến thành công");
@@ -366,11 +368,17 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region SensorLog Methods
-        public async Task<Result<SensorLogDto>> CreateSensorLogAsync(Guid sensorId, CreateSensorLogDto dto)
+        public async Task<Result<SensorLogDto>> CreateSensorLogAsync(
+            Guid sensorId,
+            CreateSensorLogDto dto
+        )
         {
             try
             {
-                _logger.LogInformation("Bắt đầu thêm dữ liệu thủ công cho cảm biến: {SensorId}", sensorId);
+                _logger.LogInformation(
+                    "Bắt đầu thêm dữ liệu thủ công cho cảm biến: {SensorId}",
+                    sensorId
+                );
 
                 var sensorRepository = _unitOfWork.GetRepository<Sensor>();
                 var sensor = await sensorRepository.GetByIdAsync(sensorId);
@@ -402,7 +410,9 @@ namespace IRasRag.Application.Services.Implementations
                 await logRepository.AddAsync(sensorLog);
                 await _unitOfWork.SaveChangesAsync();
 
-                var logDto = await logRepository.FirstOrDefaultAsync(new SensorLogDtoByIdSpec(sensorLog.Id));
+                var logDto = await logRepository.FirstOrDefaultAsync(
+                    new SensorLogDtoByIdSpec(sensorLog.Id)
+                );
                 _logger.LogInformation(
                     "Thêm dữ liệu thủ công thành công: {LogId} cho cảm biến {SensorId}",
                     sensorLog.Id,
@@ -413,7 +423,11 @@ namespace IRasRag.Application.Services.Implementations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi thêm dữ liệu thủ công cho cảm biến: {SensorId}", sensorId);
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi thêm dữ liệu thủ công cho cảm biến: {SensorId}",
+                    sensorId
+                );
                 return Result<SensorLogDto>.Failure(
                     "Đã xảy ra lỗi khi thêm dữ liệu cảm biến",
                     ResultType.Unexpected
@@ -421,7 +435,10 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsAsync(Guid sensorId, SensorLogListRequest request)
+        public async Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsAsync(
+            Guid sensorId,
+            SensorLogListRequest request
+        )
         {
             try
             {
@@ -445,7 +462,9 @@ namespace IRasRag.Application.Services.Implementations
                 if (request.Interval.HasValue && request.Interval.Value > 0)
                 {
                     // Kéo toàn bộ dữ liệu (đã lọc theo From/To), gom nhóm trong bộ nhớ, rồi phân trang
-                    var allLogs = await logRepository.ListAsync(new SensorLogListSpec(sensorId, request));
+                    var allLogs = await logRepository.ListAsync(
+                        new SensorLogListSpec(sensorId, request)
+                    );
 
                     var intervalTicks = TimeSpan.FromMinutes(request.Interval.Value).Ticks;
                     var buckets = allLogs
@@ -453,9 +472,10 @@ namespace IRasRag.Application.Services.Implementations
                         .GroupBy(l =>
                         {
                             var createdAt = l.CreatedAt!.Value;
-                            var kind = createdAt.Kind == DateTimeKind.Unspecified
-                                ? DateTimeKind.Utc
-                                : createdAt.Kind;
+                            var kind =
+                                createdAt.Kind == DateTimeKind.Unspecified
+                                    ? DateTimeKind.Utc
+                                    : createdAt.Kind;
                             var roundedTicks = createdAt.Ticks / intervalTicks * intervalTicks;
                             return new DateTime(roundedTicks, kind);
                         })
@@ -480,10 +500,21 @@ namespace IRasRag.Application.Services.Implementations
 
                     pagedResult = new PaginatedResult<SensorLogDto>
                     {
-                        Message = totalBuckets == 0 ? "Không có dữ liệu lịch sử" : "Lấy lịch sử cảm biến thành công",
+                        Message =
+                            totalBuckets == 0
+                                ? "Không có dữ liệu lịch sử"
+                                : "Lấy lịch sử cảm biến thành công",
                         Data = pagedBuckets,
-                        Meta = PaginationBuilder.BuildPaginationMetadata(request.Page, request.PageSize, totalBuckets),
-                        Links = PaginationBuilder.BuildPaginationLinks(request.Page, request.PageSize, totalBuckets),
+                        Meta = PaginationBuilder.BuildPaginationMetadata(
+                            request.Page,
+                            request.PageSize,
+                            totalBuckets
+                        ),
+                        Links = PaginationBuilder.BuildPaginationLinks(
+                            request.Page,
+                            request.PageSize,
+                            totalBuckets
+                        ),
                     };
                 }
                 else
@@ -497,10 +528,21 @@ namespace IRasRag.Application.Services.Implementations
 
                     pagedResult = new PaginatedResult<SensorLogDto>
                     {
-                        Message = dbPaged.TotalItems == 0 ? "Không có dữ liệu lịch sử" : "Lấy lịch sử cảm biến thành công",
+                        Message =
+                            dbPaged.TotalItems == 0
+                                ? "Không có dữ liệu lịch sử"
+                                : "Lấy lịch sử cảm biến thành công",
                         Data = dbPaged.Items,
-                        Meta = PaginationBuilder.BuildPaginationMetadata(request.Page, request.PageSize, dbPaged.TotalItems),
-                        Links = PaginationBuilder.BuildPaginationLinks(request.Page, request.PageSize, dbPaged.TotalItems),
+                        Meta = PaginationBuilder.BuildPaginationMetadata(
+                            request.Page,
+                            request.PageSize,
+                            dbPaged.TotalItems
+                        ),
+                        Links = PaginationBuilder.BuildPaginationLinks(
+                            request.Page,
+                            request.PageSize,
+                            dbPaged.TotalItems
+                        ),
                     };
                 }
 
@@ -511,7 +553,10 @@ namespace IRasRag.Application.Services.Implementations
                     pagedResult.Meta?.TotalPages
                 );
 
-                return Result<PaginatedResult<SensorLogDto>>.Success(pagedResult, pagedResult.Message);
+                return Result<PaginatedResult<SensorLogDto>>.Success(
+                    pagedResult,
+                    pagedResult.Message
+                );
             }
             catch (Exception ex)
             {
@@ -522,7 +567,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
-        
+
         #endregion
     }
 }

@@ -171,7 +171,9 @@ namespace IRasRag.Application.Services.Implementations
                 await mappingRepo.AddAsync(mapping);
                 await _unitOfWork.SaveChangesAsync();
 
-                var mappingDto = await mappingRepo.FirstOrDefaultAsync(new JobControlMappingDtoByIdSpec(mapping.Id));
+                var mappingDto = await mappingRepo.FirstOrDefaultAsync(
+                    new JobControlMappingDtoByIdSpec(mapping.Id)
+                );
 
                 return Result<JobControlMappingDto>.Success(
                     mappingDto!,

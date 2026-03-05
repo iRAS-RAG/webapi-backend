@@ -71,7 +71,11 @@ namespace IRasRag.Application.DTOs
         public DateTime? To { get; set; }
 
         /// <summary>Interval tính bằng phút để gộp nhóm dữ liệu. Nếu null, trả về dữ liệu thô.</summary>
-        [Range(1, int.MaxValue, ErrorMessage = "Interval phải là số nguyên dương (tối thiểu 1 phút)")]
+        [Range(
+            1,
+            int.MaxValue,
+            ErrorMessage = "Interval phải là số nguyên dương (tối thiểu 1 phút)"
+        )]
         public int? Interval { get; set; }
 
         /// <summary>Số bản ghi mỗi trang (mặc định: 50, tối đa: 500).</summary>

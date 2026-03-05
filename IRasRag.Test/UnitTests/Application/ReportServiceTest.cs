@@ -42,12 +42,24 @@ namespace IRasRag.Test.UnitTests.Application
             _fishTankRepoMock = new Mock<IRepository<FishTank>>();
 
             _unitOfWorkMock.Setup(u => u.GetRepository<Alert>()).Returns(_alertRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<FarmingBatch>()).Returns(_batchRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<MortalityLog>()).Returns(_mortalityRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<CorrectiveAction>()).Returns(_correctiveActionRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<Recommendation>()).Returns(_recommendationRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<UserFarm>()).Returns(_userFarmRepoMock.Object);
-            _unitOfWorkMock.Setup(u => u.GetRepository<FishTank>()).Returns(_fishTankRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<FarmingBatch>())
+                .Returns(_batchRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<MortalityLog>())
+                .Returns(_mortalityRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<CorrectiveAction>())
+                .Returns(_correctiveActionRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<Recommendation>())
+                .Returns(_recommendationRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<UserFarm>())
+                .Returns(_userFarmRepoMock.Object);
+            _unitOfWorkMock
+                .Setup(u => u.GetRepository<FishTank>())
+                .Returns(_fishTankRepoMock.Object);
 
             _sut = new ReportService(_unitOfWorkMock.Object, _loggerMock.Object);
         }
@@ -55,7 +67,13 @@ namespace IRasRag.Test.UnitTests.Application
         // ─── Factory helpers ────────────────────────────────────────────────────
 
         private static MortalityLog MakeMortalityLog(DateTime date, float quantity) =>
-            new() { Id = Guid.NewGuid(), BatchId = Guid.NewGuid(), Quantity = quantity, Date = date };
+            new()
+            {
+                Id = Guid.NewGuid(),
+                BatchId = Guid.NewGuid(),
+                Quantity = quantity,
+                Date = date,
+            };
 
         private static WeeklyCorrectiveActionItem MakeCAItem(DateTime timestamp) =>
             new()
@@ -96,7 +114,8 @@ namespace IRasRag.Test.UnitTests.Application
             int harvestedBatches = 0,
             int totalBatches = 0,
             IEnumerable<BatchSurvivalProjection>? survivalData = null,
-            IEnumerable<MortalityLog>? mortalityLogs = null)
+            IEnumerable<MortalityLog>? mortalityLogs = null
+        )
         {
             // ── Scope: return one dummy UserFarm → one dummy FishTank so the service
             //    proceeds past the early-exit guard (tankIds.Count == 0).
@@ -104,22 +123,36 @@ namespace IRasRag.Test.UnitTests.Application
             var dummyTankId = Guid.NewGuid();
 
             _userFarmRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
 
             _fishTankRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FishTank, bool>>>(),
-                    It.IsAny<QueryType>()))
-                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FishTank, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    new List<FishTank>
+                    {
+                        new() { Id = dummyTankId, FarmId = dummyFarmId },
+                    }
+                );
 
             // batchRepo.FindAllAsync is used to build dashboardBatchIds before querying mortality.
             _batchRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<FarmingBatch>());
 
             var alertList = new List<AlertStatus>();
@@ -132,29 +165,41 @@ namespace IRasRag.Test.UnitTests.Application
                 alertList.AddRange(Enumerable.Repeat((AlertStatus)999, remaining));
 
             _alertRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(alertList);
 
             _batchRepoMock
-                .SetupSequence(r => r.CountAsync(
-                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .SetupSequence(r =>
+                    r.CountAsync(
+                        It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(activeBatches)
                 .ReturnsAsync(harvestedBatches)
                 .ReturnsAsync(totalBatches);
 
             _batchRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<FarmingBatch, BatchSurvivalProjection>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<FarmingBatch, BatchSurvivalProjection>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(survivalData ?? new List<BatchSurvivalProjection>());
 
             _mortalityRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<MortalityLog, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<MortalityLog, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(mortalityLogs ?? new List<MortalityLog>());
         }
 
@@ -175,7 +220,8 @@ namespace IRasRag.Test.UnitTests.Application
             IEnumerable<WeeklyRecommendationItem>? recommendations = null,
             IEnumerable<MortalityLog>? mortalityLogs = null,
             int activeBatches = 0,
-            IEnumerable<BatchSurvivalProjection>? survivalData = null)
+            IEnumerable<BatchSurvivalProjection>? survivalData = null
+        )
         {
             // ── Scope: return one dummy UserFarm → one dummy FishTank so the service
             //    proceeds past the early-exit guard (tankIds.Count == 0).
@@ -183,22 +229,36 @@ namespace IRasRag.Test.UnitTests.Application
             var dummyTankId = Guid.NewGuid();
 
             _userFarmRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
 
             _fishTankRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FishTank, bool>>>(),
-                    It.IsAny<QueryType>()))
-                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FishTank, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    new List<FishTank>
+                    {
+                        new() { Id = dummyTankId, FarmId = dummyFarmId },
+                    }
+                );
 
             // batchRepo.FindAllAsync is used to build weeklyBatchIds before querying mortality.
             _batchRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<FarmingBatch>());
 
             var alertList = new List<AlertStatus>();
@@ -211,45 +271,63 @@ namespace IRasRag.Test.UnitTests.Application
                 alertList.AddRange(Enumerable.Repeat((AlertStatus)999, remaining));
 
             _alertRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(alertList);
 
             _alertRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Alert, string>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(It.IsAny<ISpecification<Alert, string>>(), It.IsAny<QueryType>())
+                )
                 .ReturnsAsync(sensorTypeNames ?? new List<string>());
 
             _correctiveActionRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<CorrectiveAction, WeeklyCorrectiveActionItem>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<CorrectiveAction, WeeklyCorrectiveActionItem>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(correctiveActions ?? new List<WeeklyCorrectiveActionItem>());
 
             _recommendationRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Recommendation, WeeklyRecommendationItem>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Recommendation, WeeklyRecommendationItem>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(recommendations ?? new List<WeeklyRecommendationItem>());
 
             _mortalityRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<MortalityLog, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<MortalityLog, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(mortalityLogs ?? new List<MortalityLog>());
 
             _batchRepoMock
-                .Setup(r => r.CountAsync(
-                    It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.CountAsync(
+                        It.IsAny<Expression<Func<FarmingBatch, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(activeBatches);
 
             _batchRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<FarmingBatch, BatchSurvivalProjection>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<FarmingBatch, BatchSurvivalProjection>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(survivalData ?? new List<BatchSurvivalProjection>());
         }
 
@@ -265,14 +343,18 @@ namespace IRasRag.Test.UnitTests.Application
             var now = DateTime.UtcNow;
             SetupDashboardDefaults();
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be($"Tháng {now.Month}/{now.Year}");
-            result.Data.PeriodFrom.Should().Be(
-                new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1));
+            result
+                .Data.PeriodFrom.Should()
+                .Be(new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1));
         }
 
         [Fact]
@@ -281,14 +363,20 @@ namespace IRasRag.Test.UnitTests.Application
             var now = DateTime.UtcNow;
             SetupDashboardDefaults();
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "today" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.TODAY }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be("Hôm nay");
-            result.Data.PeriodFrom.Should().Be(
-                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
+            result
+                .Data.PeriodFrom.Should()
+                .Be(new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(
+                    new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1)
+                );
         }
 
         [Fact]
@@ -297,13 +385,18 @@ namespace IRasRag.Test.UnitTests.Application
             var now = DateTime.UtcNow;
             SetupDashboardDefaults();
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "week" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.WEEK }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be("7 ngày qua");
             // PeriodTo should be end of today
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
+            result
+                .Data.PeriodTo.Should()
+                .Be(
+                    new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1)
+                );
             // PeriodFrom should be 6 calendar days ago at midnight UTC
             result.Data.PeriodFrom.Date.Should().Be(now.AddDays(-6).Date);
         }
@@ -314,31 +407,33 @@ namespace IRasRag.Test.UnitTests.Application
             var now = DateTime.UtcNow;
             SetupDashboardDefaults();
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "year" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.YEAR }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be($"Năm {now.Year}");
-            result.Data.PeriodFrom.Should().Be(
-                new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodFrom.Should()
+                .Be(new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("unknown_period")]
-        public async Task GetDashboardSummaryAsync_ShouldDefaultToMonth_WhenPeriodIsNullOrUnknown(string? period)
+        [Fact]
+        public async Task GetDashboardSummaryAsync_ShouldDefaultToMonth_WhenPeriodIsDefault()
         {
             var now = DateTime.UtcNow;
             SetupDashboardDefaults();
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = period! });
+            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest());
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be($"Tháng {now.Month}/{now.Year}");
-            result.Data.PeriodFrom.Should().Be(
-                new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodFrom.Should()
+                .Be(new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc));
         }
 
         #endregion
@@ -357,9 +452,12 @@ namespace IRasRag.Test.UnitTests.Application
                 openAlerts: 3,
                 acknowledgedAlerts: 2,
                 resolvedAlerts: 4,
-                dismissedAlerts: 1);
+                dismissedAlerts: 1
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalAlerts.Should().Be(10);
@@ -374,7 +472,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupDashboardDefaults(); // all zeros
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalAlerts.Should().Be(0);
@@ -397,7 +497,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupDashboardDefaults(survivalData: new List<BatchSurvivalProjection>());
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().BeNull();
@@ -408,12 +510,16 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetDashboardSummaryAsync_ShouldReturnNullSurvivalRate_WhenTotalInitialQuantityIsZero()
         {
-            SetupDashboardDefaults(survivalData: new List<BatchSurvivalProjection>
-            {
-                new() { InitialQuantity = 0, CurrentQuantity = 0 },
-            });
+            SetupDashboardDefaults(
+                survivalData: new List<BatchSurvivalProjection>
+                {
+                    new() { InitialQuantity = 0, CurrentQuantity = 0 },
+                }
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().BeNull();
@@ -423,12 +529,16 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetDashboardSummaryAsync_ShouldComputeSurvivalRate_RoundedTo2DecimalPlaces()
         {
             // 850 / 1000 * 100 = 85.00
-            SetupDashboardDefaults(survivalData: new List<BatchSurvivalProjection>
-            {
-                new() { InitialQuantity = 1000, CurrentQuantity = 850 },
-            });
+            SetupDashboardDefaults(
+                survivalData: new List<BatchSurvivalProjection>
+                {
+                    new() { InitialQuantity = 1000, CurrentQuantity = 850 },
+                }
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().Be(85.0);
@@ -438,13 +548,17 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetDashboardSummaryAsync_ShouldComputeFleetWideSurvivalRate_NotPerBatchMean()
         {
             // Fleet-wide: (850 + 450) / (1000 + 500) * 100 = 1300 / 1500 * 100 = 86.67
-            SetupDashboardDefaults(survivalData: new List<BatchSurvivalProjection>
-            {
-                new() { InitialQuantity = 1000, CurrentQuantity = 850 },
-                new() { InitialQuantity =  500, CurrentQuantity = 450 },
-            });
+            SetupDashboardDefaults(
+                survivalData: new List<BatchSurvivalProjection>
+                {
+                    new() { InitialQuantity = 1000, CurrentQuantity = 850 },
+                    new() { InitialQuantity = 500, CurrentQuantity = 450 },
+                }
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().Be(86.67);
@@ -465,7 +579,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupDashboardDefaults(activeBatches: 5, harvestedBatches: 2, totalBatches: 7);
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.ActiveBatches.Should().Be(5);
@@ -485,13 +601,17 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetDashboardSummaryAsync_ShouldSumTotalMortality_FromMortalityLogs()
         {
             var now = DateTime.UtcNow;
-            SetupDashboardDefaults(mortalityLogs: new List<MortalityLog>
-            {
-                MakeMortalityLog(now, 30f),
-                MakeMortalityLog(now, 70f),
-            });
+            SetupDashboardDefaults(
+                mortalityLogs: new List<MortalityLog>
+                {
+                    MakeMortalityLog(now, 30f),
+                    MakeMortalityLog(now, 70f),
+                }
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalMortality.Should().Be(100);
@@ -502,7 +622,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupDashboardDefaults(mortalityLogs: new List<MortalityLog>());
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalMortality.Should().Be(0);
@@ -520,18 +642,24 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetDashboardSummaryAsync_ShouldReturnOkWithNonNullData_OnHappyPath()
         {
             SetupDashboardDefaults(
-                totalAlerts: 5, openAlerts: 2, acknowledgedAlerts: 1, resolvedAlerts: 2, dismissedAlerts: 0,
-                activeBatches: 3, harvestedBatches: 1, totalBatches: 4,
+                totalAlerts: 5,
+                openAlerts: 2,
+                acknowledgedAlerts: 1,
+                resolvedAlerts: 2,
+                dismissedAlerts: 0,
+                activeBatches: 3,
+                harvestedBatches: 1,
+                totalBatches: 4,
                 survivalData: new List<BatchSurvivalProjection>
                 {
                     new() { InitialQuantity = 1000, CurrentQuantity = 900 },
                 },
-                mortalityLogs: new List<MortalityLog>
-                {
-                    MakeMortalityLog(DateTime.UtcNow, 100f),
-                });
+                mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 100f) }
+            );
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.IsSuccess.Should().BeTrue();
@@ -555,24 +683,40 @@ namespace IRasRag.Test.UnitTests.Application
             var dummyFarmId = Guid.NewGuid();
             var dummyTankId = Guid.NewGuid();
             _userFarmRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
             _fishTankRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FishTank, bool>>>(),
-                    It.IsAny<QueryType>()))
-                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FishTank, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    new List<FishTank>
+                    {
+                        new() { Id = dummyTankId, FarmId = dummyFarmId },
+                    }
+                );
 
             // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.
             _alertRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new InvalidOperationException("DB connection failure"));
 
-            var result = await _sut.GetDashboardSummaryAsync(new DashboardQueryRequest { Period = "month" });
+            var result = await _sut.GetDashboardSummaryAsync(
+                new DashboardQueryRequest { Period = ReportPeriod.MONTH }
+            );
 
             result.Type.Should().Be(ResultType.Unexpected);
             result.IsSuccess.Should().BeFalse();
@@ -599,13 +743,27 @@ namespace IRasRag.Test.UnitTests.Application
 
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
-            result.Data!.PeriodFrom.Should().Be(
-                new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
+            result
+                .Data!.PeriodFrom.Should()
+                .Be(new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(
+                    new DateTime(
+                        sunday.Year,
+                        sunday.Month,
+                        sunday.Day,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc
+                    ).AddDays(1)
+                );
         }
 
         [Fact]
@@ -619,13 +777,27 @@ namespace IRasRag.Test.UnitTests.Application
 
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "last" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "last" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
-            result.Data!.PeriodFrom.Should().Be(
-                new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
+            result
+                .Data!.PeriodFrom.Should()
+                .Be(new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(
+                    new DateTime(
+                        sunday.Year,
+                        sunday.Month,
+                        sunday.Day,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc
+                    ).AddDays(1)
+                );
         }
 
         [Fact]
@@ -639,19 +811,35 @@ namespace IRasRag.Test.UnitTests.Application
 
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "2" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "2" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
-            result.Data!.PeriodFrom.Should().Be(
-                new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
-            result.Data.PeriodTo.Should().Be(
-                new DateTime(sunday.Year, sunday.Month, sunday.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(1));
+            result
+                .Data!.PeriodFrom.Should()
+                .Be(new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data.PeriodTo.Should()
+                .Be(
+                    new DateTime(
+                        sunday.Year,
+                        sunday.Month,
+                        sunday.Day,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc
+                    ).AddDays(1)
+                );
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData("invalid_period")]
-        public async Task GetWeeklyReportAsync_ShouldDefaultToCurrentIsoWeek_WhenPeriodIsNullOrUnknown(string? period)
+        public async Task GetWeeklyReportAsync_ShouldDefaultToCurrentIsoWeek_WhenPeriodIsNullOrUnknown(
+            string? period
+        )
         {
             var now = DateTime.UtcNow;
             var today = now.Date;
@@ -660,11 +848,14 @@ namespace IRasRag.Test.UnitTests.Application
 
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = period! });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = period! }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
-            result.Data!.PeriodFrom.Should().Be(
-                new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
+            result
+                .Data!.PeriodFrom.Should()
+                .Be(new DateTime(monday.Year, monday.Month, monday.Day, 0, 0, 0, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -680,12 +871,15 @@ namespace IRasRag.Test.UnitTests.Application
             int weekNum = cal.GetWeekOfYear(
                 monday,
                 System.Globalization.CalendarWeekRule.FirstFourDayWeek,
-                DayOfWeek.Monday);
+                DayOfWeek.Monday
+            );
             var expectedLabel = $"Tuần {weekNum}/{monday.Year} ({monday:dd/MM} – {sunday:dd/MM})";
 
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.PeriodLabel.Should().Be(expectedLabel);
@@ -707,9 +901,12 @@ namespace IRasRag.Test.UnitTests.Application
                 openAlerts: 5,
                 acknowledgedAlerts: 3,
                 resolvedAlerts: 10,
-                dismissedAlerts: 2);
+                dismissedAlerts: 2
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalAlerts.Should().Be(20);
@@ -722,12 +919,21 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetWeeklyReportAsync_ShouldSortTopIssues_InDescendingOrderByCount()
         {
-            SetupWeeklyDefaults(sensorTypeNames: new List<string>
-            {
-                "pH", "Temperature", "pH", "DO", "pH", "Temperature",
-            });
+            SetupWeeklyDefaults(
+                sensorTypeNames: new List<string>
+                {
+                    "pH",
+                    "Temperature",
+                    "pH",
+                    "DO",
+                    "pH",
+                    "Temperature",
+                }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             var topIssues = result.Data!.TopIssuesBySensorType;
@@ -743,12 +949,13 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetWeeklyReportAsync_ShouldGroupTopIssues_BySameNameIntoSingleEntry()
         {
-            SetupWeeklyDefaults(sensorTypeNames: new List<string>
-            {
-                "Temperature", "Temperature", "Temperature",
-            });
+            SetupWeeklyDefaults(
+                sensorTypeNames: new List<string> { "Temperature", "Temperature", "Temperature" }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TopIssuesBySensorType.Should().HaveCount(1);
@@ -761,7 +968,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(sensorTypeNames: new List<string>());
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TopIssuesBySensorType.Should().BeEmpty();
@@ -778,13 +987,13 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetWeeklyReportAsync_ShouldReportFullTotalCorrectiveActions_EvenWhenAbove20()
         {
-            var items = Enumerable.Range(0, 25)
-                .Select(_ => MakeCAItem(DateTime.UtcNow))
-                .ToList();
+            var items = Enumerable.Range(0, 25).Select(_ => MakeCAItem(DateTime.UtcNow)).ToList();
 
             SetupWeeklyDefaults(correctiveActions: items);
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalCorrectiveActions.Should().Be(25);
@@ -796,7 +1005,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(correctiveActions: new List<WeeklyCorrectiveActionItem>());
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalCorrectiveActions.Should().Be(0);
@@ -814,13 +1025,13 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task GetWeeklyReportAsync_ShouldReportFullTotalRecommendations_EvenWhenAbove20()
         {
-            var items = Enumerable.Range(0, 30)
-                .Select(_ => MakeRecItem())
-                .ToList();
+            var items = Enumerable.Range(0, 30).Select(_ => MakeRecItem()).ToList();
 
             SetupWeeklyDefaults(recommendations: items);
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalRecommendations.Should().Be(30);
@@ -832,7 +1043,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(recommendations: new List<WeeklyRecommendationItem>());
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalRecommendations.Should().Be(0);
@@ -851,13 +1064,17 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetWeeklyReportAsync_ShouldSumTotalMortality_FromMortalityLogs()
         {
             var now = DateTime.UtcNow;
-            SetupWeeklyDefaults(mortalityLogs: new List<MortalityLog>
-            {
-                MakeMortalityLog(now, 40f),
-                MakeMortalityLog(now, 60f),
-            });
+            SetupWeeklyDefaults(
+                mortalityLogs: new List<MortalityLog>
+                {
+                    MakeMortalityLog(now, 40f),
+                    MakeMortalityLog(now, 60f),
+                }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalMortality.Should().Be(100);
@@ -867,14 +1084,18 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetWeeklyReportAsync_ShouldCountMortalityIncidents_AsTotalLogRows()
         {
             var now = DateTime.UtcNow;
-            SetupWeeklyDefaults(mortalityLogs: new List<MortalityLog>
-            {
-                MakeMortalityLog(now, 10f),
-                MakeMortalityLog(now, 20f),
-                MakeMortalityLog(now, 30f),
-            });
+            SetupWeeklyDefaults(
+                mortalityLogs: new List<MortalityLog>
+                {
+                    MakeMortalityLog(now, 10f),
+                    MakeMortalityLog(now, 20f),
+                    MakeMortalityLog(now, 30f),
+                }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.MortalityIncidents.Should().Be(3);
@@ -886,7 +1107,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(mortalityLogs: new List<MortalityLog>());
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.TotalMortality.Should().Be(0);
@@ -906,7 +1129,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(activeBatches: 7);
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.ActiveBatches.Should().Be(7);
@@ -917,7 +1142,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             SetupWeeklyDefaults(survivalData: new List<BatchSurvivalProjection>());
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().BeNull();
@@ -927,13 +1154,17 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetWeeklyReportAsync_ShouldComputeFleetWideSurvivalRate_WhenActiveBatchesExist()
         {
             // (400 + 500) / (500 + 500) * 100 = 900 / 1000 * 100 = 90.00
-            SetupWeeklyDefaults(survivalData: new List<BatchSurvivalProjection>
-            {
-                new() { InitialQuantity = 500, CurrentQuantity = 400 },
-                new() { InitialQuantity = 500, CurrentQuantity = 500 },
-            });
+            SetupWeeklyDefaults(
+                survivalData: new List<BatchSurvivalProjection>
+                {
+                    new() { InitialQuantity = 500, CurrentQuantity = 400 },
+                    new() { InitialQuantity = 500, CurrentQuantity = 500 },
+                }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.Data!.AverageSurvivalRate.Should().Be(90.0);
@@ -951,18 +1182,28 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task GetWeeklyReportAsync_ShouldReturnOkWithNonNullData_OnHappyPath()
         {
             SetupWeeklyDefaults(
-                totalAlerts: 8, openAlerts: 2, acknowledgedAlerts: 1, resolvedAlerts: 4, dismissedAlerts: 1,
+                totalAlerts: 8,
+                openAlerts: 2,
+                acknowledgedAlerts: 1,
+                resolvedAlerts: 4,
+                dismissedAlerts: 1,
                 sensorTypeNames: new List<string> { "pH", "Temperature", "pH" },
-                correctiveActions: new List<WeeklyCorrectiveActionItem> { MakeCAItem(DateTime.UtcNow) },
+                correctiveActions: new List<WeeklyCorrectiveActionItem>
+                {
+                    MakeCAItem(DateTime.UtcNow),
+                },
                 recommendations: new List<WeeklyRecommendationItem> { MakeRecItem() },
                 mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 50f) },
                 activeBatches: 3,
                 survivalData: new List<BatchSurvivalProjection>
                 {
                     new() { InitialQuantity = 1000, CurrentQuantity = 850 },
-                });
+                }
+            );
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Ok);
             result.IsSuccess.Should().BeTrue();
@@ -976,7 +1217,9 @@ namespace IRasRag.Test.UnitTests.Application
             var before = DateTime.UtcNow;
             SetupWeeklyDefaults();
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             var after = DateTime.UtcNow;
             result.Type.Should().Be(ResultType.Ok);
@@ -999,24 +1242,40 @@ namespace IRasRag.Test.UnitTests.Application
             var dummyFarmId = Guid.NewGuid();
             var dummyTankId = Guid.NewGuid();
             _userFarmRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<UserFarm, bool>>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<UserFarm, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
             _fishTankRepoMock
-                .Setup(r => r.FindAllAsync(
-                    It.IsAny<Expression<Func<FishTank, bool>>>(),
-                    It.IsAny<QueryType>()))
-                .ReturnsAsync(new List<FishTank> { new() { Id = dummyTankId, FarmId = dummyFarmId } });
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FishTank, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    new List<FishTank>
+                    {
+                        new() { Id = dummyTankId, FarmId = dummyFarmId },
+                    }
+                );
 
             // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.
             _alertRepoMock
-                .Setup(r => r.ListAsync(
-                    It.IsAny<ISpecification<Alert, AlertStatus>>(),
-                    It.IsAny<QueryType>()))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Alert, AlertStatus>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
                 .ThrowsAsync(new InvalidOperationException("DB connection failure"));
 
-            var result = await _sut.GetWeeklyReportAsync(new WeeklyReportQueryRequest { Period = "current" });
+            var result = await _sut.GetWeeklyReportAsync(
+                new WeeklyReportQueryRequest { Period = "current" }
+            );
 
             result.Type.Should().Be(ResultType.Unexpected);
             result.IsSuccess.Should().BeFalse();

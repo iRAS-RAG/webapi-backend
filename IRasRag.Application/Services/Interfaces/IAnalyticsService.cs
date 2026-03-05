@@ -13,6 +13,8 @@ namespace IRasRag.Application.Services.Interfaces
         /// <summary>
         /// Returns alert frequency statistics by sensor type (F12 – Supervisor).
         /// </summary>
-        Task<Result<AlertFrequencyResponseDto>> GetAlertFrequencyAsync(AlertFrequencyRequest request);
+        Task<Result<AlertFrequencyResponseDto>> GetAlertFrequencyAsync(
+            AlertFrequencyRequest request
+        );
     }
 }

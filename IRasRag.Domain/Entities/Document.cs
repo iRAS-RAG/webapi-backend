@@ -14,6 +14,7 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public Guid UploadedByUserId { get; set; }
+
         [Required]
         [MaxLength(500)]
         public string FileUrl { get; set; }

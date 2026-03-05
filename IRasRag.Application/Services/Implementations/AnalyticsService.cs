@@ -1,5 +1,6 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.AnalyticsSpecifications;
@@ -15,7 +16,9 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<AnalyticsService> _logger;
 
         // ── Fixed metric keys ────────────────────────────────────────────────
-        private static readonly HashSet<string> _fixedMetrics = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> _fixedMetrics = new(
+            StringComparer.OrdinalIgnoreCase
+        )
         {
             "survival_rate",
             "mortality",
@@ -91,8 +94,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 bool allMetrics = requestedMetrics.Count == 0;
 
-                bool computeSurvivalRate =
-                    allMetrics || requestedMetrics.Contains("survival_rate");
+                bool computeSurvivalRate = allMetrics || requestedMetrics.Contains("survival_rate");
                 bool computeMortality = allMetrics || requestedMetrics.Contains("mortality");
                 bool computeFeeding = allMetrics || requestedMetrics.Contains("feeding");
                 bool computeAlerts = allMetrics || requestedMetrics.Contains("alerts");
@@ -119,7 +121,10 @@ namespace IRasRag.Application.Services.Implementations
                 var sensorTypeRepo = _unitOfWork.GetRepository<SensorType>();
 
                 // ── 3a. Resolve user's allowed tanks ─────────────────────────
-                var userTankIds = await GetUserTankIdsAsync(request.UserId);
+                var userTankIds = await UserScopeHelper.GetUserTankIdsAsync(
+                    _unitOfWork,
+                    request.UserId
+                );
 
                 // ── 4. Load all sensor types once ────────────────────────────
                 var allSensorTypes = await sensorTypeRepo.GetAllAsync();
@@ -129,15 +134,65 @@ namespace IRasRag.Application.Services.Implementations
 
                 // Batch-load all requested batches and their fish tanks in two queries
                 // to avoid N+1 round-trips when comparing multiple batches.
-                var allBatches = (await batchRepo.FindAllAsync(b => distinctBatchIds.Contains(b.Id)))
-                    .ToDictionary(b => b.Id);
+                var allBatches = (
+                    await batchRepo.FindAllAsync(b => distinctBatchIds.Contains(b.Id))
+                ).ToDictionary(b => b.Id);
                 var fishTankIds = allBatches.Values.Select(b => b.FishTankId).Distinct().ToList();
-                var allFishTanks = (await fishTankRepo.FindAllAsync(ft => fishTankIds.Contains(ft.Id)))
-                    .ToDictionary(ft => ft.Id);
+                var allFishTanks = (
+                    await fishTankRepo.FindAllAsync(ft => fishTankIds.Contains(ft.Id))
+                ).ToDictionary(ft => ft.Id);
+
+                // Pre-load all metric data to avoid N+1 queries in the batch loop
+                IEnumerable<MortalityLog> allMortalities = [];
+                IEnumerable<FeedingLog> allFeedings = [];
+                IEnumerable<Alert> allAlerts = [];
+                List<MasterBoard> allMasterBoardsList = [];
+                List<Sensor> allSensorsList = [];
+                IEnumerable<SensorLog> allSensorLogs = [];
+
+                if (computeMortality)
+                    allMortalities = await mortalityLogRepo.FindAllAsync(ml =>
+                        distinctBatchIds.Contains(ml.BatchId)
+                    );
+
+                if (computeFeeding)
+                    allFeedings = await feedingLogRepo.FindAllAsync(fl =>
+                        distinctBatchIds.Contains(fl.FarmingBatchId)
+                    );
+
+                if (computeAlerts)
+                    allAlerts = await alertRepo.FindAllAsync(a =>
+                        fishTankIds.Contains(a.FishTankId)
+                    );
+
+                if (needSensor)
+                {
+                    allMasterBoardsList = (
+                        await masterBoardRepo.FindAllAsync(mb =>
+                            fishTankIds.Contains(mb.FishTankId)
+                        )
+                    ).ToList();
+                    var allMasterBoardIds = allMasterBoardsList.Select(mb => mb.Id).ToList();
+                    if (allMasterBoardIds.Count > 0)
+                    {
+                        allSensorsList = (
+                            await sensorRepo.FindAllAsync(s =>
+                                allMasterBoardIds.Contains(s.MasterBoardId)
+                            )
+                        ).ToList();
+                        var allSensorIds = allSensorsList.Select(s => s.Id).ToList();
+                        if (allSensorIds.Count > 0)
+                            allSensorLogs = await sensorLogRepo.FindAllAsync(sl =>
+                                allSensorIds.Contains(sl.SensorId) && sl.CreatedAt != null
+                            );
+                    }
+                }
 
                 // ── 5a. Ownership check – reject batches the user cannot access ─
                 var unauthorizedBatchIds = distinctBatchIds
-                    .Where(id => allBatches.TryGetValue(id, out var b) && !userTankIds.Contains(b.FishTankId))
+                    .Where(id =>
+                        allBatches.TryGetValue(id, out var b) && !userTankIds.Contains(b.FishTankId)
+                    )
                     .ToList();
 
                 if (unauthorizedBatchIds.Count > 0)
@@ -189,21 +244,16 @@ namespace IRasRag.Application.Services.Implementations
                     }
 
                     // ── 5b. Total mortality ────────────────────────────────
-                    // NOTE: EF Core DbContext is not thread-safe – queries must be sequential.
                     if (computeMortality)
                     {
-                        var mortalityLogs = await mortalityLogRepo.FindAllAsync(ml =>
-                            ml.BatchId == batchId
-                        );
+                        var mortalityLogs = allMortalities.Where(ml => ml.BatchId == batchId);
                         metricValues.TotalMortality = mortalityLogs.Sum(ml => (double)ml.Quantity);
                     }
 
                     // ── 5c. Total feeding ──────────────────────────────────
                     if (computeFeeding)
                     {
-                        var feedingLogs = await feedingLogRepo.FindAllAsync(fl =>
-                            fl.FarmingBatchId == batchId
-                        );
+                        var feedingLogs = allFeedings.Where(fl => fl.FarmingBatchId == batchId);
                         metricValues.TotalFeeding = Math.Round(
                             feedingLogs.Sum(fl => (double)fl.Amount),
                             2
@@ -213,17 +263,19 @@ namespace IRasRag.Application.Services.Implementations
                     // ── 5d. Alerts ─────────────────────────────────────────
                     if (computeAlerts)
                     {
-                        var alertList = (
-                            await alertRepo.FindAllAsync(a =>
+                        var alertList = allAlerts
+                            .Where(a =>
                                 a.FishTankId == batch.FishTankId
                                 && a.RaisedAt >= batchFrom
                                 && a.RaisedAt <= batchTo
                             )
-                        ).ToList();
+                            .ToList();
 
                         metricValues.TotalAlerts = alertList.Count;
 
-                        var orphanedAlerts = alertList.Count(a => !sensorTypeById.ContainsKey(a.SensorTypeId));
+                        var orphanedAlerts = alertList.Count(a =>
+                            !sensorTypeById.ContainsKey(a.SensorTypeId)
+                        );
                         if (orphanedAlerts > 0)
                             _logger.LogWarning(
                                 "Batch {BatchId}: {Count} alert(s) reference an unknown SensorTypeId and are excluded from AlertsByType.",
@@ -240,14 +292,14 @@ namespace IRasRag.Application.Services.Implementations
                     // ── 5e. Sensor averages ────────────────────────────────
                     if (needSensor)
                     {
-                        var masterBoards = await masterBoardRepo.FindAllAsync(mb =>
-                            mb.FishTankId == batch.FishTankId
-                        );
-                        var masterBoardIds = masterBoards.Select(mb => mb.Id).ToList();
+                        var masterBoardIds = allMasterBoardsList
+                            .Where(mb => mb.FishTankId == batch.FishTankId)
+                            .Select(mb => mb.Id)
+                            .ToList();
 
                         if (masterBoardIds.Count > 0)
                         {
-                            var sensors = await sensorRepo.FindAllAsync(s =>
+                            var sensors = allSensorsList.Where(s =>
                                 masterBoardIds.Contains(s.MasterBoardId)
                             );
 
@@ -271,7 +323,10 @@ namespace IRasRag.Application.Services.Implementations
                                         sensorMetricFilter.Contains(typeName)
                                         || sensorMetricFilter.Contains(sensorType.MeasureType)
                                         || sensorMetricFilter.Any(f =>
-                                            typeName.StartsWith(f, StringComparison.OrdinalIgnoreCase)
+                                            typeName.StartsWith(
+                                                f,
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
                                             || sensorType.MeasureType.StartsWith(
                                                 f,
                                                 StringComparison.OrdinalIgnoreCase
@@ -282,17 +337,15 @@ namespace IRasRag.Application.Services.Implementations
                                         continue;
                                 }
 
-                                // Use List<Guid> – EF Core translates IList<T>.Contains reliably
-                                var sensorIds = group.Select(s => s.Id).ToList();
+                                var sensorIds = group.Select(s => s.Id).ToHashSet();
 
-                                var logs = await sensorLogRepo.FindAllAsync(sl =>
-                                    sensorIds.Contains(sl.SensorId)
-                                    && sl.CreatedAt != null
-                                    && sl.CreatedAt.Value >= batchFrom
-                                    && sl.CreatedAt.Value <= batchTo
-                                );
-
-                                var logList = logs.ToList();
+                                var logList = allSensorLogs
+                                    .Where(sl =>
+                                        sensorIds.Contains(sl.SensorId)
+                                        && sl.CreatedAt!.Value >= batchFrom
+                                        && sl.CreatedAt.Value <= batchTo
+                                    )
+                                    .ToList();
                                 if (logList.Count > 0)
                                 {
                                     metricValues.SensorAverages[typeName] = Math.Round(
@@ -420,7 +473,10 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 // ── 1. Resolve user's allowed tanks ─────────────────────────
-                var userTankIds = await GetUserTankIdsAsync(request.UserId);
+                var userTankIds = await UserScopeHelper.GetUserTankIdsAsync(
+                    _unitOfWork,
+                    request.UserId
+                );
 
                 // ── 2. Validate optional filter IDs – ownership check ────────
                 if (request.FishTankId.HasValue)
@@ -443,7 +499,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     var hasAccess = await _unitOfWork
                         .GetRepository<UserFarm>()
-                        .AnyAsync(uf => uf.UserId == request.UserId && uf.FarmId == request.FarmId.Value);
+                        .AnyAsync(uf =>
+                            uf.UserId == request.UserId && uf.FarmId == request.FarmId.Value
+                        );
                     if (!hasAccess)
                     {
                         _logger.LogWarning(
@@ -460,7 +518,13 @@ namespace IRasRag.Application.Services.Implementations
 
                 // ── 3. Load projected alerts (scoped to user's tanks) ────────
                 var alertRepo = _unitOfWork.GetRepository<Alert>();
-                var spec = new AlertFrequencySpec(from, to, userTankIds, request.FishTankId, request.FarmId);
+                var spec = new AlertFrequencySpec(
+                    from,
+                    to,
+                    userTankIds,
+                    request.FishTankId,
+                    request.FarmId
+                );
                 var projections = (await alertRepo.ListAsync(spec)).ToList();
 
                 int totalAlerts = projections.Count;
@@ -479,31 +543,43 @@ namespace IRasRag.Application.Services.Implementations
                         sensorTypeById.TryGetValue(g.Key, out var st);
 
                         // Single-pass status count
-                        int openCount = 0, ackCount = 0, resolvedCount = 0, dismissedCount = 0;
+                        int openCount = 0,
+                            ackCount = 0,
+                            resolvedCount = 0,
+                            dismissedCount = 0;
                         var resolvedItems = new List<AlertFrequencyProjection>();
 
                         foreach (var item in items)
                         {
                             switch (item.Status)
                             {
-                                case AlertStatus.OPEN:         openCount++;         break;
-                                case AlertStatus.ACKNOWLEDGED: ackCount++;          break;
-                                case AlertStatus.RESOLVED:     resolvedCount++;     break;
-                                case AlertStatus.DISMISSED:    dismissedCount++;    break;
+                                case AlertStatus.OPEN:
+                                    openCount++;
+                                    break;
+                                case AlertStatus.ACKNOWLEDGED:
+                                    ackCount++;
+                                    break;
+                                case AlertStatus.RESOLVED:
+                                    resolvedCount++;
+                                    break;
+                                case AlertStatus.DISMISSED:
+                                    dismissedCount++;
+                                    break;
                             }
                             if (item.Status == AlertStatus.RESOLVED && item.ResolvedAt.HasValue)
                                 resolvedItems.Add(item);
                         }
 
                         // Average resolution time (minutes) for RESOLVED alerts only
-                        double? avgResolutionMinutes = resolvedItems.Count > 0
-                            ? Math.Round(
-                                resolvedItems.Average(i =>
-                                    (i.ResolvedAt!.Value - i.RaisedAt).TotalMinutes
-                                ),
-                                2
-                            )
-                            : null;
+                        double? avgResolutionMinutes =
+                            resolvedItems.Count > 0
+                                ? Math.Round(
+                                    resolvedItems.Average(i =>
+                                        (i.ResolvedAt!.Value - i.RaisedAt).TotalMinutes
+                                    ),
+                                    2
+                                )
+                                : null;
 
                         // Top tanks with most alerts of this type (top 5)
                         var topTanks = items
@@ -546,11 +622,7 @@ namespace IRasRag.Application.Services.Implementations
                 // ── 6. Daily trend ─────────────────────────────────────────────────
                 var dailyTrend = projections
                     .GroupBy(p => p.RaisedAt.Date)
-                    .Select(g => new DailyAlertTrendDto
-                    {
-                        Date = g.Key,
-                        Count = g.Count(),
-                    })
+                    .Select(g => new DailyAlertTrendDto { Date = g.Key, Count = g.Count() })
                     .OrderBy(d => d.Date)
                     .ToList();
 
@@ -601,27 +673,5 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
-
-        // ── User Scope Helper ─────────────────────────────────────────────────
-
-        /// <summary>
-        /// Trả về tập hợp FishTankId mà user được phép truy cập.
-        /// Đường đi: User → UserFarm → Farm → FishTank
-        /// </summary>
-        private async Task<HashSet<Guid>> GetUserTankIdsAsync(Guid userId)
-        {
-            var userFarmRepo = _unitOfWork.GetRepository<UserFarm>();
-            var farmIds = (await userFarmRepo.FindAllAsync(uf => uf.UserId == userId))
-                .Select(uf => uf.FarmId)
-                .ToHashSet();
-
-            if (farmIds.Count == 0)
-                return new HashSet<Guid>();
-
-            var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-            return (await fishTankRepo.FindAllAsync(t => farmIds.Contains(t.FarmId)))
-                .Select(t => t.Id)
-                .ToHashSet();
-        }
     }
 }

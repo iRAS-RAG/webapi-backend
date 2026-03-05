@@ -18,13 +18,16 @@ namespace IRasRag.Application.Specifications.AnalyticsSpecifications
             DateTime to,
             IEnumerable<Guid> userTankIds,
             Guid? fishTankId,
-            Guid? farmId)
+            Guid? farmId
+        )
         {
             var tankSet = userTankIds is HashSet<Guid> hs ? hs : userTankIds.ToHashSet();
 
             Query
                 .AsNoTracking()
-                .Where(a => tankSet.Contains(a.FishTankId) && a.RaisedAt >= from && a.RaisedAt <= to);
+                .Where(a =>
+                    tankSet.Contains(a.FishTankId) && a.RaisedAt >= from && a.RaisedAt <= to
+                );
 
             if (fishTankId.HasValue)
                 Query.Where(a => a.FishTankId == fishTankId.Value);

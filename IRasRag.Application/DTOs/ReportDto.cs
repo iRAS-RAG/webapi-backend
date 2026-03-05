@@ -1,17 +1,18 @@
 using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs
 {
     /// <summary>
     /// Query parameters for the dashboard endpoint.
-    /// period: today | week | month | year (default: month)
+    /// period: TODAY | WEEK | MONTH | YEAR (default: MONTH)
     /// </summary>
     public class DashboardQueryRequest
     {
         /// <summary>
-        /// Khoảng thời gian thống kê: today, week, month, year. Mặc định: month.
+        /// Khoảng thời gian thống kê: TODAY, WEEK, MONTH, YEAR. Mặc định: MONTH.
         /// </summary>
-        public string Period { get; set; } = "month";
+        public ReportPeriod Period { get; set; } = ReportPeriod.MONTH;
 
         /// <summary>
         /// ID của user hiện tại, được set bởi Controller từ JWT claims.

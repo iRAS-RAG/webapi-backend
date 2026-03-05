@@ -105,7 +105,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
-                var mortalityLogDto = await mortalityLogRepository.FirstOrDefaultAsync(new MortalityLogDtoByIdSpec(id));
+                var mortalityLogDto = await mortalityLogRepository.FirstOrDefaultAsync(
+                    new MortalityLogDtoByIdSpec(id)
+                );
 
                 if (mortalityLogDto == null)
                 {

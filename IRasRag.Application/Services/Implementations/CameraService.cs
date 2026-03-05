@@ -97,7 +97,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var cameraRepository = _unitOfWork.GetRepository<Camera>();
-                var cameraDto = await cameraRepository.FirstOrDefaultAsync(new CameraDtoByIdSpec(id));
+                var cameraDto = await cameraRepository.FirstOrDefaultAsync(
+                    new CameraDtoByIdSpec(id)
+                );
 
                 if (cameraDto == null)
                 {

@@ -19,7 +19,8 @@ namespace IRasRag.API.Controllers
         public ReportController(
             IReportService reportService,
             ILogger<ReportController> logger,
-            HttpContextUtils httpContextUtils)
+            HttpContextUtils httpContextUtils
+        )
         {
             _reportService = reportService;
             _logger = logger;
@@ -33,6 +34,7 @@ namespace IRasRag.API.Controllers
         /// period: today | week | month | year (mặc định: month)
         /// </param>
         [HttpGet("dashboard")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetDashboardSummary(
             [FromQuery] DashboardQueryRequest request
         )
@@ -46,7 +48,10 @@ namespace IRasRag.API.Controllers
 
             try
             {
-                _logger.LogInformation("Dashboard summary requested with period: {Period}", request.Period);
+                _logger.LogInformation(
+                    "Dashboard summary requested with period: {Period}",
+                    request.Period
+                );
 
                 var result = await _reportService.GetDashboardSummaryAsync(request);
 
@@ -59,10 +64,15 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching dashboard summary for period: {Period}", request.Period);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while fetching dashboard summary for period: {Period}",
+                    request.Period
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
+
         /// <summary>
         /// Lấy báo cáo tuần tự động dành cho Supervisor (F10).
         /// Tổng hợp cảnh báo, vấn đề chính, hành động khắc phục, khuyến nghị đã dùng và sức khỏe lô nuôi.
@@ -71,6 +81,7 @@ namespace IRasRag.API.Controllers
         /// period: current | last | số tuần lùi (mặc định: current)
         /// </param>
         [HttpGet("weekly")]
+        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetWeeklyReport(
             [FromQuery] WeeklyReportQueryRequest request
         )
@@ -84,7 +95,10 @@ namespace IRasRag.API.Controllers
 
             try
             {
-                _logger.LogInformation("Weekly report requested with period: {Period}", request.Period);
+                _logger.LogInformation(
+                    "Weekly report requested with period: {Period}",
+                    request.Period
+                );
 
                 var result = await _reportService.GetWeeklyReportAsync(request);
 
@@ -97,7 +111,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while generating weekly report for period: {Period}", request.Period);
+                _logger.LogError(
+                    ex,
+                    "An error occurred while generating weekly report for period: {Period}",
+                    request.Period
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

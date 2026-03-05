@@ -93,7 +93,9 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy bảng mạch với Id: {Id}", id);
 
                 var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
-                var masterBoardDto = await masterBoardRepository.FirstOrDefaultAsync(new MasterBoardDtoByIdSpec(id));
+                var masterBoardDto = await masterBoardRepository.FirstOrDefaultAsync(
+                    new MasterBoardDtoByIdSpec(id)
+                );
 
                 if (masterBoardDto == null)
                 {
