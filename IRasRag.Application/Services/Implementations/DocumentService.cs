@@ -254,11 +254,19 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy tài liệu", ResultType.NotFound);
                 }
 
-                // Update Content if provided
-                if (!string.IsNullOrWhiteSpace(updateDto.Content))
+                // Update Title if provided
+                if (string.IsNullOrWhiteSpace(updateDto.Title))
                 {
-                    document.Content = updateDto.Content.Trim();
+                    return Result.Failure("Tiêu đề không được để trống", ResultType.BadRequest);
                 }
+
+                var titleExists = await documentRepository.AnyAsync(d => d.Title == updateDto.Title.Trim() && d.Id != id);
+                if (titleExists)
+                {
+                    return Result.Failure("Tài liệu với tiêu đề này đã tồn tại", ResultType.Conflict);
+                }
+
+                document.Title = updateDto.Title.Trim();
 
                 documentRepository.Update(document);
                 await _unitOfWork.SaveChangesAsync();

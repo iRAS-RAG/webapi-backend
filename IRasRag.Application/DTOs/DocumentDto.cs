@@ -44,7 +44,8 @@ namespace IRasRag.Application.DTOs
     // Update DTO
     public class UpdateDocumentDto
     {
-        public string? Content { get; set; }
+        [Required]
+        public string Title { get; set; }
     }
 
     // List Request DTO

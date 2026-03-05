@@ -92,7 +92,7 @@ namespace IRasRag.API.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateDocument(IFormFile file)
+        public async Task<IActionResult> CreateDocument([FromForm] IFormFile file, [FromForm] string title)
         {
 
             if (!ModelState.IsValid)
@@ -100,6 +100,11 @@ namespace IRasRag.API.Controllers
                 return BadRequest(
                     new { Message = "Dữ liệu không hợp lệ", Errors = ModelState }
                 );
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return BadRequest(new { Message = "Tiêu đề không được để trống" });
             }
 
             var userId = _httpContextUtils.GetUserId();
@@ -111,7 +116,7 @@ namespace IRasRag.API.Controllers
             var fileStream = file.OpenReadStream();
             var fileName = file.FileName;
             var fileSize = file.Length;
-            var fileTitle = Path.GetFileNameWithoutExtension(fileName);
+            var fileTitle = title.Trim();
 
             var dto = new CreateDocumentDto
             {
