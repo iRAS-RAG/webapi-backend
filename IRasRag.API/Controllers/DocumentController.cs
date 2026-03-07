@@ -90,19 +90,27 @@ namespace IRasRag.API.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateDocument(
-            [FromForm] IFormFile file,
-            [FromForm] string title
-        )
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateDocument([FromForm] CreateDocumentDto dto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
             }
 
-            if (string.IsNullOrWhiteSpace(title))
+            if (dto == null || string.IsNullOrWhiteSpace(dto.FileTitle))
             {
-                return BadRequest(new { Message = "Tiêu đề không được để trống" });
+                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
+            }
+
+            var file =
+                Request.Form?.Files != null && Request.Form.Files.Count > 0
+                    ? Request.Form.Files[0]
+                    : null;
+
+            if (file == null)
+            {
+                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
             }
 
             var userId = _httpContextUtils.GetUserId();
@@ -111,19 +119,12 @@ namespace IRasRag.API.Controllers
                 return Unauthorized(new { Message = "Không xác thực được người dùng" });
             }
 
-            var fileStream = file.OpenReadStream();
-            var fileName = file.FileName;
-            var fileSize = file.Length;
-            var fileTitle = title.Trim();
+            dto.FileStream = file.OpenReadStream();
+            dto.FileName = file.FileName;
+            dto.FileSize = file.Length;
+            dto.UploadedByUserId = userId.Value;
+            dto.FileTitle = dto.FileTitle?.Trim() ?? string.Empty;
 
-            var dto = new CreateDocumentDto
-            {
-                FileStream = fileStream,
-                FileName = fileName,
-                FileSize = fileSize,
-                FileTitle = fileTitle,
-                UploadedByUserId = userId.Value,
-            };
             var result = await _documentService.CreateDocumentAsync(dto);
 
             return result.Type switch
