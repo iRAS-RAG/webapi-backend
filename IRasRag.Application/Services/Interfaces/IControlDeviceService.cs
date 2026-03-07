@@ -13,6 +13,9 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result<ControlDeviceDto>> CreateControlDeviceAsync(CreateControlDeviceDto createDto);
         Task<Result> UpdateControlDeviceAsync(Guid id, UpdateControlDeviceDto updateDto);
         Task<Result> DeleteControlDeviceAsync(Guid id);
-        Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(Guid id, ToggleControlDeviceDto toggleDto);
+        Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(
+            Guid id,
+            ToggleControlDeviceDto toggleDto
+        );
     }
 }

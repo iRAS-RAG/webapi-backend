@@ -166,7 +166,9 @@ namespace IRasRag.Application.Services.Implementations
                 await userFarmRepo.AddAsync(userFarm);
                 await _unitOfWork.SaveChangesAsync();
 
-                var userFarmDto = await userFarmRepo.FirstOrDefaultAsync(new UserFarmDtoByIdSpec(userFarm.Id));
+                var userFarmDto = await userFarmRepo.FirstOrDefaultAsync(
+                    new UserFarmDtoByIdSpec(userFarm.Id)
+                );
 
                 return Result<UserFarmDto>.Success(
                     userFarmDto!,

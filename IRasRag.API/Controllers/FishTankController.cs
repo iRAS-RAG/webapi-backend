@@ -143,7 +143,7 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
- 
+
         /// <summary>
         /// Lấy dữ liệu cảm biến mới nhất của bể cá theo ID.
         /// Trả về danh sách các cảm biến cùng với giá trị đo gần nhất, loại cảm biến và trạng thái cảnh báo.
@@ -170,7 +170,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến mới nhất của bể với ID: {TankId}", id);
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến mới nhất của bể với ID: {TankId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -214,7 +218,10 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(
-                    ex,"Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}", id);
+                    ex,
+                    "Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

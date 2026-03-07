@@ -8,7 +8,8 @@ namespace IRasRag.Application.Specifications.JobControlMappingSpecifications
     /// Specification chiếu một JobControlMapping theo Id thành JobControlMappingDto,
     /// bao gồm cả thông tin Job và ControlDevice.
     /// </summary>
-    public class JobControlMappingDtoByIdSpec : Specification<JobControlMapping, JobControlMappingDto>
+    public class JobControlMappingDtoByIdSpec
+        : Specification<JobControlMapping, JobControlMappingDto>
     {
         public JobControlMappingDtoByIdSpec(Guid id)
         {

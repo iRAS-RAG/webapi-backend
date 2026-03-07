@@ -1,5 +1,4 @@
-﻿
-namespace IRasRag.Application.Common.Interfaces.Cloudinary
+﻿namespace IRasRag.Application.Common.Interfaces.Cloudinary
 {
     public interface ICloudFileStorageService
     {

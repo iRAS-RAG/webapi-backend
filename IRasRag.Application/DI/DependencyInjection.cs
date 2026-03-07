@@ -19,8 +19,10 @@ namespace IRasRag.Application.DI
 
         public static void AddServices(this IServiceCollection services)
         {
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<IAlertService, AlertService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IReportService, ReportService>();
             services.AddScoped<ICameraService, CameraService>();
             services.AddScoped<IControlDeviceService, ControlDeviceService>();
             services.AddScoped<IControlDeviceTypeService, ControlDeviceTypeService>();

@@ -31,9 +31,7 @@ namespace IRasRag.API.Controllers
         /// Lấy danh sách tất cả tài liệu
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllDocuments(
-            [FromQuery] DocumentListRequest request
-        )
+        public async Task<IActionResult> GetAllDocuments([FromQuery] DocumentListRequest request)
         {
             try
             {
@@ -92,14 +90,14 @@ namespace IRasRag.API.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateDocument([FromForm] IFormFile file, [FromForm] string title)
+        public async Task<IActionResult> CreateDocument(
+            [FromForm] IFormFile file,
+            [FromForm] string title
+        )
         {
-
             if (!ModelState.IsValid)
             {
-                return BadRequest(
-                    new { Message = "Dữ liệu không hợp lệ", Errors = ModelState }
-                );
+                return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
             }
 
             if (string.IsNullOrWhiteSpace(title))
@@ -124,7 +122,7 @@ namespace IRasRag.API.Controllers
                 FileName = fileName,
                 FileSize = fileSize,
                 FileTitle = fileTitle,
-                UploadedByUserId = userId.Value
+                UploadedByUserId = userId.Value,
             };
             var result = await _documentService.CreateDocumentAsync(dto);
 

@@ -12,9 +12,7 @@ namespace IRasRag.Infrastructure.Services.TextExtractors
         {
             using var document = PdfDocument.Open(pdfStream);
 
-            var text = string.Join(
-                Environment.NewLine,
-                document.GetPages().Select(p => p.Text));
+            var text = string.Join(Environment.NewLine, document.GetPages().Select(p => p.Text));
             return text;
         }
     }

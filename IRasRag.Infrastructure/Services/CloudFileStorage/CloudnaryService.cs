@@ -1,11 +1,11 @@
-﻿using IRasRag.Application.Common.Interfaces.Cloudinary;
+﻿using System.Text;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using Microsoft.Extensions.Logging;
-using IRasRag.Infrastructure.Settings;
-using Microsoft.Extensions.Options;
-using System.Text;
 using Hangfire;
+using IRasRag.Application.Common.Interfaces.Cloudinary;
+using IRasRag.Infrastructure.Settings;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace IRasRag.Infrastructure.Services.CloudFileStorage
 {
@@ -15,7 +15,10 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
         private readonly ILogger<CloudnaryService> _logger;
         private readonly CloudinarySettings _settings;
 
-        public CloudnaryService(IOptions<CloudinarySettings> settings ,ILogger<CloudnaryService> logger)
+        public CloudnaryService(
+            IOptions<CloudinarySettings> settings,
+            ILogger<CloudnaryService> logger
+        )
         {
             _settings = settings.Value;
             _logger = logger;
@@ -25,10 +28,7 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
             _cloudinary.Api.Secure = true; //use HTTPS
         }
 
-        public async Task<string?> UploadAsync(
-            Stream fileStream,
-            string fileName,
-            long fileSize)
+        public async Task<string?> UploadAsync(Stream fileStream, string fileName, long fileSize)
         {
             try
             {
@@ -51,7 +51,9 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
 
                 _logger.LogInformation(
                     "File '{FileName}' uploaded successfully. URL: {Url}",
-                    fileName, result.SecureUrl);
+                    fileName,
+                    result.SecureUrl
+                );
 
                 return result.SecureUrl.ToString();
             }
@@ -80,10 +82,7 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
                     return false;
                 }
 
-                var deleteParams = new DeletionParams(publicId)
-                {
-                    ResourceType = ResourceType.Raw
-                };
+                var deleteParams = new DeletionParams(publicId) { ResourceType = ResourceType.Raw };
 
                 var result = await _cloudinary.DestroyAsync(deleteParams);
 
@@ -91,13 +90,17 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
                 {
                     _logger.LogInformation(
                         "File with public ID '{PublicId}' deleted (result: {Result}).",
-                        publicId, result.Result);
+                        publicId,
+                        result.Result
+                    );
                     return true;
                 }
 
                 _logger.LogWarning(
                     "Cloudinary delete returned unexpected result '{Result}' for public ID '{PublicId}'.",
-                    result.Result, publicId);
+                    result.Result,
+                    publicId
+                );
                 return false;
             }
             catch (Exception ex)
@@ -115,7 +118,8 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
         {
             const string uploadSegment = "/upload/";
             var uploadIndex = fileUrl.IndexOf(uploadSegment, StringComparison.OrdinalIgnoreCase);
-            if (uploadIndex < 0) return string.Empty;
+            if (uploadIndex < 0)
+                return string.Empty;
 
             var afterUpload = fileUrl[(uploadIndex + uploadSegment.Length)..];
 

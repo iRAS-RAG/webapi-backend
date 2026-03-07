@@ -88,7 +88,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
 
-                var thresholdDto = await _unitOfWork.GetRepository<SpeciesThreshold>().FirstOrDefaultAsync(new SpeciesThresholdByIdSpec(newThreshold.Id));
+                var thresholdDto = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(new SpeciesThresholdByIdSpec(newThreshold.Id));
                 return Result<SpeciesThresholdDto>.Success(
                     thresholdDto!,
                     "Tạo ngưỡng sinh trưởng thành công."

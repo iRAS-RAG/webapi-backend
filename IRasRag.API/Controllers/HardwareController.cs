@@ -578,7 +578,10 @@ namespace IRasRag.API.Controllers
         /// </summary>
         [HttpPost("control-devices/{id}/toggle")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> ToggleControlDevice(Guid id,[FromBody] ToggleControlDeviceDto dto)
+        public async Task<IActionResult> ToggleControlDevice(
+            Guid id,
+            [FromBody] ToggleControlDeviceDto dto
+        )
         {
             try
             {

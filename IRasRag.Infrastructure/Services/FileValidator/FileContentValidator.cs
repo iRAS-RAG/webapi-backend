@@ -1,8 +1,8 @@
-﻿using IRasRag.Application.Common.Interfaces.FileValidator;
+﻿using System.IO.Compression;
+using System.Text;
+using IRasRag.Application.Common.Interfaces.FileValidator;
 using Microsoft.Extensions.Logging;
 using MimeKit;
-using System.IO.Compression;
-using System.Text;
 
 namespace IRasRag.Infrastructure.Services.FileValidator
 {
@@ -19,7 +19,6 @@ namespace IRasRag.Infrastructure.Services.FileValidator
         private static readonly byte[] _zipSignature = { 0x50, 0x4B, 0x03, 0x04 };
 
         private const long MaxFileSizeBytes = 50L * 1024 * 1024; // 50 MB
-
 
         public bool HasValidSize(long fileSize)
         {
@@ -45,11 +44,17 @@ namespace IRasRag.Infrastructure.Services.FileValidator
                 stream.Position = 0;
                 try
                 {
-                    using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+                    using var archive = new ZipArchive(
+                        stream,
+                        ZipArchiveMode.Read,
+                        leaveOpen: true
+                    );
 
                     // True DOCX must contain Word main document part
-                    if (archive.GetEntry("word/document.xml") != null &&
-                        archive.GetEntry("[Content_Types].xml") != null)
+                    if (
+                        archive.GetEntry("word/document.xml") != null
+                        && archive.GetEntry("[Content_Types].xml") != null
+                    )
                     {
                         return ".docx";
                     }

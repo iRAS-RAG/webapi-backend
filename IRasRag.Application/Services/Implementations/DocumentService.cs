@@ -23,6 +23,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IFileContentValidator _fileContentValidator;
         private readonly ICloudFileStorageService _cloudFileStorageService;
+
         //private readonly IFileTextExtractor _pdfTextExtractor;
         private readonly IFileTextExtractorResolver _fileTextExtractorResolver;
         private readonly IBackgroundJobService _backgroundJobService;
@@ -47,13 +48,19 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(DocumentListRequest request)
+        public async Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(
+            DocumentListRequest request
+        )
         {
             try
             {
                 var documentRepository = _unitOfWork.GetRepository<Document>();
                 var spec = new DocumentDtoListSpec(request);
-                var pagedResult = await documentRepository.GetPagedAsync(spec, request.Page, request.PageSize);
+                var pagedResult = await documentRepository.GetPagedAsync(
+                    spec,
+                    request.Page,
+                    request.PageSize
+                );
 
                 _logger.LogInformation(
                     "Lấy danh sách tài liệu thành công: {Count} tài liệu",
@@ -99,7 +106,9 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogInformation("Bắt đầu lấy tài liệu với Id: {Id}", id);
 
-                var document = await _unitOfWork.GetRepository<Document>().FirstOrDefaultAsync(new DocumentDtoByIdSpec(id));
+                var document = await _unitOfWork
+                    .GetRepository<Document>()
+                    .FirstOrDefaultAsync(new DocumentDtoByIdSpec(id));
 
                 if (document == null)
                 {
@@ -109,7 +118,6 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
                 }
-
 
                 return Result<DocumentDetailDto>.Success(
                     document,
@@ -133,36 +141,34 @@ namespace IRasRag.Application.Services.Implementations
             if (string.IsNullOrWhiteSpace(dto.FileTitle))
             {
                 _logger.LogWarning("Tiêu đề không được để trống");
-                return Result.Failure(
-                    "Tiêu đề không được để trống",
-                    ResultType.BadRequest
-                );
+                return Result.Failure("Tiêu đề không được để trống", ResultType.BadRequest);
             }
 
-            var exists = await _unitOfWork.GetRepository<Document>()
+            var exists = await _unitOfWork
+                .GetRepository<Document>()
                 .AnyAsync(d => d.Title == dto.FileTitle);
-            if (exists) return Result.Failure("Tài liệu đã tồn tại", ResultType.Conflict);
+            if (exists)
+                return Result.Failure("Tài liệu đã tồn tại", ResultType.Conflict);
 
             if (_fileContentValidator.HasValidSize(dto.FileSize) == false)
             {
-                _logger.LogWarning("Kích thước tệp vượt quá giới hạn: {FileSize} bytes", dto.FileSize);
-                return Result.Failure(
-                    "Kích thước tệp vượt quá giới hạn",
-                    ResultType.BadRequest
+                _logger.LogWarning(
+                    "Kích thước tệp vượt quá giới hạn: {FileSize} bytes",
+                    dto.FileSize
                 );
+                return Result.Failure("Kích thước tệp vượt quá giới hạn", ResultType.BadRequest);
             }
 
-            var isUserExists = await _unitOfWork.GetRepository<User>().AnyAsync(u => u.Id == dto.UploadedByUserId);
+            var isUserExists = await _unitOfWork
+                .GetRepository<User>()
+                .AnyAsync(u => u.Id == dto.UploadedByUserId);
             if (!isUserExists)
             {
                 _logger.LogWarning(
                     "Không tìm thấy người dùng với Id: {UserId}",
                     dto.UploadedByUserId
                 );
-                return Result.Failure(
-                    "Không tìm thấy người dùng",
-                    ResultType.NotFound
-                );
+                return Result.Failure("Không tìm thấy người dùng", ResultType.NotFound);
             }
 
             // Create a copy of the file stream to avoid issues with stream position during upload and text extraction
@@ -173,10 +179,7 @@ namespace IRasRag.Application.Services.Implementations
             var fileExtension = _fileContentValidator.DetectExtension(buffer);
             if (fileExtension == null)
             {
-                _logger.LogWarning(
-                    "Định dạng tệp không hợp lệ: {FileName}",
-                    dto.FileName
-                );
+                _logger.LogWarning("Định dạng tệp không hợp lệ: {FileName}", dto.FileName);
                 return Result.Failure(
                     "Định dạng tệp không hợp lệ, hiện tại chỉ hỗ trợ PDF và Docx",
                     ResultType.BadRequest
@@ -188,11 +191,19 @@ namespace IRasRag.Application.Services.Implementations
             try
             {
                 buffer.Position = 0;
-                fileUrl = await _cloudFileStorageService.UploadAsync(buffer, dto.FileName, dto.FileSize);
+                fileUrl = await _cloudFileStorageService.UploadAsync(
+                    buffer,
+                    dto.FileName,
+                    dto.FileSize
+                );
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Lỗi khi tải tệp lên dịch vụ lưu trữ đám mây: {Message}", ex.Message);
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi tải tệp lên dịch vụ lưu trữ đám mây: {Message}",
+                    ex.Message
+                );
                 return Result.Failure(
                     "Đã xảy ra lỗi khi tải tệp lên dịch vụ lưu trữ đám mây",
                     ResultType.Unexpected
@@ -204,7 +215,10 @@ namespace IRasRag.Application.Services.Implementations
             var content = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
             if (string.IsNullOrWhiteSpace(content))
             {
-                return Result.Failure("Không thể trích xuất nội dung từ tệp", ResultType.BadRequest);
+                return Result.Failure(
+                    "Không thể trích xuất nội dung từ tệp",
+                    ResultType.BadRequest
+                );
             }
 
             var document = new Document
@@ -213,26 +227,23 @@ namespace IRasRag.Application.Services.Implementations
                 Content = content,
                 UploadedByUserId = dto.UploadedByUserId,
                 UploadedAt = DateTime.UtcNow,
-                FileUrl = fileUrl
+                FileUrl = fileUrl,
             };
 
             try
             {
                 await _unitOfWork.GetRepository<Document>().AddAsync(document);
                 await _unitOfWork.SaveChangesAsync();
-                return Result.Success(
-                    "Tạo tài liệu thành công"
-                );
+                return Result.Success("Tạo tài liệu thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi bắt đầu giao dịch tạo tài liệu");
                 // delete file from cloud storage if database operation fails
-                _backgroundJobService.Enqueue<ICloudFileStorageService>(service => service.DeleteAsync(fileUrl));
-                return Result.Failure(
-                    "Đã xảy ra lỗi khi tạo tài liệu",
-                    ResultType.Unexpected
+                _backgroundJobService.Enqueue<ICloudFileStorageService>(service =>
+                    service.DeleteAsync(fileUrl)
                 );
+                return Result.Failure("Đã xảy ra lỗi khi tạo tài liệu", ResultType.Unexpected);
             }
         }
 
@@ -260,10 +271,15 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Tiêu đề không được để trống", ResultType.BadRequest);
                 }
 
-                var titleExists = await documentRepository.AnyAsync(d => d.Title == updateDto.Title.Trim() && d.Id != id);
+                var titleExists = await documentRepository.AnyAsync(d =>
+                    d.Title == updateDto.Title.Trim() && d.Id != id
+                );
                 if (titleExists)
                 {
-                    return Result.Failure("Tài liệu với tiêu đề này đã tồn tại", ResultType.Conflict);
+                    return Result.Failure(
+                        "Tài liệu với tiêu đề này đã tồn tại",
+                        ResultType.Conflict
+                    );
                 }
 
                 document.Title = updateDto.Title.Trim();
@@ -318,7 +334,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 documentRepository.Delete(document);
                 await _unitOfWork.SaveChangesAsync();
-                _backgroundJobService.Enqueue<ICloudFileStorageService>(service => service.DeleteAsync(document.FileUrl));
+                _backgroundJobService.Enqueue<ICloudFileStorageService>(service =>
+                    service.DeleteAsync(document.FileUrl)
+                );
 
                 _logger.LogInformation("Xóa tài liệu thành công với Id: {Id}", id);
                 return Result.Success("Xóa tài liệu thành công");
