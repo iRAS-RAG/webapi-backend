@@ -24,7 +24,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
         {
             try
@@ -74,7 +74,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetFishTankById(Guid id)
         {
             try
@@ -99,7 +98,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
         {
             try
@@ -227,7 +226,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteFishTank(Guid id)
         {
             try

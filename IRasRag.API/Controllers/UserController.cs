@@ -72,7 +72,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Supervisor")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers([FromQuery] UserListRequest request)
         {
@@ -101,6 +101,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             try
@@ -124,7 +125,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Supervisor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
         {
@@ -147,7 +148,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Supervisor")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
