@@ -11,6 +11,10 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result<SensorDto>> CreateSensorAsync(CreateSensorDto createDto);
         Task<Result> UpdateSensorAsync(Guid id, UpdateSensorDto updateDto);
         Task<Result> DeleteSensorAsync(Guid id);
+        Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsAsync(
+            Guid sensorId,
+            SensorLogListRequest request
+        );
         Task<Result<SensorHistoryDto>> GetSensorHistoryAsync(
             Guid sensorId,
             DateTime from,

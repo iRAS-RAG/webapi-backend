@@ -703,6 +703,8 @@ namespace IRasRag.Application.Services.Implementations
                     pagedResult,
                     pagedResult.Message
                 );
+
+                return Result<PaginatedResult<SensorLogDto>>.Success(pagedResult, pagedResult.Message);
             }
             catch (Exception ex)
             {

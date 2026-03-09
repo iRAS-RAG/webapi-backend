@@ -66,7 +66,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetSensorTypeById(Guid id)
         {
             try
@@ -92,7 +91,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("sensor-types")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> CreateSensorType([FromBody] CreateSensorTypeDto dto)
         {
             try
@@ -118,7 +117,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> UpdateSensorType(
             Guid id,
             [FromBody] UpdateSensorTypeDto dto
@@ -148,7 +147,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> DeleteSensorType(Guid id)
         {
             try
@@ -203,7 +202,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetSensorById(Guid id)
         {
             try
@@ -225,6 +223,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("sensors")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateSensor([FromBody] CreateSensorDto dto)
         {
             try
@@ -284,7 +283,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSensor(Guid id, [FromBody] UpdateSensorDto dto)
         {
             try
@@ -307,7 +306,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSensor(Guid id)
         {
             try
@@ -361,7 +360,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetMasterBoardById(Guid id)
         {
             try
@@ -387,6 +385,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("masterboards")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateMasterBoard([FromBody] CreateMasterBoardDto dto)
         {
             try
@@ -412,7 +411,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateMasterBoard(
             Guid id,
             [FromBody] UpdateMasterBoardDto dto
@@ -442,7 +441,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteMasterBoard(Guid id)
         {
             try
@@ -525,6 +524,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("control-devices")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateControlDevice([FromBody] CreateControlDeviceDto dto)
         {
             try
@@ -550,7 +550,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("control-devices/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateControlDevice(
             Guid id,
             [FromBody] UpdateControlDeviceDto dto
@@ -580,7 +580,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("control-devices/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteControlDevice(Guid id)
         {
             try
@@ -610,7 +610,7 @@ namespace IRasRag.API.Controllers
         /// Manual Override: Bật/tắt thiết bị điều khiển theo yêu cầu thủ công.
         /// </summary>
         [HttpPost("control-devices/{id}/toggle")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Operator")]
         public async Task<IActionResult> ToggleControlDevice(
             Guid id,
             [FromBody] ToggleControlDeviceDto dto
@@ -666,7 +666,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetControlDeviceTypeById(Guid id)
         {
             try
@@ -692,7 +691,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("control-device-types")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateControlDeviceType(
             [FromBody] CreateControlDeviceTypeDto dto
         )
@@ -720,7 +719,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateControlDeviceType(
             Guid id,
             [FromBody] UpdateControlDeviceTypeDto dto
@@ -750,7 +749,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteControlDeviceType(Guid id)
         {
             try

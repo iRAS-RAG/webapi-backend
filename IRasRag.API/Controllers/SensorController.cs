@@ -76,6 +76,11 @@ namespace IRasRag.API.Controllers
                     "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
                     id
                 );
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

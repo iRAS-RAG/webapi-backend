@@ -5,13 +5,13 @@ using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.AlertSpecifications
 {
-    public class AlertDtoFilteredDtoSpec : Specification<Alert, AlertDto>
+    public class AlertDtoByIdSpec : Specification<Alert, AlertDto>
     {
-        public AlertDtoFilteredDtoSpec(Expression<Func<Alert, bool>> predicate)
+        public AlertDtoByIdSpec(Guid id)
         {
             Query
                 .AsNoTracking()
-                .Where(predicate)
+                .Where(a => a.Id == id)
                 .Select(a => new AlertDto
                 {
                     Id = a.Id,

@@ -199,7 +199,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var alertDto = await _unitOfWork
                     .GetRepository<Alert>()
-                    .FirstOrDefaultAsync(new AlertDtoFilteredDtoSpec(a => a.Id == alert.Id));
+                    .FirstOrDefaultAsync(new AlertDtoByIdSpec(alert.Id));
                 return Result<AlertDto>.Success(alertDto!, "Tạo cảnh báo thành công");
             }
             catch (Exception ex)

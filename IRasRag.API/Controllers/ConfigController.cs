@@ -357,7 +357,7 @@ namespace IRasRag.API.Controllers
         }
 
         [Authorize(Roles = "Supervisor")]
-        [HttpPost("feeding-schedule")]
+        [HttpPost("species-stage-configs")]
         public async Task<IActionResult> CreateSpeciesStageConfig(
             [FromBody] CreateSpeciesStageConfigDto dto
         )

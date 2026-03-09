@@ -90,9 +90,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var thresholdDto = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(
-                        new SpeciesThresholdFilteredDtoSpec(st => st.Id == newThreshold.Id)
-                    );
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByFilterSpec(st => st.Id == newThreshold.Id));
                 return Result<SpeciesThresholdDto>.Success(
                     thresholdDto!,
                     "Tạo ngưỡng sinh trưởng thành công."
@@ -134,7 +132,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(new SpeciesThresholdFilteredDtoSpec(st => st.Id == id));
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByFilterSpec(st => st.Id == id));
 
                 if (threshold == null)
                     return Result<SpeciesThresholdDto>.Failure(
@@ -164,7 +162,7 @@ namespace IRasRag.Application.Services.Implementations
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
                     .FirstOrDefaultAsync(
-                        new SpeciesThresholdFilteredDtoSpec(st => st.Species.Id == speciesId)
+                        new SpeciesThresholdDtoByFilterSpec(st => st.Species.Id == speciesId)
                     );
 
                 if (threshold == null)

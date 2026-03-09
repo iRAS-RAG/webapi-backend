@@ -5,10 +5,10 @@ using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
 {
-    public class SpeciesThresholdFilteredDtoSpec
+    public class SpeciesThresholdDtoByFilterSpec
         : Specification<SpeciesThreshold, SpeciesThresholdDto>
     {
-        public SpeciesThresholdFilteredDtoSpec(Expression<Func<SpeciesThreshold, bool>> predicate)
+        public SpeciesThresholdDtoByFilterSpec(Expression<Func<SpeciesThreshold, bool>> predicate)
         {
             Query
                 .AsNoTracking()

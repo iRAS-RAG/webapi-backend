@@ -351,7 +351,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -371,7 +371,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -390,7 +390,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdFilteredDtoSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
