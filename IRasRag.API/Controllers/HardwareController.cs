@@ -328,6 +328,63 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("sensors/{id}/logs")]
+        public async Task<IActionResult> GetSensorLogs(
+            Guid id,
+            [FromQuery] SensorLogListRequest request
+        )
+        {
+            try
+            {
+                var result = await _sensorService.GetSensorLogsAsync(id, request);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(result.Data),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("sensors/{id}/logs")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateSensorLog(
+            Guid id,
+            [FromBody] CreateSensorLogDto dto
+        )
+        {
+            try
+            {
+                var result = await _sensorService.CreateSensorLogAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         #endregion
 
         #region Master Boards

@@ -22,15 +22,5 @@ namespace IRasRag.Application.Services.Interfaces
             int interval
         );
         Task<Result<SensorLogDto>> CreateSensorLogAsync(Guid sensorId, CreateSensorLogDto dto);
-        Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsAsync(
-            Guid sensorId,
-            SensorLogListRequest request
-        );
-
-        /// <summary>Legacy: aggregates in-memory. Use for comparison testing against GetSensorLogsAsync.</summary>
-        Task<Result<PaginatedResult<SensorLogDto>>> GetSensorLogsLegacyAsync(
-            Guid sensorId,
-            SensorLogListRequest request
-        );
     }
 }

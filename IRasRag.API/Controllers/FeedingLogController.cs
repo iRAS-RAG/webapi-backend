@@ -105,7 +105,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFeedingLog(
             Guid id,
@@ -135,7 +135,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFeedingLog(Guid id)
         {

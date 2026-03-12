@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Ardalis.Specification;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
@@ -87,7 +88,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new List<UserFarm>
+                    (IReadOnlyList<UserFarm>)new List<UserFarm>
                     {
                         new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() },
                     }
@@ -102,7 +103,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<FishTank>());
+                .ReturnsAsync((IReadOnlyList<FishTank>)new List<FishTank>());
 
             _sut = new AnalyticsService(_unitOfWorkMock.Object, _loggerMock.Object);
         }
@@ -113,7 +114,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             _sensorTypeRepoMock
                 .Setup(r => r.GetAllAsync(It.IsAny<QueryType>()))
-                .ReturnsAsync(types ?? new List<SensorType>());
+                .ReturnsAsync((IReadOnlyList<SensorType>)(types?.ToList() ?? new List<SensorType>()));
         }
 
         private void SetupDefaultAlertRepo()
@@ -122,7 +123,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r =>
                     r.FindAllAsync(It.IsAny<Expression<Func<Alert, bool>>>(), It.IsAny<QueryType>())
                 )
-                .ReturnsAsync(new List<Alert>());
+                .ReturnsAsync((IReadOnlyList<Alert>)new List<Alert>());
         }
 
         private void SetupDefaultMasterBoardRepo()
@@ -134,7 +135,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<MasterBoard>());
+                .ReturnsAsync((IReadOnlyList<MasterBoard>)new List<MasterBoard>());
         }
 
         private FarmingBatch MakeBatch(
@@ -997,7 +998,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<AlertFrequencyProjection>());
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>());
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1022,7 +1023,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<AlertFrequencyProjection>());
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>());
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1106,7 +1107,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes(sensorTypes);
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1204,7 +1205,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes(sensorTypes);
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1264,7 +1265,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes(sensorTypes);
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1305,7 +1306,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes(
                 new List<SensorType>
                 {
@@ -1357,7 +1358,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1433,7 +1434,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(projections);
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)projections);
             SetupDefaultSensorTypes(
                 new List<SensorType>
                 {

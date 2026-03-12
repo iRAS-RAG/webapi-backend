@@ -105,9 +105,7 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
-                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
-                    new FeedingLogDtoByIdSpec(id)
-                );
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(new FeedingLogDtoByIdSpec(id));
 
                 if (feedingLogDto == null)
                 {
