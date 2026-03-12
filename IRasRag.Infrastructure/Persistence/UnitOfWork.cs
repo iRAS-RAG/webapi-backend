@@ -16,11 +16,9 @@ namespace IRasRag.Infrastructure.Persistence
         {
             _context = context;
             SensorLogs = new SensorLogRepository(_context);
-            FishTanks = new FishTankRepository(_context);
         }
 
         public ISensorLogRepository SensorLogs { get; private set; }
-        public IFishTankRepository FishTanks { get; private set; }
 
         public IRepository<T> GetRepository<T>()
             where T : BaseEntity

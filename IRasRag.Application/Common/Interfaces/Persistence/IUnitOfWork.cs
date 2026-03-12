@@ -8,7 +8,6 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
         IRepository<T> GetRepository<T>()
             where T : BaseEntity;
         ISensorLogRepository SensorLogs { get; }
-        IFishTankRepository FishTanks { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task BeginTransactionAsync(CancellationToken cancellationToken = default);
         Task CommitTransactionAsync(CancellationToken cancellationToken = default);
