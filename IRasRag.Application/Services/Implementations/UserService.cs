@@ -63,6 +63,8 @@ namespace IRasRag.Application.Services.Implementations
                     return Result<UserDto>.Failure("Vai trò không tồn tại.", ResultType.BadRequest);
                 }
 
+                var roleName = userRole?.ToSystemRole().ToRoleName() ?? "Kỹ thuật viên";
+
                 var newUser = new User
                 {
                     RoleId = userRole.Id,
@@ -82,7 +84,7 @@ namespace IRasRag.Application.Services.Implementations
                 };
 
                 var emailBody = await _emailService.GenerateAccountCreatedEmailBodyAsync(
-                    "Kỹ thuật viên",
+                    roleName,
                     newUser.Email,
                     createDto.Password
                 );
@@ -305,12 +307,13 @@ namespace IRasRag.Application.Services.Implementations
                     );
 
                 var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
+                var roleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định";
 
                 var dto = new UserDto
                 {
                     Id = user.Id,
                     RoleId = user.RoleId,
-                    RoleName = role?.Name ?? "Unknown",
+                    RoleName = roleName,
                     Email = user.Email,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
