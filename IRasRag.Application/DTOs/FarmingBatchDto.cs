@@ -29,6 +29,7 @@ namespace IRasRag.Application.DTOs
 
     public class ActiveFarmingBatchResponseDto
     {
+        public string FarmingBatchName { get; set; }
         public string FishTankName { get; set; } = string.Empty;
         public string SpeciesName { get; set; } = string.Empty;
         public int CurrentQuantity { get; set; }

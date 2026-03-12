@@ -9,6 +9,7 @@
 
     public class SensorMetricDto
     {
+        public string SensorName { get; set; }
         public string SensorTypeName { get; set; }
         public SensorMetricValueDto Value { get; set; }
     }

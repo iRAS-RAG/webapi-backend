@@ -22,7 +22,6 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public double MinThreshold { get; set; }
         public double MaxThreshold { get; set; }
-        public bool IsWarning => Value < MinThreshold || Value > MaxThreshold;
     }
 
     // Create DTO

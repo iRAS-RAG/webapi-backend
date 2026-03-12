@@ -97,6 +97,8 @@ namespace IRasRag.Application.DTOs
     // Latest sensor reading per sensor in a tank
     public class TankSensorLatestDataDto
     {
+        public Guid FishTankId { get; set; }
+        public string FishTankName { get; set; } = string.Empty;
         public Guid SensorId { get; set; }
         public string SensorName { get; set; } = string.Empty;
         public Guid SensorTypeId { get; set; }
@@ -105,10 +107,6 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
-
-        //public double? LatestValue { get; set; }
-        //public bool? IsWarning { get; set; }
-        //public DateTime? RecordedAt { get; set; }
         public TankSensorLatestDataValueDto? LatestData { get; set; }
     }
 

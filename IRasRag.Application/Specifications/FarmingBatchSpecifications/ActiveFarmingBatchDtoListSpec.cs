@@ -15,6 +15,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 .Where(fb => fb.Status == FarmingBatchStatus.ACTIVE && fb.FishTank.Id == fishTankId)
                 .Select(fb => new ActiveFarmingBatchResponseDto
                 {
+                    FarmingBatchName = fb.Name,
                     FishTankName = fb.FishTank.Name,
                     SpeciesName = fb.CurrentStageConfig.Species.Name,
                     CurrentQuantity = (int)fb.CurrentQuantity,

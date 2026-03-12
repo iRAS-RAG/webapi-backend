@@ -24,6 +24,7 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
                     SensorTypeName = st.SensorType.Name,
                     MinValue = st.MinValue,
                     MaxValue = st.MaxValue,
+                    UnitOfMeasure = st.SensorType.UnitOfMeasure
                 });
         }
     }
