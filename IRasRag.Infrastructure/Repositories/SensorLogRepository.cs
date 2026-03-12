@@ -56,7 +56,7 @@ namespace IRasRag.Infrastructure.Repositories
                     SensorId = sensorId,
                     Data = x.Avg,
                     IsWarning = x.HasWarning,
-                    DataJson = "{}",
+                    DataJson = null,
                     CreatedAt = new DateTime(x.Bucket, DateTimeKind.Utc),
                 })
                 .ToList();
@@ -86,7 +86,7 @@ namespace IRasRag.Infrastructure.Repositories
                 .ToList();
 
             var totalMinutes = (int)(to - from).TotalMinutes;
-            var bucketCount = totalMinutes / interval;
+            var bucketCount = (int)Math.Ceiling(totalMinutes / (double)interval);
             var fixedBuckets = Enumerable
                 .Range(0, bucketCount)
                 .Select(i => from.AddMinutes(i * interval).Ticks)
