@@ -177,40 +177,29 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<
-            Result<IReadOnlyList<FishTankMetricDto>>
+            Result<List<TankSensorLatestDataDto>>
         > GetLatestFishTankMetricsByFarmAsync(Guid farmId)
         {
             var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(farmId);
             if (farm == null)
             {
-                return Result<IReadOnlyList<FishTankMetricDto>>.Failure(
+                return Result<List<TankSensorLatestDataDto>>.Failure(
                     "Trang trại không tồn tại.",
                     ResultType.NotFound
                 );
             }
-            var result = await _unitOfWork.FishTanks.GetLatestFishTankMetricsByFarmIdAsync(farmId);
-            return Result<IReadOnlyList<FishTankMetricDto>>.Success(
-                result,
-                "Lấy thông tin chỉ số các bể cá thành công."
-            );
-        }
 
-        public async Task<Result<FishTankMetricDto>> GetLatestFishTankMetricsByTankAsync(
-            Guid tankId
-        )
-        {
-            var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
-            if (tank == null)
-            {
-                return Result<FishTankMetricDto>.Failure(
-                    "Bể cá không tồn tại.",
-                    ResultType.NotFound
-                );
-            }
-            var result = await _unitOfWork.FishTanks.GetLatestFishTankMetricsByTankIdAsync(tankId);
-            return Result<FishTankMetricDto>.Success(
+            var result = (
+                await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .ListAsync(new TankSensorLatestDataByFarmSpec(farmId))
+            ).ToList();
+
+            return Result<List<TankSensorLatestDataDto>>.Success(
                 result,
-                "Lấy thông tin chỉ số của bể cá thành công."
+                result.Count == 0
+                    ? "Trang trại chưa có cảm biến nào"
+                    : $"Lấy dữ liệu mới nhất thành công: {result.Count} cảm biến"
             );
         }
 
@@ -383,7 +372,7 @@ namespace IRasRag.Application.Services.Implementations
                 ).ToList();
 
                 var totalSensors = sensors.Count;
-                var warningSensors = sensors.Count(s => s.LatestData!.IsWarning == true);
+                var warningSensors = sensors.Count(s => s.LatestData?.IsWarning == true);
 
                 var statusDto = new TankStatusDto
                 {
