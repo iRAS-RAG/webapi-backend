@@ -7,6 +7,8 @@ namespace IRasRag.Domain.Entities
     {
         [Required]
         public Guid BatchId { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
 
         [Required]
         public float Quantity { get; set; }
@@ -16,5 +18,6 @@ namespace IRasRag.Domain.Entities
 
         // Navigation properties
         public FarmingBatch Batch { get; set; }
+        public User User { get; set; }
     }
 }

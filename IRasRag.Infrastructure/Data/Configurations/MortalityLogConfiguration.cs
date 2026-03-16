@@ -17,6 +17,14 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(ml => ml.BatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder
+                .HasOne(ml => ml.User)
+                .WithMany()
+                .HasForeignKey(ml => ml.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(ml => new { ml.BatchId, ml.Date });
+
             builder.HasData(MortalityLogSeed.MortalityLogs);
         }
     }

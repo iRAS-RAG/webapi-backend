@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace IRasRag.Application.DTOs
 {
@@ -8,6 +9,8 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public Guid FarmingBatchId { get; set; }
         public string FarmingBatchName { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string UserEmail { get; set; } = string.Empty;
         public float Amount { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? CreatedAt { get; set; }
@@ -19,6 +22,9 @@ namespace IRasRag.Application.DTOs
     {
         [Required(ErrorMessage = "Mã lô nuôi là bắt buộc")]
         public Guid FarmingBatchId { get; set; }
+
+        [JsonIgnore]
+        public Guid UserId { get; set; }
 
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
         [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]

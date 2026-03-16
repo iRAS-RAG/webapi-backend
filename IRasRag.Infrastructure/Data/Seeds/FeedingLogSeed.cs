@@ -27,6 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = FeedLog1Id,
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
+                    UserId = UserSeed.OperatorId,
                     Amount = 5.5f,
                     CreatedDate = new DateTime(2024, 01, 20, 6, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
@@ -35,6 +36,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = FeedLog2Id,
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
+                    UserId = UserSeed.OperatorId,
                     Amount = 5.8f,
                     CreatedDate = new DateTime(2024, 01, 20, 12, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
@@ -43,6 +45,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = FeedLog3Id,
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
+                    UserId = UserSeed.OperatorId,
                     Amount = 6.0f,
                     CreatedDate = new DateTime(2024, 01, 20, 18, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,

@@ -1,3 +1,4 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -13,14 +14,17 @@ namespace IRasRag.API.Controllers
     {
         private readonly IMortalityLogService _mortalityLogService;
         private readonly ILogger<MortalityLogController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
         public MortalityLogController(
             IMortalityLogService mortalityLogService,
-            ILogger<MortalityLogController> logger
+            ILogger<MortalityLogController> logger,
+            HttpContextUtils httpContextUtils
         )
         {
             _mortalityLogService = mortalityLogService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
         [Authorize(Roles = "Supervisor,Operator")]
@@ -29,6 +33,14 @@ namespace IRasRag.API.Controllers
         {
             try
             {
+                var userId = _httpContextUtils.GetUserId();
+                if (userId == null)
+                {
+                    return Unauthorized(new { Message = "Không xác thực được người dùng" });
+                }
+
+                dto.UserId = userId.Value;
+
                 var result = await _mortalityLogService.CreateMortalityLogAsync(dto);
 
                 return result.Type switch

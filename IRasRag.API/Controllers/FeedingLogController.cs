@@ -1,3 +1,4 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -13,14 +14,17 @@ namespace IRasRag.API.Controllers
     {
         private readonly IFeedingLogService _feedingLogService;
         private readonly ILogger<FeedingLogController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
         public FeedingLogController(
             IFeedingLogService feedingLogService,
-            ILogger<FeedingLogController> logger
+            ILogger<FeedingLogController> logger,
+            HttpContextUtils httpContextUtils
         )
         {
             _feedingLogService = feedingLogService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
         [Authorize(Roles = "Supervisor,Operator")]
@@ -29,6 +33,14 @@ namespace IRasRag.API.Controllers
         {
             try
             {
+                var userId = _httpContextUtils.GetUserId();
+                if (userId == null)
+                {
+                    return Unauthorized(new { Message = "Không xác thực được người dùng" });
+                }
+
+                dto.UserId = userId.Value;
+
                 var result = await _feedingLogService.CreateFeedingLogAsync(dto);
 
                 return result.Type switch
