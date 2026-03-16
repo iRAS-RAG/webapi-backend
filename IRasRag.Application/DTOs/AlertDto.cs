@@ -19,8 +19,9 @@ namespace IRasRag.Application.DTOs
         public DateTime RaisedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public AlertStatus Status { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? ModifiedAt { get; set; }
+        public string UnitOfMeasure { get; set; } = string.Empty;
+        public double MinThreshold { get; set; }
+        public double MaxThreshold { get; set; }
     }
 
     // Create DTO
@@ -71,6 +72,7 @@ namespace IRasRag.Application.DTOs
 
     public class AlertListRequest : BasePaginatedListRequest
     {
+        public Guid? TankId { get; set; }
         public AlertStatus? Status { get; set; }
     }
 }

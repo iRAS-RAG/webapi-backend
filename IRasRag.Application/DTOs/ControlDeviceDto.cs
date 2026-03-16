@@ -70,6 +70,7 @@ namespace IRasRag.Application.DTOs
 
     public class ControlDeviceListRequest : BasePaginatedListRequest
     {
+        public Guid? TankId { get; set; }
         public bool? State { get; set; }
     }
 

@@ -8,33 +8,35 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/mortality-logs")]
-    public class MortalityLogController : ControllerBase
+    [Route("api/control-device-types")]
+    public class ControlDeviceTypeController : ControllerBase
     {
-        private readonly IMortalityLogService _mortalityLogService;
-        private readonly ILogger<MortalityLogController> _logger;
+        private readonly IControlDeviceTypeService _controlDeviceTypeService;
+        private readonly ILogger<ControlDeviceTypeController> _logger;
 
-        public MortalityLogController(
-            IMortalityLogService mortalityLogService,
-            ILogger<MortalityLogController> logger
+        public ControlDeviceTypeController(
+            IControlDeviceTypeService controlDeviceTypeService,
+            ILogger<ControlDeviceTypeController> logger
         )
         {
-            _mortalityLogService = mortalityLogService;
+            _controlDeviceTypeService = controlDeviceTypeService;
             _logger = logger;
         }
 
-        [Authorize(Roles = "Supervisor,Operator")]
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
-        public async Task<IActionResult> CreateMortalityLog([FromBody] CreateMortalityLogDto dto)
+        public async Task<IActionResult> CreateControlDeviceType(
+            [FromBody] CreateControlDeviceTypeDto dto
+        )
         {
             try
             {
-                var result = await _mortalityLogService.CreateMortalityLogAsync(dto);
+                var result = await _controlDeviceTypeService.CreateControlDeviceTypeAsync(dto);
 
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
@@ -43,16 +45,16 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "An error occurred while creating mortality log for BatchId: {BatchId}",
-                    dto.BatchId
+                    "An error occurred while creating control device type: {ControlDeviceTypeName}",
+                    dto.Name
                 );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllMortalityLogs(
-            [FromQuery] MortalityLogListRequest request
+        public async Task<IActionResult> GetAllControlDeviceTypes(
+            [FromQuery] ControlDeviceTypeListRequest request
         )
         {
             try
@@ -69,23 +71,23 @@ namespace IRasRag.API.Controllers
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
-                var result = await _mortalityLogService.GetAllMortalityLogsAsync(request);
+                var result = await _controlDeviceTypeService.GetAllControlDeviceTypesAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving mortality logs.");
+                _logger.LogError(ex, "An error occurred while retrieving control device types.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
-        [Authorize(Roles = "Supervisor,Operator")]
+        [Authorize(Roles = "Supervisor")]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetMortalityLogById(Guid id)
+        public async Task<IActionResult> GetControlDeviceTypeById(Guid id)
         {
             try
             {
-                var result = await _mortalityLogService.GetMortalityLogByIdAsync(id);
+                var result = await _controlDeviceTypeService.GetControlDeviceTypeByIdAsync(id);
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),
@@ -98,28 +100,29 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "An error occurred while retrieving mortality log: {MortalityLogId}",
+                    "An error occurred while retrieving control device type: {ControlDeviceTypeId}",
                     id
                 );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
-        [Authorize(Roles = "Supervisor, Operator")]
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMortalityLog(
+        public async Task<IActionResult> UpdateControlDeviceType(
             Guid id,
-            [FromBody] UpdateMortalityLogDto dto
+            [FromBody] UpdateControlDeviceTypeDto dto
         )
         {
             try
             {
-                var result = await _mortalityLogService.UpdateMortalityLogAsync(id, dto);
+                var result = await _controlDeviceTypeService.UpdateControlDeviceTypeAsync(id, dto);
 
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message }),
                     ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
@@ -128,20 +131,20 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "An error occurred while updating mortality log: {MortalityLogId}",
+                    "An error occurred while updating control device type: {ControlDeviceTypeId}",
                     id
                 );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
-        [Authorize(Roles = "Supervisor, Operator")]
+        [Authorize(Roles = "Supervisor")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMortalityLog(Guid id)
+        public async Task<IActionResult> DeleteControlDeviceType(Guid id)
         {
             try
             {
-                var result = await _mortalityLogService.DeleteMortalityLogAsync(id);
+                var result = await _controlDeviceTypeService.DeleteControlDeviceTypeAsync(id);
 
                 return result.Type switch
                 {
@@ -155,7 +158,7 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "An error occurred while deleting mortality log: {MortalityLogId}",
+                    "An error occurred while deleting control device type: {ControlDeviceTypeId}",
                     id
                 );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });

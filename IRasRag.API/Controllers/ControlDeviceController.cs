@@ -7,28 +7,28 @@ using Microsoft.AspNetCore.Mvc;
 namespace IRasRag.API.Controllers
 {
     [ApiController]
-    [Route("api/corrective-actions")]
+    [Route("api/control-devices")]
     [Authorize]
-    public class CorrectiveActionController : ControllerBase
+    public class ControlDeviceController : ControllerBase
     {
-        private readonly ICorrectiveActionService _correctiveActionService;
-        private readonly ILogger<CorrectiveActionController> _logger;
+        private readonly IControlDeviceService _controlDeviceService;
+        private readonly ILogger<ControlDeviceController> _logger;
 
-        public CorrectiveActionController(
-            ICorrectiveActionService correctiveActionService,
-            ILogger<CorrectiveActionController> logger
+        public ControlDeviceController(
+            IControlDeviceService controlDeviceService,
+            ILogger<ControlDeviceController> logger
         )
         {
-            _correctiveActionService = correctiveActionService;
+            _controlDeviceService = controlDeviceService;
             _logger = logger;
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả hành động khắc phục
+        /// Lấy danh sách tất cả thiết bị điều khiển
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllCorrectiveActions(
-            [FromQuery] CorrectiveActionListRequest request
+        public async Task<IActionResult> GetAllControlDevices(
+            [FromQuery] ControlDeviceListRequest request
         )
         {
             try
@@ -45,26 +45,25 @@ namespace IRasRag.API.Controllers
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
-                var result = await _correctiveActionService.GetAllCorrectiveActionsAsync(request);
-
+                var result = await _controlDeviceService.GetAllControlDevicesAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách hành động khắc phục");
+                _logger.LogError(ex, "Lỗi khi lấy danh sách thiết bị điều khiển");
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }
 
         /// <summary>
-        /// Lấy thông tin hành động khắc phục theo Id
+        /// Lấy thông tin thiết bị điều khiển theo Id
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCorrectiveActionById(Guid id)
+        public async Task<IActionResult> GetControlDeviceById(Guid id)
         {
             try
             {
-                var result = await _correctiveActionService.GetCorrectiveActionByIdAsync(id);
+                var result = await _controlDeviceService.GetControlDeviceByIdAsync(id);
 
                 if (!result.IsSuccess)
                 {
@@ -79,18 +78,18 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy hành động khắc phục với Id: {Id}", id);
+                _logger.LogError(ex, "Lỗi khi lấy thiết bị điều khiển với Id: {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }
 
         /// <summary>
-        /// Tạo hành động khắc phục mới
+        /// Tạo thiết bị điều khiển mới
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Supervisor, Operator")]
-        public async Task<IActionResult> CreateCorrectiveAction(
-            [FromBody] CreateCorrectiveActionDto createDto
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateControlDevice(
+            [FromBody] CreateControlDeviceDto createDto
         )
         {
             try
@@ -102,7 +101,7 @@ namespace IRasRag.API.Controllers
                     );
                 }
 
-                var result = await _correctiveActionService.CreateCorrectiveActionAsync(createDto);
+                var result = await _controlDeviceService.CreateControlDeviceAsync(createDto);
 
                 if (!result.IsSuccess)
                 {
@@ -116,26 +115,26 @@ namespace IRasRag.API.Controllers
                 }
 
                 return CreatedAtAction(
-                    nameof(GetCorrectiveActionById),
+                    nameof(GetControlDeviceById),
                     new { id = result.Data!.Id },
                     new { result.Message, result.Data }
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo hành động khắc phục");
+                _logger.LogError(ex, "Lỗi khi tạo thiết bị điều khiển");
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }
 
         /// <summary>
-        /// Cập nhật hành động khắc phục
+        /// Cập nhật thiết bị điều khiển
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor, Operator")]
-        public async Task<IActionResult> UpdateCorrectiveAction(
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdateControlDevice(
             Guid id,
-            [FromBody] UpdateCorrectiveActionDto updateDto
+            [FromBody] UpdateControlDeviceDto updateDto
         )
         {
             try
@@ -147,10 +146,7 @@ namespace IRasRag.API.Controllers
                     );
                 }
 
-                var result = await _correctiveActionService.UpdateCorrectiveActionAsync(
-                    id,
-                    updateDto
-                );
+                var result = await _controlDeviceService.UpdateControlDeviceAsync(id, updateDto);
 
                 if (!result.IsSuccess)
                 {
@@ -167,21 +163,21 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi cập nhật hành động khắc phục với Id: {Id}", id);
+                _logger.LogError(ex, "Lỗi khi cập nhật thiết bị điều khiển với Id: {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }
 
         /// <summary>
-        /// Xóa hành động khắc phục
+        /// Xóa thiết bị điều khiển
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor, Operator")]
-        public async Task<IActionResult> DeleteCorrectiveAction(Guid id)
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> DeleteControlDevice(Guid id)
         {
             try
             {
-                var result = await _correctiveActionService.DeleteCorrectiveActionAsync(id);
+                var result = await _controlDeviceService.DeleteControlDeviceAsync(id);
 
                 if (!result.IsSuccess)
                 {
@@ -197,7 +193,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xóa hành động khắc phục với Id: {Id}", id);
+                _logger.LogError(ex, "Lỗi khi xóa thiết bị điều khiển với Id: {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }

@@ -123,7 +123,6 @@ namespace IRasRag.API.Controllers
             dto.FileName = file.FileName;
             dto.FileSize = file.Length;
             dto.UploadedByUserId = userId.Value;
-            dto.FileTitle = dto.FileTitle?.Trim() ?? string.Empty;
 
             var result = await _documentService.CreateDocumentAsync(dto);
 

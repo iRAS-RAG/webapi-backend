@@ -7,12 +7,28 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public float Height { get; set; }
-        public float Radius { get; set; }
+        public double Volume { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
         public string CameraUrl { get; set; }
+        public string CurrentSpecies { get; set; }
+        public float? CurrentCount { get; set; }
+        public bool HasOpenAlert { get; set; }
+    }
+
+    public class FishTankDashboardDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public float Volume { get; set; }
+        public Guid FarmId { get; set; }
+        public string FarmName { get; set; }
+        public string TopicCode { get; set; }
+        public string CameraUrl { get; set; }
+        public string CurrentSpecies { get; set; }
+        public float? CurrentCount { get; set; }
+        public string LatestStatus { get; set; }
     }
 
     public class CreateFishTankDto
@@ -81,6 +97,8 @@ namespace IRasRag.Application.DTOs
     // Latest sensor reading per sensor in a tank
     public class TankSensorLatestDataDto
     {
+        public Guid FishTankId { get; set; }
+        public string FishTankName { get; set; } = string.Empty;
         public Guid SensorId { get; set; }
         public string SensorName { get; set; } = string.Empty;
         public Guid SensorTypeId { get; set; }
@@ -89,6 +107,11 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
+        public TankSensorLatestDataValueDto? LatestData { get; set; }
+    }
+
+    public class TankSensorLatestDataValueDto
+    {
         public double? LatestValue { get; set; }
         public bool? IsWarning { get; set; }
         public DateTime? RecordedAt { get; set; }

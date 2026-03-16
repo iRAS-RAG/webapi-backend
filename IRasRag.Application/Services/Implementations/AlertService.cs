@@ -49,8 +49,8 @@ namespace IRasRag.Application.Services.Implementations
 
                 return new PaginatedResult<AlertDto>
                 {
-                    Message = "Lấy danh sách cảnh báo thành công",
-                    Data = pagedResult.Items.ToList(),
+                    Message = pagedResult.TotalItems > 0 ? "Lấy danh sách cảnh báo thành công" : "Không có dữ liệu",
+                    Data = pagedResult.Items,
                     Meta = meta,
                     Links = links,
                 };

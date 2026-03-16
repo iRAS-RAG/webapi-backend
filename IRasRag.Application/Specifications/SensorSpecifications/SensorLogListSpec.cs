@@ -15,7 +15,7 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
             ApplyFilter(request.From, log => log.CreatedAt >= request.From);
             ApplyFilter(request.To, log => log.CreatedAt <= request.To);
 
-            Query.OrderBy(log => log.CreatedAt);
+            Query.OrderByDescending(log => log.CreatedAt);
 
             Query.Select(log => new SensorLogDto
             {

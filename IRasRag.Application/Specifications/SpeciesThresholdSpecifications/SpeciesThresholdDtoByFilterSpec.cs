@@ -1,16 +1,18 @@
+using System.Linq.Expressions;
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
 {
-    public class SpeciesThresholdByIdSpec : Specification<SpeciesThreshold, SpeciesThresholdDto>
+    public class SpeciesThresholdDtoByFilterSpec
+        : Specification<SpeciesThreshold, SpeciesThresholdDto>
     {
-        public SpeciesThresholdByIdSpec(Guid id)
+        public SpeciesThresholdDtoByFilterSpec(Expression<Func<SpeciesThreshold, bool>> predicate)
         {
             Query
                 .AsNoTracking()
-                .Where(st => st.Id == id)
+                .Where(predicate)
                 .Select(st => new SpeciesThresholdDto
                 {
                     Id = st.Id,
@@ -22,6 +24,7 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
                     SensorTypeName = st.SensorType.Name,
                     MinValue = st.MinValue,
                     MaxValue = st.MaxValue,
+                    UnitOfMeasure = st.SensorType.UnitOfMeasure
                 });
         }
     }

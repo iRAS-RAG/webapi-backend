@@ -6,6 +6,7 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
+using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -83,8 +84,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = newFishTank.Id,
                     Name = newFishTank.Name,
-                    Height = newFishTank.Height,
-                    Radius = newFishTank.Radius,
+                    Volume = (float)(
+                        Math.PI * newFishTank.Radius * newFishTank.Radius * newFishTank.Height
+                    ),
                     FarmId = newFishTank.FarmId,
                     FarmName = farm.Name,
                     TopicCode = newFishTank.TopicCode,
@@ -141,15 +143,13 @@ namespace IRasRag.Application.Services.Implementations
                     request.PageSize
                 );
 
-                var fishTankDtos = pagedResult.Items.ToList();
-
                 return new PaginatedResult<FishTankDto>
                 {
                     Message =
-                        fishTankDtos.Count == 0
+                        pagedResult.TotalItems == 0
                             ? "Không có bể cá nào"
                             : "Lấy danh sách bể cá thành công.",
-                    Data = fishTankDtos,
+                    Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
                         request.Page,
                         request.PageSize,
@@ -176,39 +176,42 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<FishTankDto>> GetFishTankByIdAsync(Guid id)
+        public async Task<
+            Result<List<TankSensorLatestDataDto>>
+        > GetLatestFishTankMetricsByFarmAsync(Guid farmId)
         {
-            try
+            var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(farmId);
+            if (farm == null)
             {
-                var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(id);
-
-                if (fishTank == null || fishTank.IsDeleted)
-                    return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
-
-                var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(fishTank.FarmId);
-
-                var dto = new FishTankDto
-                {
-                    Id = fishTank.Id,
-                    Name = fishTank.Name,
-                    Height = fishTank.Height,
-                    Radius = fishTank.Radius,
-                    FarmId = fishTank.FarmId,
-                    FarmName = farm?.Name ?? "Unknown",
-                    TopicCode = fishTank.TopicCode,
-                    CameraUrl = fishTank.CameraUrl,
-                };
-
-                return Result<FishTankDto>.Success(dto, "Lấy thông tin bể cá thành công.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi truy xuất thông tin bể cá");
-                return Result<FishTankDto>.Failure(
-                    "Lỗi khi truy xuất thông tin bể cá.",
-                    ResultType.Unexpected
+                return Result<List<TankSensorLatestDataDto>>.Failure(
+                    "Trang trại không tồn tại.",
+                    ResultType.NotFound
                 );
             }
+
+            var result = (
+                await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .ListAsync(new TankSensorLatestDataByFarmSpec(farmId))
+            ).ToList();
+
+            return Result<List<TankSensorLatestDataDto>>.Success(
+                result,
+                result.Count == 0
+                    ? "Trang trại chưa có cảm biến nào"
+                    : $"Lấy dữ liệu mới nhất thành công: {result.Count} cảm biến"
+            );
+        }
+
+        public async Task<Result<FishTankDto>> GetFishTankByIdAsync(Guid id)
+        {
+            var dto = await _unitOfWork
+                .GetRepository<FishTank>()
+                .FirstOrDefaultAsync(new FishTankDtoSpec(id));
+            if (dto == null)
+                return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
+
+            return Result<FishTankDto>.Success(dto, "Lấy thông tin bể cá thành công.");
         }
 
         public async Task<Result<FishTankDto>> UpdateFishTankAsync(Guid id, UpdateFishTankDto dto)
@@ -279,8 +282,7 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = fishTank.Id,
                     Name = fishTank.Name,
-                    Height = fishTank.Height,
-                    Radius = fishTank.Radius,
+                    Volume = (float)(Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height),
                     FarmId = fishTank.FarmId,
                     FarmName = farmName,
                     TopicCode = fishTank.TopicCode,
@@ -370,7 +372,7 @@ namespace IRasRag.Application.Services.Implementations
                 ).ToList();
 
                 var totalSensors = sensors.Count;
-                var warningSensors = sensors.Count(s => s.IsWarning == true);
+                var warningSensors = sensors.Count(s => s.LatestData?.IsWarning == true);
 
                 var statusDto = new TankStatusDto
                 {

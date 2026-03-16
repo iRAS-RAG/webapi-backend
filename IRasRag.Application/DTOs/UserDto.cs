@@ -17,7 +17,6 @@ namespace IRasRag.Application.DTOs
     public class UserProfileDto
     {
         public Guid Id { get; set; }
-        public Guid RoleId { get; set; }
         public string RoleName { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }

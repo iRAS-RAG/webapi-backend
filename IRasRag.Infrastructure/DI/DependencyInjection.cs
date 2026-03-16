@@ -6,6 +6,7 @@ using IRasRag.Application.Common.Interfaces.FileExtraction;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
 using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services.Auth;

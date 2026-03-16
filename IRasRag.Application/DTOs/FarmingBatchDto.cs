@@ -27,6 +27,15 @@ namespace IRasRag.Application.DTOs
         public DateTime? ModifiedAt { get; set; }
     }
 
+    public class ActiveFarmingBatchResponseDto
+    {
+        public string FarmingBatchName { get; set; }
+        public string FishTankName { get; set; } = string.Empty;
+        public string SpeciesName { get; set; } = string.Empty;
+        public int CurrentQuantity { get; set; }
+        public double TankVolume { get; set; }
+    }
+
     // Create DTO
     public class CreateFarmingBatchDto
     {
@@ -37,8 +46,11 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên lô nuôi không được vượt quá 255 ký tự")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "SpeciesStageConfigId là bắt buộc")]
-        public Guid SpeciesStageConfigId { get; set; }
+        [Required(ErrorMessage = "SpeciesId là bắt buộc")]
+        public Guid SpeciesId { get; set; }
+
+        [Required(ErrorMessage = "GrowthStageId là bắt buộc")]
+        public Guid GrowthStageId { get; set; }
 
         [Required(ErrorMessage = "Ngày bắt đầu là bắt buộc")]
         public DateTime StartDate { get; set; }

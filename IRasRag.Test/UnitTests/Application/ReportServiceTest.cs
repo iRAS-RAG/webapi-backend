@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Ardalis.Specification;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
@@ -129,7 +130,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+                .ReturnsAsync((IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } });
 
             _fishTankRepoMock
                 .Setup(r =>
@@ -139,7 +140,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new List<FishTank>
+                    (IReadOnlyList<FishTank>)new List<FishTank>
                     {
                         new() { Id = dummyTankId, FarmId = dummyFarmId },
                     }
@@ -153,7 +154,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<FarmingBatch>());
+                .ReturnsAsync((IReadOnlyList<FarmingBatch>)new List<FarmingBatch>());
 
             var alertList = new List<AlertStatus>();
             alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
@@ -171,7 +172,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(alertList);
+                .ReturnsAsync((IReadOnlyList<AlertStatus>)alertList);
 
             _batchRepoMock
                 .SetupSequence(r =>
@@ -191,7 +192,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(survivalData ?? new List<BatchSurvivalProjection>());
+                .ReturnsAsync((IReadOnlyList<BatchSurvivalProjection>)(survivalData?.ToList() ?? new List<BatchSurvivalProjection>()));
 
             _mortalityRepoMock
                 .Setup(r =>
@@ -200,7 +201,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(mortalityLogs ?? new List<MortalityLog>());
+                .ReturnsAsync((IReadOnlyList<MortalityLog>)(mortalityLogs?.ToList() ?? new List<MortalityLog>()));
         }
 
         /// <summary>
@@ -235,7 +236,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+                .ReturnsAsync((IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } });
 
             _fishTankRepoMock
                 .Setup(r =>
@@ -245,7 +246,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new List<FishTank>
+                    (IReadOnlyList<FishTank>)new List<FishTank>
                     {
                         new() { Id = dummyTankId, FarmId = dummyFarmId },
                     }
@@ -259,7 +260,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<FarmingBatch>());
+                .ReturnsAsync((IReadOnlyList<FarmingBatch>)new List<FarmingBatch>());
 
             var alertList = new List<AlertStatus>();
             alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
@@ -277,13 +278,13 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(alertList);
+                .ReturnsAsync((IReadOnlyList<AlertStatus>)alertList);
 
             _alertRepoMock
                 .Setup(r =>
                     r.ListAsync(It.IsAny<ISpecification<Alert, string>>(), It.IsAny<QueryType>())
                 )
-                .ReturnsAsync(sensorTypeNames ?? new List<string>());
+                .ReturnsAsync((IReadOnlyList<string>)(sensorTypeNames?.ToList() ?? new List<string>()));
 
             _correctiveActionRepoMock
                 .Setup(r =>
@@ -292,7 +293,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(correctiveActions ?? new List<WeeklyCorrectiveActionItem>());
+                .ReturnsAsync((IReadOnlyList<WeeklyCorrectiveActionItem>)(correctiveActions?.ToList() ?? new List<WeeklyCorrectiveActionItem>()));
 
             _recommendationRepoMock
                 .Setup(r =>
@@ -301,7 +302,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(recommendations ?? new List<WeeklyRecommendationItem>());
+                .ReturnsAsync((IReadOnlyList<WeeklyRecommendationItem>)(recommendations?.ToList() ?? new List<WeeklyRecommendationItem>()));
 
             _mortalityRepoMock
                 .Setup(r =>
@@ -310,7 +311,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(mortalityLogs ?? new List<MortalityLog>());
+                .ReturnsAsync((IReadOnlyList<MortalityLog>)(mortalityLogs?.ToList() ?? new List<MortalityLog>()));
 
             _batchRepoMock
                 .Setup(r =>
@@ -328,7 +329,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(survivalData ?? new List<BatchSurvivalProjection>());
+                .ReturnsAsync((IReadOnlyList<BatchSurvivalProjection>)(survivalData?.ToList() ?? new List<BatchSurvivalProjection>()));
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -689,7 +690,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+                .ReturnsAsync((IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } });
             _fishTankRepoMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -698,7 +699,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new List<FishTank>
+                    (IReadOnlyList<FishTank>)new List<FishTank>
                     {
                         new() { Id = dummyTankId, FarmId = dummyFarmId },
                     }
@@ -1248,7 +1249,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(new List<UserFarm> { new() { FarmId = dummyFarmId } });
+                .ReturnsAsync((IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } });
             _fishTankRepoMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -1257,7 +1258,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    new List<FishTank>
+                    (IReadOnlyList<FishTank>)new List<FishTank>
                     {
                         new() { Id = dummyTankId, FarmId = dummyFarmId },
                     }

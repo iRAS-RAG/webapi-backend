@@ -3,7 +3,7 @@ using Ardalis.Specification;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Domain.Enums;
 
-namespace IRasRag.Application.Common.Interfaces.Persistence
+namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
 {
     public interface IRepository<T>
         where T : class
@@ -14,11 +14,11 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
             Expression<Func<T, bool>> predicate,
             QueryType type = QueryType.ActiveOnly
         );
-        Task<IEnumerable<T>> FindAllAsync(
+        Task<IReadOnlyList<T>> FindAllAsync(
             Expression<Func<T, bool>> predicate,
             QueryType type = QueryType.ActiveOnly
         );
-        Task<IEnumerable<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly);
+        Task<IReadOnlyList<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly);
         Task<bool> AnyAsync(
             Expression<Func<T, bool>> predicate,
             QueryType type = QueryType.ActiveOnly
@@ -47,13 +47,13 @@ namespace IRasRag.Application.Common.Interfaces.Persistence
         );
 
         // Non-projected specification (returns IEnumerable<T>)
-        Task<IEnumerable<T>> ListAsync(
+        Task<IReadOnlyList<T>> ListAsync(
             ISpecification<T> spec,
             QueryType type = QueryType.ActiveOnly
         );
 
         // Projected specification (returns IEnumerable<TResult>)
-        Task<IEnumerable<TResult>> ListAsync<TResult>(
+        Task<IReadOnlyList<TResult>> ListAsync<TResult>(
             ISpecification<T, TResult> spec,
             QueryType type = QueryType.ActiveOnly
         );

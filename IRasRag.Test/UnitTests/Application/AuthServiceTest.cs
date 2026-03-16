@@ -4,6 +4,7 @@ using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Auth;
 using IRasRag.Application.DTOs;
@@ -326,7 +327,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(Enumerable.Empty<Verification>());
+                .ReturnsAsync(Array.Empty<Verification>());
             _emailServiceMock
                 .Setup(e =>
                     e.GenerateResetPasswordEmailBodyAsync(It.IsAny<string>(), It.IsAny<int>())

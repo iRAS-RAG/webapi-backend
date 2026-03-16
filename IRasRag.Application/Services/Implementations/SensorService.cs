@@ -112,6 +112,43 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
+        public async Task<Result<SensorHistoryDto>> GetSensorHistoryAsync(
+            Guid sensorId,
+            DateTime from,
+            DateTime to,
+            int interval
+        )
+        {
+            try
+            {
+                var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(sensorId);
+                if (sensor == null)
+                {
+                    _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
+                    return Result<SensorHistoryDto>.Failure(
+                        $"Không tìm thấy cảm biến với Id: {sensorId}",
+                        ResultType.NotFound
+                    );
+                }
+                var result = await _unitOfWork.SensorLogs.GetLogsByTimeRangeAsync(
+                    sensorId,
+                    from,
+                    to,
+                    interval
+                );
+
+                return Result<SensorHistoryDto>.Success(result, "Lấy lịch sử cảm biến thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy lịch sử cảm biến với Id: {SensorId}", sensorId);
+                return Result<SensorHistoryDto>.Failure(
+                    "Đã xảy ra lỗi khi lấy lịch sử cảm biến",
+                    ResultType.Unexpected
+                );
+            }
+        }
         #endregion
 
         #region Create Method
@@ -459,61 +496,39 @@ namespace IRasRag.Application.Services.Implementations
                 var logRepository = _unitOfWork.GetRepository<SensorLog>();
                 PaginatedResult<SensorLogDto> pagedResult;
 
-                if (request.Interval.HasValue && request.Interval.Value > 0)
+                if (
+                    request.Interval.HasValue
+                    && request.Interval.Value > 0
+                    && request.From.HasValue
+                    && request.To.HasValue
+                )
                 {
-                    // Kéo toàn bộ dữ liệu (đã lọc theo From/To), gom nhóm trong bộ nhớ, rồi phân trang
-                    var allLogs = await logRepository.ListAsync(
-                        new SensorLogListSpec(sensorId, request)
+                    // GROUP BY trên DB, phân trang tại DB — không tải toàn bộ dữ liệu vào bộ nhớ
+                    var (items, totalCount) = await _unitOfWork.SensorLogs.GetAggregatedLogsAsync(
+                        sensorId,
+                        request.From.Value,
+                        request.To.Value,
+                        request.Interval.Value,
+                        request.Page,
+                        request.PageSize
                     );
-
-                    var intervalTicks = TimeSpan.FromMinutes(request.Interval.Value).Ticks;
-                    var buckets = allLogs
-                        .Where(l => l.CreatedAt.HasValue)
-                        .GroupBy(l =>
-                        {
-                            var createdAt = l.CreatedAt!.Value;
-                            var kind =
-                                createdAt.Kind == DateTimeKind.Unspecified
-                                    ? DateTimeKind.Utc
-                                    : createdAt.Kind;
-                            var roundedTicks = createdAt.Ticks / intervalTicks * intervalTicks;
-                            return new DateTime(roundedTicks, kind);
-                        })
-                        .OrderBy(g => g.Key)
-                        .Select(g => new SensorLogDto
-                        {
-                            Id = g.First().Id,
-                            SensorId = sensorId,
-                            Data = g.Average(l => l.Data),
-                            IsWarning = g.Any(l => l.IsWarning),
-                            DataJson = g.First().DataJson,
-                            CreatedAt = g.Key,
-                        })
-                        .ToList();
-
-                    // Phân trang trên danh sách bucket đã gom nhóm
-                    var totalBuckets = buckets.Count;
-                    var pagedBuckets = buckets
-                        .Skip((request.Page - 1) * request.PageSize)
-                        .Take(request.PageSize)
-                        .ToList();
 
                     pagedResult = new PaginatedResult<SensorLogDto>
                     {
                         Message =
-                            totalBuckets == 0
+                            totalCount == 0
                                 ? "Không có dữ liệu lịch sử"
                                 : "Lấy lịch sử cảm biến thành công",
-                        Data = pagedBuckets,
+                        Data = items,
                         Meta = PaginationBuilder.BuildPaginationMetadata(
                             request.Page,
                             request.PageSize,
-                            totalBuckets
+                            totalCount
                         ),
                         Links = PaginationBuilder.BuildPaginationLinks(
                             request.Page,
                             request.PageSize,
-                            totalBuckets
+                            totalCount
                         ),
                     };
                 }

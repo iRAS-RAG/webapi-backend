@@ -3,6 +3,7 @@ using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -91,8 +92,12 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Tạo bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
-            result.Data.Height.Should().Be(createDto.Height);
-            result.Data.Radius.Should().Be(createDto.Radius);
+            result
+                .Data.Volume.Should()
+                .BeApproximately(
+                    (float)(Math.PI * createDto.Radius * createDto.Radius * createDto.Height),
+                    0.001f
+                );
             result.Data.FarmId.Should().Be(createDto.FarmId);
             result.Data.FarmName.Should().Be(farm.Name);
             result.Data.TopicCode.Should().Be(createDto.TopicCode);
@@ -477,8 +482,12 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Id.Should().Be(fishTankId);
             result.Data.Name.Should().Be(fishTank.Name);
-            result.Data.Height.Should().Be(fishTank.Height);
-            result.Data.Radius.Should().Be(fishTank.Radius);
+            result
+                .Data.Volume.Should()
+                .BeApproximately(
+                    (float)(Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height),
+                    0.001f
+                );
             result.Data.FarmId.Should().Be(fishTank.FarmId);
             result.Data.FarmName.Should().Be(farm.Name);
             result.Data.TopicCode.Should().Be(fishTank.TopicCode);
@@ -585,7 +594,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Page = 1,
                 PageSize = 10,
                 SearchTerm = "trại beta",
-                SortBy = "height",
+                SortBy = "volume",
                 SortDir = "desc",
             };
 
@@ -686,7 +695,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result.Data.Select(x => x.Height).Should().ContainInOrder(5.0f, 3.0f);
+            result
+                .Data.Select(x => x.Volume)
+                .Should()
+                .ContainInOrder(
+                    (float)(Math.PI * 4.5f * 4.5f * 5.0f),
+                    (float)(Math.PI * 4.0f * 4.0f * 3.0f)
+                );
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
@@ -1475,18 +1490,24 @@ namespace IRasRag.Test.UnitTests.Application
                     SensorId = Guid.NewGuid(),
                     SensorName = "Nhiệt độ 1",
                     SensorTypeName = "Nhiệt độ",
-                    LatestValue = 28.5,
-                    IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestValue = 28.5,
+                        IsWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
                     SensorName = "pH 1",
                     SensorTypeName = "pH",
-                    LatestValue = 7.2,
-                    IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestValue = 7.2,
+                        IsWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
             };
 
@@ -1509,7 +1530,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Data.Should().HaveCount(2);
             result.Data![0].SensorName.Should().Be("Nhiệt độ 1");
-            result.Data[1].LatestValue.Should().Be(7.2);
+            result.Data[1].LatestData?.LatestValue.Should().Be(7.2);
         }
 
         [Fact]
@@ -1604,9 +1625,21 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
@@ -1646,9 +1679,21 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
@@ -1686,8 +1731,16 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
+                new TankSensorLatestDataDto
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                },
             };
 
             _fishTankRepositoryMock

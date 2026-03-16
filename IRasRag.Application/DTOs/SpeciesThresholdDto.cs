@@ -13,6 +13,7 @@ namespace IRasRag.Application.DTOs
         public string SensorTypeName { get; set; }
         public float MinValue { get; set; }
         public float MaxValue { get; set; }
+        public string UnitOfMeasure { get; set; }
     }
 
     public class CreateSpeciesThresholdDto
@@ -41,5 +42,8 @@ namespace IRasRag.Application.DTOs
     }
 
     // List Request DTO
-    public class SpeciesThresholdListRequest : BasePaginatedListRequest { }
+    public class SpeciesThresholdListRequest : BasePaginatedListRequest
+    {
+        public Guid? SpeciesId { get; set; }
+    }
 }

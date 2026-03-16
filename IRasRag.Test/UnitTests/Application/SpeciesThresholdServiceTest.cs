@@ -3,6 +3,7 @@ using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -350,7 +351,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -370,7 +371,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -389,7 +390,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
                         QueryType.ActiveOnly
                     )
                 )

@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
-using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Domain.Enums;
 using IRasRag.Infrastructure.Persistence;
@@ -36,7 +36,7 @@ namespace IRasRag.Infrastructure.Repositories
             return await GetQueryable(type).FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<IEnumerable<T>> FindAllAsync(
+        public async Task<IReadOnlyList<T>> FindAllAsync(
             Expression<Func<T, bool>> predicate,
             QueryType type = QueryType.ActiveOnly
         )
@@ -44,7 +44,7 @@ namespace IRasRag.Infrastructure.Repositories
             return await GetQueryable(type).Where(predicate).ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly)
+        public async Task<IReadOnlyList<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly)
         {
             return await GetQueryable(type).ToListAsync();
         }
@@ -105,7 +105,7 @@ namespace IRasRag.Infrastructure.Repositories
         }
 
         // Non-projected specification (returns IEnumerable<T>)
-        public async Task<IEnumerable<T>> ListAsync(
+        public async Task<IReadOnlyList<T>> ListAsync(
             ISpecification<T> spec,
             QueryType type = QueryType.ActiveOnly
         )
@@ -115,7 +115,7 @@ namespace IRasRag.Infrastructure.Repositories
         }
 
         // Projected specification (returns IEnumerable<TResult>)
-        public async Task<IEnumerable<TResult>> ListAsync<TResult>(
+        public async Task<IReadOnlyList<TResult>> ListAsync<TResult>(
             ISpecification<T, TResult> spec,
             QueryType type = QueryType.ActiveOnly
         )
@@ -133,9 +133,19 @@ namespace IRasRag.Infrastructure.Repositories
         )
         {
             var query = GetQueryable(type);
+
+            // Count query (criteria only)
+            var filteredQuery = SpecificationEvaluator.Default.GetQuery(
+                query,
+                spec,
+                evaluateCriteriaOnly: true
+            );
+
+            var count = await filteredQuery.CountAsync();
+
+            // Data query (full spec)
             var specQuery = SpecificationEvaluator.Default.GetQuery(query, spec);
 
-            var count = await specQuery.CountAsync();
             var items = await specQuery
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -153,9 +163,18 @@ namespace IRasRag.Infrastructure.Repositories
         )
         {
             var query = GetQueryable(type);
-            var specQuery = SpecificationEvaluator.Default.GetQuery(query, spec);
 
-            var count = await specQuery.CountAsync();
+            var filteredQuery = SpecificationEvaluator.Default.GetQuery(
+                query,
+                spec,
+                evaluateCriteriaOnly: true
+            );
+            var count = await filteredQuery.CountAsync();
+
+            var specQuery = SpecificationEvaluator.Default.GetQuery(query, spec);
+            var sql = specQuery.ToQueryString(); // For debugging purposes
+            Console.WriteLine($"Generated SQL for paged query: {sql}");
+
             var items = await specQuery
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)

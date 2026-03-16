@@ -12,6 +12,9 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
         {
             Query.AsNoTracking();
 
+            if (request.SpeciesId.HasValue)
+                Query.Where(st => st.SpeciesId == request.SpeciesId.Value);
+
             var sortMap = new Dictionary<string, Expression<Func<SpeciesThreshold, object?>>>
             {
                 ["speciesname"] = st => st.Species.Name,
@@ -37,6 +40,7 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
                 SensorTypeName = st.SensorType.Name,
                 MinValue = st.MinValue,
                 MaxValue = st.MaxValue,
+                UnitOfMeasure = st.SensorType.UnitOfMeasure
             });
         }
     }

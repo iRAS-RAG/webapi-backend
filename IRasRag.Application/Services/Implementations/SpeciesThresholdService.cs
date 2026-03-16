@@ -90,7 +90,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var thresholdDto = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(new SpeciesThresholdByIdSpec(newThreshold.Id));
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByFilterSpec(st => st.Id == newThreshold.Id));
                 return Result<SpeciesThresholdDto>.Success(
                     thresholdDto!,
                     "Tạo ngưỡng sinh trưởng thành công."
@@ -132,7 +132,38 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(new SpeciesThresholdByIdSpec(id));
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByFilterSpec(st => st.Id == id));
+
+                if (threshold == null)
+                    return Result<SpeciesThresholdDto>.Failure(
+                        "Ngưỡng sinh trưởng không tồn tại.",
+                        ResultType.NotFound
+                    );
+
+                return Result<SpeciesThresholdDto>.Success(
+                    threshold,
+                    "Lấy ngưỡng sinh trưởng thành công."
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving species threshold by ID");
+                return Result<SpeciesThresholdDto>.Failure(
+                    "Lỗi khi truy xuất ngưỡng sinh trưởng.",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
+        public async Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdBySpecies(Guid speciesId)
+        {
+            try
+            {
+                var threshold = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(
+                        new SpeciesThresholdDtoByFilterSpec(st => st.Species.Id == speciesId)
+                    );
 
                 if (threshold == null)
                     return Result<SpeciesThresholdDto>.Failure(

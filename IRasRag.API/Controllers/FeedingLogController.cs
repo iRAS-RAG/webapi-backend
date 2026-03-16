@@ -23,7 +23,7 @@ namespace IRasRag.API.Controllers
             _logger = logger;
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor,Operator")]
         [HttpPost]
         public async Task<IActionResult> CreateFeedingLog([FromBody] CreateFeedingLogDto dto)
         {
@@ -79,7 +79,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor,Operator")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFeedingLogById(Guid id)
         {
@@ -105,7 +105,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFeedingLog(
             Guid id,
@@ -135,7 +135,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFeedingLog(Guid id)
         {

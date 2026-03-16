@@ -74,6 +74,43 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
+        public async Task<
+            Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>
+        > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
+        {
+            try
+            {
+                var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
+                if (tank == null)
+                {
+                    return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                        "Bể cá không tồn tại",
+                        ResultType.NotFound
+                    );
+                }
+
+                var list = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .ListAsync(new ActiveFarmingBatchDtoListSpec(fishTankId));
+                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Success(
+                    list,
+                    "Lấy danh sách lô nuôi đang hoạt động thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi lấy danh sách lô nuôi đang hoạt động cho bể cá với ID {FishTankId}",
+                    fishTankId
+                );
+                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                    "Lỗi khi lấy danh sách lô nuôi đang hoạt động",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
         public async Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id)
         {
             try
@@ -155,15 +192,40 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
-                // Validate SpeciesStageConfig exists
-                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var stageConfigExists = await stageConfigRepo.AnyAsync(sc =>
-                    sc.Id == createDto.SpeciesStageConfigId
-                );
-                if (!stageConfigExists)
+                // Validate Species exists
+                var speciesRepo = _unitOfWork.GetRepository<Species>();
+                var speciesExists = await speciesRepo.AnyAsync(s => s.Id == createDto.SpeciesId);
+                if (!speciesExists)
                 {
                     return Result<FarmingBatchDto>.Failure(
-                        "Cấu hình giai đoạn không tồn tại",
+                        "Loài cá không tồn tại",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Validate GrowthStage exists
+                var growthStageRepo = _unitOfWork.GetRepository<GrowthStage>();
+                var growthStageExists = await growthStageRepo.AnyAsync(gs =>
+                    gs.Id == createDto.GrowthStageId
+                );
+                if (!growthStageExists)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Giai đoạn tăng trưởng không tồn tại",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Resolve SpeciesStageConfig from Species + GrowthStage
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var stageConfig = await stageConfigRepo.FirstOrDefaultAsync(sc =>
+                    sc.SpeciesId == createDto.SpeciesId
+                    && sc.GrowthStageId == createDto.GrowthStageId
+                );
+                if (stageConfig == null)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy cấu hình cho loài và giai đoạn này",
                         ResultType.BadRequest
                     );
                 }
@@ -199,6 +261,7 @@ namespace IRasRag.Application.Services.Implementations
                 var farmingBatch = _mapper.Map<FarmingBatch>(createDto);
                 farmingBatch.Name = trimmedName;
                 farmingBatch.UnitOfMeasure = trimmedUnitOfMeasure;
+                farmingBatch.CurrentStageConfigId = stageConfig.Id;
 
                 await farmingBatchRepo.AddAsync(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();

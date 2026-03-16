@@ -1,7 +1,6 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +8,7 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/hardware")]
+    [Route("api/hardwares")]
     public class HardwareController : ControllerBase
     {
         private ILogger<HardwareController> _logger;
@@ -249,6 +248,40 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("sensors/{id}/history")]
+        public async Task<IActionResult> GetSensorHistory(
+            Guid id,
+            [FromQuery] DateTime? from,
+            [FromQuery] DateTime? to,
+            [FromQuery] int interval = 60
+        )
+        {
+            try
+            {
+                var fromDt = from ?? DateTime.Today;
+                var toDt = to ?? DateTime.Today.AddDays(1);
+
+                var result = await _sensorService.GetSensorHistoryAsync(id, fromDt, toDt, interval);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving sensor history: {SensorId}",
+                    id
+                );
+
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         [HttpPut("sensors/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSensor(Guid id, [FromBody] UpdateSensorDto dto)
@@ -291,6 +324,63 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while deleting sensor: {SensorId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("sensors/{id}/logs")]
+        public async Task<IActionResult> GetSensorLogs(
+            Guid id,
+            [FromQuery] SensorLogListRequest request
+        )
+        {
+            try
+            {
+                var result = await _sensorService.GetSensorLogsAsync(id, request);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(result.Data),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("sensors/{id}/logs")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateSensorLog(
+            Guid id,
+            [FromBody] CreateSensorLogDto dto
+        )
+        {
+            try
+            {
+                var result = await _sensorService.CreateSensorLogAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }

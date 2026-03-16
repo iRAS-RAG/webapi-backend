@@ -1,5 +1,6 @@
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
+using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,21 +9,28 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/tanks")]
+    [Route("api/fish-tanks")]
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
+        private readonly ISensorService _sensorService;
         private readonly ILogger<FishTankController> _logger;
+        private readonly IControlDeviceService _controlDeviceService;
 
         public FishTankController(
             IFishTankService fishTankService,
-            ILogger<FishTankController> logger
+            ISensorService sensorService,
+            ILogger<FishTankController> logger,
+            IControlDeviceService controlDeviceService
         )
         {
             _fishTankService = fishTankService;
+            _sensorService = sensorService;
             _logger = logger;
+            _controlDeviceService = controlDeviceService;
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
@@ -97,6 +105,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
