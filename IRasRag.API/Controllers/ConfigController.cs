@@ -332,6 +332,47 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("species-stage-configs/by-species/{speciesId}")]
+        public async Task<IActionResult> GetSpeciesStageConfigsBySpeciesId(
+            Guid speciesId,
+            [FromQuery] SpeciesStageConfigListRequest request
+        )
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+
+                var result =
+                    await _speciesStageConfigService.GetSpeciesStageConfigsBySpeciesId(
+                        speciesId,
+                        request
+                    );
+
+                return result.Meta == null && (result.Data == null || result.Data.Count == 0)
+                    ? NotFound(new { result.Message })
+                    : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving species stage configs by species ID: {SpeciesId}",
+                    speciesId
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         [HttpGet("species-stage-configs/{id}")]
         public async Task<IActionResult> GetSpeciesStageConfigById(Guid id)
         {
