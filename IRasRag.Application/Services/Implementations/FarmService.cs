@@ -55,9 +55,7 @@ namespace IRasRag.Application.Services.Implementations
                 // Kiểm tra trùng email
                 var existingFarm = await _unitOfWork
                     .GetRepository<Farm>()
-                    .FirstOrDefaultAsync(f =>
-                        f.Email.ToLower() == createDto.Email.Trim().ToLower() && !f.IsDeleted
-                    );
+                    .FirstOrDefaultAsync(f => f.Email.ToLower() == createDto.Email.Trim().ToLower());
 
                 if (existingFarm != null)
                     return Result<FarmDto>.Failure(
@@ -71,7 +69,6 @@ namespace IRasRag.Application.Services.Implementations
                     Address = createDto.Address.Trim(),
                     PhoneNumber = createDto.PhoneNumber.Trim(),
                     Email = createDto.Email.Trim(),
-                    IsDeleted = false,
                 };
 
                 await _unitOfWork.GetRepository<Farm>().AddAsync(newFarm);
@@ -95,16 +92,12 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(id);
 
-                if (farm == null || farm.IsDeleted)
+                if (farm == null)
                 {
                     return Result.Failure("Trang trại không tồn tại.", ResultType.NotFound);
                 }
 
-                // Soft delete
-                farm.IsDeleted = true;
-                farm.DeletedAt = DateTime.UtcNow;
-
-                _unitOfWork.GetRepository<Farm>().Update(farm);
+                _unitOfWork.GetRepository<Farm>().Delete(farm);
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result.Success("Xóa trang trại thành công.");
@@ -166,7 +159,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(id);
 
-                if (farm == null || farm.IsDeleted)
+                if (farm == null)
                     return Result<FarmDto>.Failure(
                         "Trang trại không tồn tại.",
                         ResultType.NotFound
@@ -199,7 +192,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(id);
 
-                if (farm == null || farm.IsDeleted)
+                if (farm == null)
                     return Result.Failure("Trang trại không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -225,9 +218,7 @@ namespace IRasRag.Application.Services.Implementations
                     var existingFarm = await _unitOfWork
                         .GetRepository<Farm>()
                         .FirstOrDefaultAsync(f =>
-                            f.Email.ToLower() == emailToUpdate.ToLower()
-                            && f.Id != id
-                            && !f.IsDeleted
+                            f.Email.ToLower() == emailToUpdate.ToLower() && f.Id != id
                         );
 
                     if (existingFarm != null)

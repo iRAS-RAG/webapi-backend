@@ -10,9 +10,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<ControlDevice> builder)
         {
             builder.ConfigureTimestamps();
-            builder.ConfigureSoftDelete();
-
-            builder.HasQueryFilter(cd => !cd.IsDeleted);
 
             builder
                 .HasOne(cd => cd.MasterBoard)
@@ -27,7 +24,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // List control devices by board
-            builder.HasIndex(cd => new { cd.MasterBoardId, cd.IsDeleted });
+            builder.HasIndex(cd => cd.MasterBoardId);
             // Unique hardware constraint
             builder.HasIndex(cd => new { cd.MasterBoardId, cd.PinCode }).IsUnique();
 

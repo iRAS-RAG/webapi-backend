@@ -32,8 +32,6 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.MasterBoard, opt => opt.Ignore())
                 .ForMember(dest => dest.ControlDeviceType, opt => opt.Ignore())
                 .ForMember(dest => dest.JobControlMappings, opt => opt.Ignore());

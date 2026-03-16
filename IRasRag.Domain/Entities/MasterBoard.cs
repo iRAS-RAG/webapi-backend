@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class MasterBoard : BaseEntity, ISoftDeletable
+    public class MasterBoard : BaseEntity
     {
         [Required]
         [MaxLength(255)]
@@ -15,10 +15,6 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public Guid FishTankId { get; set; }
-
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public FishTank FishTank { get; set; }

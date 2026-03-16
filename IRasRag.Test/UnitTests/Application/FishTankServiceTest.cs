@@ -73,7 +73,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Email = "abc@farm.com",
                 Address = "123 ABC",
                 PhoneNumber = "0123456789",
-                IsDeleted = false,
             };
 
             _farmRepositoryMock
@@ -113,7 +112,6 @@ namespace IRasRag.Test.UnitTests.Application
                             && ft.FarmId == createDto.FarmId
                             && ft.TopicCode == createDto.TopicCode
                             && ft.CameraUrl == createDto.CameraUrl
-                            && ft.IsDeleted == false
                         )
                     ),
                 Times.Once
@@ -144,7 +142,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = farmId,
                 Name = "Trang trại ABC",
-                IsDeleted = false,
             };
 
             _farmRepositoryMock
@@ -364,7 +361,7 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task CreateFishTankAsync_ShouldReturnBadRequest_WhenFarmIsDeleted()
+        public async Task CreateFishTankAsync_ShouldReturnBadRequest_WhenFarmFilteredByActiveQuery()
         {
             // Arrange
             var farmId = Guid.NewGuid();
@@ -377,17 +374,9 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "http://camera.com/stream1",
             };
 
-            var deletedFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
-            };
-
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm?)null);
             _unitOfWorkMock
                 .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
@@ -399,6 +388,11 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
             result.Message.Should().Be("Trang trại không tồn tại.");
+
+            _farmRepositoryMock.Verify(
+                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
+                Times.Once
+            );
 
             _fishTankRepositoryMock.Verify(r => r.AddAsync(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
@@ -446,31 +440,20 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             var farmId = Guid.NewGuid();
-            var fishTank = new FishTank
+            var fishTank = new FishTankDto
             {
                 Id = fishTankId,
                 Name = "Bể cá số 1",
-                Height = 2.5f,
-                Radius = 3.0f,
+                Volume = (float)(Math.PI * 3.0f * 3.0f * 2.5f),
                 FarmId = farmId,
+                FarmName = "Trang trại ABC",
                 TopicCode = "TOPIC001",
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
-            };
-
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
                 .ReturnsAsync(fishTank);
-            _farmRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(farm);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -482,19 +465,14 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Id.Should().Be(fishTankId);
             result.Data.Name.Should().Be(fishTank.Name);
-            result
-                .Data.Volume.Should()
-                .BeApproximately(
-                    (float)(Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height),
-                    0.001f
-                );
+            result.Data.Volume.Should().BeApproximately(fishTank.Volume, 0.001f);
             result.Data.FarmId.Should().Be(fishTank.FarmId);
-            result.Data.FarmName.Should().Be(farm.Name);
+            result.Data.FarmName.Should().Be(fishTank.FarmName);
             result.Data.TopicCode.Should().Be(fishTank.TopicCode);
             result.Data.CameraUrl.Should().Be(fishTank.CameraUrl);
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
                 Times.Once
             );
         }
@@ -505,8 +483,8 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync((FishTank?)null);
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync((FishTankDto?)null);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -518,31 +496,19 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().BeNull();
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetFishTankByIdAsync_ShouldReturnNotFound_WhenFishTankIsDeleted()
+        public async Task GetFishTankByIdAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                Height = 2.5f,
-                Radius = 3.0f,
-                FarmId = Guid.NewGuid(),
-                CameraUrl = "http://camera.com/stream1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
-            };
-
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync((FishTankDto?)null);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -553,30 +519,28 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Bể cá không tồn tại.");
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetFishTankByIdAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetFishTankByIdAsync_ShouldThrow_WhenRepositoryThrowsException()
         {
             // Arrange
-            var fishTankId = Guid.NewGuid();
+            var exception = new Exception("Test exception");
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ThrowsAsync(new Exception());
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .ThrowsAsync(exception);
 
             // Act
-            var result = await _sut.GetFishTankByIdAsync(fishTankId);
+            var act = () => _sut.GetFishTankByIdAsync(Guid.NewGuid());
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi truy xuất thông tin bể cá.");
+            await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
                 Times.Once
             );
         }
@@ -936,7 +900,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
@@ -954,18 +917,16 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Type.Should().Be(ResultType.Ok);
             result.Message.Should().Be("Xóa bể cá thành công.");
-            fishTank.IsDeleted.Should().BeTrue();
-            fishTank.DeletedAt.Should().NotBeNull();
-            fishTank.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
             _fishTankRepositoryMock.Verify(
                 r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
                 Times.Once
             );
             _fishTankRepositoryMock.Verify(
-                r => r.Update(It.Is<FishTank>(ft => ft.Id == fishTankId && ft.IsDeleted == true)),
+                r => r.Delete(It.Is<FishTank>(ft => ft.Id == fishTankId)),
                 Times.Once
             );
+            _fishTankRepositoryMock.Verify(r => r.Update(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
@@ -1001,21 +962,13 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task DeleteFishTankAsync_ShouldReturnNotFound_WhenFishTankAlreadyDeleted()
+        public async Task DeleteFishTankAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
-
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .ReturnsAsync((FishTank?)null);
 
             // Act
             var result = await _sut.DeleteFishTankAsync(fishTankId);
@@ -1025,6 +978,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.NotFound);
             result.Message.Should().Be("Bể cá không tồn tại.");
 
+            _fishTankRepositoryMock.Verify(r => r.Delete(It.IsAny<FishTank>()), Times.Never);
             _fishTankRepositoryMock.Verify(r => r.Update(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
@@ -1074,7 +1028,6 @@ namespace IRasRag.Test.UnitTests.Application
                 FarmId = Guid.NewGuid(),
                 TopicCode = "TOPIC001",
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto
             {
@@ -1090,7 +1043,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = newFarmId,
                 Name = "Trang trại mới",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
@@ -1149,7 +1101,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Name = nameInput };
 
@@ -1182,7 +1133,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto
             {
@@ -1240,22 +1190,15 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task UpdateFishTankAsync_ShouldReturnNotFound_WhenFishTankIsDeleted()
+        public async Task UpdateFishTankAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
             var updateDto = new UpdateFishTankDto { Name = "Bể cá số 1 - Cập nhật" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .ReturnsAsync((FishTank?)null);
 
             // Act
             var result = await _sut.UpdateFishTankAsync(fishTankId, updateDto);
@@ -1291,7 +1234,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Height = height };
 
@@ -1333,7 +1275,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Radius = radius };
 
@@ -1370,7 +1311,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { FarmId = newFarmId };
 
@@ -1397,7 +1337,7 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task UpdateFishTankAsync_ShouldReturnBadRequest_WhenNewFarmIsDeleted()
+        public async Task UpdateFishTankAsync_ShouldReturnBadRequest_WhenNewFarmFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
@@ -1410,14 +1350,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
-            };
-            var deletedFarm = new Farm
-            {
-                Id = newFarmId,
-                Name = "Trang trại XYZ",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
             };
             var updateDto = new UpdateFishTankDto { FarmId = newFarmId };
 
@@ -1426,7 +1358,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(existingFishTank);
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm?)null);
 
             // Act
             var result = await _sut.UpdateFishTankAsync(fishTankId, updateDto);
@@ -1481,7 +1413,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể A",
-                IsDeleted = false,
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
@@ -1542,7 +1473,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể Trống",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
@@ -1621,7 +1551,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể Bình Thường",
-                IsDeleted = false,
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
@@ -1675,7 +1604,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể Cảnh Báo",
-                IsDeleted = false,
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
@@ -1727,7 +1655,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể Nguy Hiểm",
-                IsDeleted = false,
             };
             var sensorData = new List<TankSensorLatestDataDto>
             {
@@ -1774,7 +1701,6 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = tankId,
                 Name = "Bể Trống",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock

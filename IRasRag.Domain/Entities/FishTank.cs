@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class FishTank : BaseEntity, ISoftDeletable
+    public class FishTank : BaseEntity
     {
         [Required]
         [MaxLength(255)]
@@ -24,10 +24,6 @@ namespace IRasRag.Domain.Entities
         [Required]
         [MaxLength(255)]
         public string CameraUrl { get; set; } = string.Empty;
-
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public Farm Farm { get; set; }

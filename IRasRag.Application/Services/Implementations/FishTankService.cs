@@ -60,7 +60,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 // Kiểm tra trang trại tồn tại
                 var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(createDto.FarmId);
-                if (farm == null || farm.IsDeleted)
+                if (farm == null)
                     return Result<FishTankDto>.Failure(
                         "Trang trại không tồn tại.",
                         ResultType.BadRequest
@@ -74,7 +74,6 @@ namespace IRasRag.Application.Services.Implementations
                     FarmId = createDto.FarmId,
                     TopicCode = createDto.TopicCode?.Trim(),
                     CameraUrl = createDto.CameraUrl.Trim(),
-                    IsDeleted = false,
                 };
 
                 await _unitOfWork.GetRepository<FishTank>().AddAsync(newFishTank);
@@ -108,16 +107,12 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(id);
 
-                if (fishTank == null || fishTank.IsDeleted)
+                if (fishTank == null)
                 {
                     return Result.Failure("Bể cá không tồn tại.", ResultType.NotFound);
                 }
 
-                // Soft delete
-                fishTank.IsDeleted = true;
-                fishTank.DeletedAt = DateTime.UtcNow;
-
-                _unitOfWork.GetRepository<FishTank>().Update(fishTank);
+                _unitOfWork.GetRepository<FishTank>().Delete(fishTank);
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result.Success("Xóa bể cá thành công.");
@@ -220,7 +215,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(id);
 
-                if (fishTank == null || fishTank.IsDeleted)
+                if (fishTank == null)
                     return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
 
                 if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -252,7 +247,7 @@ namespace IRasRag.Application.Services.Implementations
                     var farm = await _unitOfWork
                         .GetRepository<Farm>()
                         .GetByIdAsync(dto.FarmId.Value);
-                    if (farm == null || farm.IsDeleted)
+                    if (farm == null)
                         return Result<FishTankDto>.Failure(
                             "Trang trại không tồn tại.",
                             ResultType.BadRequest
