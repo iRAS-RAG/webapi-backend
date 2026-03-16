@@ -97,4 +97,15 @@ namespace IRasRag.Application.DTOs
         public FarmingBatchStatus? Status { get; set; }
         public Guid? FishTankId { get; set; }
     }
+
+    // Batch sub-route request
+    public class HarvestBatchRequest
+    {
+        [Required(ErrorMessage = "Ngày thu hoạch thực tế là bắt buộc")]
+        public DateTime ActualHarvestDate { get; set; }
+
+        [Required(ErrorMessage = "Số lượng thu hoạch là bắt buộc")]
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng thu hoạch phải lớn hơn hoặc bằng 0")]
+        public int FinalQuantity { get; set; }
+    }
 }

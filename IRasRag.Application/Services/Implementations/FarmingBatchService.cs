@@ -344,9 +344,26 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure("Lỗi khi cập nhật lô nuôi", ResultType.Unexpected);
             }
         }
+
+        public async Task<Result> HarvestBatchAsync(Guid id, HarvestBatchRequest request)
+        {
+            var batch = await _unitOfWork.GetRepository<FarmingBatch>().GetByIdAsync(id);
+
+            if (batch == null)
+            {
+                return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
+            }
+
+            batch.Status = FarmingBatchStatus.HARVESTED;
+            batch.ActualHarvestDate = request.ActualHarvestDate;
+            batch.CurrentQuantity = request.FinalQuantity;
+
+            await _unitOfWork.SaveChangesAsync();
+            return Result.Success("Thu hoạch lô nuôi thành công");
+        }
         #endregion
 
-        #region Delete Methods
+            #region Delete Methods
         public async Task<Result> DeleteFarmingBatchAsync(Guid id)
         {
             try
