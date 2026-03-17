@@ -274,6 +274,19 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync(false);
 
+            _sensorRepoMock
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<Sensor, SensorDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new SensorDto
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Sensor mới",
+                    PinCode = 5,
+                    SensorTypeId = sensorTypeId,
+                    SensorTypeName = "Độ mặn",
+                    MasterBoardId = masterBoardId,
+                    MasterBoardName = "Board X",
+                });
+
             // Act
             var result = await _sut.CreateSensorAsync(dto);
 
@@ -537,6 +550,18 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.AddAsync(It.IsAny<SensorLog>()))
                 .Callback<SensorLog>(log => log.Id = Guid.NewGuid()); // simulate DB-generated Id
 
+            _logRepoMock
+                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<SensorLog, SensorLogDto>>(), QueryType.ActiveOnly))
+                .ReturnsAsync(new SensorLogDto
+                {
+                    Id = Guid.NewGuid(),
+                    SensorId = sensorId,
+                    Data = 25.5,
+                    IsWarning = false,
+                    DataJson = "{}",
+                    CreatedAt = DateTime.UtcNow,
+                });
+
             // Act
             var result = await _sut.CreateSensorLogAsync(sensorId, dto);
 
@@ -704,7 +729,12 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var sensorId = Guid.NewGuid();
             var sensor = new Sensor { Id = sensorId, Name = "Sensor" };
-            var request = new SensorLogListRequest { Interval = 60 }; // 60-minute buckets
+            var request = new SensorLogListRequest
+            {
+                Interval = 60, // 60-minute buckets
+                From = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                To = new DateTime(2025, 1, 1, 2, 0, 0, DateTimeKind.Utc),
+            };
 
             var baseTime = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var logs = new List<SensorLogDto>
@@ -752,14 +782,40 @@ namespace IRasRag.Test.UnitTests.Application
             _sensorRepoMock
                 .Setup(r => r.GetByIdAsync(sensorId, QueryType.ActiveOnly))
                 .ReturnsAsync(sensor);
-            _logRepoMock
-                .Setup(r =>
-                    r.ListAsync(
-                        It.IsAny<ISpecification<SensorLog, SensorLogDto>>(),
-                        QueryType.ActiveOnly
-                    )
-                )
-                .ReturnsAsync(logs);
+
+            var mockSensorLogRepository = new Mock<ISensorLogRepository>();
+            var aggregatedLogs = new List<SensorLogDto>
+            {
+                new SensorLogDto
+                {
+                    Id = Guid.NewGuid(),
+                    SensorId = sensorId,
+                    Data = 15.0,
+                    IsWarning = false,
+                    DataJson = "{}",
+                    CreatedAt = baseTime,
+                },
+                new SensorLogDto
+                {
+                    Id = Guid.NewGuid(),
+                    SensorId = sensorId,
+                    Data = 35.0,
+                    IsWarning = true,
+                    DataJson = "{}",
+                    CreatedAt = baseTime.AddHours(1),
+                },
+            };
+            mockSensorLogRepository
+                .Setup(r => r.GetAggregatedLogsAsync(
+                    sensorId,
+                    request.From!.Value,
+                    request.To!.Value,
+                    request.Interval!.Value,
+                    request.Page,
+                    request.PageSize
+                ))
+                .ReturnsAsync((items: aggregatedLogs.Cast<SensorLogDto>().ToList() as IReadOnlyList<SensorLogDto>, totalCount: aggregatedLogs.Count));
+            _unitOfWorkMock.Setup(u => u.SensorLogs).Returns(mockSensorLogRepository.Object);
 
             // Act
             var result = await _sut.GetSensorLogsAsync(sensorId, request);
@@ -780,6 +836,29 @@ namespace IRasRag.Test.UnitTests.Application
             // Bucket keys should align to the hour boundary
             result.Data.Data[0].CreatedAt.Should().Be(baseTime); // 00:00
             result.Data.Data[1].CreatedAt.Should().Be(baseTime.AddHours(1)); // 01:00
+
+            mockSensorLogRepository.Verify(
+                r => r.GetAggregatedLogsAsync(
+                    sensorId,
+                    request.From!.Value,
+                    request.To!.Value,
+                    request.Interval!.Value,
+                    request.Page,
+                    request.PageSize
+                ),
+                Times.Once
+            );
+
+            _logRepoMock.Verify(
+                r =>
+                    r.GetPagedAsync(
+                        It.IsAny<ISpecification<SensorLog, SensorLogDto>>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
         }
 
         [Fact]

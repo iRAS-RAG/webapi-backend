@@ -661,11 +661,10 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm { Id = farmId };
 
             _repositoryMock
                 .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm)null);
 
             // Act
             var result = await _sut.DeleteFarmAsync(farmId);

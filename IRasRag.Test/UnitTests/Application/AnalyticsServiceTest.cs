@@ -265,6 +265,54 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(new List<FishTank>());
+            _mortalityLogRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<MortalityLog, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<MortalityLog>());
+            _feedingLogRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedingLog, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<FeedingLog>());
+            _alertRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<Alert, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<Alert>());
+            _masterBoardRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<MasterBoard, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<MasterBoard>());
+            _sensorRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<Sensor, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<Sensor>());
+            _sensorLogRepoMock
+                .Setup(r =>
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<SensorLog, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new List<SensorLog>());
 
             var result = await _sut.CompareBatchesAsync(request);
 
@@ -545,10 +593,15 @@ namespace IRasRag.Test.UnitTests.Application
             var result = await _sut.CompareBatchesAsync(request);
 
             result.Type.Should().Be(ResultType.Ok);
-            // Both batches get the same mortality logs list (mock returns same list for any predicate)
+            // Only batchId1 has mortality logs; batchId2 should have 0
             result
-                .Data!.Batches.Should()
-                .AllSatisfy(b => b.MetricValues.TotalMortality.Should().Be(50d));
+                .Data!.Batches.First(b => b.BatchId == batchId1)
+                .MetricValues.TotalMortality.Should()
+                .Be(50d);
+            result
+                .Data!.Batches.First(b => b.BatchId == batchId2)
+                .MetricValues.TotalMortality.Should()
+                .Be(0d);
         }
 
         [Fact]
@@ -599,15 +652,23 @@ namespace IRasRag.Test.UnitTests.Application
                     {
                         new() { FarmingBatchId = batchId1, Amount = 150.5f },
                         new() { FarmingBatchId = batchId1, Amount = 49.5f },
+                        new() { FarmingBatchId = batchId2, Amount = 100f },
+                        new() { FarmingBatchId = batchId2, Amount = 100f },
                     }
                 );
 
             var result = await _sut.CompareBatchesAsync(request);
 
             result.Type.Should().Be(ResultType.Ok);
+            // batchId1 has 200.0 (150.5 + 49.5), batchId2 has 200.0 (100 + 100)
             result
-                .Data!.Batches.Should()
-                .AllSatisfy(b => b.MetricValues.TotalFeeding.Should().Be(200.0));
+                .Data!.Batches.First(b => b.BatchId == batchId1)
+                .MetricValues.TotalFeeding.Should()
+                .Be(200.0);
+            result
+                .Data!.Batches.First(b => b.BatchId == batchId2)
+                .MetricValues.TotalFeeding.Should()
+                .Be(200.0);
         }
 
         [Fact]

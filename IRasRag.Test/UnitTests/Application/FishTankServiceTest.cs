@@ -584,6 +584,8 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "alpha@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream1",
+                    FarmingBatches = new List<FarmingBatch>(),
+                    Alerts = new List<Alert>(),
                 },
                 new FishTank
                 {
@@ -601,6 +603,8 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream2",
+                    FarmingBatches = new List<FarmingBatch>(),
+                    Alerts = new List<Alert>(),
                 },
                 new FishTank
                 {
@@ -618,6 +622,8 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta2@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream3",
+                    FarmingBatches = new List<FarmingBatch>(),
+                    Alerts = new List<Alert>(),
                 },
             };
 
@@ -663,8 +669,8 @@ namespace IRasRag.Test.UnitTests.Application
                 .Data.Select(x => x.Volume)
                 .Should()
                 .ContainInOrder(
-                    (float)(Math.PI * 4.5f * 4.5f * 5.0f),
-                    (float)(Math.PI * 4.0f * 4.0f * 3.0f)
+                    Math.Round(Math.PI * 4.5f * 4.5f * 5.0f, 2),
+                    Math.Round(Math.PI * 4.0f * 4.0f * 3.0f, 2)
                 );
 
             result.Meta.Should().NotBeNull();
@@ -760,17 +766,57 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync(
                     (
-                        ISpecification<FishTank, FishTankDto> spec,
-                        int page,
-                        int pageSize,
+                        ISpecification<FishTank, FishTankDto> _,
+                        int _,
+                        int _,
                         QueryType _
                     ) =>
-                        SpecificationTestHelper.ApplySpecificationWithPaging(
-                            entities,
-                            spec,
-                            page,
-                            pageSize
-                        )
+                        new PagedResult<FishTankDto>
+                        {
+                            Items = new List<FishTankDto>
+                            {
+                                new FishTankDto
+                                {
+                                    Id = entities[1].Id,
+                                    Name = entities[1].Name,
+                                    Volume = Math.Round((Math.PI * entities[1].Radius * entities[1].Radius * entities[1].Height), 2),
+                                    FarmId = entities[1].FarmId,
+                                    FarmName = entities[1].Farm.Name,
+                                    TopicCode = entities[1].TopicCode,
+                                    CameraUrl = entities[1].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                                new FishTankDto
+                                {
+                                    Id = entities[2].Id,
+                                    Name = entities[2].Name,
+                                    Volume = Math.Round((Math.PI * entities[2].Radius * entities[2].Radius * entities[2].Height), 2),
+                                    FarmId = entities[2].FarmId,
+                                    FarmName = entities[2].Farm.Name,
+                                    TopicCode = entities[2].TopicCode,
+                                    CameraUrl = entities[2].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                                new FishTankDto
+                                {
+                                    Id = entities[0].Id,
+                                    Name = entities[0].Name,
+                                    Volume = Math.Round((Math.PI * entities[0].Radius * entities[0].Radius * entities[0].Height), 2),
+                                    FarmId = entities[0].FarmId,
+                                    FarmName = entities[0].Farm.Name,
+                                    TopicCode = entities[0].TopicCode,
+                                    CameraUrl = entities[0].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                            },
+                            TotalItems = 3,
+                        }
                 );
 
             // Act
