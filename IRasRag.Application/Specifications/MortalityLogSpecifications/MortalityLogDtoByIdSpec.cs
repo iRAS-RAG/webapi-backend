@@ -20,6 +20,8 @@ namespace IRasRag.Application.Specifications.MortalityLogSpecifications
                     Id = ml.Id,
                     BatchId = ml.BatchId,
                     BatchName = ml.Batch.Name,
+                    UserId = ml.UserId,
+                    UserEmail = ml.User.Email,
                     Quantity = ml.Quantity,
                     Date = ml.Date,
                     CreatedAt = ml.CreatedAt,

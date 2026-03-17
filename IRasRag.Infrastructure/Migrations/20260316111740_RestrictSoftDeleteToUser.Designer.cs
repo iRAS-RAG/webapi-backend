@@ -3,6 +3,7 @@ using System;
 using IRasRag.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316111740_RestrictSoftDeleteToUser")]
+    partial class RestrictSoftDeleteToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,8 +74,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
-                    b.Property<double>("Value")
-                        .HasColumnType("double precision")
+                    b.Property<float>("Value")
+                        .HasColumnType("real")
                         .HasColumnName("value");
 
                     b.HasKey("Id")
@@ -107,7 +110,7 @@ namespace IRasRag.Infrastructure.Migrations
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
                             Status = "OPEN",
-                            Value = 31.199999999999999
+                            Value = 31.2f
                         },
                         new
                         {
@@ -121,7 +124,7 @@ namespace IRasRag.Infrastructure.Migrations
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
                             Status = "RESOLVED",
-                            Value = 7.2000000000000002
+                            Value = 7.2f
                         },
                         new
                         {
@@ -134,7 +137,7 @@ namespace IRasRag.Infrastructure.Migrations
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
                             Status = "ACKNOWLEDGED",
-                            Value = 28.5
+                            Value = 28.5f
                         });
                 });
 
@@ -596,8 +599,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("CurrentQuantity")
-                        .HasColumnType("integer")
+                    b.Property<float>("CurrentQuantity")
+                        .HasColumnType("real")
                         .HasColumnName("current_quantity");
 
                     b.Property<Guid>("CurrentStageConfigId")
@@ -612,8 +615,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("fish_tank_id");
 
-                    b.Property<int>("InitialQuantity")
-                        .HasColumnType("integer")
+                    b.Property<float>("InitialQuantity")
+                        .HasColumnType("real")
                         .HasColumnName("initial_quantity");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -670,11 +673,11 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrentQuantity = 950,
+                            CurrentQuantity = 950f,
                             CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
                             EstimatedHarvestDate = new DateTime(2024, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            InitialQuantity = 1000,
+                            InitialQuantity = 1000f,
                             Name = "Lô nuôi cá rô phi 2024-01",
                             StartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "ACTIVE",
@@ -685,11 +688,11 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
                             ActualHarvestDate = new DateTime(2024, 5, 28, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrentQuantity = 0,
+                            CurrentQuantity = 0f,
                             CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
                             EstimatedHarvestDate = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            InitialQuantity = 800,
+                            InitialQuantity = 800f,
                             Name = "Lô nuôi cá rô phi 2023-12",
                             StartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "HARVESTED",
@@ -730,8 +733,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
-                    b.Property<double>("ProteinPercentage")
-                        .HasColumnType("double precision")
+                    b.Property<float>("ProteinPercentage")
+                        .HasColumnType("real")
                         .HasColumnName("protein_percentage");
 
                     b.HasKey("Id")
@@ -746,7 +749,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Description = "Thức ăn có hàm lượng protein cao, phù hợp cho giai đoạn đầu phát triển của cá.",
                             Manufacturer = "AquaFeed Solutions",
                             Name = "Giàu protein",
-                            ProteinPercentage = 45.0
+                            ProteinPercentage = 45f
                         },
                         new
                         {
@@ -754,7 +757,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Description = "Thức ăn tiêu chuẩn, phù hợp cho giai đoạn phát triển tiếp theo của cá.",
                             Manufacturer = "AquaFeed Solutions",
                             Name = "Tiêu chuẩn",
-                            ProteinPercentage = 38.0
+                            ProteinPercentage = 38f
                         });
                 });
 
@@ -765,8 +768,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision")
+                    b.Property<float>("Amount")
+                        .HasColumnType("real")
                         .HasColumnName("amount");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -785,15 +788,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.HasKey("Id")
                         .HasName("pk_feeding_logs");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_feeding_logs_user_id");
 
                     b.HasIndex("FarmingBatchId", "CreatedDate")
                         .HasDatabaseName("ix_feeding_logs_farming_batch_id_created_date");
@@ -804,29 +800,26 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001601"),
-                            Amount = 5.5,
+                            Amount = 5.5f,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedDate = new DateTime(2024, 1, 20, 6, 0, 0, 0, DateTimeKind.Utc),
-                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
-                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001602"),
-                            Amount = 5.7999999999999998,
+                            Amount = 5.8f,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedDate = new DateTime(2024, 1, 20, 12, 0, 0, 0, DateTimeKind.Utc),
-                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
-                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001603"),
-                            Amount = 6.0,
+                            Amount = 6f,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedDate = new DateTime(2024, 1, 20, 18, 0, 0, 0, DateTimeKind.Utc),
-                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
-                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501")
                         });
                 });
 
@@ -851,8 +844,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("farm_id");
 
-                    b.Property<double>("Height")
-                        .HasColumnType("double precision")
+                    b.Property<float>("Height")
+                        .HasColumnType("real")
                         .HasColumnName("height");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -865,8 +858,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
-                    b.Property<double>("Radius")
-                        .HasColumnType("double precision")
+                    b.Property<float>("Radius")
+                        .HasColumnType("real")
                         .HasColumnName("radius");
 
                     b.Property<string>("TopicCode")
@@ -889,9 +882,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             CameraUrl = "",
                             FarmId = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
-                            Height = 0.0,
+                            Height = 0f,
                             Name = "Bể nuôi số 1",
-                            Radius = 0.0,
+                            Radius = 0f,
                             TopicCode = "tank/001"
                         });
                 });
@@ -985,12 +978,12 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("job_type_id");
 
-                    b.Property<double?>("MaxValue")
-                        .HasColumnType("double precision")
+                    b.Property<float?>("MaxValue")
+                        .HasColumnType("real")
                         .HasColumnName("max_value");
 
-                    b.Property<double?>("MinValue")
-                        .HasColumnType("double precision")
+                    b.Property<float?>("MinValue")
+                        .HasColumnType("real")
                         .HasColumnName("min_value");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -1049,7 +1042,7 @@ namespace IRasRag.Infrastructure.Migrations
                             ExecutionDays = "ALL",
                             IsActive = true,
                             JobTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000902"),
-                            MaxValue = 30.0,
+                            MaxValue = 30f,
                             Name = "Kiểm soát nhiệt độ",
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
                         },
@@ -1289,22 +1282,15 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_at");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real")
                         .HasColumnName("quantity");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_mortality_logs");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_mortality_logs_user_id");
-
-                    b.HasIndex("BatchId", "Date")
-                        .HasDatabaseName("ix_mortality_logs_batch_id_date");
+                    b.HasIndex("BatchId")
+                        .HasDatabaseName("ix_mortality_logs_batch_id");
 
                     b.ToTable("mortality_logs", (string)null);
 
@@ -1315,8 +1301,7 @@ namespace IRasRag.Infrastructure.Migrations
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Date = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Quantity = 30,
-                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                            Quantity = 30f
                         },
                         new
                         {
@@ -1324,8 +1309,7 @@ namespace IRasRag.Infrastructure.Migrations
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Date = new DateTime(2024, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Quantity = 20,
-                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                            Quantity = 20f
                         });
                 });
 
@@ -1847,8 +1831,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<double>("AmountPer100Fish")
-                        .HasColumnType("double precision")
+                    b.Property<float>("AmountPer100Fish")
+                        .HasColumnType("real")
                         .HasColumnName("amount_per100fish");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -1871,8 +1855,8 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("growth_stage_id");
 
-                    b.Property<double?>("MaxStockingDensity")
-                        .HasColumnType("double precision")
+                    b.Property<float?>("MaxStockingDensity")
+                        .HasColumnType("real")
                         .HasColumnName("max_stocking_density");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -1902,23 +1886,23 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
-                            AmountPer100Fish = 0.5,
+                            AmountPer100Fish = 0.5f,
                             ExpectedDurationDays = 30,
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                             FrequencyPerDay = 6,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxStockingDensity = 50.0,
+                            MaxStockingDensity = 50f,
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
-                            AmountPer100Fish = 3.0,
+                            AmountPer100Fish = 3f,
                             ExpectedDurationDays = 90,
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                             FrequencyPerDay = 3,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxStockingDensity = 30.0,
+                            MaxStockingDensity = 30f,
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         });
                 });
@@ -1938,12 +1922,12 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("growth_stage_id");
 
-                    b.Property<double>("MaxValue")
-                        .HasColumnType("double precision")
+                    b.Property<float>("MaxValue")
+                        .HasColumnType("real")
                         .HasColumnName("max_value");
 
-                    b.Property<double>("MinValue")
-                        .HasColumnType("double precision")
+                    b.Property<float>("MinValue")
+                        .HasColumnType("real")
                         .HasColumnName("min_value");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -1978,8 +1962,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 30.0,
-                            MinValue = 26.0,
+                            MaxValue = 30f,
+                            MinValue = 26f,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
@@ -1987,8 +1971,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 8.0,
-                            MinValue = 6.5,
+                            MaxValue = 8f,
+                            MinValue = 6.5f,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
@@ -1996,8 +1980,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000503"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 29.0,
-                            MinValue = 25.0,
+                            MaxValue = 29f,
+                            MinValue = 25f,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
@@ -2005,8 +1989,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000504"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 8.5,
-                            MinValue = 6.5,
+                            MaxValue = 8.5f,
+                            MinValue = 6.5f,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         });
@@ -2357,16 +2341,7 @@ namespace IRasRag.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_feeding_logs_farming_batches_farming_batch_id");
 
-                    b.HasOne("IRasRag.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_feeding_logs_users_user_id");
-
                     b.Navigation("FarmingBatch");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.FishTank", b =>
@@ -2443,16 +2418,7 @@ namespace IRasRag.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mortality_logs_farming_batches_batch_id");
 
-                    b.HasOne("IRasRag.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_mortality_logs_users_user_id");
-
                     b.Navigation("Batch");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Recommendation", b =>

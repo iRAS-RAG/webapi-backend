@@ -54,7 +54,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     JobTypeId = JobTypeSeed.SensorBasedJobTypeId,
                     SensorId = SensorSeed.TemperatureSensor1Id,
                     MinValue = null,
-                    MaxValue = 30.0f,
+                    MaxValue = 30.0,
                     DefaultState = false,
                     IsActive = true,
                     StartTime = null,

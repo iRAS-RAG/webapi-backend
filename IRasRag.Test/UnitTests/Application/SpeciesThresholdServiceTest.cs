@@ -270,6 +270,62 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(false);
+
+            var persistedId = Guid.NewGuid();
+            SpeciesThreshold? persistedThreshold = null;
+
+            _thresholdRepoMock
+                .Setup(r => r.AddAsync(It.IsAny<SpeciesThreshold>()))
+                .Callback<SpeciesThreshold>(entity =>
+                {
+                    entity.Id = persistedId;
+                    entity.Species = new Species { Id = dto.SpeciesId, Name = "Species" };
+                    entity.GrowthStage = new GrowthStage
+                    {
+                        Id = dto.GrowthStageId,
+                        Name = "Stage",
+                    };
+                    entity.SensorType = new SensorType
+                    {
+                        Id = dto.SensorTypeId,
+                        Name = "Sensor",
+                        UnitOfMeasure = "Unit",
+                    };
+                    persistedThreshold = entity;
+                });
+
+            _thresholdRepoMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec,
+                        QueryType _
+                    ) =>
+                    {
+                        if (persistedThreshold == null || spec.Selector == null)
+                        {
+                            return null;
+                        }
+
+                        IQueryable<SpeciesThreshold> query = new List<SpeciesThreshold>
+                        {
+                            persistedThreshold,
+                        }.AsQueryable();
+
+                        foreach (var whereExpression in spec.WhereExpressions)
+                        {
+                            query = query.Where(whereExpression.Filter);
+                        }
+
+                        return query.Select(spec.Selector).FirstOrDefault();
+                    }
+                );
+
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
             var result = await _sut.CreateSpeciesThreshold(dto);
 
@@ -277,8 +333,25 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.Ok);
             result.Message.Should().Be("Tạo ngưỡng sinh trưởng thành công.");
             result.Data.Should().NotBeNull();
+            result.Data!.Id.Should().Be(persistedId);
+            result.Data.SpeciesId.Should().Be(dto.SpeciesId);
+            result.Data.GrowthStageId.Should().Be(dto.GrowthStageId);
+            result.Data.SensorTypeId.Should().Be(dto.SensorTypeId);
+            result.Data.MinValue.Should().Be(dto.MinValue);
+            result.Data.MaxValue.Should().Be(dto.MaxValue);
+            result.Data.UnitOfMeasure.Should().Be("Unit");
 
             _thresholdRepoMock.Verify(r => r.AddAsync(It.IsAny<SpeciesThreshold>()), Times.Once);
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s is SpeciesThresholdDtoByIdSpec
+                        ),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
 
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
@@ -351,7 +424,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -371,7 +444,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -390,7 +463,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdDtoByFilterSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )

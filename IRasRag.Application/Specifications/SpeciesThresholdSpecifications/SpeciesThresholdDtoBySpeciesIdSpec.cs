@@ -1,18 +1,17 @@
-using System.Linq.Expressions;
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
 {
-    public class SpeciesThresholdDtoByFilterSpec
+    public class SpeciesThresholdDtoBySpeciesIdSpec
         : Specification<SpeciesThreshold, SpeciesThresholdDto>
     {
-        public SpeciesThresholdDtoByFilterSpec(Expression<Func<SpeciesThreshold, bool>> predicate)
+        public SpeciesThresholdDtoBySpeciesIdSpec(Guid speciesId)
         {
             Query
                 .AsNoTracking()
-                .Where(predicate)
+                .Where(st => st.Species.Id == speciesId)
                 .Select(st => new SpeciesThresholdDto
                 {
                     Id = st.Id,

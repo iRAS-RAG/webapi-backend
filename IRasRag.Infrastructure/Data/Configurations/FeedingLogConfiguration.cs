@@ -17,6 +17,12 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(fl => fl.FarmingBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder
+                .HasOne(fl => fl.User)
+                .WithMany()
+                .HasForeignKey(fl => fl.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Time-series query: feeding history per batch
             builder.HasIndex(fl => new { fl.FarmingBatchId, fl.CreatedDate });
 

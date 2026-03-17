@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class Sensor : BaseEntity, ISoftDeletable
+    public class Sensor : BaseEntity
     {
         [Required]
         [MaxLength(255)]
@@ -17,10 +17,6 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public Guid MasterBoardId { get; set; }
-
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public SensorType SensorType { get; set; }

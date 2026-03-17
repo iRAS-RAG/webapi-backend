@@ -24,8 +24,6 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.JobType, opt => opt.Ignore())
                 .ForMember(dest => dest.Sensor, opt => opt.Ignore())
                 .ForMember(dest => dest.JobControlMappings, opt => opt.Ignore());
@@ -35,8 +33,6 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.JobType, opt => opt.Ignore())
                 .ForMember(dest => dest.Sensor, opt => opt.Ignore())
                 .ForMember(dest => dest.JobControlMappings, opt => opt.Ignore())

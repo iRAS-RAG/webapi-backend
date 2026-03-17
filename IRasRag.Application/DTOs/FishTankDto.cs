@@ -13,7 +13,7 @@ namespace IRasRag.Application.DTOs
         public string TopicCode { get; set; }
         public string CameraUrl { get; set; }
         public string CurrentSpecies { get; set; }
-        public float? CurrentCount { get; set; }
+        public int? CurrentCount { get; set; }
         public bool HasOpenAlert { get; set; }
     }
 
@@ -21,13 +21,13 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public float Volume { get; set; }
+        public double Volume { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
         public string CameraUrl { get; set; }
         public string CurrentSpecies { get; set; }
-        public float? CurrentCount { get; set; }
+        public int? CurrentCount { get; set; }
         public string LatestStatus { get; set; }
     }
 
@@ -38,12 +38,12 @@ namespace IRasRag.Application.DTOs
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Chiều cao không được để trống.")]
-        [Range(0.01, float.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
-        public float Height { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
+        public double Height { get; set; }
 
         [Required(ErrorMessage = "Bán kính không được để trống.")]
-        [Range(0.01, float.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
-        public float Radius { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
+        public double Radius { get; set; }
 
         [Required(ErrorMessage = "ID trang trại không được để trống.")]
         public Guid FarmId { get; set; }
@@ -62,11 +62,11 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên bể cá không được vượt quá 255 ký tự.")]
         public string? Name { get; set; }
 
-        [Range(0.01, float.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
-        public float? Height { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
+        public double? Height { get; set; }
 
-        [Range(0.01, float.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
-        public float? Radius { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
+        public double? Radius { get; set; }
 
         public Guid? FarmId { get; set; }
 

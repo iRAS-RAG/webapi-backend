@@ -40,7 +40,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     FarmId = FarmSeed.DefaultFarmId, // Tham chiếu đến Farm seed
                     Name = "Camera cổng chính",
                     Url = "rtsp://192.168.1.100:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
                 new Camera
@@ -49,7 +48,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     FarmId = FarmSeed.DefaultFarmId,
                     Name = "Camera giám sát bể số 1",
                     Url = "rtsp://192.168.1.101:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
                 new Camera
@@ -58,7 +56,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     FarmId = FarmSeed.DefaultFarmId,
                     Name = "Camera khu vực cho ăn",
                     Url = "rtsp://192.168.1.102:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
             };

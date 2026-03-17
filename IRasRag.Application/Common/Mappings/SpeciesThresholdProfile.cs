@@ -8,7 +8,8 @@ namespace IRasRag.Application.Common.Mappings
     {
         public SpeciesThresholdProfile()
         {
-            CreateMap<SpeciesThreshold, SpeciesThresholdDto>();
+            CreateMap<SpeciesThreshold, SpeciesThresholdDto>()
+                .ForMember(dest => dest.UnitOfMeasure, opt => opt.MapFrom(src => src.SensorType != null ? src.SensorType.UnitOfMeasure : null));
 
             CreateMap<CreateSpeciesThresholdDto, SpeciesThreshold>(MemberList.Source);
 

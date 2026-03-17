@@ -105,7 +105,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
-                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(new FeedingLogDtoByIdSpec(id));
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
 
                 if (feedingLogDto == null)
                 {
@@ -165,6 +167,15 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                if (createDto.UserId == Guid.Empty)
+                {
+                    _logger.LogWarning("Người dùng không hợp lệ");
+                    return Result<FeedingLogDto>.Failure(
+                        "Người dùng không hợp lệ",
+                        ResultType.BadRequest
+                    );
+                }
+
                 // Verify FarmingBatchId exists
                 var farmingBatchRepository = _unitOfWork.GetRepository<FarmingBatch>();
                 var farmingBatchExists = await farmingBatchRepository.AnyAsync(fb =>
@@ -183,17 +194,48 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var userRepository = _unitOfWork.GetRepository<User>();
+                var userExists = await userRepository.AnyAsync(u => u.Id == createDto.UserId);
+
+                if (!userExists)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy người dùng với Id: {UserId}",
+                        createDto.UserId
+                    );
+                    return Result<FeedingLogDto>.Failure(
+                        "Không tìm thấy người dùng",
+                        ResultType.NotFound
+                    );
+                }
+
                 var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
                 var feedingLog = _mapper.Map<FeedingLog>(createDto);
 
                 await feedingLogRepository.AddAsync(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
 
-                var feedingLogDto = _mapper.Map<FeedingLogDto>(feedingLog);
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(feedingLog.Id)
+                );
+
+                if (feedingLogDto == null)
+                {
+                    _logger.LogWarning(
+                        "Không thể tải lại nhật ký cho ăn vừa tạo với Id: {Id}",
+                        feedingLog.Id
+                    );
+                    return Result<FeedingLogDto>.Failure(
+                        "Đã xảy ra lỗi khi tạo nhật ký cho ăn",
+                        ResultType.Unexpected
+                    );
+                }
+
                 _logger.LogInformation(
-                    "Tạo nhật ký cho ăn thành công: {Id} - FarmingBatchId: {FarmingBatchId}, Amount: {Amount}",
+                    "Tạo nhật ký cho ăn thành công: {Id} - FarmingBatchId: {FarmingBatchId}, UserId: {UserId}, Amount: {Amount}",
                     feedingLog.Id,
                     feedingLog.FarmingBatchId,
+                    feedingLog.UserId,
                     feedingLog.Amount
                 );
 

@@ -20,9 +20,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.FryStageId,
                     FeedTypeId = FeedTypeSeed.StarterFeedId,
-                    AmountPer100Fish = 0.5f,
+                    AmountPer100Fish = 0.5,
                     FrequencyPerDay = 6,
-                    MaxStockingDensity = 50.0f,
+                    MaxStockingDensity = 50.0,
                     ExpectedDurationDays = 30,
                 },
                 new SpeciesStageConfig
@@ -31,9 +31,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.JuvenileStageId,
                     FeedTypeId = FeedTypeSeed.GrowerFeedId,
-                    AmountPer100Fish = 3.0f,
+                    AmountPer100Fish = 3.0,
                     FrequencyPerDay = 3,
-                    MaxStockingDensity = 30.0f,
+                    MaxStockingDensity = 30.0,
                     ExpectedDurationDays = 90,
                 },
             };

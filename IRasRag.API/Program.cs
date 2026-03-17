@@ -32,7 +32,6 @@ namespace IRasRag.API
             app.UseSwaggerUI();
             app.UseCors("CorsPolicy");
             app.UseMiddleware<ExceptionMiddleware>();
-            app.UseMiddleware<ApiKeyMiddleware>();
 
             if (!app.Environment.IsDevelopment())
             {

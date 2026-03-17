@@ -21,7 +21,7 @@ namespace IRasRag.Domain.Entities
         public Guid SensorTypeId { get; set; }
 
         [Required]
-        public float Value { get; set; }
+        public double Value { get; set; }
 
         [Required]
         public DateTime RaisedAt { get; set; }

@@ -11,8 +11,8 @@ namespace IRasRag.Application.DTOs
         public string GrowthStageName { get; set; }
         public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; }
-        public float MinValue { get; set; }
-        public float MaxValue { get; set; }
+        public double MinValue { get; set; }
+        public double MaxValue { get; set; }
         public string UnitOfMeasure { get; set; }
     }
 
@@ -28,17 +28,17 @@ namespace IRasRag.Application.DTOs
         public Guid SensorTypeId { get; set; }
 
         [Required]
-        public float MinValue { get; set; }
+        public double MinValue { get; set; }
 
         [Required]
-        public float MaxValue { get; set; }
+        public double MaxValue { get; set; }
     }
 
     public class UpdateSpeciesThresholdDto
     {
-        public float? MinValue { get; set; }
+        public double? MinValue { get; set; }
 
-        public float? MaxValue { get; set; }
+        public double? MaxValue { get; set; }
     }
 
     // List Request DTO

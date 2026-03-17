@@ -15,7 +15,7 @@ public static class FeedTypeSeed
                 Name = "Giàu protein",
                 Description =
                     "Thức ăn có hàm lượng protein cao, phù hợp cho giai đoạn đầu phát triển của cá.",
-                ProteinPercentage = 45.0f,
+                ProteinPercentage = 45.0,
                 Manufacturer = "AquaFeed Solutions",
             },
             new FeedType
@@ -24,7 +24,7 @@ public static class FeedTypeSeed
                 Name = "Tiêu chuẩn",
                 Description =
                     "Thức ăn tiêu chuẩn, phù hợp cho giai đoạn phát triển tiếp theo của cá.",
-                ProteinPercentage = 38.0f,
+                ProteinPercentage = 38.0,
                 Manufacturer = "AquaFeed Solutions",
             },
         };

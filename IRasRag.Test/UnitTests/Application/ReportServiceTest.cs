@@ -67,7 +67,7 @@ namespace IRasRag.Test.UnitTests.Application
 
         // ─── Factory helpers ────────────────────────────────────────────────────
 
-        private static MortalityLog MakeMortalityLog(DateTime date, float quantity) =>
+        private static MortalityLog MakeMortalityLog(DateTime date, int quantity) =>
             new()
             {
                 Id = Guid.NewGuid(),
@@ -605,8 +605,8 @@ namespace IRasRag.Test.UnitTests.Application
             SetupDashboardDefaults(
                 mortalityLogs: new List<MortalityLog>
                 {
-                    MakeMortalityLog(now, 30f),
-                    MakeMortalityLog(now, 70f),
+                    MakeMortalityLog(now, 30),
+                    MakeMortalityLog(now, 70),
                 }
             );
 
@@ -655,7 +655,7 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     new() { InitialQuantity = 1000, CurrentQuantity = 900 },
                 },
-                mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 100f) }
+                mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 100) }
             );
 
             var result = await _sut.GetDashboardSummaryAsync(
@@ -1068,8 +1068,8 @@ namespace IRasRag.Test.UnitTests.Application
             SetupWeeklyDefaults(
                 mortalityLogs: new List<MortalityLog>
                 {
-                    MakeMortalityLog(now, 40f),
-                    MakeMortalityLog(now, 60f),
+                    MakeMortalityLog(now, 40),
+                    MakeMortalityLog(now, 60),
                 }
             );
 
@@ -1088,9 +1088,9 @@ namespace IRasRag.Test.UnitTests.Application
             SetupWeeklyDefaults(
                 mortalityLogs: new List<MortalityLog>
                 {
-                    MakeMortalityLog(now, 10f),
-                    MakeMortalityLog(now, 20f),
-                    MakeMortalityLog(now, 30f),
+                    MakeMortalityLog(now, 10),
+                    MakeMortalityLog(now, 20),
+                    MakeMortalityLog(now, 30),
                 }
             );
 
@@ -1194,7 +1194,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MakeCAItem(DateTime.UtcNow),
                 },
                 recommendations: new List<WeeklyRecommendationItem> { MakeRecItem() },
-                mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 50f) },
+                mortalityLogs: new List<MortalityLog> { MakeMortalityLog(DateTime.UtcNow, 50) },
                 activeBatches: 3,
                 survivalData: new List<BatchSurvivalProjection>
                 {

@@ -167,6 +167,15 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                if (createDto.UserId == Guid.Empty)
+                {
+                    _logger.LogWarning("Người dùng không hợp lệ");
+                    return Result<MortalityLogDto>.Failure(
+                        "Người dùng không hợp lệ",
+                        ResultType.BadRequest
+                    );
+                }
+
                 // Verify BatchId exists
                 var batchRepository = _unitOfWork.GetRepository<FarmingBatch>();
                 var batchExists = await batchRepository.AnyAsync(b => b.Id == createDto.BatchId);
@@ -183,17 +192,48 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var userRepository = _unitOfWork.GetRepository<User>();
+                var userExists = await userRepository.AnyAsync(u => u.Id == createDto.UserId);
+
+                if (!userExists)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy người dùng với Id: {UserId}",
+                        createDto.UserId
+                    );
+                    return Result<MortalityLogDto>.Failure(
+                        "Không tìm thấy người dùng",
+                        ResultType.NotFound
+                    );
+                }
+
                 var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
                 var mortalityLog = _mapper.Map<MortalityLog>(createDto);
 
                 await mortalityLogRepository.AddAsync(mortalityLog);
                 await _unitOfWork.SaveChangesAsync();
 
-                var mortalityLogDto = _mapper.Map<MortalityLogDto>(mortalityLog);
+                var mortalityLogDto = await mortalityLogRepository.FirstOrDefaultAsync(
+                    new MortalityLogDtoByIdSpec(mortalityLog.Id)
+                );
+
+                if (mortalityLogDto == null)
+                {
+                    _logger.LogWarning(
+                        "Không thể tải lại nhật ký tử vong vừa tạo với Id: {Id}",
+                        mortalityLog.Id
+                    );
+                    return Result<MortalityLogDto>.Failure(
+                        "Đã xảy ra lỗi khi tạo nhật ký tử vong",
+                        ResultType.Unexpected
+                    );
+                }
+
                 _logger.LogInformation(
-                    "Tạo nhật ký tử vong thành công: {Id} - BatchId: {BatchId}, Quantity: {Quantity}",
+                    "Tạo nhật ký tử vong thành công: {Id} - BatchId: {BatchId}, UserId: {UserId}, Quantity: {Quantity}",
                     mortalityLog.Id,
                     mortalityLog.BatchId,
+                    mortalityLog.UserId,
                     mortalityLog.Quantity
                 );
 

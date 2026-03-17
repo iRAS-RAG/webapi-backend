@@ -7,14 +7,17 @@ namespace IRasRag.Domain.Entities
     {
         [Required]
         public Guid FarmingBatchId { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
 
         [Required]
-        public float Amount { get; set; }
+        public double Amount { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; }
 
         // Navigation properties
         public FarmingBatch FarmingBatch { get; set; }
+        public User User { get; set; }
     }
 }

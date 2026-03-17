@@ -29,7 +29,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = MortalityLog1Id,
                     BatchId = FarmingBatchSeed.Batch1Id,
-                    Quantity = 30f,
+                    UserId = UserSeed.OperatorId,
+                    Quantity = 30,
                     Date = new DateTime(2024, 02, 15, 0, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
@@ -37,7 +38,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = MortalityLog2Id,
                     BatchId = FarmingBatchSeed.Batch1Id,
-                    Quantity = 20f,
+                    UserId = UserSeed.OperatorId,
+                    Quantity = 20,
                     Date = new DateTime(2024, 03, 10, 0, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },

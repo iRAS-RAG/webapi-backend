@@ -208,6 +208,48 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
+        public async Task<PaginatedResult<SpeciesStageConfigDto>> GetSpeciesStageConfigsBySpeciesId(Guid speciesId,
+            SpeciesStageConfigListRequest request
+        )
+        {
+            var species = await _unitOfWork.GetRepository<Species>().AnyAsync(s => s.Id == speciesId);
+
+            if (species == false)
+                return new PaginatedResult<SpeciesStageConfigDto>
+                {
+                    Message = "Loài cá không tồn tại",
+                    Data = Array.Empty<SpeciesStageConfigDto>(),
+                    Meta = null,
+                    Links = null,
+                };
+
+            var pagedResult = await _unitOfWork.GetRepository<SpeciesStageConfig>().GetPagedAsync(
+                new SpeciesStageConfigBySpeciesIdSpec(speciesId, request),
+                request.Page,
+                request.PageSize
+            );
+
+
+            return new PaginatedResult<SpeciesStageConfigDto>
+            {
+                Message =
+                    pagedResult.Items.Count == 0
+                        ? "Không có cấu hình giai đoạn sinh trưởng nào cho loài cá này"
+                        : "Lấy danh sách cấu hình giai đoạn sinh trưởng cho loài cá thành công",
+                Data = pagedResult.Items,
+                Meta = PaginationBuilder.BuildPaginationMetadata(
+                    request.Page,
+                    request.PageSize,
+                    pagedResult.TotalItems
+                ),
+                Links = PaginationBuilder.BuildPaginationLinks(
+                    request.Page,
+                    request.PageSize,
+                    pagedResult.TotalItems
+                ),
+            };
+        }
+
         public async Task<Result> UpdateSpeciesStageConfig(Guid id, UpdateSpeciesStageConfigDto dto)
         {
             try
