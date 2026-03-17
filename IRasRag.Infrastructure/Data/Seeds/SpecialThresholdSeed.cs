@@ -17,8 +17,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.FryStageId,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    MinValue = 26f,
-                    MaxValue = 30f,
+                    MinValue = 26,
+                    MaxValue = 30,
                 },
                 new SpeciesThreshold
                 {
@@ -26,8 +26,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.FryStageId,
                     SensorTypeId = SensorTypeSeed.PhSensorTypeId,
-                    MinValue = 6.5f,
-                    MaxValue = 8.0f,
+                    MinValue = 6.5,
+                    MaxValue = 8.0,
                 },
                 // ============================
                 // Cá rô phi – Giai đoạn cá giống
@@ -39,8 +39,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.JuvenileStageId,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    MinValue = 25f,
-                    MaxValue = 29f,
+                    MinValue = 25,
+                    MaxValue = 29,
                 },
                 new SpeciesThreshold
                 {
@@ -48,8 +48,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.JuvenileStageId,
                     SensorTypeId = SensorTypeSeed.PhSensorTypeId,
-                    MinValue = 6.5f,
-                    MaxValue = 8.5f,
+                    MinValue = 6.5,
+                    MaxValue = 8.5,
                 },
             };
     }

@@ -11,7 +11,7 @@ namespace IRasRag.Domain.Entities
         public Guid UserId { get; set; }
 
         [Required]
-        public float Quantity { get; set; }
+        public int Quantity { get; set; }
 
         [Required]
         public DateTime Date { get; set; }

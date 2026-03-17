@@ -31,10 +31,10 @@ namespace IRasRag.Domain.Entities
         public DateTime? ActualHarvestDate { get; set; }
 
         [Required]
-        public float InitialQuantity { get; set; }
+        public int InitialQuantity { get; set; }
 
         [Required]
-        public float CurrentQuantity { get; set; }
+        public int CurrentQuantity { get; set; }
 
         [Required]
         [MaxLength(20)]

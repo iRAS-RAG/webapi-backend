@@ -11,7 +11,7 @@ namespace IRasRag.Application.DTOs
         public string FarmingBatchName { get; set; } = string.Empty;
         public Guid UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
-        public float Amount { get; set; }
+        public double Amount { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
@@ -27,8 +27,8 @@ namespace IRasRag.Application.DTOs
         public Guid UserId { get; set; }
 
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float Amount { get; set; }
+        [Range(0.1, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double Amount { get; set; }
 
         [Required(ErrorMessage = "Ngày cho ăn là bắt buộc")]
         public DateTime CreatedDate { get; set; }
@@ -39,8 +39,8 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? FarmingBatchId { get; set; }
 
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float? Amount { get; set; }
+        [Range(0.1, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double? Amount { get; set; }
 
         public DateTime? CreatedDate { get; set; }
     }
@@ -56,7 +56,7 @@ namespace IRasRag.Application.DTOs
     public class RecordFeedingRequest
     {
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float Amount { get; set; }
+        [Range(0.1, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double Amount { get; set; }
     }
 }

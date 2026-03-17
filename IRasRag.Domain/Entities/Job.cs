@@ -16,9 +16,9 @@ namespace IRasRag.Domain.Entities
 
         public Guid? SensorId { get; set; }
 
-        public float? MinValue { get; set; }
+        public double? MinValue { get; set; }
 
-        public float? MaxValue { get; set; }
+        public double? MaxValue { get; set; }
 
         [Required]
         public bool DefaultState { get; set; } = false;

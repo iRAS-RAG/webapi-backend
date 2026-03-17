@@ -7,7 +7,7 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public float ProteinPercentage { get; set; }
+        public double ProteinPercentage { get; set; }
         public string Manufacturer { get; set; }
     }
 
@@ -22,7 +22,7 @@ namespace IRasRag.Application.DTOs
 
         [Required(ErrorMessage = "Tỷ lệ protein không được để trống.")]
         [Range(0, 100, ErrorMessage = "Tỷ lệ protein phải từ 0 đến 100.")]
-        public float ProteinPercentage { get; set; }
+        public double ProteinPercentage { get; set; }
 
         [MaxLength(255, ErrorMessage = "Tên nhà sản xuất không được vượt quá 255 ký tự.")]
         public string Manufacturer { get; set; }
@@ -37,7 +37,7 @@ namespace IRasRag.Application.DTOs
         public string? Description { get; set; }
 
         [Range(0, 100, ErrorMessage = "Tỷ lệ protein phải từ 0 đến 100.")]
-        public float? ProteinPercentage { get; set; }
+        public double? ProteinPercentage { get; set; }
 
         [MaxLength(255, ErrorMessage = "Tên nhà sản xuất không được vượt quá 255 ký tự.")]
         public string? Manufacturer { get; set; }

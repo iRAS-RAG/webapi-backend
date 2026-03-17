@@ -11,7 +11,7 @@ namespace IRasRag.Application.Common.Mappings
             CreateMap<FishTank, FishTankDto>()
                 .ForMember(
                     d => d.Volume,
-                    opt => opt.MapFrom(s => (float)(Math.PI * s.Radius * s.Radius * s.Height))
+                    opt => opt.MapFrom(s => Math.PI * s.Radius * s.Radius * s.Height)
                 )
                 .ForMember(d => d.CurrentSpecies, opt => opt.Ignore())
                 .ForMember(d => d.CurrentCount, opt => opt.Ignore())

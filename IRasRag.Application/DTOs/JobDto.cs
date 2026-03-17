@@ -14,8 +14,8 @@ namespace IRasRag.Application.DTOs
         public string JobTypeName { get; set; } = string.Empty;
         public Guid? SensorId { get; set; }
         public string? SensorName { get; set; }
-        public float? MinValue { get; set; }
-        public float? MaxValue { get; set; }
+        public double? MinValue { get; set; }
+        public double? MaxValue { get; set; }
         public bool DefaultState { get; set; }
         public bool IsActive { get; set; }
         public TimeSpan? StartTime { get; set; }
@@ -39,9 +39,9 @@ namespace IRasRag.Application.DTOs
 
         public Guid? SensorId { get; set; }
 
-        public float? MinValue { get; set; }
+        public double? MinValue { get; set; }
 
-        public float? MaxValue { get; set; }
+        public double? MaxValue { get; set; }
 
         public bool DefaultState { get; set; } = false;
 
@@ -74,9 +74,9 @@ namespace IRasRag.Application.DTOs
 
         public Guid? SensorId { get; set; }
 
-        public float? MinValue { get; set; }
+        public double? MinValue { get; set; }
 
-        public float? MaxValue { get; set; }
+        public double? MaxValue { get; set; }
 
         public bool? DefaultState { get; set; }
 

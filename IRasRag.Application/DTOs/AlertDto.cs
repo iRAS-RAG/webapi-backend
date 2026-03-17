@@ -15,7 +15,7 @@ namespace IRasRag.Application.DTOs
         public string FishTankName { get; set; } = string.Empty;
         public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; } = string.Empty;
-        public float Value { get; set; }
+        public double Value { get; set; }
         public DateTime RaisedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public AlertStatus Status { get; set; }
@@ -42,7 +42,7 @@ namespace IRasRag.Application.DTOs
         public Guid SensorTypeId { get; set; }
 
         [Required(ErrorMessage = "Giá trị là bắt buộc")]
-        public float Value { get; set; }
+        public double Value { get; set; }
 
         [Required(ErrorMessage = "Thời gian phát hiện là bắt buộc")]
         public DateTime RaisedAt { get; set; }
@@ -61,7 +61,7 @@ namespace IRasRag.Application.DTOs
 
         public Guid? SensorTypeId { get; set; }
 
-        public float? Value { get; set; }
+        public double? Value { get; set; }
 
         public DateTime? RaisedAt { get; set; }
 

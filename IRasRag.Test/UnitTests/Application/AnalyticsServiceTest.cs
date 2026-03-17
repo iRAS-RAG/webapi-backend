@@ -141,8 +141,8 @@ namespace IRasRag.Test.UnitTests.Application
         private FarmingBatch MakeBatch(
             Guid batchId,
             Guid fishTankId,
-            float initial = 1000,
-            float current = 900,
+            int initial = 1000,
+            int current = 900,
             DateTime? startDate = null
         ) =>
             new()

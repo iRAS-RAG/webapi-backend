@@ -10,10 +10,10 @@ namespace IRasRag.Domain.Entities
         public string Name { get; set; }
 
         [Required]
-        public float Height { get; set; }
+        public double Height { get; set; }
 
         [Required]
-        public float Radius { get; set; }
+        public double Radius { get; set; }
 
         [Required]
         public Guid FarmId { get; set; }

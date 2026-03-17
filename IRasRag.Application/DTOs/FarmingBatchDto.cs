@@ -20,8 +20,8 @@ namespace IRasRag.Application.DTOs
         public DateTime StartDate { get; set; }
         public DateTime? EstimatedHarvestDate { get; set; }
         public DateTime? ActualHarvestDate { get; set; }
-        public float InitialQuantity { get; set; }
-        public float CurrentQuantity { get; set; }
+        public int InitialQuantity { get; set; }
+        public int CurrentQuantity { get; set; }
         public string UnitOfMeasure { get; set; } = string.Empty;
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
@@ -58,8 +58,8 @@ namespace IRasRag.Application.DTOs
         public DateTime? EstimatedHarvestDate { get; set; }
 
         [Required(ErrorMessage = "Số lượng ban đầu là bắt buộc")]
-        [Range(0, float.MaxValue, ErrorMessage = "Số lượng ban đầu phải lớn hơn hoặc bằng 0")]
-        public float InitialQuantity { get; set; }
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng ban đầu phải lớn hơn hoặc bằng 0")]
+        public int InitialQuantity { get; set; }
 
         [Required(ErrorMessage = "Đơn vị đo là bắt buộc")]
         [MaxLength(20, ErrorMessage = "Đơn vị đo không được vượt quá 20 ký tự")]
@@ -84,8 +84,8 @@ namespace IRasRag.Application.DTOs
 
         public DateTime? ActualHarvestDate { get; set; }
 
-        [Range(0, float.MaxValue, ErrorMessage = "Số lượng hiện tại phải lớn hơn hoặc bằng 0")]
-        public float? CurrentQuantity { get; set; }
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng hiện tại phải lớn hơn hoặc bằng 0")]
+        public int? CurrentQuantity { get; set; }
 
         [MaxLength(20, ErrorMessage = "Đơn vị đo không được vượt quá 20 ký tự")]
         public string? UnitOfMeasure { get; set; }
@@ -96,16 +96,5 @@ namespace IRasRag.Application.DTOs
     {
         public FarmingBatchStatus? Status { get; set; }
         public Guid? FishTankId { get; set; }
-    }
-
-    // Batch sub-route request
-    public class HarvestBatchRequest
-    {
-        [Required(ErrorMessage = "Ngày thu hoạch thực tế là bắt buộc")]
-        public DateTime ActualHarvestDate { get; set; }
-
-        [Required(ErrorMessage = "Số lượng thu hoạch là bắt buộc")]
-        [Range(0, int.MaxValue, ErrorMessage = "Số lượng thu hoạch phải lớn hơn hoặc bằng 0")]
-        public int FinalQuantity { get; set; }
     }
 }
