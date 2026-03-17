@@ -15,7 +15,7 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id);
         Task<Result<FarmingBatchDto>> CreateFarmingBatchAsync(CreateFarmingBatchDto createDto);
         Task<Result> UpdateFarmingBatchAsync(Guid id, UpdateFarmingBatchDto updateDto);
-        Task<Result> HarvestBatchAsync(Guid id, HarvestBatchRequest request);
+        Task<Result> HarvestBatchAsync(Guid id, DateTime harvestTime);
         Task<Result> DeleteFarmingBatchAsync(Guid id);
     }
 }

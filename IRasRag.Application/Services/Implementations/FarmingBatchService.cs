@@ -296,6 +296,11 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
                 }
 
+                if(farmingBatch.Status == FarmingBatchStatus.HARVESTED || farmingBatch.Status == FarmingBatchStatus.TERMINATED)
+                {
+                    return Result.Failure("Không thể cập nhật lô nuôi đã thu hoạch/hủy bỏ", ResultType.BadRequest);
+                }
+
                 // Validate inputs
                 if (updateDto.Name != null)
                 {
@@ -345,7 +350,7 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result> HarvestBatchAsync(Guid id, HarvestBatchRequest request)
+        public async Task<Result> HarvestBatchAsync(Guid id, DateTime harvestDate)
         {
             var batch = await _unitOfWork.GetRepository<FarmingBatch>().GetByIdAsync(id);
 
@@ -353,10 +358,10 @@ namespace IRasRag.Application.Services.Implementations
             {
                 return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
             }
-
+            var deathCount = await _unitOfWork.MoralityLogs.ComputeDeathCountByBatch(id);
             batch.Status = FarmingBatchStatus.HARVESTED;
-            batch.ActualHarvestDate = request.ActualHarvestDate;
-            batch.CurrentQuantity = request.FinalQuantity;
+            batch.ActualHarvestDate = harvestDate;
+            batch.CurrentQuantity = batch.InitialQuantity - deathCount;
 
             await _unitOfWork.SaveChangesAsync();
             return Result.Success("Thu hoạch lô nuôi thành công");
