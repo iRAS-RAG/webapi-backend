@@ -12,9 +12,6 @@ namespace IRasRag.Domain.Entities
         public Guid GrowthStageId { get; set; }
 
         [Required]
-        public Guid FeedTypeId { get; set; }
-
-        [Required]
         public double AmountPer100Fish { get; set; } // Recommended amount in kg
 
         [Required]
@@ -27,7 +24,8 @@ namespace IRasRag.Domain.Entities
         // Navigation properties
         public Species Species { get; set; }
         public GrowthStage GrowthStage { get; set; }
-        public FeedType FeedType { get; set; }
+        public ICollection<FeedType> FeedTypes { get; set; }
+        public ICollection<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
         public ICollection<FarmingBatch> FarmingBatches { get; set; }
     }
 }

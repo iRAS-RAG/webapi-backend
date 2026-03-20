@@ -21,5 +21,6 @@ namespace IRasRag.Domain.Entities
         // Navigation properties
         public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
+        public ICollection<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
     }
 }

@@ -19,22 +19,22 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Id = FryStageConfigId,
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.FryStageId,
-                    FeedTypeId = FeedTypeSeed.StarterFeedId,
                     AmountPer100Fish = 0.5,
                     FrequencyPerDay = 6,
                     MaxStockingDensity = 50.0,
                     ExpectedDurationDays = 30,
+                    FeedTypes = new List<FeedType>(),
                 },
                 new SpeciesStageConfig
                 {
                     Id = JuvenileStageConfigId,
                     SpeciesId = SpeciesSeed.TilapiaId,
                     GrowthStageId = GrowthStageSeed.JuvenileStageId,
-                    FeedTypeId = FeedTypeSeed.GrowerFeedId,
                     AmountPer100Fish = 3.0,
                     FrequencyPerDay = 3,
                     MaxStockingDensity = 30.0,
                     ExpectedDurationDays = 90,
+                    FeedTypes = new List<FeedType>(),
                 },
             };
     }

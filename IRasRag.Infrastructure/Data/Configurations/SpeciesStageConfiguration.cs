@@ -24,10 +24,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasOne(ssc => ssc.FeedType)
+                .HasMany(ssc => ssc.FeedTypes)
                 .WithMany(ft => ft.SpeciesStageConfigs)
-                .HasForeignKey(ssc => ssc.FeedTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .UsingEntity<SpeciesStageConfigFeedType>();
 
             // One config per species/stage combination
             builder.HasIndex(ssc => new { ssc.SpeciesId, ssc.GrowthStageId }).IsUnique();
