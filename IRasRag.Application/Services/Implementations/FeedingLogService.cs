@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.FarmingBatchSpecifications;
 using IRasRag.Application.Specifications.FeedingLogSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -176,62 +177,42 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                if (createDto.UserId == Guid.Empty)
-                {
-                    _logger.LogWarning("Người dùng không hợp lệ");
-                    return Result<FeedingLogDto>.Failure(
-                        "Người dùng không hợp lệ",
-                        ResultType.BadRequest
-                    );
-                }
-
-                // Verify FarmingBatchId exists
+                // Verify valid FarmingBatch that user can access
                 var farmingBatchRepository = _unitOfWork.GetRepository<FarmingBatch>();
-                var farmingBatchExists = await farmingBatchRepository.AnyAsync(fb =>
-                    fb.Id == createDto.FarmingBatchId
+                var farmingBatch = await farmingBatchRepository.FirstOrDefaultAsync(
+                    new FarmingBatchByUserAccessSpec(createDto.FarmingBatchId, createDto.UserId)
                 );
 
-                if (!farmingBatchExists)
+                if (farmingBatch == null)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy lô nuôi với Id: {FarmingBatchId}",
-                        createDto.FarmingBatchId
+                        "Không tìm thấy lô nuôi với Id: {FarmingBatchId} hoặc người dùng {UserId} không có quyền truy cập",
+                        createDto.FarmingBatchId, createDto.UserId
                     );
                     return Result<FeedingLogDto>.Failure(
-                        "Không tìm thấy lô nuôi",
+                        "Không tìm thấy lô nuôi hoặc bạn không có quyền truy cập",
                         ResultType.NotFound
                     );
                 }
 
-                var feedTypeRepository = _unitOfWork.GetRepository<FeedType>();
-                var feedTypeExists = await feedTypeRepository.AnyAsync(ft =>
-                    ft.Id == createDto.FeedTypeId
-                );
-
-                if (!feedTypeExists)
+                // Verify allowed FeedType for current stage of the FarmingBatch
+                var speciesStageConfigRepository = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var isFeedTypeAllowedForCurrentStage =
+                    await speciesStageConfigRepository.AnyAsync(ssc =>
+                        ssc.Id == farmingBatch.CurrentStageConfigId
+                        && ssc.FeedTypes.Any(ft => ft.Id == createDto.FeedTypeId)
+                    );
+                    
+                if (!isFeedTypeAllowedForCurrentStage)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy loại thức ăn với Id: {FeedTypeId}",
-                        createDto.FeedTypeId
+                        "FeedTypeId {FeedTypeId} không thuộc danh sách cho phép của CurrentStageConfigId {CurrentStageConfigId}",
+                        createDto.FeedTypeId,
+                        farmingBatch.CurrentStageConfigId
                     );
                     return Result<FeedingLogDto>.Failure(
-                        "Không tìm thấy loại thức ăn",
-                        ResultType.NotFound
-                    );
-                }
-
-                var userRepository = _unitOfWork.GetRepository<User>();
-                var userExists = await userRepository.AnyAsync(u => u.Id == createDto.UserId);
-
-                if (!userExists)
-                {
-                    _logger.LogWarning(
-                        "Không tìm thấy người dùng với Id: {UserId}",
-                        createDto.UserId
-                    );
-                    return Result<FeedingLogDto>.Failure(
-                        "Không tìm thấy người dùng",
-                        ResultType.NotFound
+                        "Loại thức ăn không tồn tại/không hợp lệ với giai đoạn sinh trưởng hiện tại của lô nuôi",
+                        ResultType.BadRequest
                     );
                 }
 
