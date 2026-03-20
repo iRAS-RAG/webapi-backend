@@ -19,6 +19,7 @@ namespace IRasRag.Domain.Entities
         public string Manufacturer { get; set; }
 
         // Navigation properties
+        public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
     }
 }

@@ -16,10 +16,12 @@ namespace IRasRag.Application.Specifications.FeedingLogSpecifications
             {
                 ["createddate"] = fl => fl.CreatedDate,
                 ["amount"] = fl => fl.Amount,
+                ["feedtypename"] = fl => fl.FeedType.Name,
             };
 
             ApplyFilter(request.CreatedDate, fl => fl.CreatedDate == request.CreatedDate);
             ApplyFilter(request.FarmingBatchId, fl => fl.FarmingBatchId == request.FarmingBatchId);
+            ApplyFilter(request.FeedTypeId, fl => fl.FeedTypeId == request.FeedTypeId);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "createddate");
 
@@ -28,6 +30,8 @@ namespace IRasRag.Application.Specifications.FeedingLogSpecifications
                 Id = fl.Id,
                 FarmingBatchId = fl.FarmingBatchId,
                 FarmingBatchName = fl.FarmingBatch.Name,
+                FeedTypeId = fl.FeedTypeId,
+                FeedTypeName = fl.FeedType.Name,
                 UserId = fl.UserId,
                 UserEmail = fl.User.Email,
                 Amount = fl.Amount,

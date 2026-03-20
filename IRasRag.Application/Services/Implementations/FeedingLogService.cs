@@ -158,6 +158,15 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                if (createDto.FeedTypeId == Guid.Empty)
+                {
+                    _logger.LogWarning("Loại thức ăn không hợp lệ");
+                    return Result<FeedingLogDto>.Failure(
+                        "Loại thức ăn không hợp lệ",
+                        ResultType.BadRequest
+                    );
+                }
+
                 if (createDto.Amount <= 0)
                 {
                     _logger.LogWarning("Lượng thức ăn phải lớn hơn 0");
@@ -190,6 +199,23 @@ namespace IRasRag.Application.Services.Implementations
                     );
                     return Result<FeedingLogDto>.Failure(
                         "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+                }
+
+                var feedTypeRepository = _unitOfWork.GetRepository<FeedType>();
+                var feedTypeExists = await feedTypeRepository.AnyAsync(ft =>
+                    ft.Id == createDto.FeedTypeId
+                );
+
+                if (!feedTypeExists)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy loại thức ăn với Id: {FeedTypeId}",
+                        createDto.FeedTypeId
+                    );
+                    return Result<FeedingLogDto>.Failure(
+                        "Không tìm thấy loại thức ăn",
                         ResultType.NotFound
                     );
                 }
@@ -306,6 +332,26 @@ namespace IRasRag.Application.Services.Implementations
                             updateDto.FarmingBatchId.Value
                         );
                         return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
+                    }
+                }
+
+                if (updateDto.FeedTypeId.HasValue && updateDto.FeedTypeId.Value != Guid.Empty)
+                {
+                    var feedTypeRepository = _unitOfWork.GetRepository<FeedType>();
+                    var feedTypeExists = await feedTypeRepository.AnyAsync(ft =>
+                        ft.Id == updateDto.FeedTypeId.Value
+                    );
+
+                    if (!feedTypeExists)
+                    {
+                        _logger.LogWarning(
+                            "Không tìm thấy loại thức ăn với Id: {FeedTypeId}",
+                            updateDto.FeedTypeId.Value
+                        );
+                        return Result.Failure(
+                            "Không tìm thấy loại thức ăn",
+                            ResultType.NotFound
+                        );
                     }
                 }
 

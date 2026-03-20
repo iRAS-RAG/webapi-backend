@@ -9,6 +9,8 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public Guid FarmingBatchId { get; set; }
         public string FarmingBatchName { get; set; } = string.Empty;
+        public Guid FeedTypeId { get; set; }
+        public string FeedTypeName { get; set; } = string.Empty;
         public Guid UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
         public double Amount { get; set; }
@@ -22,6 +24,9 @@ namespace IRasRag.Application.DTOs
     {
         [Required(ErrorMessage = "Mã lô nuôi là bắt buộc")]
         public Guid FarmingBatchId { get; set; }
+
+        [Required(ErrorMessage = "Loại thức ăn là bắt buộc")]
+        public Guid FeedTypeId { get; set; }
 
         [JsonIgnore]
         public Guid UserId { get; set; }
@@ -39,6 +44,8 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? FarmingBatchId { get; set; }
 
+        public Guid? FeedTypeId { get; set; }
+
         [Range(0.1, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
         public double? Amount { get; set; }
 
@@ -50,6 +57,7 @@ namespace IRasRag.Application.DTOs
     {
         public DateTime? CreatedDate { get; set; }
         public Guid? FarmingBatchId { get; set; }
+        public Guid? FeedTypeId { get; set; }
     }
 
     // Batch sub-route requests
