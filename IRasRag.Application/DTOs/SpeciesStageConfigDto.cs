@@ -6,11 +6,11 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public Guid SpeciesId { get; set; }
-        public string SpeciesName { get; set; }
+        public string SpeciesName { get; set; } = string.Empty;
         public Guid GrowthStageId { get; set; }
-        public string GrowthStageName { get; set; }
-        public Guid FeedTypeId { get; set; }
-        public string FeedTypeName { get; set; }
+        public string GrowthStageName { get; set; } = string.Empty;
+        public List<Guid> FeedTypeIds { get; set; } = new();
+        public List<string> FeedTypeNames { get; set; } = new();
 
         public double AmountPer100Fish { get; set; }
 
@@ -30,7 +30,8 @@ namespace IRasRag.Application.DTOs
         public Guid GrowthStageId { get; set; }
 
         [Required]
-        public Guid FeedTypeId { get; set; }
+        [MinLength(1, ErrorMessage = "Phải chọn ít nhất một kiểu thức ăn.")]
+        public List<Guid> FeedTypeIds { get; set; } = new();
 
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Lượng cho ăn phải lớn hơn 0 kg.")]
@@ -49,7 +50,7 @@ namespace IRasRag.Application.DTOs
 
     public class UpdateSpeciesStageConfigDto
     {
-        public Guid? FeedTypeId { get; set; }
+        public List<Guid>? FeedTypeIds { get; set; }
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Lượng cho ăn phải lớn hơn 0 kg.")]
         public double? AmountPer100Fish { get; set; }

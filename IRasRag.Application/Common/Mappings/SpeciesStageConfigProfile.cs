@@ -8,7 +8,15 @@ namespace IRasRag.Application.Common.Mappings
     {
         public SpeciesStageConfigProfile()
         {
-            CreateMap<SpeciesStageConfig, SpeciesStageConfigDto>().ReverseMap();
+            CreateMap<SpeciesStageConfig, SpeciesStageConfigDto>()
+                .ForMember(
+                    dest => dest.FeedTypeIds,
+                    opt => opt.MapFrom(src => src.FeedTypes.Select(ft => ft.Id))
+                )
+                .ForMember(
+                    dest => dest.FeedTypeNames,
+                    opt => opt.MapFrom(src => src.FeedTypes.Select(ft => ft.Name))
+                );
 
             CreateMap<CreateSpeciesStageConfigDto, SpeciesStageConfig>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -16,7 +24,7 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Species, opt => opt.Ignore())
                 .ForMember(dest => dest.GrowthStage, opt => opt.Ignore())
-                .ForMember(dest => dest.FeedType, opt => opt.Ignore())
+                .ForMember(dest => dest.FeedTypes, opt => opt.Ignore())
                 .ForMember(dest => dest.FarmingBatches, opt => opt.Ignore());
 
             CreateMap<UpdateSpeciesStageConfigDto, SpeciesStageConfig>()
@@ -25,7 +33,7 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.ModifiedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.Species, opt => opt.Ignore())
                 .ForMember(dest => dest.GrowthStage, opt => opt.Ignore())
-                .ForMember(dest => dest.FeedType, opt => opt.Ignore())
+                .ForMember(dest => dest.FeedTypes, opt => opt.Ignore())
                 .ForMember(dest => dest.SpeciesId, opt => opt.Ignore())
                 .ForMember(dest => dest.GrowthStageId, opt => opt.Ignore())
                 .ForMember(dest => dest.FarmingBatches, opt => opt.Ignore())
