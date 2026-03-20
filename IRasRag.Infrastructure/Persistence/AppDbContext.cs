@@ -39,6 +39,7 @@ namespace IRasRag.Infrastructure.Persistence
         // ====================================
         public DbSet<FeedType> FeedTypes { get; set; }
         public DbSet<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
+        public DbSet<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
 
         // ====================================
         // Hardware
@@ -94,6 +95,7 @@ namespace IRasRag.Infrastructure.Persistence
             // Feeding Configuration
             modelBuilder.ApplyConfiguration(new FeedTypeConfiguration());
             modelBuilder.ApplyConfiguration(new SpeciesStageConfigConfiguration());
+            modelBuilder.ApplyConfiguration(new SpeciesStageConfigFeedTypeConfiguration());
 
             // Hardware
             modelBuilder.ApplyConfiguration(new MasterBoardConfiguration());

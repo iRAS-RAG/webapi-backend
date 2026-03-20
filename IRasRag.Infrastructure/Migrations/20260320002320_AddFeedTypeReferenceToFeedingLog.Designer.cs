@@ -3,6 +3,7 @@ using System;
 using IRasRag.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260320002320_AddFeedTypeReferenceToFeedingLog")]
+    partial class AddFeedTypeReferenceToFeedingLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1869,6 +1872,10 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("expected_duration_days");
 
+                    b.Property<Guid>("FeedTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("feed_type_id");
+
                     b.Property<int>("FrequencyPerDay")
                         .HasColumnType("integer")
                         .HasColumnName("frequency_per_day");
@@ -1892,6 +1899,9 @@ namespace IRasRag.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_species_stage_configs");
 
+                    b.HasIndex("FeedTypeId")
+                        .HasDatabaseName("ix_species_stage_configs_feed_type_id");
+
                     b.HasIndex("GrowthStageId")
                         .HasDatabaseName("ix_species_stage_configs_growth_stage_id");
 
@@ -1907,6 +1917,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
                             AmountPer100Fish = 0.5,
                             ExpectedDurationDays = 30,
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                             FrequencyPerDay = 6,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
                             MaxStockingDensity = 50.0,
@@ -1917,41 +1928,11 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
                             AmountPer100Fish = 3.0,
                             ExpectedDurationDays = 90,
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                             FrequencyPerDay = 3,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
                             MaxStockingDensity = 30.0,
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        });
-                });
-
-            modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesStageConfigFeedType", b =>
-                {
-                    b.Property<Guid>("SpeciesStageConfigId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("species_stage_config_id");
-
-                    b.Property<Guid>("FeedTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("feed_type_id");
-
-                    b.HasKey("SpeciesStageConfigId", "FeedTypeId")
-                        .HasName("pk_species_stage_config_feed_types");
-
-                    b.HasIndex("FeedTypeId")
-                        .HasDatabaseName("ix_species_stage_config_feed_types_feed_type_id");
-
-                    b.ToTable("species_stage_config_feed_types", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201")
-                        },
-                        new
-                        {
-                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
                         });
                 });
 
@@ -2564,6 +2545,13 @@ namespace IRasRag.Infrastructure.Migrations
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesStageConfig", b =>
                 {
+                    b.HasOne("IRasRag.Domain.Entities.FeedType", "FeedType")
+                        .WithMany("SpeciesStageConfigs")
+                        .HasForeignKey("FeedTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_species_stage_configs_feed_types_feed_type_id");
+
                     b.HasOne("IRasRag.Domain.Entities.GrowthStage", "GrowthStage")
                         .WithMany("SpeciesStageConfigs")
                         .HasForeignKey("GrowthStageId")
@@ -2578,30 +2566,11 @@ namespace IRasRag.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_species_stage_configs_species_species_id");
 
+                    b.Navigation("FeedType");
+
                     b.Navigation("GrowthStage");
 
                     b.Navigation("Species");
-                });
-
-            modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesStageConfigFeedType", b =>
-                {
-                    b.HasOne("IRasRag.Domain.Entities.FeedType", "FeedType")
-                        .WithMany("SpeciesStageConfigFeedTypes")
-                        .HasForeignKey("FeedTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_species_stage_config_feed_types_feed_types_feed_type_id");
-
-                    b.HasOne("IRasRag.Domain.Entities.SpeciesStageConfig", "SpeciesStageConfig")
-                        .WithMany("SpeciesStageConfigFeedTypes")
-                        .HasForeignKey("SpeciesStageConfigId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_species_stage_config_feed_types_species_stage_configs_speci");
-
-                    b.Navigation("FeedType");
-
-                    b.Navigation("SpeciesStageConfig");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesThreshold", b =>
@@ -2723,7 +2692,7 @@ namespace IRasRag.Infrastructure.Migrations
                 {
                     b.Navigation("FeedingLogs");
 
-                    b.Navigation("SpeciesStageConfigFeedTypes");
+                    b.Navigation("SpeciesStageConfigs");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.FishTank", b =>
@@ -2792,8 +2761,6 @@ namespace IRasRag.Infrastructure.Migrations
             modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesStageConfig", b =>
                 {
                     b.Navigation("FarmingBatches");
-
-                    b.Navigation("SpeciesStageConfigFeedTypes");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SpeciesThreshold", b =>

@@ -15,12 +15,19 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
             {
                 ["speciesname"] = s => s.Species.Name,
                 ["growthstagename"] = s => s.GrowthStage.Name,
-                ["feedtypename"] = s => s.FeedType.Name,
+                ["feedtypename"] = s =>
+                    s.FeedTypes.OrderBy(ft => ft.Name).Select(ft => ft.Name).FirstOrDefault(),
             };
 
-            ApplySearch(
-                request.SearchTerm, [s => s.Species.Name, s => s.GrowthStage.Name, s => s.FeedType.Name]
-            );
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var term = request.SearchTerm.Trim().ToLower();
+                Query.Where(s =>
+                    s.Species.Name.ToLower().Contains(term)
+                    || s.GrowthStage.Name.ToLower().Contains(term)
+                    || s.FeedTypes.Any(ft => ft.Name.ToLower().Contains(term))
+                );
+            }
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "speciesname");
 
@@ -32,8 +39,8 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                     SpeciesName = config.Species.Name,
                     GrowthStageId = config.GrowthStageId,
                     GrowthStageName = config.GrowthStage.Name,
-                    FeedTypeId = config.FeedTypeId,
-                    FeedTypeName = config.FeedType.Name,
+                    FeedTypeIds = config.FeedTypes.Select(ft => ft.Id).ToList(),
+                    FeedTypeNames = config.FeedTypes.Select(ft => ft.Name).ToList(),
                     AmountPer100Fish = config.AmountPer100Fish,
                     FrequencyPerDay = config.FrequencyPerDay,
                     MaxStockingDensity = config.MaxStockingDensity,

@@ -27,6 +27,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(fb => fb.FishTankId);
+            builder.HasIndex(fb => fb.CurrentStageConfigId);
 
             builder.HasData(FarmingBatchSeed.FarmingBatches);
         }

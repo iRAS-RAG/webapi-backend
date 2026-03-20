@@ -283,10 +283,10 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("{id}/feeding")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         public async Task<IActionResult> RecordFeeding(
             Guid id,
-            [FromBody] RecordFeedingRequest body
+            [FromBody] CreateFeedingLogDto dto
         )
         {
             try
@@ -299,14 +299,13 @@ namespace IRasRag.API.Controllers
                 {
                     return Unauthorized(new { Message = "Không xác thực được người dùng" });
                 }
-
-                var dto = new CreateFeedingLogDto
+                dto.FarmingBatchId = id;
+                dto.UserId = userId.Value;
+                // Set current UTC timestamp if not explicitly provided
+                if (dto.CreatedDate == default)
                 {
-                    FarmingBatchId = id,
-                    UserId = userId.Value,
-                    Amount = body.Amount,
-                    CreatedDate = DateTime.UtcNow,
-                };
+                    dto.CreatedDate = DateTime.UtcNow;
+                }
 
                 var result = await _feedingLogService.CreateFeedingLogAsync(dto);
                 return result.Type switch
@@ -319,7 +318,7 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}", id);
+                _logger.LogError(ex, "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}", dto.FarmingBatchId);
                 return StatusCode(
                     500,
                     new { Message = "Đã xảy ra lỗi khi ghi nhận sự kiện cho ăn." }

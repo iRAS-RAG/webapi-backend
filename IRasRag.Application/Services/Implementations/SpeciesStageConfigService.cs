@@ -54,10 +54,20 @@ namespace IRasRag.Application.Services.Implementations
                     );
 
                 if (
-                    await _unitOfWork
-                        .GetRepository<FeedType>()
-                        .AnyAsync(ft => ft.Id == dto.FeedTypeId) == false
+                    dto.FeedTypeIds == null
+                    || dto.FeedTypeIds.Count == 0
                 )
+                    return Result<SpeciesStageConfigDto>.Failure(
+                        "Phải chọn ít nhất một kiểu cho ăn.",
+                        ResultType.BadRequest
+                    );
+
+                var requestedFeedTypeIds = dto.FeedTypeIds.Distinct().ToList();
+                var feedTypes = await _unitOfWork
+                    .GetRepository<FeedType>()
+                    .FindAllAsync(ft => requestedFeedTypeIds.Contains(ft.Id));
+
+                if (feedTypes.Count != requestedFeedTypeIds.Count)
                     return Result<SpeciesStageConfigDto>.Failure(
                         "Kiểu cho ăn không tồn tại.",
                         ResultType.BadRequest
@@ -76,6 +86,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
 
                 var newConfig = _mapper.Map<SpeciesStageConfig>(dto);
+                newConfig.FeedTypes = feedTypes.ToList();
 
                 await _unitOfWork.GetRepository<SpeciesStageConfig>().AddAsync(newConfig);
                 await _unitOfWork.SaveChangesAsync();
@@ -256,22 +267,33 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var config = await _unitOfWork.GetRepository<SpeciesStageConfig>().GetByIdAsync(id);
 
-                if (
-                    dto.FeedTypeId != null
-                    && await _unitOfWork
-                        .GetRepository<FeedType>()
-                        .AnyAsync(ft => ft.Id == dto.FeedTypeId) == false
-                )
-                    return Result<SpeciesStageConfigDto>.Failure(
-                        "Kiểu cho ăn không tồn tại.",
-                        ResultType.BadRequest
-                    );
-
                 if (config == null)
                     return Result.Failure(
                         "Cấu hình giai đoạn sinh trưởng của cá không tồn tại.",
                         ResultType.NotFound
                     );
+
+                if (dto.FeedTypeIds != null)
+                {
+                    if (dto.FeedTypeIds.Count == 0)
+                        return Result.Failure(
+                            "Phải chọn ít nhất một kiểu cho ăn.",
+                            ResultType.BadRequest
+                        );
+
+                    var requestedFeedTypeIds = dto.FeedTypeIds.Distinct().ToList();
+                    var feedTypes = await _unitOfWork
+                        .GetRepository<FeedType>()
+                        .FindAllAsync(ft => requestedFeedTypeIds.Contains(ft.Id));
+
+                    if (feedTypes.Count != requestedFeedTypeIds.Count)
+                        return Result<SpeciesStageConfigDto>.Failure(
+                            "Kiểu cho ăn không tồn tại.",
+                            ResultType.BadRequest
+                        );
+
+                    config.FeedTypes = feedTypes.ToList();
+                }
 
                 _mapper.Map(dto, config);
                 await _unitOfWork.SaveChangesAsync();
