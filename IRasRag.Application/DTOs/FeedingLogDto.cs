@@ -22,7 +22,7 @@ namespace IRasRag.Application.DTOs
     // Create DTO
     public class CreateFeedingLogDto
     {
-        [Required(ErrorMessage = "Mã lô nuôi là bắt buộc")]
+        [JsonIgnore]
         public Guid FarmingBatchId { get; set; }
 
         [Required(ErrorMessage = "Loại thức ăn là bắt buộc")]
@@ -56,6 +56,7 @@ namespace IRasRag.Application.DTOs
     public class FeedingLogListRequest : BasePaginatedListRequest
     {
         public DateTime? CreatedDate { get; set; }
+        [JsonIgnore]
         public Guid? FarmingBatchId { get; set; }
         public Guid? FeedTypeId { get; set; }
     }

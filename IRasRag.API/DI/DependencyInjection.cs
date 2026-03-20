@@ -80,17 +80,6 @@ namespace IRasRag.API.DI
                     }
                 );
 
-                c.AddSecurityDefinition(
-                    "ApiKey",
-                    new OpenApiSecurityScheme
-                    {
-                        Description = "API Key via x-api-key header",
-                        Name = "x-api-key",
-                        In = ParameterLocation.Header,
-                        Type = SecuritySchemeType.ApiKey,
-                    }
-                );
-
                 c.AddSecurityRequirement(
                     new OpenApiSecurityRequirement
                     {
@@ -104,18 +93,7 @@ namespace IRasRag.API.DI
                                 },
                             },
                             Array.Empty<string>()
-                        },
-                        {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "ApiKey",
-                                },
-                            },
-                            Array.Empty<string>()
-                        },
+                        }
                     }
                 );
             });
