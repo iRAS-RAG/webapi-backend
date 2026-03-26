@@ -479,6 +479,12 @@ namespace IRasRag.Application.Services.Implementations
                 if (!_hasher.VerifyPassword(dto.OldPassword, user.PasswordHash))
                     return Result.Failure("Mật khẩu cũ không đúng.", ResultType.BadRequest);
 
+                if (dto.NewPassword == dto.OldPassword)
+                    return Result.Failure(
+                        "Mật khẩu mới không được trùng mật khẩu cũ.",
+                        ResultType.BadRequest
+                    );
+
                 if (dto.NewPassword != dto.ConfirmNewPassword)
                     return Result.Failure(
                         "Mật khẩu mới và xác nhận mật khẩu mới không khớp.",
