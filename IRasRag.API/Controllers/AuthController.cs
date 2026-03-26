@@ -1,6 +1,8 @@
-﻿using IRasRag.Application.Common.Models;
+﻿using System.Security.Claims;
+using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IRasRag.API.Controllers
@@ -10,11 +12,17 @@ namespace IRasRag.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger)
+        public AuthController(
+            IAuthService authService,
+            IUserService userService,
+            ILogger<AuthController> logger
+        )
         {
             _authService = authService;
+            _userService = userService;
             _logger = logger;
         }
 
@@ -125,6 +133,39 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while refreshing access token.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdateUserPasswordDto request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Message = "Người dùng chưa được xác thực." });
+            }
+
+            try
+            {
+                var response = await _userService.UpdateUserPasswordAsync(userId, request);
+                return response.Type switch
+                {
+                    ResultType.NotFound => NotFound(new { response.Message }),
+                    ResultType.BadRequest => BadRequest(new { response.Message }),
+                    ResultType.Unauthorized => Unauthorized(new { response.Message }),
+                    ResultType.Unexpected => StatusCode(500, new { response.Message }),
+                    _ => Ok(new { response.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while changing password for user with ID: {UserId}",
+                    userId
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
