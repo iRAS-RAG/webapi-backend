@@ -476,7 +476,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (user == null || user.IsDeleted)
                     return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
 
-                if (_hasher.VerifyPassword(dto.OldPassword, user.PasswordHash))
+                if (!_hasher.VerifyPassword(dto.OldPassword, user.PasswordHash))
                     return Result.Failure("Mật khẩu cũ không đúng.", ResultType.BadRequest);
 
                 if (dto.NewPassword != dto.ConfirmNewPassword)
