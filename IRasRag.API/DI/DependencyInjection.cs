@@ -93,7 +93,7 @@ namespace IRasRag.API.DI
                                 },
                             },
                             Array.Empty<string>()
-                        }
+                        },
                     }
                 );
             });

@@ -7,6 +7,7 @@ namespace IRasRag.Domain.Entities
     {
         [Required]
         public Guid BatchId { get; set; }
+
         [Required]
         public Guid UserId { get; set; }
 

@@ -161,9 +161,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
-                    .FirstOrDefaultAsync(
-                        new SpeciesThresholdDtoBySpeciesIdSpec(speciesId)
-                    );
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoBySpeciesIdSpec(speciesId));
 
                 if (threshold == null)
                     return Result<SpeciesThresholdDto>.Failure(

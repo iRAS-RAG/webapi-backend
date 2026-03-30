@@ -296,9 +296,15 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
                 }
 
-                if(farmingBatch.Status == FarmingBatchStatus.HARVESTED || farmingBatch.Status == FarmingBatchStatus.TERMINATED)
+                if (
+                    farmingBatch.Status == FarmingBatchStatus.HARVESTED
+                    || farmingBatch.Status == FarmingBatchStatus.TERMINATED
+                )
                 {
-                    return Result.Failure("Không thể cập nhật lô nuôi đã thu hoạch/hủy bỏ", ResultType.BadRequest);
+                    return Result.Failure(
+                        "Không thể cập nhật lô nuôi đã thu hoạch/hủy bỏ",
+                        ResultType.BadRequest
+                    );
                 }
 
                 // Validate inputs
@@ -368,7 +374,7 @@ namespace IRasRag.Application.Services.Implementations
         }
         #endregion
 
-            #region Delete Methods
+        #region Delete Methods
         public async Task<Result> DeleteFarmingBatchAsync(Guid id)
         {
             try

@@ -30,7 +30,12 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Time-series query: feeding history per batch
-            builder.HasIndex(fl => new { fl.FarmingBatchId, fl.FeedTypeId, fl.CreatedDate });
+            builder.HasIndex(fl => new
+            {
+                fl.FarmingBatchId,
+                fl.FeedTypeId,
+                fl.CreatedDate,
+            });
 
             builder.HasData(FeedingLogSeed.FeedingLogs);
         }

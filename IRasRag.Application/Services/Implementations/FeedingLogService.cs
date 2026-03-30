@@ -187,7 +187,8 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     _logger.LogWarning(
                         "Không tìm thấy lô nuôi với Id: {FarmingBatchId} hoặc người dùng {UserId} không có quyền truy cập",
-                        createDto.FarmingBatchId, createDto.UserId
+                        createDto.FarmingBatchId,
+                        createDto.UserId
                     );
                     return Result<FeedingLogDto>.Failure(
                         "Không tìm thấy lô nuôi hoặc bạn không có quyền truy cập",
@@ -197,12 +198,12 @@ namespace IRasRag.Application.Services.Implementations
 
                 // Verify allowed FeedType for current stage of the FarmingBatch
                 var speciesStageConfigRepository = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var isFeedTypeAllowedForCurrentStage =
-                    await speciesStageConfigRepository.AnyAsync(ssc =>
+                var isFeedTypeAllowedForCurrentStage = await speciesStageConfigRepository.AnyAsync(
+                    ssc =>
                         ssc.Id == farmingBatch.CurrentStageConfigId
                         && ssc.FeedTypes.Any(ft => ft.Id == createDto.FeedTypeId)
-                    );
-                    
+                );
+
                 if (!isFeedTypeAllowedForCurrentStage)
                 {
                     _logger.LogWarning(
@@ -329,10 +330,7 @@ namespace IRasRag.Application.Services.Implementations
                             "Không tìm thấy loại thức ăn với Id: {FeedTypeId}",
                             updateDto.FeedTypeId.Value
                         );
-                        return Result.Failure(
-                            "Không tìm thấy loại thức ăn",
-                            ResultType.NotFound
-                        );
+                        return Result.Failure("Không tìm thấy loại thức ăn", ResultType.NotFound);
                     }
                 }
 

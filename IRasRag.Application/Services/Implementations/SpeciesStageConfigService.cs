@@ -53,10 +53,7 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
-                if (
-                    dto.FeedTypeIds == null
-                    || dto.FeedTypeIds.Count == 0
-                )
+                if (dto.FeedTypeIds == null || dto.FeedTypeIds.Count == 0)
                     return Result<SpeciesStageConfigDto>.Failure(
                         "Phải chọn ít nhất một kiểu cho ăn.",
                         ResultType.BadRequest
@@ -219,11 +216,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<PaginatedResult<SpeciesStageConfigDto>> GetSpeciesStageConfigsBySpeciesId(Guid speciesId,
+        public async Task<PaginatedResult<SpeciesStageConfigDto>> GetSpeciesStageConfigsBySpeciesId(
+            Guid speciesId,
             SpeciesStageConfigListRequest request
         )
         {
-            var species = await _unitOfWork.GetRepository<Species>().AnyAsync(s => s.Id == speciesId);
+            var species = await _unitOfWork
+                .GetRepository<Species>()
+                .AnyAsync(s => s.Id == speciesId);
 
             if (species == false)
                 return new PaginatedResult<SpeciesStageConfigDto>
@@ -234,12 +234,13 @@ namespace IRasRag.Application.Services.Implementations
                     Links = null,
                 };
 
-            var pagedResult = await _unitOfWork.GetRepository<SpeciesStageConfig>().GetPagedAsync(
-                new SpeciesStageConfigBySpeciesIdSpec(speciesId, request),
-                request.Page,
-                request.PageSize
-            );
-
+            var pagedResult = await _unitOfWork
+                .GetRepository<SpeciesStageConfig>()
+                .GetPagedAsync(
+                    new SpeciesStageConfigBySpeciesIdSpec(speciesId, request),
+                    request.Page,
+                    request.PageSize
+                );
 
             return new PaginatedResult<SpeciesStageConfigDto>
             {

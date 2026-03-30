@@ -1,14 +1,18 @@
-﻿using Ardalis.Specification;
+﻿using System.Linq.Expressions;
+using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.Base;
 using IRasRag.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
 {
-    public class SpeciesStageConfigBySpeciesIdSpec : BaseListSpec<SpeciesStageConfig, SpeciesStageConfigDto>
+    public class SpeciesStageConfigBySpeciesIdSpec
+        : BaseListSpec<SpeciesStageConfig, SpeciesStageConfigDto>
     {
-        public SpeciesStageConfigBySpeciesIdSpec(Guid speciesId, SpeciesStageConfigListRequest request)
+        public SpeciesStageConfigBySpeciesIdSpec(
+            Guid speciesId,
+            SpeciesStageConfigListRequest request
+        )
         {
             Query.AsNoTracking();
             var sortMap = new Dictionary<string, Expression<Func<SpeciesStageConfig, object?>>>
@@ -31,7 +35,8 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "speciesname");
 
-            Query.Where(config => config.SpeciesId == speciesId)
+            Query
+                .Where(config => config.SpeciesId == speciesId)
                 .Select(config => new SpeciesStageConfigDto
                 {
                     Id = config.Id,
@@ -44,7 +49,7 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                     AmountPer100Fish = config.AmountPer100Fish,
                     FrequencyPerDay = config.FrequencyPerDay,
                     MaxStockingDensity = config.MaxStockingDensity,
-                    ExpectedDurationDays = config.ExpectedDurationDays
+                    ExpectedDurationDays = config.ExpectedDurationDays,
                 });
         }
     }

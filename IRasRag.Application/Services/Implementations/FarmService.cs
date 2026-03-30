@@ -55,7 +55,9 @@ namespace IRasRag.Application.Services.Implementations
                 // Kiểm tra trùng email
                 var existingFarm = await _unitOfWork
                     .GetRepository<Farm>()
-                    .FirstOrDefaultAsync(f => f.Email.ToLower() == createDto.Email.Trim().ToLower());
+                    .FirstOrDefaultAsync(f =>
+                        f.Email.ToLower() == createDto.Email.Trim().ToLower()
+                    );
 
                 if (existingFarm != null)
                     return Result<FarmDto>.Failure(

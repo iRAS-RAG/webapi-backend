@@ -7,9 +7,8 @@ namespace IRasRag.Infrastructure.Repositories
 {
     public class MoralityLogRepository : Repository<MortalityLog>, IMoralityLogRepository
     {
-        public MoralityLogRepository(AppDbContext context) : base(context)
-        {
-        }
+        public MoralityLogRepository(AppDbContext context)
+            : base(context) { }
 
         public async Task<int> ComputeDeathCountByBatch(Guid batchId)
         {

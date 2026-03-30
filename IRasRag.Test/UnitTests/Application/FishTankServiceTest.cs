@@ -138,11 +138,7 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "  http://camera.com/stream1  ",
             };
 
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-            };
+            var farm = new Farm { Id = farmId, Name = "Trang trại ABC" };
 
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
@@ -452,7 +448,12 @@ namespace IRasRag.Test.UnitTests.Application
             };
 
             _fishTankRepositoryMock
-                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(fishTank);
 
             // Act
@@ -472,7 +473,11 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.CameraUrl.Should().Be(fishTank.CameraUrl);
 
             _fishTankRepositoryMock.Verify(
-                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -483,7 +488,12 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             _fishTankRepositoryMock
-                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync((FishTankDto?)null);
 
             // Act
@@ -496,7 +506,11 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().BeNull();
 
             _fishTankRepositoryMock.Verify(
-                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -507,7 +521,12 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             _fishTankRepositoryMock
-                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync((FishTankDto?)null);
 
             // Act
@@ -519,7 +538,11 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Bể cá không tồn tại.");
 
             _fishTankRepositoryMock.Verify(
-                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -530,7 +553,12 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var exception = new Exception("Test exception");
             _fishTankRepositoryMock
-                .Setup(r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ThrowsAsync(exception);
 
             // Act
@@ -540,7 +568,11 @@ namespace IRasRag.Test.UnitTests.Application
             await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
 
             _fishTankRepositoryMock.Verify(
-                r => r.FirstOrDefaultAsync(It.IsAny<ISpecification<FishTank, FishTankDto>>(), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -765,12 +797,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (
-                        ISpecification<FishTank, FishTankDto> _,
-                        int _,
-                        int _,
-                        QueryType _
-                    ) =>
+                    (ISpecification<FishTank, FishTankDto> _, int _, int _, QueryType _) =>
                         new PagedResult<FishTankDto>
                         {
                             Items = new List<FishTankDto>
@@ -779,7 +806,15 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[1].Id,
                                     Name = entities[1].Name,
-                                    Volume = Math.Round((Math.PI * entities[1].Radius * entities[1].Radius * entities[1].Height), 2),
+                                    Volume = Math.Round(
+                                        (
+                                            Math.PI
+                                            * entities[1].Radius
+                                            * entities[1].Radius
+                                            * entities[1].Height
+                                        ),
+                                        2
+                                    ),
                                     FarmId = entities[1].FarmId,
                                     FarmName = entities[1].Farm.Name,
                                     TopicCode = entities[1].TopicCode,
@@ -792,7 +827,15 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[2].Id,
                                     Name = entities[2].Name,
-                                    Volume = Math.Round((Math.PI * entities[2].Radius * entities[2].Radius * entities[2].Height), 2),
+                                    Volume = Math.Round(
+                                        (
+                                            Math.PI
+                                            * entities[2].Radius
+                                            * entities[2].Radius
+                                            * entities[2].Height
+                                        ),
+                                        2
+                                    ),
                                     FarmId = entities[2].FarmId,
                                     FarmName = entities[2].Farm.Name,
                                     TopicCode = entities[2].TopicCode,
@@ -805,7 +848,15 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[0].Id,
                                     Name = entities[0].Name,
-                                    Volume = Math.Round((Math.PI * entities[0].Radius * entities[0].Radius * entities[0].Height), 2),
+                                    Volume = Math.Round(
+                                        (
+                                            Math.PI
+                                            * entities[0].Radius
+                                            * entities[0].Radius
+                                            * entities[0].Height
+                                        ),
+                                        2
+                                    ),
                                     FarmId = entities[0].FarmId,
                                     FarmName = entities[0].Farm.Name,
                                     TopicCode = entities[0].TopicCode,
@@ -1085,11 +1136,7 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "http://camera.com/stream2",
             };
 
-            var newFarm = new Farm
-            {
-                Id = newFarmId,
-                Name = "Trang trại mới",
-            };
+            var newFarm = new Farm { Id = newFarmId, Name = "Trang trại mới" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
@@ -1455,11 +1502,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể A",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể A" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto
@@ -1515,11 +1558,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể Trống",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
@@ -1593,11 +1632,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể Bình Thường",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto
@@ -1646,11 +1681,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể Cảnh Báo",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto
@@ -1697,11 +1728,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể Nguy Hiểm",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
                 new TankSensorLatestDataDto
@@ -1743,11 +1770,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank
-            {
-                Id = tankId,
-                Name = "Bể Trống",
-            };
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))

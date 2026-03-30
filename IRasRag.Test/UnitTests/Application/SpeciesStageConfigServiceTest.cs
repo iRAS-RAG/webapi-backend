@@ -457,12 +457,12 @@ namespace IRasRag.Test.UnitTests.Application
                     FeedTypes =
                     [
                         new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed A",
-                        Description = "d",
-                        ProteinPercentage = 35,
-                    },
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed A",
+                            Description = "d",
+                            ProteinPercentage = 35,
+                        },
                     ],
                 },
                 new SpeciesStageConfig
@@ -478,12 +478,12 @@ namespace IRasRag.Test.UnitTests.Application
                     FeedTypes =
                     [
                         new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed Z",
-                        Description = "d",
-                        ProteinPercentage = 45,
-                    },
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed Z",
+                            Description = "d",
+                            ProteinPercentage = 45,
+                        },
                     ],
                 },
                 new SpeciesStageConfig
@@ -499,12 +499,12 @@ namespace IRasRag.Test.UnitTests.Application
                     FeedTypes =
                     [
                         new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed M",
-                        Description = "d",
-                        ProteinPercentage = 40,
-                    },
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed M",
+                            Description = "d",
+                            ProteinPercentage = 40,
+                        },
                     ],
                 },
             };
@@ -601,12 +601,12 @@ namespace IRasRag.Test.UnitTests.Application
                     FeedTypes =
                     [
                         new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "F1",
-                        Description = "d",
-                        ProteinPercentage = 35,
-                    },
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "F1",
+                            Description = "d",
+                            ProteinPercentage = 35,
+                        },
                     ],
                 },
                 new SpeciesStageConfig
@@ -622,12 +622,12 @@ namespace IRasRag.Test.UnitTests.Application
                     FeedTypes =
                     [
                         new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "F2",
-                        Description = "d",
-                        ProteinPercentage = 45,
-                    },
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "F2",
+                            Description = "d",
+                            ProteinPercentage = 45,
+                        },
                     ],
                 },
             };

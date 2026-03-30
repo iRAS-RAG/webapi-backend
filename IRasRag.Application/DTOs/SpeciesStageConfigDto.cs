@@ -41,7 +41,11 @@ namespace IRasRag.Application.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Tần suất cho ăn phải từ 1 lần mỗi ngày")]
         public int FrequencyPerDay { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Mật độ thả nuôi tối đa phải lớn hơn 0 kg/m³.")]
+        [Range(
+            0.01,
+            double.MaxValue,
+            ErrorMessage = "Mật độ thả nuôi tối đa phải lớn hơn 0 kg/m³."
+        )]
         public double? MaxStockingDensity { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Thời gian dự kiến phải là số ngày hợp lệ.")]
@@ -58,7 +62,11 @@ namespace IRasRag.Application.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Tần suất cho ăn phải từ 1 lần mỗi ngày")]
         public int? FrequencyPerDay { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Mật độ thả nuôi tối đa phải lớn hơn 0 kg/m³.")]
+        [Range(
+            0.01,
+            double.MaxValue,
+            ErrorMessage = "Mật độ thả nuôi tối đa phải lớn hơn 0 kg/m³."
+        )]
         public double? MaxStockingDensity { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Thời gian dự kiến phải là số ngày hợp lệ.")]

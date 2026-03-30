@@ -358,10 +358,7 @@ namespace IRasRag.API.Controllers
 
         [HttpPost("sensors/{id}/logs")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateSensorLog(
-            Guid id,
-            [FromBody] CreateSensorLogDto dto
-        )
+        public async Task<IActionResult> CreateSensorLog(Guid id, [FromBody] CreateSensorLogDto dto)
         {
             try
             {

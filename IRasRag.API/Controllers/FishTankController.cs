@@ -13,26 +13,19 @@ namespace IRasRag.API.Controllers
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
-        private readonly ISensorService _sensorService;
         private readonly ILogger<FishTankController> _logger;
-        private readonly IControlDeviceService _controlDeviceService;
 
         public FishTankController(
             IFishTankService fishTankService,
-            ISensorService sensorService,
-            ILogger<FishTankController> logger,
-            IControlDeviceService controlDeviceService
+            ILogger<FishTankController> logger
         )
         {
             _fishTankService = fishTankService;
-            _sensorService = sensorService;
             _logger = logger;
-            _controlDeviceService = controlDeviceService;
         }
 
-        [Authorize(Roles = "Supervisor")]
-        [HttpPost]
         [Authorize(Roles = "Admin")]
+        [HttpPost]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
         {
             try
@@ -105,9 +98,8 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
-        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
         {
             try
@@ -234,8 +226,8 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFishTank(Guid id)
         {
             try

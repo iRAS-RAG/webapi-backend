@@ -197,10 +197,7 @@ namespace IRasRag.API.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _farmingBatchService.HarvestBatchAsync(
-                    id,
-                    harvestDate
-                );
+                var result = await _farmingBatchService.HarvestBatchAsync(id, harvestDate);
 
                 return result.Type switch
                 {
@@ -284,10 +281,7 @@ namespace IRasRag.API.Controllers
 
         [HttpPost("{id}/feeding")]
         [Authorize(Roles = "Supervisor, Operator")]
-        public async Task<IActionResult> RecordFeeding(
-            Guid id,
-            [FromBody] CreateFeedingLogDto dto
-        )
+        public async Task<IActionResult> RecordFeeding(Guid id, [FromBody] CreateFeedingLogDto dto)
         {
             try
             {
@@ -318,7 +312,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}", dto.FarmingBatchId);
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}",
+                    dto.FarmingBatchId
+                );
                 return StatusCode(
                     500,
                     new { Message = "Đã xảy ra lỗi khi ghi nhận sự kiện cho ăn." }

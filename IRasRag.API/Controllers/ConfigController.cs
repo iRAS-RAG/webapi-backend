@@ -352,11 +352,10 @@ namespace IRasRag.API.Controllers
                     return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
                 }
 
-                var result =
-                    await _speciesStageConfigService.GetSpeciesStageConfigsBySpeciesId(
-                        speciesId,
-                        request
-                    );
+                var result = await _speciesStageConfigService.GetSpeciesStageConfigsBySpeciesId(
+                    speciesId,
+                    request
+                );
 
                 return result.Meta == null && (result.Data == null || result.Data.Count == 0)
                     ? NotFound(new { result.Message })

@@ -49,7 +49,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 return new PaginatedResult<AlertDto>
                 {
-                    Message = pagedResult.TotalItems > 0 ? "Lấy danh sách cảnh báo thành công" : "Không có dữ liệu",
+                    Message =
+                        pagedResult.TotalItems > 0
+                            ? "Lấy danh sách cảnh báo thành công"
+                            : "Không có dữ liệu",
                     Data = pagedResult.Items,
                     Meta = meta,
                     Links = links,

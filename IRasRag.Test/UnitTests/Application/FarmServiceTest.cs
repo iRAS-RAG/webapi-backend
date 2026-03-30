@@ -235,7 +235,7 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
-            var existingFarm = new Farm { Email = "abc@farm.com"};
+            var existingFarm = new Farm { Email = "abc@farm.com" };
 
             _repositoryMock
                 .Setup(r =>
@@ -299,7 +299,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Name = "Trang trại ABC",
                 Address = "123 Đường ABC",
                 PhoneNumber = "0123456789",
-                Email = "abc@farm.com"
+                Email = "abc@farm.com",
             };
 
             _repositoryMock
@@ -616,11 +616,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Farm ABC"
-            };
+            var farm = new Farm { Id = farmId, Name = "Farm ABC" };
 
             _repositoryMock
                 .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
@@ -707,7 +703,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Name = "Old Name",
                 Address = "Old Address",
                 PhoneNumber = "0123456789",
-                Email = "old@farm.com"
+                Email = "old@farm.com",
             };
             var updateDto = new UpdateFarmDto
             {
@@ -788,7 +784,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = farmId,
                 Name = "Original Name",
-                Address = "Original Address"
+                Address = "Original Address",
             };
             var updateDto = new UpdateFarmDto { Name = null, Address = "" };
 
@@ -830,16 +826,8 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var existingFarm = new Farm
-            {
-                Id = farmId,
-                Email = "old@farm.com"
-            };
-            var anotherFarm = new Farm
-            {
-                Id = Guid.NewGuid(),
-                Email = "taken@farm.com"
-            };
+            var existingFarm = new Farm { Id = farmId, Email = "old@farm.com" };
+            var anotherFarm = new Farm { Id = Guid.NewGuid(), Email = "taken@farm.com" };
             var updateDto = new UpdateFarmDto { Email = "taken@farm.com" };
 
             _repositoryMock

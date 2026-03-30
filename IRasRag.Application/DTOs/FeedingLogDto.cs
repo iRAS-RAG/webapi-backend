@@ -56,6 +56,7 @@ namespace IRasRag.Application.DTOs
     public class FeedingLogListRequest : BasePaginatedListRequest
     {
         public DateTime? CreatedDate { get; set; }
+
         [JsonIgnore]
         public Guid? FarmingBatchId { get; set; }
         public Guid? FeedTypeId { get; set; }

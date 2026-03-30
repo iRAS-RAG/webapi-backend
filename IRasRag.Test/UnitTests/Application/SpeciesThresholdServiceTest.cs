@@ -280,11 +280,7 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     entity.Id = persistedId;
                     entity.Species = new Species { Id = dto.SpeciesId, Name = "Species" };
-                    entity.GrowthStage = new GrowthStage
-                    {
-                        Id = dto.GrowthStageId,
-                        Name = "Stage",
-                    };
+                    entity.GrowthStage = new GrowthStage { Id = dto.GrowthStageId, Name = "Stage" };
                     entity.SensorType = new SensorType
                     {
                         Id = dto.SensorTypeId,
@@ -302,10 +298,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (
-                        ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec,
-                        QueryType _
-                    ) =>
+                    (ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec, QueryType _) =>
                     {
                         if (persistedThreshold == null || spec.Selector == null)
                         {

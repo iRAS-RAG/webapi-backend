@@ -88,10 +88,11 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<UserFarm>)new List<UserFarm>
-                    {
-                        new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() },
-                    }
+                    (IReadOnlyList<UserFarm>)
+                        new List<UserFarm>
+                        {
+                            new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() },
+                        }
                 );
 
             // FishTank returns an empty list by default; individual tests override this as needed.
@@ -114,7 +115,9 @@ namespace IRasRag.Test.UnitTests.Application
         {
             _sensorTypeRepoMock
                 .Setup(r => r.GetAllAsync(It.IsAny<QueryType>()))
-                .ReturnsAsync((IReadOnlyList<SensorType>)(types?.ToList() ?? new List<SensorType>()));
+                .ReturnsAsync(
+                    (IReadOnlyList<SensorType>)(types?.ToList() ?? new List<SensorType>())
+                );
         }
 
         private void SetupDefaultAlertRepo()
@@ -283,10 +286,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(new List<FeedingLog>());
             _alertRepoMock
                 .Setup(r =>
-                    r.FindAllAsync(
-                        It.IsAny<Expression<Func<Alert, bool>>>(),
-                        It.IsAny<QueryType>()
-                    )
+                    r.FindAllAsync(It.IsAny<Expression<Func<Alert, bool>>>(), It.IsAny<QueryType>())
                 )
                 .ReturnsAsync(new List<Alert>());
             _masterBoardRepoMock
@@ -1059,7 +1059,9 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>());
+                .ReturnsAsync(
+                    (IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>()
+                );
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1084,7 +1086,9 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>());
+                .ReturnsAsync(
+                    (IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>()
+                );
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
