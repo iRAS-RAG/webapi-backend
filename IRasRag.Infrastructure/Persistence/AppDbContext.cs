@@ -161,13 +161,11 @@ namespace IRasRag.Infrastructure.Persistence
             }
         }
 
-        private bool _hardDelete;
+        private readonly HashSet<object> _hardDeleteEntities = new();
 
-        public void HardDelete<TEntity>(TEntity entity)
-            where TEntity : class
+        public void MarkHardDelete(object entity)
         {
-            _hardDelete = true;
-            Remove(entity);
+            _hardDeleteEntities.Add(entity);
         }
 
         public override int SaveChanges()
@@ -188,7 +186,7 @@ namespace IRasRag.Infrastructure.Persistence
                 else if (
                     entry.State == EntityState.Deleted
                     && entry.Entity is ISoftDeletable softDeletable
-                    && !_hardDelete
+                    && !_hardDeleteEntities.Contains(entry.Entity)
                 )
                 {
                     // Soft delete
@@ -199,14 +197,9 @@ namespace IRasRag.Infrastructure.Persistence
                 }
             }
 
-            try
-            {
-                return base.SaveChanges();
-            }
-            finally
-            {
-                _hardDelete = false;
-            }
+            var result = base.SaveChanges();
+            _hardDeleteEntities.Clear();
+            return result;
         }
 
         public override async Task<int> SaveChangesAsync(
@@ -229,7 +222,7 @@ namespace IRasRag.Infrastructure.Persistence
                 else if (
                     entry.State == EntityState.Deleted
                     && entry.Entity is ISoftDeletable softDeletable
-                    && !_hardDelete
+                    && !_hardDeleteEntities.Contains(entry.Entity)
                 )
                 {
                     // Soft delete
@@ -240,14 +233,9 @@ namespace IRasRag.Infrastructure.Persistence
                 }
             }
 
-            try
-            {
-                return await base.SaveChangesAsync(cancellationToken);
-            }
-            finally
-            {
-                _hardDelete = false;
-            }
+            var result = await base.SaveChangesAsync(cancellationToken);
+            _hardDeleteEntities.Clear();
+            return result;
         }
     }
 }

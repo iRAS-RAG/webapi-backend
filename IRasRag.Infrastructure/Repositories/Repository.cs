@@ -230,7 +230,8 @@ namespace IRasRag.Infrastructure.Repositories
 
         public void HardDelete(T entity)
         {
-            _context.HardDelete(entity);
+            _context.MarkHardDelete(entity);
+            _dbSet.Remove(entity);
         }
 
         #endregion
