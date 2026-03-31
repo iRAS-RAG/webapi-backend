@@ -91,26 +91,11 @@ namespace IRasRag.API.Controllers
         [HttpPost]
         [Authorize(Roles = "Supervisor")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> CreateDocument([FromForm] CreateDocumentDto dto)
+        public async Task<IActionResult> CreateDocument(string fileTitle, IFormFile file)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
-            }
-
-            if (dto == null || string.IsNullOrWhiteSpace(dto.FileTitle))
-            {
-                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
-            }
-
-            var file =
-                Request.Form?.Files != null && Request.Form.Files.Count > 0
-                    ? Request.Form.Files[0]
-                    : null;
-
             if (file == null)
             {
-                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
+                return BadRequest(new { Message = "File không được để trống" });
             }
 
             var userId = _httpContextUtils.GetUserId();
@@ -119,10 +104,14 @@ namespace IRasRag.API.Controllers
                 return Unauthorized(new { Message = "Không xác thực được người dùng" });
             }
 
-            dto.FileStream = file.OpenReadStream();
-            dto.FileName = file.FileName;
-            dto.FileSize = file.Length;
-            dto.UploadedByUserId = userId.Value;
+            var dto = new CreateDocumentDto
+            {
+                FileStream = file.OpenReadStream(),
+                FileTitle = fileTitle,
+                FileName = file.FileName,
+                FileSize = file.Length,
+                UploadedByUserId = userId.Value
+            };
 
             var result = await _documentService.CreateDocumentAsync(dto);
 
