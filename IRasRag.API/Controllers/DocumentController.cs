@@ -91,7 +91,7 @@ namespace IRasRag.API.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> CreateDocument(string fileTitle, IFormFile file)
+        public async Task<IActionResult> CreateDocument(string? fileTitle, IFormFile file)
         {
             if (file == null)
             {
@@ -107,7 +107,9 @@ namespace IRasRag.API.Controllers
             var dto = new CreateDocumentDto
             {
                 FileStream = file.OpenReadStream(),
-                FileTitle = fileTitle,
+                FileTitle = string.IsNullOrWhiteSpace(fileTitle)
+                            ? Path.GetFileNameWithoutExtension(file.FileName)
+                            : fileTitle,
                 FileName = file.FileName,
                 FileSize = file.Length,
                 UploadedByUserId = userId.Value,
