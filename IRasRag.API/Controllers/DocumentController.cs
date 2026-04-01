@@ -89,7 +89,7 @@ namespace IRasRag.API.Controllers
         /// Tạo tài liệu mới
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateDocument(string fileTitle, IFormFile file)
         {
@@ -110,7 +110,7 @@ namespace IRasRag.API.Controllers
                 FileTitle = fileTitle,
                 FileName = file.FileName,
                 FileSize = file.Length,
-                UploadedByUserId = userId.Value
+                UploadedByUserId = userId.Value,
             };
 
             var result = await _documentService.CreateDocumentAsync(dto);
@@ -128,8 +128,8 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Cập nhật tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateDocument(
             Guid id,
             [FromBody] UpdateDocumentDto updateDto
@@ -169,8 +169,8 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Xóa tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> DeleteDocument(Guid id)
         {
             var result = await _documentService.DeleteDocumentAsync(id);
