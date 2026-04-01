@@ -89,28 +89,13 @@ namespace IRasRag.API.Controllers
         /// Tạo tài liệu mới
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> CreateDocument([FromForm] CreateDocumentDto dto)
+        public async Task<IActionResult> CreateDocument(string? fileTitle, IFormFile file)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
-            }
-
-            if (dto == null || string.IsNullOrWhiteSpace(dto.FileTitle))
-            {
-                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
-            }
-
-            var file =
-                Request.Form?.Files != null && Request.Form.Files.Count > 0
-                    ? Request.Form.Files[0]
-                    : null;
-
             if (file == null)
             {
-                return BadRequest(new { Message = "File và tiêu đề không được để trống" });
+                return BadRequest(new { Message = "File không được để trống" });
             }
 
             var userId = _httpContextUtils.GetUserId();
@@ -119,10 +104,16 @@ namespace IRasRag.API.Controllers
                 return Unauthorized(new { Message = "Không xác thực được người dùng" });
             }
 
-            dto.FileStream = file.OpenReadStream();
-            dto.FileName = file.FileName;
-            dto.FileSize = file.Length;
-            dto.UploadedByUserId = userId.Value;
+            var dto = new CreateDocumentDto
+            {
+                FileStream = file.OpenReadStream(),
+                FileTitle = string.IsNullOrWhiteSpace(fileTitle)
+                            ? Path.GetFileNameWithoutExtension(file.FileName)
+                            : fileTitle,
+                FileName = file.FileName,
+                FileSize = file.Length,
+                UploadedByUserId = userId.Value,
+            };
 
             var result = await _documentService.CreateDocumentAsync(dto);
 
@@ -139,8 +130,8 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Cập nhật tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateDocument(
             Guid id,
             [FromBody] UpdateDocumentDto updateDto
@@ -180,8 +171,8 @@ namespace IRasRag.API.Controllers
         /// <summary>
         /// Xóa tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> DeleteDocument(Guid id)
         {
             var result = await _documentService.DeleteDocumentAsync(id);
