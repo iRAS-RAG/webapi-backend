@@ -24,6 +24,7 @@ namespace IRasRag.API
             builder.Services.AddApiServices(builder.Configuration, builder.Environment);
             builder.Services.AddApplicationServices(builder.Configuration);
             builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
+            builder.Services.AddMemoryCache();
 
             var app = builder.Build();
 

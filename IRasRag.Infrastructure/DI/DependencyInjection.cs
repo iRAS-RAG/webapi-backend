@@ -7,6 +7,7 @@ using IRasRag.Application.Common.Interfaces.FileExtractor;
 using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services.Auth;
@@ -15,6 +16,8 @@ using IRasRag.Infrastructure.Services.CloudFileStorage;
 using IRasRag.Infrastructure.Services.Email;
 using IRasRag.Infrastructure.Services.FileExtractors;
 using IRasRag.Infrastructure.Services.FileValidator;
+using IRasRag.Infrastructure.Services.Mqtt;
+using IRasRag.Infrastructure.Services.Telemetry;
 using IRasRag.Infrastructure.Services.TextExtractors;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +39,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddServices();
             services.AddConnectionString(config, env);
             services.AddSettings(config);
+            services.AddHostedService<MqttBackgroundService>();
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -51,6 +55,10 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
 
+            // Telemetry
+            services.AddScoped<ITelemetryCacheService, TelemetryCacheService>();
+            services.AddScoped<ITelemetryDispatchService, TelemetryDispatchService>();
+
             // File processing
             services.AddScoped<IFileContentValidator, FileContentValidator>();
             services.AddScoped<ICloudFileStorageService, CloudnaryService>();
@@ -64,6 +72,10 @@ namespace IRasRag.Infrastructure.DI
             services.Configure<EmailSettings>(config.GetSection("Email"));
             services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
             services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
+            services.Configure<MqttSettings>(config.GetSection("Mqtt"));
+
+            var mqttSettings = config.GetSection("Mqtt").Get<MqttSettings>();
+            mqttSettings?.ValidateSettings();
         }
 
         public static void AddConnectionString(
