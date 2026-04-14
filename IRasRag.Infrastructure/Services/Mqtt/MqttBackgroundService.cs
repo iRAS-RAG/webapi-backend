@@ -17,13 +17,12 @@ namespace IRasRag.Infrastructure.Services.Mqtt
         private readonly IMqttClient _client;
         private readonly MqttSettings _mqttSettings;
         private readonly IServiceScopeFactory _scopeFactory;
-        public MqttBackgroundService(ILogger<MqttBackgroundService> logger, IOptions<MqttSettings> options, IServiceScopeFactory scopeFactory)
+        public MqttBackgroundService(ILogger<MqttBackgroundService> logger, IOptions<MqttSettings> options, IServiceScopeFactory scopeFactory, IMqttClient client)
         {
             _logger = logger;
             _mqttSettings = options.Value;
-            var factory = new MqttClientFactory();
             _scopeFactory = scopeFactory;
-            _client = factory.CreateMqttClient();
+            _client = client;
             _client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
             _client.DisconnectedAsync += async e =>
             {

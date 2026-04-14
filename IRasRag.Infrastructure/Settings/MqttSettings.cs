@@ -9,7 +9,6 @@
         public string Username { get; set; }
         public string Password { get; set; }
         public string SubscribeTopic { get; set; }
-        public string PublishTopicTemplate { get; set; }
         public string CommandTopicTemplate { get; set; }
         public bool UseTls
         {
