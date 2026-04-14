@@ -138,13 +138,13 @@ namespace IRasRag.Application.Services.Implementations
             try
             {
                 // Validate SensorLog exists
-                var sensorLogRepo = _unitOfWork.GetRepository<SensorLog>();
-                var sensorLogExists = await sensorLogRepo.AnyAsync(sl =>
-                    sl.Id == createDto.SensorLogId
+                var sensorRepo = _unitOfWork.GetRepository<Sensor>();
+                var sensorLogExists = await sensorRepo.AnyAsync(s =>
+                    s.Id == createDto.SensorId
                 );
                 if (!sensorLogExists)
                 {
-                    return Result<AlertDto>.Failure("SensorLog không tồn tại", ResultType.NotFound);
+                    return Result<AlertDto>.Failure("Sensor không tồn tại", ResultType.NotFound);
                 }
 
                 // Validate SpeciesThreshold exists
@@ -230,15 +230,15 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // Validate SensorLog if provided
-                if (updateDto.SensorLogId.HasValue)
+                if (updateDto.SensorId.HasValue)
                 {
-                    var sensorLogRepo = _unitOfWork.GetRepository<SensorLog>();
-                    var sensorLogExists = await sensorLogRepo.AnyAsync(sl =>
-                        sl.Id == updateDto.SensorLogId.Value
+                    var sensorRepo = _unitOfWork.GetRepository<Sensor>();
+                    var sensorExists = await sensorRepo.AnyAsync(s =>
+                        s.Id == updateDto.SensorId.Value
                     );
-                    if (!sensorLogExists)
+                    if (!sensorExists)
                     {
-                        return Result.Failure("SensorLog không tồn tại", ResultType.NotFound);
+                        return Result.Failure("Sensor không tồn tại", ResultType.NotFound);
                     }
                 }
 

@@ -12,9 +12,9 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.ConfigureTimestamps();
 
             builder
-                .HasOne(a => a.SensorLog)
-                .WithMany(sl => sl.Alerts)
-                .HasForeignKey(a => a.SensorLogId)
+                .HasOne(a => a.Sensor)
+                .WithMany(s => s.Alerts)
+                .HasForeignKey(a => a.SensorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
@@ -41,12 +41,23 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(a => a.SensorTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(a => a.TriggerValue).HasColumnType("double precision").IsRequired();
+            builder.Property(a => a.RaisedAt).IsRequired();
             builder.Property(a => a.Status).HasConversion<string>();
 
-            // Filter alerts by tank
             builder.HasIndex(a => new { a.FishTankId, a.Status });
             builder.HasIndex(a => new { a.FarmingBatchId, a.Status });
-            builder.HasIndex(a => new { a.SensorLogId, a.Status });
+            builder.HasIndex(a => new { a.SensorId, a.Status });
+
+            // Unique index to prevent multiple open alerts of same type for same tank/batch
+            builder.HasIndex(a => new { a.FishTankId, a.FarmingBatchId, a.SensorTypeId })
+                .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NOT NULL")
+                .IsUnique();
+
+            // Also allow one open alert per sensor type at tank level if no batch is active
+            builder.HasIndex(a => new { a.FishTankId, a.SensorTypeId })
+                .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NULL")
+                .IsUnique();
 
             builder.HasData(AlertSeed.Alerts);
         }

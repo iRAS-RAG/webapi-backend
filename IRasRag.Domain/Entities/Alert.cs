@@ -7,7 +7,7 @@ namespace IRasRag.Domain.Entities
     public class Alert : BaseEntity
     {
         [Required]
-        public Guid SensorLogId { get; set; }
+        public Guid SensorId { get; set; }
 
         [Required]
         public Guid SpeciesThresholdId { get; set; }
@@ -21,7 +21,7 @@ namespace IRasRag.Domain.Entities
         public Guid SensorTypeId { get; set; }
 
         [Required]
-        public double Value { get; set; }
+        public double TriggerValue { get; set; }
 
         [Required]
         public DateTime RaisedAt { get; set; }
@@ -33,7 +33,7 @@ namespace IRasRag.Domain.Entities
         public AlertStatus Status { get; set; } = AlertStatus.OPEN;
 
         // Navigation properties
-        public SensorLog SensorLog { get; set; }
+        public Sensor Sensor { get; set; }
         public SpeciesThreshold SpeciesThreshold { get; set; }
         public FarmingBatch? FarmingBatch { get; set; }
         public FishTank FishTank { get; set; }
