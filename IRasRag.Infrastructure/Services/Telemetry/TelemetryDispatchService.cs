@@ -1,6 +1,9 @@
 ﻿using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Mqtt;
+using IRasRag.Application.Common.Models.Realtime;
+using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -13,27 +16,33 @@ namespace IRasRag.Infrastructure.Services.Telemetry
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITelemetryCacheService _cache;
+        private readonly ITelemetryLogBatchWriter _logBatchWriter;
+        private readonly ILatestTelemetryCacheService _latestTelemetryCache;
         private readonly ILogger<TelemetryDispatchService> _logger;
-
-        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        private readonly IAlertStateEvaluator _alertStateEvaluator;
+        private readonly ILiveDataNotifier _liveDataNotifier;
 
         public TelemetryDispatchService(
             IUnitOfWork unitOfWork,
             ITelemetryCacheService cache,
-            ILogger<TelemetryDispatchService> logger)
+            ITelemetryLogBatchWriter logBatchWriter,
+            ILatestTelemetryCacheService latestTelemetryCache,
+            ILogger<TelemetryDispatchService> logger,
+            IAlertStateEvaluator alertStateEvaluator,
+            ILiveDataNotifier liveDataNotifier)
         {
             _unitOfWork = unitOfWork;
             _cache = cache;
+            _logBatchWriter = logBatchWriter;
+            _latestTelemetryCache = latestTelemetryCache;
             _logger = logger;
+            _alertStateEvaluator = alertStateEvaluator;
+            _liveDataNotifier = liveDataNotifier;
         }
 
         public async Task DispatchAsync(SensorTelemetry telemetry, string macFromTopic)
         {
             var timestamp = DateTime.UtcNow;
-            var rawJson = JsonSerializer.Serialize(telemetry, JsonOptions);
 
             // Step 1: Resolve masterboard
             var masterboard = await _cache.GetMasterboardByMacAsync(macFromTopic);
@@ -53,7 +62,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
                 await PersistLogsAsync(
                     telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, rawJson, thresholds: null, batch: null);
+                    timestamp, thresholds: null, batch: null);
                 return;
             }
 
@@ -67,17 +76,16 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
                 await PersistLogsAsync(
                     telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, rawJson, thresholds: null, batch: null);
+                    timestamp, thresholds: null, batch: null);
                 return;
             }
 
             // Step 3: Resolve sensors and thresholds
-            var sensors = await _cache.GetSensorsByMasterboardAsync(masterboard.Id);
             var thresholds = await _cache.GetThresholdsAsync(stageConfig.SpeciesId, stageConfig.GrowthStageId);
 
             await PersistLogsAsync(
                 telemetry, masterboard.Id, masterboard.FishTankId,
-                timestamp, rawJson, thresholds, batch);
+                timestamp, thresholds, batch);
         }
 
         private async Task PersistLogsAsync(
@@ -85,11 +93,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             Guid masterboardId,
             Guid tankId,
             DateTime timestamp,
-            string rawJson,
             Dictionary<Guid, SpeciesThreshold>? thresholds,
             FarmingBatch? batch)
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
+            var bufferedLogs = new List<TelemetryLogWriteModel>();
 
             foreach (var reading in telemetry.Readings)
             {
@@ -102,54 +110,48 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     continue;
                 }
 
-                // Evaluate threshold if batch is active
+                // Update latest cache for this sensor
+                _latestTelemetryCache.Set(sensor.Id, reading.Val, timestamp);
+
+                // Push live reading to connected clients
+                await _liveDataNotifier.PushTelemetryAsync(
+                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp));
+
+                // Evaluate thresholds and prepare log entry
                 var isWarning = false;
-                SpeciesThreshold? violatedThreshold = null;
 
                 if (thresholds != null && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold))
                 {
                     isWarning = ThresholdEvaluator.IsViolation(reading.Val, threshold);
-                    if (isWarning)
-                        violatedThreshold = threshold;
+
+                    if (batch != null)
+                    {
+                        await _alertStateEvaluator.EvaluateAsync(
+                            tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val);
+                    }
+
                 }
-                else if (thresholds != null)
+                else if (thresholds == null)
                 {
                     _logger.LogInformation(
                         "No threshold configured for sensor type {SensorTypeId}, skipping alert evaluation",
                         sensor.SensorTypeId);
                 }
 
-                // Persist SensorLog
-                var log = new SensorLog
-                {
-                    SensorId = sensor.Id,
-                    Data = reading.Val,
-                    IsWarning = isWarning,
-                    DataJson = rawJson
-                };
-
-                await _unitOfWork.GetRepository<SensorLog>().AddAsync(log);
-
-                // Persist Alert if violation found
-                if (isWarning && violatedThreshold != null && batch != null)
-                {
-                    var alert = new Alert
+                bufferedLogs.Add(
+                    new TelemetryLogWriteModel
                     {
-                        SensorLogId = log.Id,
-                        SpeciesThresholdId = violatedThreshold.Id,
-                        FarmingBatchId = batch.Id,
-                        FishTankId = tankId,
-                        SensorTypeId = sensor.SensorTypeId,
-                        Value = reading.Val,
-                        RaisedAt = timestamp,
-                        Status = AlertStatus.OPEN
-                    };
+                        SensorId = sensor.Id,
+                        Data = reading.Val,
+                        IsWarning = isWarning,
+                        CreatedAt = timestamp
+                    });
+            } 
 
-                    await _unitOfWork.GetRepository<Alert>().AddAsync(alert);
-                }
+            if (bufferedLogs.Count > 0)
+            {
+                await _logBatchWriter.EnqueueBatchAsync(bufferedLogs);
             }
-
-            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

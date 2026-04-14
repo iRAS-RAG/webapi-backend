@@ -1,4 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Common.Utils
 {
@@ -6,7 +7,10 @@ namespace IRasRag.Application.Common.Utils
     {
         public static bool IsViolation(double value, SpeciesThreshold threshold)
         {
-            return value < threshold.MinValue || value > threshold.MaxValue;
+            if (value < threshold.MinValue || value > threshold.MaxValue) 
+                return true;
+
+            return false;
         }
     }
 }
