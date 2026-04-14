@@ -4,6 +4,7 @@ using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
 using IRasRag.Infrastructure.Persistence;
+using IRasRag.Infrastructure.Persistence.DbFunctions;
 using Microsoft.EntityFrameworkCore;
 
 namespace IRasRag.Infrastructure.Repositories
@@ -18,6 +19,7 @@ namespace IRasRag.Infrastructure.Repositories
             int TotalCount
         )> GetAggregatedLogsAsync(
             Guid sensorId,
+            string sensorName,
             DateTime from,
             DateTime to,
             int interval,
@@ -25,22 +27,27 @@ namespace IRasRag.Infrastructure.Repositories
             int pageSize
         )
         {
-            var intervalTicks = TimeSpan.FromMinutes(interval).Ticks;
-
-            // WHERE in DB (uses index on sensor_id + created_at), grouping in memory
-            // because EF Core cannot translate Ticks arithmetic to SQL
+            // Fetch 1-minute summary rows for the range
             var filtered = await GetQueryable()
                 .AsNoTracking()
-                .Where(sl => sl.SensorId == sensorId && sl.CreatedAt >= from && sl.CreatedAt < to)
+                .Where(sl => sl.SensorId == sensorId
+                          && sl.PeriodStart >= from
+                          && sl.PeriodStart < to)
                 .ToListAsync();
 
+            // Re-bucket in memory for intervals > 1 minute
+            // Weighted average preserves accuracy for windows with fewer than 60 samples
             var grouped = filtered
-                .GroupBy(x => x.CreatedAt!.Value.Ticks / intervalTicks * intervalTicks)
+                .GroupBy(x => x.PeriodStart.Ticks / TimeSpan.FromMinutes(interval).Ticks
+                                                  * TimeSpan.FromMinutes(interval).Ticks)
                 .Select(g => new
                 {
                     Bucket = g.Key,
-                    Avg = g.Average(x => x.Data),
-                    HasWarning = g.Any(x => x.IsWarning),
+                    Avg = g.Sum(x => x.Average * x.SampleCount) / g.Sum(x => x.SampleCount),
+                    Min = g.Min(x => x.Min),
+                    Max = g.Max(x => x.Max),
+                    SampleCount = g.Sum(x => x.SampleCount),
+                    HasWarning = g.Any(x => x.HasWarning),
                 })
                 .OrderBy(x => x.Bucket)
                 .ToList();
@@ -54,9 +61,13 @@ namespace IRasRag.Infrastructure.Repositories
                 {
                     Id = Guid.Empty,
                     SensorId = sensorId,
-                    Data = x.Avg,
-                    IsWarning = x.HasWarning,
-                    DataJson = null,
+                    SensorName = sensorName,
+                    Average = x.Avg,
+                    Min = x.Min,
+                    Max = x.Max,
+                    SampleCount = x.SampleCount,
+                    HasWarning = x.HasWarning,
+                    PeriodStart = new DateTime(x.Bucket, DateTimeKind.Utc),
                     CreatedAt = new DateTime(x.Bucket, DateTimeKind.Utc),
                 })
                 .ToList();
@@ -71,29 +82,44 @@ namespace IRasRag.Infrastructure.Repositories
             int interval
         )
         {
-            var intervalTicks = TimeSpan.FromMinutes(interval).Ticks;
+            var utcFrom = DateTime.SpecifyKind(from, DateTimeKind.Utc);
+            var utcTo = DateTime.SpecifyKind(to, DateTimeKind.Utc);
 
-            // WHERE in DB, grouping in memory — EF Core cannot translate Ticks arithmetic to SQL
-            var filtered = await GetQueryable()
+            if (utcTo <= utcFrom)
+                throw new ArgumentException("To must be greater than From");
+            if (interval <= 0)
+                throw new ArgumentException("Interval must be a positive integer");
+            if (interval > (utcTo - utcFrom).TotalMinutes)
+                throw new ArgumentException("Interval cannot be greater than the total time range");
+
+            var bucketCount = (int)Math.Ceiling((utcTo - utcFrom).TotalMinutes / interval);
+            var stride = TimeSpan.FromMinutes(interval);
+
+            // date_bin buckets the 1-min PeriodStart into the requested interval
+            // Sum(Average * SampleCount) / Sum(SampleCount) is the weighted average 
+            var buckets = await _context.Set<SensorLog>()
                 .AsNoTracking()
-                .Where(sl => sl.SensorId == sensorId && sl.CreatedAt >= from && sl.CreatedAt < to)
+                .Where(sl => sl.SensorId == sensorId
+                          && sl.PeriodStart >= utcFrom
+                          && sl.PeriodStart < utcTo)
+                .GroupBy(sl => PgFunctions.DateBin(stride, sl.PeriodStart, utcFrom))
+                .Select(g => new
+                {
+                    BucketStart = g.Key,
+                    Avg = g.Sum(x => x.Average * x.SampleCount) / g.Sum(x => x.SampleCount)
+                })
+                .OrderBy(x => x.BucketStart)
                 .ToListAsync();
 
-            var query = filtered
-                .GroupBy(x => x.CreatedAt!.Value.Ticks / intervalTicks * intervalTicks)
-                .OrderBy(g => g.Key)
-                .Select(g => new { Bucket = g.Key, Avg = g.Average(x => x.Data) })
-                .ToList();
+            // Create a lookup of bucket index to average value
+            var lookup = buckets.ToDictionary(
+                b => (long)(b.BucketStart - utcFrom).TotalMinutes / interval,
+                b => b.Avg);
 
-            var totalMinutes = (int)(to - from).TotalMinutes;
-            var bucketCount = (int)Math.Ceiling(totalMinutes / (double)interval);
-            var fixedBuckets = Enumerable
+            // Fill in missing buckets with nulls
+            var dataset = Enumerable
                 .Range(0, bucketCount)
-                .Select(i => from.AddMinutes(i * interval).Ticks)
-                .ToList();
-
-            var dataset = fixedBuckets
-                .Select(bucket => query.FirstOrDefault(x => x.Bucket == bucket)?.Avg ?? 0)
+                .Select(i => lookup.TryGetValue(i, out var v) ? v : (double?)null)
                 .ToList();
 
             return new SensorHistoryDto { Datasets = dataset };

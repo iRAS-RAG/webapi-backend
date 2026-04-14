@@ -1512,8 +1512,8 @@ namespace IRasRag.Test.UnitTests.Application
                     SensorTypeName = "Nhiệt độ",
                     LatestData = new TankSensorLatestDataValueDto
                     {
-                        LatestValue = 28.5,
-                        IsWarning = false,
+                        LatestAvg = 28.5,
+                        HasWarning = false,
                         RecordedAt = DateTime.UtcNow,
                     },
                 },
@@ -1524,8 +1524,8 @@ namespace IRasRag.Test.UnitTests.Application
                     SensorTypeName = "pH",
                     LatestData = new TankSensorLatestDataValueDto
                     {
-                        LatestValue = 7.2,
-                        IsWarning = false,
+                        LatestAvg = 7.2,
+                        HasWarning = false,
                         RecordedAt = DateTime.UtcNow,
                     },
                 },
@@ -1550,7 +1550,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Data.Should().HaveCount(2);
             result.Data![0].SensorName.Should().Be("Nhiệt độ 1");
-            result.Data[1].LatestData?.LatestValue.Should().Be(7.2);
+            result.Data[1].LatestData?.LatestAvg.Should().Be(7.2);
         }
 
         [Fact]
@@ -1638,17 +1638,17 @@ namespace IRasRag.Test.UnitTests.Application
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
             };
 
@@ -1687,17 +1687,17 @@ namespace IRasRag.Test.UnitTests.Application
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = false },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
             };
 
@@ -1734,12 +1734,12 @@ namespace IRasRag.Test.UnitTests.Application
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
                 },
                 new TankSensorLatestDataDto
                 {
                     SensorId = Guid.NewGuid(),
-                    LatestData = new TankSensorLatestDataValueDto { IsWarning = true },
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
                 },
             };
 

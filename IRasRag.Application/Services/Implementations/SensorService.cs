@@ -430,12 +430,20 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var logRepository = _unitOfWork.GetRepository<SensorLog>();
+                var entryTime = dto.Timestamp ?? DateTime.UtcNow;
+                var periodStart = new DateTime(
+                    entryTime.Year, entryTime.Month, entryTime.Day,
+                    entryTime.Hour, entryTime.Minute, 0, DateTimeKind.Utc);
+
                 var sensorLog = new SensorLog
                 {
                     SensorId = sensorId,
-                    Data = dto.Data,
-                    IsWarning = false,
-                    DataJson = "{}",
+                    Average = dto.Data,
+                    Min = dto.Data,
+                    Max = dto.Data,
+                    SampleCount = 1,
+                    HasWarning = false,
+                    PeriodStart = periodStart,
                 };
 
                 // If a custom timestamp is provided, set it before the initial save
@@ -503,9 +511,9 @@ namespace IRasRag.Application.Services.Implementations
                     && request.To.HasValue
                 )
                 {
-                    // GROUP BY trên DB, phân trang tại DB — không tải toàn bộ dữ liệu vào bộ nhớ
                     var (items, totalCount) = await _unitOfWork.SensorLogs.GetAggregatedLogsAsync(
                         sensorId,
+                        sensor.Name,
                         request.From.Value,
                         request.To.Value,
                         request.Interval.Value,

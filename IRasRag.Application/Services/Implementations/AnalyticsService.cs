@@ -348,10 +348,10 @@ namespace IRasRag.Application.Services.Implementations
                                     .ToList();
                                 if (logList.Count > 0)
                                 {
-                                    metricValues.SensorAverages[typeName] = Math.Round(
-                                        logList.Average(l => l.Data),
-                                        4
-                                    );
+                                    var weightedAvg = logList.Sum(l => l.Average * l.SampleCount)
+                                                   / logList.Sum(l => l.SampleCount);
+
+                                    metricValues.SensorAverages[typeName] = Math.Round(weightedAvg, 4);
                                 }
                             }
                         }

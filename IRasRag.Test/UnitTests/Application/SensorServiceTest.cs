@@ -569,9 +569,12 @@ namespace IRasRag.Test.UnitTests.Application
                     {
                         Id = Guid.NewGuid(),
                         SensorId = sensorId,
-                        Data = 25.5,
-                        IsWarning = false,
-                        DataJson = "{}",
+                        Average = 25.5,
+                        Min = 25.5,
+                        Max = 25.5,
+                        SampleCount = 1,
+                        HasWarning = false,
+                        PeriodStart = DateTime.UtcNow,
                         CreatedAt = DateTime.UtcNow,
                     }
                 );
@@ -582,7 +585,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Assert
             result.IsSuccess.Should().BeTrue();
             result.Data.Should().NotBeNull();
-            result.Data!.Data.Should().Be(25.5);
+            result.Data!.Average.Should().Be(25.5);
             result.Data.SensorId.Should().Be(sensorId);
             _logRepoMock.Verify(r => r.AddAsync(It.IsAny<SensorLog>()), Times.Once);
             _unitOfWorkMock.Verify(
@@ -689,21 +692,24 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 10.0,
+                    Average = 10.0,
+                    PeriodStart = DateTime.UtcNow.AddMinutes(-10),
                     CreatedAt = DateTime.UtcNow.AddMinutes(-10),
                 },
                 new SensorLogDto
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 20.0,
+                    Average = 20.0,
+                    PeriodStart = DateTime.UtcNow.AddMinutes(-5),
                     CreatedAt = DateTime.UtcNow.AddMinutes(-5),
                 },
                 new SensorLogDto
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 30.0,
+                    Average = 30.0,
+                    PeriodStart = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
                 },
             };
@@ -731,7 +737,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Data!.Data.Should().HaveCount(3);
             result
-                .Data.Data!.Select(l => l.Data)
+                .Data.Data!.Select(l => l.Average)
                 .Should()
                 .BeEquivalentTo(new[] { 10.0, 20.0, 30.0 });
             result.Data.Meta!.TotalItems.Should().Be(3);
@@ -758,18 +764,18 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 10.0,
-                    IsWarning = false,
-                    DataJson = "{}",
+                    Average = 10.0,
+                    HasWarning = false,
+                    PeriodStart = baseTime.AddMinutes(10),
                     CreatedAt = baseTime.AddMinutes(10),
                 },
                 new SensorLogDto
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 20.0,
-                    IsWarning = false,
-                    DataJson = "{}",
+                    Average = 20.0,
+                    HasWarning = false,
+                    PeriodStart = baseTime.AddMinutes(40),
                     CreatedAt = baseTime.AddMinutes(40),
                 },
                 // Bucket 2: 01:00 UTC — values 30, 40 → avg = 35
@@ -777,18 +783,18 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 30.0,
-                    IsWarning = false,
-                    DataJson = "{}",
+                    Average = 30.0,
+                    HasWarning = false,
+                    PeriodStart = baseTime.AddMinutes(70),
                     CreatedAt = baseTime.AddMinutes(70),
                 },
                 new SensorLogDto
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 40.0,
-                    IsWarning = true,
-                    DataJson = "{}",
+                    Average = 40.0,
+                    HasWarning = true,
+                    PeriodStart = baseTime.AddMinutes(110),
                     CreatedAt = baseTime.AddMinutes(110),
                 },
             };
@@ -804,18 +810,18 @@ namespace IRasRag.Test.UnitTests.Application
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 15.0,
-                    IsWarning = false,
-                    DataJson = "{}",
+                    Average = 15.0,
+                    HasWarning = false,
+                    PeriodStart = baseTime,
                     CreatedAt = baseTime,
                 },
                 new SensorLogDto
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
-                    Data = 35.0,
-                    IsWarning = true,
-                    DataJson = "{}",
+                    Average = 35.0,
+                    HasWarning = true,
+                    PeriodStart = baseTime.AddHours(1),
                     CreatedAt = baseTime.AddHours(1),
                 },
             };
@@ -823,6 +829,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r =>
                     r.GetAggregatedLogsAsync(
                         sensorId,
+                        sensor.Name,
                         request.From!.Value,
                         request.To!.Value,
                         request.Interval!.Value,
@@ -848,12 +855,12 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Meta!.TotalItems.Should().Be(2);
 
             var bucket1 = result.Data.Data![0];
-            bucket1.Data.Should().Be(15.0); // avg(10, 20)
-            bucket1.IsWarning.Should().BeFalse(); // no warning in bucket 1
+            bucket1.Average.Should().Be(15.0); // avg(10, 20)
+            bucket1.HasWarning.Should().BeFalse(); // no warning in bucket 1
 
             var bucket2 = result.Data.Data[1];
-            bucket2.Data.Should().Be(35.0); // avg(30, 40)
-            bucket2.IsWarning.Should().BeTrue(); // one warning in bucket 2
+            bucket2.Average.Should().Be(35.0); // avg(30, 40)
+            bucket2.HasWarning.Should().BeTrue(); // one warning in bucket 2
 
             // Bucket keys should align to the hour boundary
             result.Data.Data[0].CreatedAt.Should().Be(baseTime); // 00:00
@@ -863,6 +870,7 @@ namespace IRasRag.Test.UnitTests.Application
                 r =>
                     r.GetAggregatedLogsAsync(
                         sensorId,
+                        sensor.Name,
                         request.From!.Value,
                         request.To!.Value,
                         request.Interval!.Value,

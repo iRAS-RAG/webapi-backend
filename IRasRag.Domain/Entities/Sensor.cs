@@ -22,6 +22,7 @@ namespace IRasRag.Domain.Entities
         public SensorType SensorType { get; set; }
         public MasterBoard MasterBoard { get; set; }
         public ICollection<SensorLog> SensorLogs { get; set; }
+        public ICollection<Alert> Alerts { get; set; }
         public ICollection<Job> Jobs { get; set; }
     }
 }

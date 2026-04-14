@@ -12,7 +12,7 @@ namespace IRasRag.Infrastructure.Repositories
     public class Repository<T> : IRepository<T>
         where T : class
     {
-        private readonly AppDbContext _context;
+        protected readonly AppDbContext _context;
         protected readonly DbSet<T> _dbSet;
 
         public Repository(AppDbContext context)
@@ -216,6 +216,11 @@ namespace IRasRag.Infrastructure.Repositories
         public async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
+        }
+
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+        {
+            await _dbSet.AddRangeAsync(entities);
         }
 
         public void Update(T entity)

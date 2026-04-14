@@ -86,6 +86,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
 
         Task<T?> GetByIdAsync(Guid id, QueryType type = QueryType.ActiveOnly);
         Task AddAsync(T entity);
+        Task AddRangeAsync(IEnumerable<T> entities);
         void Update(T entity);
         void Delete(T entity);
         void HardDelete(T entity);
