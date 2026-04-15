@@ -4,7 +4,7 @@ namespace IRasRag.Application.Common.Interfaces.Realtime
 {
     public interface ILiveDataNotifier
     {
+        void EnqueueTelemetry(TelemetryPush push);
         Task PushTelemetryAsync(TelemetryPush push);
-        Task PushAlertAsync(AlertPush push);
     }
 }

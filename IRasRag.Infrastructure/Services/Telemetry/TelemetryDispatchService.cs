@@ -113,8 +113,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 // Update latest cache for this sensor
                 _latestTelemetryCache.Set(sensor.Id, reading.Val, timestamp);
 
-                // Push live reading to connected clients
-                await _liveDataNotifier.PushTelemetryAsync(
+                // Enqueue live reading — decoupled from ingestion path via Channel<T>
+                _liveDataNotifier.EnqueueTelemetry(
                     new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp));
 
                 // Evaluate thresholds and prepare log entry

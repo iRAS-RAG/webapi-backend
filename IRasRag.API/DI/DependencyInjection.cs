@@ -2,7 +2,9 @@
 using System.Threading.RateLimiting;
 using Hangfire;
 using Hangfire.PostgreSql;
+using IRasRag.API.Hubs;
 using IRasRag.API.Utils;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +29,9 @@ namespace IRasRag.API.DI
             services.AddHangfireSetup(config, env);
             services.AddHttpContextAccessor();
             services.AddScoped<HttpContextUtils>();
+            services.AddSignalR();
+            services.AddSingleton<ILiveDataNotifier, SignalRLiveDataNotifier>();
+            services.AddHostedService<TelemetryPushWorker>();
         }
 
         public static void AddJwtAuthencation(
@@ -56,6 +61,22 @@ namespace IRasRag.API.DI
                             Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
                         ),
                         ClockSkew = TimeSpan.Zero,
+                    };
+
+                    // SignalR sends the JWT via query string because WebSockets don't support headers
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/hubs/telemetry"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
         }

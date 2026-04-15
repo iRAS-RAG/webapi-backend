@@ -1,7 +1,6 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
-using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Domain.Entities;
@@ -189,7 +188,6 @@ namespace IRasRag.Application.Common.Utils
                 LastValue = value
             });
 
-            await _liveDataNotifier.PushAlertAsync(new AlertPush(tankId, newAlert.Id));
         }
 
         private bool IsInRecoveryZone(double value, SpeciesThreshold threshold)
