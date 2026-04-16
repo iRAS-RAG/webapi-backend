@@ -127,7 +127,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     if (batch != null)
                     {
                         await _alertStateEvaluator.EvaluateAsync(
-                            tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val);
+                            tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val,
+                            sensor.Name, batch.Name);
                     }
 
                 }

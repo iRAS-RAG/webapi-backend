@@ -1,6 +1,7 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
+using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Domain.Entities;
@@ -40,7 +41,9 @@ namespace IRasRag.Application.Common.Utils
             Guid sensorTypeId,
             Guid? batchId,
             SpeciesThreshold threshold,
-            double value)
+            double value,
+            string sensorName,
+            string? batchName)
         {
             ArgumentNullException.ThrowIfNull(threshold);
 
@@ -58,7 +61,7 @@ namespace IRasRag.Application.Common.Utils
                     return;
                 }
 
-                await HandleNoActiveAlertAsync(tankId, sensorId, sensorTypeId, batchId, threshold, value, state, isBreach);
+                await HandleNoActiveAlertAsync(tankId, sensorId, sensorTypeId, batchId, threshold, value, state, isBreach, sensorName, batchName);
             }
             catch (Exception ex)
             {
@@ -137,7 +140,9 @@ namespace IRasRag.Application.Common.Utils
             SpeciesThreshold threshold,
             double value,
             AlertState state,
-            bool isBreach)
+            bool isBreach,
+            string sensorName,
+            string? batchName)
         {
             if (!isBreach)
             {
@@ -187,6 +192,16 @@ namespace IRasRag.Application.Common.Utils
                 ResolveCount = 0,
                 LastValue = value
             });
+
+            await _liveDataNotifier.PushAlertAsync(new AlertPush(
+                AlertId: newAlert.Id,
+                TankId: tankId,
+                SensorName: sensorName,
+                BatchName: batchName,
+                TriggerValue: value,
+                MinValue: threshold.MinValue,
+                MaxValue: threshold.MaxValue,
+                RaisedAt: newAlert.RaisedAt));
 
         }
 

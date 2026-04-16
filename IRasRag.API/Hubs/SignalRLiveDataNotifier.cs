@@ -31,5 +31,11 @@ namespace IRasRag.API.Hubs
             var group = TelemetryHub.TankGroup(push.TankId.ToString());
             return _hub.Clients.Group(group).SendAsync("ReceiveTelemetry", push);
         }
+
+        public Task PushAlertAsync(AlertPush push)
+        {
+            var group = TelemetryHub.TankGroup(push.TankId.ToString());
+            return _hub.Clients.Group(group).SendAsync("ReceiveAlert", push);
+        }
     }
 }
