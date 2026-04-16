@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -16,16 +17,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SpeciesThresholdService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITelemetryCacheService _telemetryCache;
 
         public SpeciesThresholdService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesThresholdService> logger,
-            IMapper mapper
+            IMapper mapper,
+            ITelemetryCacheService telemetryCache
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _telemetryCache = telemetryCache;
         }
 
         public async Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(
@@ -87,6 +91,7 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.GetRepository<SpeciesThreshold>().AddAsync(newThreshold);
 
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateThresholds(dto.SpeciesId, dto.GrowthStageId);
 
                 var thresholdDto = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
@@ -117,6 +122,7 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Ngưỡng sinh trưởng không tồn tại.", ResultType.NotFound);
                 _unitOfWork.GetRepository<SpeciesThreshold>().Delete(threshold);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
                 return Result.Success("Xóa ngưỡng sinh trưởng thành công.");
             }
             catch (Exception ex)
@@ -258,6 +264,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 _mapper.Map(dto, threshold);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
                 return Result.Success("Cập nhật ngưỡng sinh trưởng thành công.");
             }
             catch (Exception ex)

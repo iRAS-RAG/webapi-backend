@@ -48,6 +48,7 @@ namespace IRasRag.Application.DI
             services.AddScoped<ISpeciesThresholdService, SpeciesThresholdService>();
             services.AddScoped<IUserFarmService, UserFarmService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserTankAccessService, UserTankAccessService>();
         }
 
         public static void AddAutoMapper(this IServiceCollection services, IConfiguration config)

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -16,16 +17,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SpeciesStageConfigService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITelemetryCacheService _telemetryCache;
 
         public SpeciesStageConfigService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesStageConfigService> logger,
-            IMapper mapper
+            IMapper mapper,
+            ITelemetryCacheService telemetryCache
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _telemetryCache = telemetryCache;
         }
 
         public async Task<Result<SpeciesStageConfigDto>> CreateSpeciesStageConfig(
@@ -116,6 +120,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 _unitOfWork.GetRepository<SpeciesStageConfig>().Delete(config);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateStageConfig(id);
                 return Result.Success("Xóa cấu hình giai đoạn sinh trưởng của cá thành công.");
             }
             catch (Exception ex)
@@ -298,6 +303,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 _mapper.Map(dto, config);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateStageConfig(id);
 
                 return Result.Success("Cập nhật cấu hình giai đoạn sinh trưởng của cá thành công.");
             }
