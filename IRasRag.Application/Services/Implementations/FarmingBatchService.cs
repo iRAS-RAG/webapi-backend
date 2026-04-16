@@ -1,5 +1,6 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -17,16 +18,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<FarmingBatchService> _logger;
+        private readonly ITelemetryCacheService _telemetryCache;
 
         public FarmingBatchService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<FarmingBatchService> logger
+            ILogger<FarmingBatchService> logger,
+            ITelemetryCacheService telemetryCache
         )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _telemetryCache = telemetryCache;
         }
 
         #region Get Methods
@@ -265,6 +269,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 await farmingBatchRepo.AddAsync(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
 
                 var farmingBatchDto = await _unitOfWork
                     .GetRepository<FarmingBatch>()
@@ -370,6 +375,7 @@ namespace IRasRag.Application.Services.Implementations
             batch.CurrentQuantity = batch.InitialQuantity - deathCount;
 
             await _unitOfWork.SaveChangesAsync();
+            _telemetryCache.InvalidateBatch(batch.FishTankId);
             return Result.Success("Thu hoạch lô nuôi thành công");
         }
         #endregion
@@ -422,6 +428,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 farmingBatchRepo.Delete(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
 
                 return Result.Success("Xóa lô nuôi thành công");
             }

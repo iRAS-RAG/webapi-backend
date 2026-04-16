@@ -1,5 +1,6 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -16,12 +17,14 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SensorService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITelemetryCacheService _telemetryCache;
 
-        public SensorService(IUnitOfWork unitOfWork, ILogger<SensorService> logger, IMapper mapper)
+        public SensorService(IUnitOfWork unitOfWork, ILogger<SensorService> logger, IMapper mapper, ITelemetryCacheService telemetryCache)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _telemetryCache = telemetryCache;
         }
 
         #region Get Methods
@@ -213,6 +216,7 @@ namespace IRasRag.Application.Services.Implementations
                 var sensor = _mapper.Map<Sensor>(createDto);
                 await sensorRepository.AddAsync(sensor);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateSensors(createDto.MasterBoardId);
 
                 var sensorDto = await sensorRepository.FirstOrDefaultAsync(
                     new SensorDtoByIdSpec(sensor.Id)
@@ -304,6 +308,7 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // Validate and update MasterBoardId if provided
+                var oldMasterBoardId = sensor.MasterBoardId;
                 if (updateDto.MasterBoardId.HasValue)
                 {
                     var existMasterBoard = await _unitOfWork
@@ -326,6 +331,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateSensors(oldMasterBoardId);
+                if (updateDto.MasterBoardId.HasValue && updateDto.MasterBoardId.Value != oldMasterBoardId)
+                    _telemetryCache.InvalidateSensors(updateDto.MasterBoardId.Value);
 
                 _logger.LogInformation("Cập nhật cảm biến thành công: {Id}", id);
 
@@ -392,6 +400,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 sensorRepository.Delete(sensor);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateSensors(sensor.MasterBoardId);
 
                 _logger.LogInformation("Xóa cảm biến thành công: {Id}", id);
                 return Result.Success("Xóa cảm biến thành công");

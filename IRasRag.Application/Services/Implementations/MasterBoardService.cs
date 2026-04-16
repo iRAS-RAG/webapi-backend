@@ -1,5 +1,6 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -16,16 +17,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<MasterBoardService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITelemetryCacheService _telemetryCache;
 
         public MasterBoardService(
             IUnitOfWork unitOfWork,
             ILogger<MasterBoardService> logger,
-            IMapper mapper
+            IMapper mapper,
+            ITelemetryCacheService telemetryCache
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _telemetryCache = telemetryCache;
         }
 
         #region Get Methods
@@ -232,6 +236,7 @@ namespace IRasRag.Application.Services.Implementations
                         );
                     }
 
+                    _telemetryCache.InvalidateMasterboard(masterBoard.MacAddress);
                     masterBoard.MacAddress = updateDto.MacAddress.Trim();
                 }
 
@@ -331,6 +336,8 @@ namespace IRasRag.Application.Services.Implementations
 
                 masterBoardRepository.Delete(masterBoard);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateMasterboard(masterBoard.MacAddress);
+                _telemetryCache.InvalidateSensors(masterBoard.Id);
 
                 _logger.LogInformation("Xóa bảng mạch thành công: {Id}", id);
                 return Result.Success("Xóa bảng mạch thành công");
