@@ -135,5 +135,26 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             _cache.Remove(key);
             _logger.LogInformation("Invalidated stage config cache for id {StageConfigId}", stageConfigId);
         }
+
+        public void InvalidateMasterboard(string mac)
+        {
+            var key = $"masterboard:mac:{mac}";
+            _cache.Remove(key);
+            _logger.LogInformation("Invalidated masterboard cache for MAC {Mac}", mac);
+        }
+
+        public void InvalidateSensors(Guid masterboardId)
+        {
+            var key = $"sensors:masterboard:{masterboardId}";
+            _cache.Remove(key);
+            _logger.LogInformation("Invalidated sensors cache for masterboard {MasterboardId}", masterboardId);
+        }
+
+        public void InvalidateThresholds(Guid speciesId, Guid growthStageId)
+        {
+            var key = $"thresholds:{speciesId}:{growthStageId}";
+            _cache.Remove(key);
+            _logger.LogInformation("Invalidated thresholds cache for species {SpeciesId} stage {GrowthStageId}", speciesId, growthStageId);
+        }
     }
 }

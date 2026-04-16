@@ -11,5 +11,8 @@ namespace IRasRag.Application.Common.Interfaces.Telemetry
         Task<SpeciesStageConfig?> GetStageConfigAsync(Guid stageConfigId);
         void InvalidateBatch(Guid tankId);
         void InvalidateStageConfig(Guid stageConfigId);
+        void InvalidateMasterboard(string mac);
+        void InvalidateSensors(Guid masterboardId);
+        void InvalidateThresholds(Guid speciesId, Guid growthStageId);
     }
 }
