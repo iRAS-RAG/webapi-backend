@@ -40,8 +40,10 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                     .SensorLogs.OrderByDescending(l => l.CreatedAt)
                     .Select(l => new TankSensorLatestDataValueDto
                     {
-                        LatestValue = (double?)l.Data,
-                        IsWarning = (bool?)l.IsWarning,
+                        LatestAvg = l.Average,
+                        LatestMax = l.Max,
+                        LatestMin = l.Min,
+                        HasWarning = l.HasWarning,
                         RecordedAt = l.CreatedAt,
                     })
                     .FirstOrDefault(),

@@ -169,6 +169,40 @@ namespace IRasRag.API.Controllers
         }
 
         /// <summary>
+        /// Bật/tắt thiết bị điều khiển và gửi lệnh MQTT đến thiết bị
+        /// </summary>
+        [HttpPatch("{id}/toggle")]
+        public async Task<IActionResult> ToggleControlDevice(
+            Guid id,
+            [FromBody] ToggleControlDeviceDto toggleDto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
+
+                var result = await _controlDeviceService.ToggleControlDeviceAsync(id, toggleDto);
+
+                if (!result.IsSuccess)
+                {
+                    return result.Type switch
+                    {
+                        ResultType.NotFound => NotFound(new { result.Message }),
+                        _ => BadRequest(new { result.Message }),
+                    };
+                }
+
+                return Ok(new { result.Message, result.Data });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bật/tắt thiết bị điều khiển với Id: {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
+            }
+        }
+
+        /// <summary>
         /// Xóa thiết bị điều khiển
         /// </summary>
         [HttpDelete("{id}")]

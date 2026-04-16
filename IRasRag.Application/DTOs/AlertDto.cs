@@ -7,7 +7,7 @@ namespace IRasRag.Application.DTOs
     public class AlertDto
     {
         public Guid Id { get; set; }
-        public Guid SensorLogId { get; set; }
+        public Guid SensorId { get; set; }
         public Guid SpeciesThresholdId { get; set; }
         public Guid? FarmingBatchId { get; set; }
         public string? FarmingBatchName { get; set; }
@@ -15,7 +15,7 @@ namespace IRasRag.Application.DTOs
         public string FishTankName { get; set; } = string.Empty;
         public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; } = string.Empty;
-        public double Value { get; set; }
+        public double TriggerValue { get; set; }
         public DateTime RaisedAt { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public AlertStatus Status { get; set; }
@@ -28,7 +28,7 @@ namespace IRasRag.Application.DTOs
     public class CreateAlertDto
     {
         [Required(ErrorMessage = "SensorLogId là bắt buộc")]
-        public Guid SensorLogId { get; set; }
+        public Guid SensorId { get; set; }
 
         [Required(ErrorMessage = "SpeciesThresholdId là bắt buộc")]
         public Guid SpeciesThresholdId { get; set; }
@@ -51,7 +51,7 @@ namespace IRasRag.Application.DTOs
     // Update DTO
     public class UpdateAlertDto
     {
-        public Guid? SensorLogId { get; set; }
+        public Guid? SensorId { get; set; }
 
         public Guid? SpeciesThresholdId { get; set; }
 
@@ -73,6 +73,7 @@ namespace IRasRag.Application.DTOs
     public class AlertListRequest : BasePaginatedListRequest
     {
         public Guid? TankId { get; set; }
+        public Guid? SensorId { get; set; }
         public AlertStatus? Status { get; set; }
     }
 }

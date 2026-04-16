@@ -365,7 +365,7 @@ namespace IRasRag.Application.Services.Implementations
                 ).ToList();
 
                 var totalSensors = sensors.Count;
-                var warningSensors = sensors.Count(s => s.LatestData?.IsWarning == true);
+                var warningSensors = sensors.Count(s => s.LatestData?.HasWarning == true);
 
                 var statusDto = new TankStatusDto
                 {

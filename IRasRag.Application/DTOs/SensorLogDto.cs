@@ -8,9 +8,12 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public Guid SensorId { get; set; }
         public string SensorName { get; set; } = string.Empty;
-        public double Data { get; set; }
-        public bool IsWarning { get; set; }
-        public string DataJson { get; set; } = "{}";
+        public double Average { get; set; }
+        public double Min { get; set; }
+        public double Max { get; set; }
+        public int SampleCount { get; set; }
+        public bool HasWarning { get; set; }
+        public DateTime PeriodStart { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 

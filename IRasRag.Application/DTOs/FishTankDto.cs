@@ -112,8 +112,10 @@ namespace IRasRag.Application.DTOs
 
     public class TankSensorLatestDataValueDto
     {
-        public double? LatestValue { get; set; }
-        public bool? IsWarning { get; set; }
+        public double LatestAvg { get; set; }
+        public double LatestMin { get; set; }
+        public double LatestMax { get; set; }
+        public bool? HasWarning { get; set; }
         public DateTime? RecordedAt { get; set; }
     }
 }

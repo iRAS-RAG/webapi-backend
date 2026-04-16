@@ -708,8 +708,7 @@ namespace IRasRag.Test.UnitTests.Application
                     FishTankId = tankId,
                     SensorTypeId = sensorTypeId,
                     RaisedAt = DateTime.UtcNow.AddDays(-3),
-                    Value = 4.5f,
-                    SensorLogId = Guid.NewGuid(),
+                    TriggerValue = 4.5,
                     SpeciesThresholdId = Guid.NewGuid(),
                     Status = AlertStatus.OPEN,
                 },
@@ -719,8 +718,7 @@ namespace IRasRag.Test.UnitTests.Application
                     FishTankId = tankId,
                     SensorTypeId = sensorTypeId,
                     RaisedAt = DateTime.UtcNow.AddDays(-2),
-                    Value = 4.0f,
-                    SensorLogId = Guid.NewGuid(),
+                    TriggerValue = 4.0,
                     SpeciesThresholdId = Guid.NewGuid(),
                     Status = AlertStatus.RESOLVED,
                 },
@@ -861,16 +859,22 @@ namespace IRasRag.Test.UnitTests.Application
                         new()
                         {
                             SensorId = sensorId,
-                            Data = 7.0,
-                            IsWarning = false,
-                            CreatedAt = startDate.AddDays(1),
+                            Average = 7.0,
+                            Min = 7.0,
+                            Max = 7.0,
+                            SampleCount = 1,
+                            HasWarning = false,
+                            PeriodStart = startDate.AddDays(1),
                         },
                         new()
                         {
                             SensorId = sensorId,
-                            Data = 5.0,
-                            IsWarning = false,
-                            CreatedAt = startDate.AddDays(2),
+                            Average = 5.0,
+                            Min = 5.0,
+                            Max = 5.0,
+                            SampleCount = 1,
+                            HasWarning = false,
+                            PeriodStart = startDate.AddDays(2),
                         },
                     }
                 );

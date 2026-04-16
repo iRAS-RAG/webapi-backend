@@ -53,9 +53,9 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("resolved_at");
 
-                    b.Property<Guid>("SensorLogId")
+                    b.Property<Guid>("SensorId")
                         .HasColumnType("uuid")
-                        .HasColumnName("sensor_log_id");
+                        .HasColumnName("sensor_id");
 
                     b.Property<Guid>("SensorTypeId")
                         .HasColumnType("uuid")
@@ -71,9 +71,9 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
-                    b.Property<double>("Value")
+                    b.Property<double>("TriggerValue")
                         .HasColumnType("double precision")
-                        .HasColumnName("value");
+                        .HasColumnName("trigger_value");
 
                     b.HasKey("Id")
                         .HasName("pk_alerts");
@@ -87,11 +87,21 @@ namespace IRasRag.Infrastructure.Migrations
                     b.HasIndex("FarmingBatchId", "Status")
                         .HasDatabaseName("ix_alerts_farming_batch_id_status");
 
+                    b.HasIndex("FishTankId", "SensorTypeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_alerts_fish_tank_id_sensor_type_id")
+                        .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NULL");
+
                     b.HasIndex("FishTankId", "Status")
                         .HasDatabaseName("ix_alerts_fish_tank_id_status");
 
-                    b.HasIndex("SensorLogId", "Status")
-                        .HasDatabaseName("ix_alerts_sensor_log_id_status");
+                    b.HasIndex("SensorId", "Status")
+                        .HasDatabaseName("ix_alerts_sensor_id_status");
+
+                    b.HasIndex("FishTankId", "FarmingBatchId", "SensorTypeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_alerts_fish_tank_id_farming_batch_id_sensor_type_id")
+                        .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NOT NULL");
 
                     b.ToTable("alerts", (string)null);
 
@@ -103,11 +113,12 @@ namespace IRasRag.Infrastructure.Migrations
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             RaisedAt = new DateTime(2024, 1, 15, 14, 30, 0, 0, DateTimeKind.Utc),
-                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
+                            ResolvedAt = new DateTime(2024, 1, 15, 18, 0, 0, 0, DateTimeKind.Utc),
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
-                            Status = "OPEN",
-                            Value = 31.199999999999999
+                            Status = "RESOLVED",
+                            TriggerValue = 31.199999999999999
                         },
                         new
                         {
@@ -117,11 +128,11 @@ namespace IRasRag.Infrastructure.Migrations
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             RaisedAt = new DateTime(2024, 1, 16, 8, 0, 0, 0, DateTimeKind.Utc),
                             ResolvedAt = new DateTime(2024, 1, 16, 10, 30, 0, 0, DateTimeKind.Utc),
-                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
                             Status = "RESOLVED",
-                            Value = 7.2000000000000002
+                            TriggerValue = 7.2000000000000002
                         },
                         new
                         {
@@ -130,11 +141,11 @@ namespace IRasRag.Infrastructure.Migrations
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             RaisedAt = new DateTime(2024, 1, 17, 12, 0, 0, 0, DateTimeKind.Utc),
-                            SensorLogId = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
                             Status = "ACKNOWLEDGED",
-                            Value = 28.5
+                            TriggerValue = 28.5
                         });
                 });
 
@@ -1591,28 +1602,37 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<double>("Average")
+                        .HasColumnType("double precision")
+                        .HasColumnName("average");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<double>("Data")
-                        .HasColumnType("double precision")
-                        .HasColumnName("data");
-
-                    b.Property<string>("DataJson")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("jsonb")
-                        .HasDefaultValue("{}")
-                        .HasColumnName("data_json");
-
-                    b.Property<bool>("IsWarning")
+                    b.Property<bool>("HasWarning")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_warning");
+                        .HasColumnName("has_warning");
+
+                    b.Property<double>("Max")
+                        .HasColumnType("double precision")
+                        .HasColumnName("max");
+
+                    b.Property<double>("Min")
+                        .HasColumnType("double precision")
+                        .HasColumnName("min");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_at");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_start");
+
+                    b.Property<int>("SampleCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("sample_count");
 
                     b.Property<Guid>("SensorId")
                         .HasColumnType("uuid")
@@ -1621,8 +1641,9 @@ namespace IRasRag.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_sensor_logs");
 
-                    b.HasIndex("SensorId", "CreatedAt")
-                        .HasDatabaseName("ix_sensor_logs_sensor_id_created_at");
+                    b.HasIndex("SensorId", "PeriodStart")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sensor_logs_sensor_id_period_start");
 
                     b.ToTable("sensor_logs", (string)null);
 
@@ -1630,127 +1651,169 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
-                            CreatedAt = new DateTime(2026, 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 27.800000000000001,
-                            DataJson = "{\"temperature\": 27.8, \"unit\": \"C\"}",
-                            IsWarning = false,
+                            Average = 27.899999999999999,
+                            CreatedAt = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 28.399999999999999,
+                            Min = 27.5,
+                            PeriodStart = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
-                            CreatedAt = new DateTime(2026, 1, 1, 2, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 28.199999999999999,
-                            DataJson = "{\"temperature\": 28.2, \"unit\": \"C\"}",
-                            IsWarning = false,
+                            Average = 28.600000000000001,
+                            CreatedAt = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 29.100000000000001,
+                            Min = 28.100000000000001,
+                            PeriodStart = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
-                            CreatedAt = new DateTime(2026, 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.0999999999999996,
-                            DataJson = "{\"ph\": 7.1}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001404"),
-                            CreatedAt = new DateTime(2026, 1, 1, 5, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 28.600000000000001,
-                            DataJson = "{\"temperature\": 28.6, \"unit\": \"C\"}",
-                            IsWarning = false,
+                            Average = 29.800000000000001,
+                            CreatedAt = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 30.399999999999999,
+                            Min = 29.100000000000001,
+                            PeriodStart = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001409"),
-                            CreatedAt = new DateTime(2026, 1, 1, 5, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.2999999999999998,
-                            DataJson = "{\"ph\": 7.3}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001405"),
-                            CreatedAt = new DateTime(2026, 1, 1, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 29.399999999999999,
-                            DataJson = "{\"temperature\": 29.4, \"unit\": \"C\"}",
-                            IsWarning = false,
+                            Average = 31.100000000000001,
+                            CreatedAt = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = true,
+                            Max = 31.800000000000001,
+                            Min = 30.5,
+                            PeriodStart = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001410"),
-                            CreatedAt = new DateTime(2026, 1, 1, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.5,
-                            DataJson = "{\"ph\": 7.5}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001406"),
-                            CreatedAt = new DateTime(2026, 1, 1, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 31.199999999999999,
-                            DataJson = "{\"temperature\": 31.2, \"unit\": \"C\"}",
-                            IsWarning = true,
+                            Average = 30.300000000000001,
+                            CreatedAt = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 30.899999999999999,
+                            Min = 29.800000000000001,
+                            PeriodStart = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001411"),
-                            CreatedAt = new DateTime(2026, 1, 1, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.4000000000000004,
-                            DataJson = "{\"ph\": 7.4}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001407"),
-                            CreatedAt = new DateTime(2026, 1, 1, 17, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 30.5,
-                            DataJson = "{\"temperature\": 30.5, \"unit\": \"C\"}",
-                            IsWarning = false,
+                            Average = 29.0,
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 29.5,
+                            Min = 28.600000000000001,
+                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001412"),
-                            CreatedAt = new DateTime(2026, 1, 1, 17, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.5999999999999996,
-                            DataJson = "{\"ph\": 7.6}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001408"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 29.100000000000001,
-                            DataJson = "{\"temperature\": 29.1, \"unit\": \"C\"}",
-                            IsWarning = false,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
+                            Average = 27.0,
+                            CreatedAt = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 27.399999999999999,
+                            Min = 26.800000000000001,
+                            PeriodStart = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001303")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
+                            Average = 7.0999999999999996,
+                            CreatedAt = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.2000000000000002,
+                            Min = 7.0,
+                            PeriodStart = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001409"),
+                            Average = 7.2999999999999998,
+                            CreatedAt = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.4000000000000004,
+                            Min = 7.2000000000000002,
+                            PeriodStart = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001410"),
+                            Average = 7.5,
+                            CreatedAt = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.5999999999999996,
+                            Min = 7.4000000000000004,
+                            PeriodStart = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001411"),
+                            Average = 7.4000000000000004,
+                            CreatedAt = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.5,
+                            Min = 7.2999999999999998,
+                            PeriodStart = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001412"),
+                            Average = 7.5999999999999996,
+                            CreatedAt = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.7000000000000002,
+                            Min = 7.5,
+                            PeriodStart = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
+                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001413"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 7.2000000000000002,
-                            DataJson = "{\"ph\": 7.2}",
-                            IsWarning = false,
+                            Average = 7.2000000000000002,
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.2999999999999998,
+                            Min = 7.0999999999999996,
+                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001414"),
-                            CreatedAt = new DateTime(2026, 1, 1, 21, 0, 0, 0, DateTimeKind.Utc),
-                            Data = 6.7999999999999998,
-                            DataJson = "{\"dissolvedOxygen\": 6.8, \"unit\": \"mg/L\"}",
-                            IsWarning = false,
+                            Average = 6.7999999999999998,
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            HasWarning = false,
+                            Max = 7.0999999999999996,
+                            Min = 6.5,
+                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                            SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001304")
                         });
                 });
@@ -1811,9 +1874,23 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
-                            MeasureType = "Nồng độ oxy",
-                            Name = "Oxy hòa tan",
-                            UnitOfMeasure = "mg/L"
+                            MeasureType = "Tổng chất rắn hòa tan",
+                            Name = "TDS",
+                            UnitOfMeasure = "ppm"
+                        },
+                        new
+                        {
+                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            MeasureType = "Lưu lượng",
+                            Name = "Lưu lượng nước",
+                            UnitOfMeasure = "L/min"
+                        },
+                        new
+                        {
+                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            MeasureType = "Mức nước",
+                            Name = "Mực nước",
+                            UnitOfMeasure = "0/1"
                         });
                 });
 
@@ -2256,12 +2333,12 @@ namespace IRasRag.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_alerts_fish_tanks_fish_tank_id");
 
-                    b.HasOne("IRasRag.Domain.Entities.SensorLog", "SensorLog")
+                    b.HasOne("IRasRag.Domain.Entities.Sensor", "Sensor")
                         .WithMany("Alerts")
-                        .HasForeignKey("SensorLogId")
+                        .HasForeignKey("SensorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_alerts_sensor_logs_sensor_log_id");
+                        .HasConstraintName("fk_alerts_sensors_sensor_id");
 
                     b.HasOne("IRasRag.Domain.Entities.SensorType", "SensorType")
                         .WithMany("Alerts")
@@ -2281,7 +2358,7 @@ namespace IRasRag.Infrastructure.Migrations
 
                     b.Navigation("FishTank");
 
-                    b.Navigation("SensorLog");
+                    b.Navigation("Sensor");
 
                     b.Navigation("SensorType");
 
@@ -2761,14 +2838,11 @@ namespace IRasRag.Infrastructure.Migrations
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Sensor", b =>
                 {
+                    b.Navigation("Alerts");
+
                     b.Navigation("Jobs");
 
                     b.Navigation("SensorLogs");
-                });
-
-            modelBuilder.Entity("IRasRag.Domain.Entities.SensorLog", b =>
-                {
-                    b.Navigation("Alerts");
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SensorType", b =>

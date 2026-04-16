@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Hangfire;
 using IRasRag.API.DI;
+using IRasRag.API.Hubs;
 using IRasRag.API.Middlewares;
 using IRasRag.Application.DI;
 using IRasRag.Infrastructure.DI;
@@ -24,6 +25,7 @@ namespace IRasRag.API
             builder.Services.AddApiServices(builder.Configuration, builder.Environment);
             builder.Services.AddApplicationServices(builder.Configuration);
             builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
+            builder.Services.AddMemoryCache();
 
             var app = builder.Build();
 
@@ -42,6 +44,7 @@ namespace IRasRag.API
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHub<TelemetryHub>("/hubs/telemetry");
 
             app.Run();
         }

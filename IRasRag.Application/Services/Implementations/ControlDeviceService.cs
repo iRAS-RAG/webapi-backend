@@ -1,6 +1,8 @@
 using AutoMapper;
+using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Models.Mqtt;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
@@ -16,16 +18,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ControlDeviceService> _logger;
         private readonly IMapper _mapper;
+        private readonly IMqttPublishService _mqttPublishService;
 
         public ControlDeviceService(
             IUnitOfWork unitOfWork,
             ILogger<ControlDeviceService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IMqttPublishService mqttPublishService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _mqttPublishService = mqttPublishService;
         }
 
         #region Get Methods
@@ -503,7 +508,30 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Cập nhật trạng thái thiết bị (manual override)
+                var masterBoard = await _unitOfWork
+                    .GetRepository<MasterBoard>()
+                    .GetByIdAsync(controlDevice.MasterBoardId);
+
+                if (masterBoard == null)
+                {
+                    _logger.LogWarning(
+                        "MasterBoard not found for control device: {Id}",
+                        id
+                    );
+                    return Result<ControlDeviceDto>.Failure(
+                        "Không tìm thấy bảng mạch của thiết bị điều khiển",
+                        ResultType.NotFound
+                    );
+                }
+
+                var command = new DeviceCommand
+                {
+                    Pin = controlDevice.PinCode,
+                    Cmd = toggleDto.State ? controlDevice.CommandOn : controlDevice.CommandOff,
+                };
+
+                await _mqttPublishService.PublishCommandAsync(masterBoard.MacAddress, command);
+
                 controlDevice.State = toggleDto.State;
                 controlDeviceRepository.Update(controlDevice);
                 await _unitOfWork.SaveChangesAsync();
@@ -524,6 +552,14 @@ namespace IRasRag.Application.Services.Implementations
                     toggleDto.State
                         ? "Bật thiết bị điều khiển thành công"
                         : "Tắt thiết bị điều khiển thành công"
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Failed to send MQTT command for device: {Id}", id);
+                return Result<ControlDeviceDto>.Failure(
+                    "Không thể gửi lệnh: MQTT chưa kết nối",
+                    ResultType.Unexpected
                 );
             }
             catch (Exception ex)

@@ -17,16 +17,15 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasForeignKey(sl => sl.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder
-                .Property(sl => sl.DataJson)
-                .IsRequired()
-                .HasColumnType("jsonb")
-                .HasDefaultValue("{}");
+            builder.Property(sl => sl.Average).HasColumnType("double precision").IsRequired();
+            builder.Property(sl => sl.Min).HasColumnType("double precision").IsRequired();
+            builder.Property(sl => sl.Max).HasColumnType("double precision").IsRequired();
+            builder.Property(sl => sl.SampleCount).IsRequired();
+            builder.Property(sl => sl.HasWarning).IsRequired();
+            builder.Property(sl => sl.PeriodStart).IsRequired();
 
-            builder.Property(sl => sl.Data).HasColumnType("double precision");
-
-            // Get sensor readings over time
-            builder.HasIndex(sl => new { sl.SensorId, sl.CreatedAt });
+            // One aggregate row per sensor per window — also the primary query index
+            builder.HasIndex(sl => new { sl.SensorId, sl.PeriodStart }).IsUnique();
 
             builder.HasData(SensorLogSeed.SensorLogs);
         }

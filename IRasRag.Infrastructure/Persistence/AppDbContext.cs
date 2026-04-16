@@ -1,6 +1,7 @@
 ﻿using IRasRag.Domain.Common;
 using IRasRag.Domain.Entities;
 using IRasRag.Infrastructure.Data.Configurations;
+using IRasRag.Infrastructure.Persistence.DbFunctions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -117,6 +118,18 @@ namespace IRasRag.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new RecommendationConfiguration());
 
             // ====================================
+            // Custom DbFunctions
+            // ====================================
+            modelBuilder.HasDbFunction(
+                    typeof(PgFunctions).GetMethod(
+                        nameof(PgFunctions.DateBin),
+                        new[] { typeof(TimeSpan), typeof(DateTime), typeof(DateTime) }
+                    )!
+                )
+                .HasName("date_bin")
+                .IsBuiltIn();
+
+            // ====================================
             // Global Value Converters
             // ====================================
 
@@ -176,7 +189,7 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedAt = now;
+                    if(entry.Entity.CreatedAt == null) entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)
@@ -212,7 +225,7 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedAt = now;
+                    if(entry.Entity.CreatedAt == null) entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)

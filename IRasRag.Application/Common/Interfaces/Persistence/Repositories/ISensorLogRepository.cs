@@ -12,6 +12,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
         );
         Task<(IReadOnlyList<SensorLogDto> Items, int TotalCount)> GetAggregatedLogsAsync(
             Guid sensorId,
+            string sensorName,
             DateTime from,
             DateTime to,
             int interval,

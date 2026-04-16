@@ -15,14 +15,14 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 .Select(a => new AlertDto
                 {
                     Id = a.Id,
-                    SensorLogId = a.SensorLogId,
+                    SensorId = a.SensorId,
                     SpeciesThresholdId = a.SpeciesThresholdId,
                     FarmingBatchId = a.FarmingBatchId,
                     FarmingBatchName = a.FarmingBatch != null ? a.FarmingBatch.Name : null,
                     FishTankId = a.FishTankId,
                     FishTankName = a.FishTank.Name,
                     SensorTypeName = a.SensorType.Name,
-                    Value = a.Value,
+                    TriggerValue = a.TriggerValue,
                     RaisedAt = a.RaisedAt,
                     ResolvedAt = a.ResolvedAt,
                     Status = a.Status,

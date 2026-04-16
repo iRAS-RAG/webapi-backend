@@ -20,9 +20,12 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
                     Id = sl.Id,
                     SensorId = sl.SensorId,
                     SensorName = sl.Sensor.Name,
-                    Data = sl.Data,
-                    IsWarning = sl.IsWarning,
-                    DataJson = sl.DataJson,
+                    Average = sl.Average,
+                    Min = sl.Min,
+                    Max = sl.Max,
+                    SampleCount = sl.SampleCount,
+                    HasWarning = sl.HasWarning,
+                    PeriodStart = sl.PeriodStart,
                     CreatedAt = sl.CreatedAt,
                 });
         }
