@@ -1,4 +1,5 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Common.Utils
@@ -25,36 +26,9 @@ namespace IRasRag.Application.Common.Utils
             Guid? batchId = null
         )
         {
-            var userFarmRepo = unitOfWork.GetRepository<UserFarm>();
-            var userFarmQuery = await userFarmRepo.FindAllAsync(uf => uf.UserId == userId);
-            var farmIds = userFarmQuery.Select(uf => uf.FarmId).ToHashSet();
-
-            if (farmId.HasValue)
-            {
-                if (!farmIds.Contains(farmId.Value))
-                    return new HashSet<Guid>();
-                farmIds = new HashSet<Guid> { farmId.Value };
-            }
-
-            if (farmIds.Count == 0)
-                return new HashSet<Guid>();
-
-            var fishTankRepo = unitOfWork.GetRepository<FishTank>();
-            var allowedTankIds = (await fishTankRepo.FindAllAsync(t => farmIds.Contains(t.FarmId)))
-                .Select(t => t.Id)
-                .ToHashSet();
-
-            if (batchId.HasValue)
-            {
-                var batchRepo = unitOfWork.GetRepository<FarmingBatch>();
-                var batch = await batchRepo.FirstOrDefaultAsync(b => b.Id == batchId.Value);
-                if (batch != null && allowedTankIds.Contains(batch.FishTankId))
-                    return new HashSet<Guid> { batch.FishTankId };
-
-                return new HashSet<Guid>();
-            }
-
-            return allowedTankIds;
+            var allowedTankIds = await unitOfWork.GetRepository<FishTank>()
+                .ListAsync(new UserAllowedFishTankSpec(userId, farmId, batchId));
+            return allowedTankIds.ToHashSet();
         }
     }
 }
