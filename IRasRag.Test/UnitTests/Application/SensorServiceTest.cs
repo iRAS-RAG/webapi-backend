@@ -4,6 +4,7 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -28,6 +29,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<SensorType>> _sensorTypeRepoMock;
         private readonly Mock<IRepository<MasterBoard>> _masterBoardRepoMock;
         private readonly Mock<IRepository<SensorLog>> _logRepoMock;
+        private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
 
         private readonly SensorService _sut;
 
@@ -51,7 +53,9 @@ namespace IRasRag.Test.UnitTests.Application
                 .Returns(_masterBoardRepoMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<SensorLog>()).Returns(_logRepoMock.Object);
 
-            _sut = new SensorService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+
+            _sut = new SensorService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object);
         }
 
         #region GetSensorByIdAsync Tests

@@ -4,6 +4,7 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -27,6 +28,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<GrowthStage>> _growthStageRepoMock;
         private readonly Mock<IRepository<SensorType>> _sensorTypeRepoMock;
         private readonly Mock<ILogger<SpeciesThresholdService>> _loggerMock;
+        private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
         private readonly IMapper _mapper;
         private readonly SpeciesThresholdService _sut;
 
@@ -53,7 +55,9 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(u => u.GetRepository<SensorType>())
                 .Returns(_sensorTypeRepoMock.Object);
 
-            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+
+            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object);
         }
 
         #region CreateSpeciesThreshold

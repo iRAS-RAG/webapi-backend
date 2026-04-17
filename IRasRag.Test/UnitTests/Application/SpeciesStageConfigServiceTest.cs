@@ -4,6 +4,7 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -27,6 +28,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<Species>> _speciesRepoMock;
         private readonly Mock<IRepository<GrowthStage>> _growthStageRepoMock;
         private readonly Mock<IRepository<FeedType>> _feedTypeRepoMock;
+        private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
         private readonly IMapper _mapper;
         private readonly SpeciesStageConfigService _sut;
 
@@ -52,10 +54,13 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(u => u.GetRepository<FeedType>())
                 .Returns(_feedTypeRepoMock.Object);
 
+            _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+
             _sut = new SpeciesStageConfigService(
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
-                _mapper
+                _mapper,
+                _telemetryCacheMock.Object
             );
         }
 
