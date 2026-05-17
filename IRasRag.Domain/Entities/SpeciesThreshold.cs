@@ -20,6 +20,8 @@ namespace IRasRag.Domain.Entities
         [Required]
         public double MaxValue { get; set; }
 
+        public string? AdvisoryThresholdId { get; set; }
+
         // Navigation properties
         public Species Species { get; set; }
         public GrowthStage GrowthStage { get; set; }
