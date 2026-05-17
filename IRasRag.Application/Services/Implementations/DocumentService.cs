@@ -1,6 +1,6 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
-using IRasRag.Application.Common.Interfaces.Cloudinary;
+using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Application.Common.Interfaces.FileExtraction;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
 using IRasRag.Application.Common.Interfaces.FileValidator;
@@ -210,21 +210,9 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
 
-            // Extract text content from the file
-            buffer.Position = 0;
-            var content = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                return Result.Failure(
-                    "Không thể trích xuất nội dung từ tệp",
-                    ResultType.BadRequest
-                );
-            }
-
             var document = new Document
             {
                 Title = dto.FileTitle,
-                Content = content,
                 UploadedByUserId = dto.UploadedByUserId,
                 UploadedAt = DateTime.UtcNow,
                 FileUrl = fileUrl,
@@ -234,6 +222,9 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _unitOfWork.GetRepository<Document>().AddAsync(document);
                 await _unitOfWork.SaveChangesAsync();
+
+                _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
+
                 return Result.Success("Tạo tài liệu thành công");
             }
             catch (Exception ex)

@@ -1,3 +1,5 @@
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -18,19 +20,22 @@ namespace IRasRag.Application.Common.Utils
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AlertStateEvaluator> _logger;
         private readonly ILiveDataNotifier _liveDataNotifier;
+        private readonly IBackgroundJobService _backgroundJobs;
 
         public AlertStateEvaluator(
             IAlertStateCacheService alertStateCache,
             IOptions<AlertSettings> settings,
             IUnitOfWork unitOfWork,
             ILogger<AlertStateEvaluator> logger,
-            ILiveDataNotifier liveDataNotifier)
+            ILiveDataNotifier liveDataNotifier,
+            IBackgroundJobService backgroundJobs)
         {
             _alertStateCache = alertStateCache ?? throw new ArgumentNullException(nameof(alertStateCache));
             _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _liveDataNotifier = liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
+            _backgroundJobs = backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
 
             ValidateSettings(_settings);
         }

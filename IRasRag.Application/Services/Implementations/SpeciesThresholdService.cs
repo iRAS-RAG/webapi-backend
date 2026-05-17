@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
@@ -18,22 +20,26 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<SpeciesThresholdService> _logger;
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
+        private readonly IBackgroundJobService _backgroundJobs;
 
         public SpeciesThresholdService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesThresholdService> logger,
             IMapper mapper,
-            ITelemetryCacheService telemetryCache
+            ITelemetryCacheService telemetryCache,
+            IBackgroundJobService backgroundJobs
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _telemetryCache = telemetryCache;
+            _backgroundJobs = backgroundJobs;
         }
 
         public async Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(
-            CreateSpeciesThresholdDto dto
+            CreateSpeciesThresholdDto dto,
+            Guid? userId = null
         )
         {
             try
@@ -96,6 +102,10 @@ namespace IRasRag.Application.Services.Implementations
                 var thresholdDto = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
                     .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(newThreshold.Id));
+
+                var userIdStr = userId?.ToString();
+                _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncCreateAsync(newThreshold.Id, userIdStr));
+
                 return Result<SpeciesThresholdDto>.Success(
                     thresholdDto!,
                     "Tạo ngưỡng sinh trưởng thành công."
@@ -120,9 +130,15 @@ namespace IRasRag.Application.Services.Implementations
                     .GetByIdAsync(id);
                 if (threshold == null)
                     return Result.Failure("Ngưỡng sinh trưởng không tồn tại.", ResultType.NotFound);
+
+                var advisoryId = threshold.AdvisoryThresholdId;
                 _unitOfWork.GetRepository<SpeciesThreshold>().Delete(threshold);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
+
+                if (advisoryId != null)
+                    _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncDeleteAsync(advisoryId));
+
                 return Result.Success("Xóa ngưỡng sinh trưởng thành công.");
             }
             catch (Exception ex)
@@ -265,6 +281,13 @@ namespace IRasRag.Application.Services.Implementations
                 _mapper.Map(dto, threshold);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
+
+                if (threshold.AdvisoryThresholdId != null)
+                {
+                    var advisoryId = threshold.AdvisoryThresholdId;
+                    _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncUpdateAsync(advisoryId, threshold.MinValue, threshold.MaxValue));
+                }
+
                 return Result.Success("Cập nhật ngưỡng sinh trưởng thành công.");
             }
             catch (Exception ex)
