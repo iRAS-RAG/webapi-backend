@@ -2,6 +2,7 @@
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -29,6 +30,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<SensorType>> _sensorTypeRepoMock;
         private readonly Mock<ILogger<SpeciesThresholdService>> _loggerMock;
         private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
+        private readonly Mock<IBackgroundJobService> _backgroundJobsMock;
         private readonly IMapper _mapper;
         private readonly SpeciesThresholdService _sut;
 
@@ -56,8 +58,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Returns(_sensorTypeRepoMock.Object);
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+            _backgroundJobsMock = new Mock<IBackgroundJobService>();
+            _backgroundJobsMock
+                .Setup(b => b.Enqueue(It.IsAny<System.Linq.Expressions.Expression<Func<object, Task>>>()))
+                .Returns("job-id");
 
-            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object);
+            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object, _backgroundJobsMock.Object);
         }
 
         #region CreateSpeciesThreshold
