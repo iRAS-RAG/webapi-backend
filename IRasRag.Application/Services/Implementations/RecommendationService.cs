@@ -159,20 +159,23 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Validate Document exists
-                var documentRepository = _unitOfWork.GetRepository<Document>();
-                var document = await documentRepository.GetByIdAsync(createDto.DocumentId);
-
-                if (document == null)
+                // Validate Document exists (optional field)
+                if (createDto.DocumentId.HasValue)
                 {
-                    _logger.LogWarning(
-                        "Không tìm thấy tài liệu với Id: {DocumentId}",
-                        createDto.DocumentId
-                    );
-                    return Result<RecommendationDto>.Failure(
-                        "Không tìm thấy tài liệu",
-                        ResultType.NotFound
-                    );
+                    var documentRepository = _unitOfWork.GetRepository<Document>();
+                    var document = await documentRepository.GetByIdAsync(createDto.DocumentId.Value);
+
+                    if (document == null)
+                    {
+                        _logger.LogWarning(
+                            "Không tìm thấy tài liệu với Id: {DocumentId}",
+                            createDto.DocumentId.Value
+                        );
+                        return Result<RecommendationDto>.Failure(
+                            "Không tìm thấy tài liệu",
+                            ResultType.NotFound
+                        );
+                    }
                 }
 
                 // Create Recommendation

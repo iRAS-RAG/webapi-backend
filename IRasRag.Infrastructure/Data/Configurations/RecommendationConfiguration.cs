@@ -21,7 +21,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasOne(r => r.Document)
                 .WithMany(d => d.Recommendations)
                 .HasForeignKey(r => r.DocumentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasData(RecommendationSeed.Recommendations);
         }

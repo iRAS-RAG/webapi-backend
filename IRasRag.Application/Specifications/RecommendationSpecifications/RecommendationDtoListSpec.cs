@@ -26,7 +26,7 @@ namespace IRasRag.Application.Specifications.RecommendationSpecifications
                 Id = r.Id,
                 AlertId = r.AlertId,
                 DocumentId = r.DocumentId,
-                DocumentTitle = r.Document.Title,
+                DocumentTitle = r.Document != null ? r.Document.Title : string.Empty,
                 SuggestionText = r.SuggestionText,
             });
         }
