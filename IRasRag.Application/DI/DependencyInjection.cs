@@ -1,4 +1,5 @@
-﻿using IRasRag.Application.Common.Mappings;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
@@ -20,6 +21,7 @@ namespace IRasRag.Application.DI
 
         public static void AddServices(this IServiceCollection services)
         {
+            services.AddScoped<IAdvisoryService, AdvisoryService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<IAlertService, AlertService>();
             services.AddScoped<IAuthService, AuthService>();

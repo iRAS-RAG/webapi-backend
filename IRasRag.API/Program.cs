@@ -1,10 +1,12 @@
 using System.Text.Json.Serialization;
 using Hangfire;
+using Hangfire.Common;
 using IRasRag.API.DI;
 using IRasRag.API.Hubs;
 using IRasRag.API.Middlewares;
 using IRasRag.Application.DI;
 using IRasRag.Infrastructure.DI;
+using IRasRag.Infrastructure.Filters;
 
 namespace IRasRag.API
 {
@@ -28,6 +30,11 @@ namespace IRasRag.API
             builder.Services.AddMemoryCache();
 
             var app = builder.Build();
+
+            GlobalJobFilters.Filters.Add(new DocumentIngestFailedFilter(
+                app.Services.GetRequiredService<IServiceScopeFactory>(),
+                app.Services.GetRequiredService<ILoggerFactory>()));
+            JobFilterProviders.Providers.Add(new MethodRetryFilterProvider());
 
             // Configure the HTTP request pipeline.
             app.UseSwagger();

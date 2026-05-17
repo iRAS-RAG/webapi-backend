@@ -1,6 +1,7 @@
-﻿using IRasRag.Application.Common.Interfaces.Auth;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
-using IRasRag.Application.Common.Interfaces.Cloudinary;
+using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.FileExtraction;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
@@ -23,11 +24,13 @@ using IRasRag.Infrastructure.Services.Mqtt;
 using IRasRag.Infrastructure.Services.Telemetry;
 using MQTTnet;
 using IRasRag.Infrastructure.Services.TextExtractors;
+using IRasRag.Infrastructure.Services.Advisory;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace IRasRag.Infrastructure.DI
 {
@@ -43,9 +46,26 @@ namespace IRasRag.Infrastructure.DI
             services.AddServices();
             services.AddConnectionString(config, env);
             services.AddSettings(config);
+            services.AddAdvisoryHttpClients(config);
             services.AddSingleton<IMqttClient>(_ => new MqttClientFactory().CreateMqttClient());
             services.AddSingleton<IMqttPublishService, MqttPublishService>();
             services.AddHostedService<MqttBackgroundService>();
+        }
+
+        public static void AddAdvisoryHttpClients(this IServiceCollection services, IConfiguration config)
+        {
+            services.AddHttpClient<IRagChatClient, RagChatClient>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+            services.AddHttpClient<IThresholdSyncClient, ThresholdSyncClient>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -61,6 +81,8 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+            services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
+            services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
 
             // Telemetry
             services.AddSingleton<TelemetryLogBatchWriter>();
@@ -89,6 +111,7 @@ namespace IRasRag.Infrastructure.DI
             services.Configure<MqttSettings>(config.GetSection("Mqtt"));
             services.Configure<LogBatchWriterSettings>(config.GetSection("LogBatchWriter"));
             services.Configure<AlertSettings>(config.GetSection("AlertSettings"));
+            services.Configure<AdvisorySettings>(config.GetSection("Advisory"));
 
             var mqttSettings = config.GetSection("Mqtt").Get<MqttSettings>();
             mqttSettings?.ValidateSettings();
