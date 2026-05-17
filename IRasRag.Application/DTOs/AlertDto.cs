@@ -74,6 +74,7 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? TankId { get; set; }
         public Guid? SensorId { get; set; }
+        public Guid? BatchId { get; set; }
         public AlertStatus? Status { get; set; }
     }
 }

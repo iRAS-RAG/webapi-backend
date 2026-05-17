@@ -19,6 +19,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 ["value"] = a => a.TriggerValue,
                 ["fishtankname"] = a => a.FishTank.Name,
                 ["sensorname"] = a => a.Sensor.Name,
+                ["farmingbatchname"] = a => a.FarmingBatch != null ? a.FarmingBatch.Name : null,
             };
 
             ApplySearch(
@@ -28,12 +29,15 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                     a => a.SensorType.Name,
                     a => a.Sensor.Name,
                     a => a.FarmingBatch != null ? a.FarmingBatch.Name : null,
+                    a => a.SensorType.Name,
                 ]
             );
 
             ApplyFilter(request.Status, a => a.Status == request.Status);
             ApplyFilter(request.TankId, a => a.FishTankId == request.TankId);
             ApplyFilter(request.SensorId, a => a.SensorId == request.SensorId);
+            ApplyFilter(request.BatchId, a => a.FarmingBatchId == request.BatchId);
+
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "raisedat");
 
