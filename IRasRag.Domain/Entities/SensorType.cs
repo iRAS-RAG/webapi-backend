@@ -17,6 +17,9 @@ namespace IRasRag.Domain.Entities
         [MaxLength(50)]
         public string UnitOfMeasure { get; set; }
 
+        [MaxLength(50)]
+        public string? Code { get; set; }
+
         // Navigation properties
         public ICollection<Sensor> Sensors { get; set; }
         public ICollection<SpeciesThreshold> SpeciesThresholds { get; set; }
