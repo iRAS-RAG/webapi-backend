@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs
 {
@@ -12,6 +13,7 @@ namespace IRasRag.Application.DTOs
         public Guid UploadedByUserId { get; set; }
         public string UploadedByUserEmail { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
+        public DocumentRagStatus RagStatus { get; set; }
     }
 
     public class DocumentDto
@@ -22,6 +24,7 @@ namespace IRasRag.Application.DTOs
         public Guid UploadedByUserId { get; set; }
         public string UploadedByUserEmail { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
+        public DocumentRagStatus RagStatus { get; set; }
     }
 
     // Create DTO

@@ -30,6 +30,7 @@ namespace IRasRag.Application.Specifications.DocumentSpecifications
                 UploadedByUserId = d.UploadedByUserId,
                 UploadedByUserEmail = d.UploadedByUser.Email,
                 UploadedAt = d.UploadedAt,
+                RagStatus = d.RagStatus,
             });
         }
     }
