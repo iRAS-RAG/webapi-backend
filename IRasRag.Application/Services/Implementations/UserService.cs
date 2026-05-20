@@ -374,6 +374,7 @@ namespace IRasRag.Application.Services.Implementations
                 var user = await _unitOfWork
                     .GetRepository<User>()
                     .GetByIdAsync(id, QueryType.IncludeDeleted);
+                Role? updatedRole = null;
 
                 if (user == null)
                     return Result<UserDto>.Failure(
@@ -423,19 +424,20 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (!string.IsNullOrWhiteSpace(dto.RoleName))
                 {
-                    var userRole = await _unitOfWork
+                    var normalizedRoleName = dto.RoleName.Trim().ToLower();
+                    updatedRole = await _unitOfWork
                         .GetRepository<Role>()
                         .FirstOrDefaultAsync(r =>
-                            r.Name.ToLowerInvariant() == dto.RoleName.ToLowerInvariant()
+                            r.Name.ToLower() == normalizedRoleName
                         );
-                    if (userRole == null)
+                    if (updatedRole == null)
                     {
                         return Result<UserDto>.Failure(
                             "Vai trò người dùng không hợp lệ.",
                             ResultType.BadRequest
                         );
                     }
-                    user.RoleId = userRole.Id;
+                    user.RoleId = updatedRole.Id;
                 }
 
                 if (dto.IsDeleted.HasValue)
@@ -452,8 +454,19 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
 
+                updatedRole ??= await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
+
                 return Result<UserDto>.Success(
-                    _mapper.Map<UserDto>(user),
+                    new UserDto
+                    {
+                        Id = user.Id,
+                        RoleId = user.RoleId,
+                        RoleName = updatedRole?.Name ?? string.Empty,
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        IsDeleted = user.IsDeleted,
+                    },
                     "Cập nhật người dùng thành công."
                 );
             }
