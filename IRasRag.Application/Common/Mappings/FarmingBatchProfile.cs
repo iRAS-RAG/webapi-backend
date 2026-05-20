@@ -17,8 +17,16 @@ namespace IRasRag.Application.Common.Mappings
                     opt => opt.MapFrom(src => src.CurrentStageConfigId)
                 )
                 .ForMember(
+                    dest => dest.SpeciesId,
+                    opt => opt.MapFrom(src => src.CurrentStageConfig.SpeciesId)
+                )
+                .ForMember(
                     dest => dest.SpeciesName,
                     opt => opt.MapFrom(src => src.CurrentStageConfig.Species.Name)
+                )
+                .ForMember(
+                    dest => dest.GrowthStageId,
+                    opt => opt.MapFrom(src => src.CurrentStageConfig.GrowthStageId)
                 )
                 .ForMember(
                     dest => dest.StageName,

@@ -124,6 +124,7 @@ namespace IRasRag.API.Controllers
                         new { result.Message, result.Data }
                     ),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
             }

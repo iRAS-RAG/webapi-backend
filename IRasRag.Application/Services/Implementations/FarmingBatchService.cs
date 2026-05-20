@@ -196,42 +196,88 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
-                // Validate Species exists
-                var speciesRepo = _unitOfWork.GetRepository<Species>();
-                var speciesExists = await speciesRepo.AnyAsync(s => s.Id == createDto.SpeciesId);
-                if (!speciesExists)
-                {
-                    return Result<FarmingBatchDto>.Failure(
-                        "Loài cá không tồn tại",
-                        ResultType.BadRequest
-                    );
-                }
-
-                // Validate GrowthStage exists
-                var growthStageRepo = _unitOfWork.GetRepository<GrowthStage>();
-                var growthStageExists = await growthStageRepo.AnyAsync(gs =>
-                    gs.Id == createDto.GrowthStageId
-                );
-                if (!growthStageExists)
-                {
-                    return Result<FarmingBatchDto>.Failure(
-                        "Giai đoạn tăng trưởng không tồn tại",
-                        ResultType.BadRequest
-                    );
-                }
-
-                // Resolve SpeciesStageConfig from Species + GrowthStage
                 var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var stageConfig = await stageConfigRepo.FirstOrDefaultAsync(sc =>
-                    sc.SpeciesId == createDto.SpeciesId
-                    && sc.GrowthStageId == createDto.GrowthStageId
-                );
-                if (stageConfig == null)
+                SpeciesStageConfig? stageConfig = null;
+
+                if (
+                    createDto.SpeciesStageConfigId.HasValue
+                    && createDto.SpeciesStageConfigId.Value != Guid.Empty
+                )
                 {
-                    return Result<FarmingBatchDto>.Failure(
-                        "Không tìm thấy cấu hình cho loài và giai đoạn này",
-                        ResultType.BadRequest
+                    stageConfig = await stageConfigRepo.GetByIdAsync(
+                        createDto.SpeciesStageConfigId.Value
                     );
+
+                    if (stageConfig == null)
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Không tìm thấy cấu hình cho loài và giai đoạn này",
+                            ResultType.BadRequest
+                        );
+                    }
+                }
+                else
+                {
+                    if (
+                        !createDto.SpeciesId.HasValue
+                        || createDto.SpeciesId.Value == Guid.Empty
+                    )
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "SpeciesStageConfigId là bắt buộc",
+                            ResultType.BadRequest
+                        );
+                    }
+
+                    if (
+                        !createDto.GrowthStageId.HasValue
+                        || createDto.GrowthStageId.Value == Guid.Empty
+                    )
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "SpeciesStageConfigId là bắt buộc",
+                            ResultType.BadRequest
+                        );
+                    }
+
+                    // Validate Species exists
+                    var speciesRepo = _unitOfWork.GetRepository<Species>();
+                    var speciesExists = await speciesRepo.AnyAsync(s =>
+                        s.Id == createDto.SpeciesId.Value
+                    );
+                    if (!speciesExists)
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Loài cá không tồn tại",
+                            ResultType.BadRequest
+                        );
+                    }
+
+                    // Validate GrowthStage exists
+                    var growthStageRepo = _unitOfWork.GetRepository<GrowthStage>();
+                    var growthStageExists = await growthStageRepo.AnyAsync(gs =>
+                        gs.Id == createDto.GrowthStageId.Value
+                    );
+                    if (!growthStageExists)
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Giai đoạn tăng trưởng không tồn tại",
+                            ResultType.BadRequest
+                        );
+                    }
+
+                    // Resolve SpeciesStageConfig from Species + GrowthStage
+                    stageConfig = await stageConfigRepo.FirstOrDefaultAsync(sc =>
+                        sc.SpeciesId == createDto.SpeciesId.Value
+                        && sc.GrowthStageId == createDto.GrowthStageId.Value
+                    );
+                    if (stageConfig == null)
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Không tìm thấy cấu hình cho loài và giai đoạn này",
+                            ResultType.BadRequest
+                        );
+                    }
                 }
 
                 // Validate inputs
