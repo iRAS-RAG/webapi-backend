@@ -7,7 +7,7 @@ namespace IRasRag.Application.Common.Utils
     {
         public static bool IsViolation(double value, SpeciesThreshold threshold)
         {
-            if (value < threshold.MinValue || value > threshold.MaxValue) 
+            if (value < threshold.MinValue || value > threshold.MaxValue)
                 return true;
 
             return false;

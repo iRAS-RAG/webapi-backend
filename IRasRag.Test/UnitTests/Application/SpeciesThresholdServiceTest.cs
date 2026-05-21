@@ -57,7 +57,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
 
-            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object);
+            _sut = new SpeciesThresholdService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _telemetryCacheMock.Object
+            );
         }
 
         #region CreateSpeciesThreshold

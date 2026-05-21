@@ -50,13 +50,24 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.HasIndex(a => new { a.SensorId, a.Status });
 
             // Unique index to prevent multiple open alerts of same type for same tank/batch
-            builder.HasIndex(a => new { a.FishTankId, a.FarmingBatchId, a.SensorTypeId })
-                .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NOT NULL")
+            builder
+                .HasIndex(a => new
+                {
+                    a.FishTankId,
+                    a.FarmingBatchId,
+                    a.SensorTypeId,
+                })
+                .HasFilter(
+                    "\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NOT NULL"
+                )
                 .IsUnique();
 
             // Also allow one open alert per sensor type at tank level if no batch is active
-            builder.HasIndex(a => new { a.FishTankId, a.SensorTypeId })
-                .HasFilter("\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NULL")
+            builder
+                .HasIndex(a => new { a.FishTankId, a.SensorTypeId })
+                .HasFilter(
+                    "\"status\" IN ('OPEN', 'ACKNOWLEDGED') AND \"farming_batch_id\" IS NULL"
+                )
                 .IsUnique();
 
             builder.HasData(AlertSeed.Alerts);

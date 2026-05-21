@@ -19,7 +19,12 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
 
-        public SensorService(IUnitOfWork unitOfWork, ILogger<SensorService> logger, IMapper mapper, ITelemetryCacheService telemetryCache)
+        public SensorService(
+            IUnitOfWork unitOfWork,
+            ILogger<SensorService> logger,
+            IMapper mapper,
+            ITelemetryCacheService telemetryCache
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
@@ -332,7 +337,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateSensors(oldMasterBoardId);
-                if (updateDto.MasterBoardId.HasValue && updateDto.MasterBoardId.Value != oldMasterBoardId)
+                if (
+                    updateDto.MasterBoardId.HasValue
+                    && updateDto.MasterBoardId.Value != oldMasterBoardId
+                )
                     _telemetryCache.InvalidateSensors(updateDto.MasterBoardId.Value);
 
                 _logger.LogInformation("Cập nhật cảm biến thành công: {Id}", id);
@@ -441,8 +449,14 @@ namespace IRasRag.Application.Services.Implementations
                 var logRepository = _unitOfWork.GetRepository<SensorLog>();
                 var entryTime = dto.Timestamp ?? DateTime.UtcNow;
                 var periodStart = new DateTime(
-                    entryTime.Year, entryTime.Month, entryTime.Day,
-                    entryTime.Hour, entryTime.Minute, 0, DateTimeKind.Utc);
+                    entryTime.Year,
+                    entryTime.Month,
+                    entryTime.Day,
+                    entryTime.Hour,
+                    entryTime.Minute,
+                    0,
+                    DateTimeKind.Utc
+                );
 
                 var sensorLog = new SensorLog
                 {

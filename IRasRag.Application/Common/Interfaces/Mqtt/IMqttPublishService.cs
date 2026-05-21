@@ -4,6 +4,10 @@ namespace IRasRag.Application.Common.Interfaces.Mqtt
 {
     public interface IMqttPublishService
     {
-        Task PublishCommandAsync(string macAddress, DeviceCommand command, CancellationToken ct = default);
+        Task PublishCommandAsync(
+            string macAddress,
+            DeviceCommand command,
+            CancellationToken ct = default
+        );
     }
 }

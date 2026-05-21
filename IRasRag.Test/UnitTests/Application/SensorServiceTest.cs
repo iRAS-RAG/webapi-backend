@@ -55,7 +55,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
 
-            _sut = new SensorService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object);
+            _sut = new SensorService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _telemetryCacheMock.Object
+            );
         }
 
         #region GetSensorByIdAsync Tests

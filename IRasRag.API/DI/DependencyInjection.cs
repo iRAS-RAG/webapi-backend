@@ -70,13 +70,15 @@ namespace IRasRag.API.DI
                         {
                             var accessToken = context.Request.Query["access_token"];
                             var path = context.HttpContext.Request.Path;
-                            if (!string.IsNullOrEmpty(accessToken) &&
-                                path.StartsWithSegments("/hubs/telemetry"))
+                            if (
+                                !string.IsNullOrEmpty(accessToken)
+                                && path.StartsWithSegments("/hubs/telemetry")
+                            )
                             {
                                 context.Token = accessToken;
                             }
                             return Task.CompletedTask;
-                        }
+                        },
                     };
                 });
         }

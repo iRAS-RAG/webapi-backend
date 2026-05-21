@@ -21,13 +21,13 @@ using IRasRag.Infrastructure.Services.FileExtractors;
 using IRasRag.Infrastructure.Services.FileValidator;
 using IRasRag.Infrastructure.Services.Mqtt;
 using IRasRag.Infrastructure.Services.Telemetry;
-using MQTTnet;
 using IRasRag.Infrastructure.Services.TextExtractors;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MQTTnet;
 
 namespace IRasRag.Infrastructure.DI
 {
@@ -65,7 +65,8 @@ namespace IRasRag.Infrastructure.DI
             // Telemetry
             services.AddSingleton<TelemetryLogBatchWriter>();
             services.AddSingleton<ITelemetryLogBatchWriter>(sp =>
-                sp.GetRequiredService<TelemetryLogBatchWriter>());
+                sp.GetRequiredService<TelemetryLogBatchWriter>()
+            );
             services.AddHostedService(sp => sp.GetRequiredService<TelemetryLogBatchWriter>());
             services.AddScoped<ITelemetryCacheService, TelemetryCacheService>();
             services.AddScoped<ITelemetryDispatchService, TelemetryDispatchService>();
