@@ -218,6 +218,11 @@ namespace IRasRag.Application.Common.Utils
             var lowerBound = threshold.MinValue + hysteresisAmount;
             var upperBound = threshold.MaxValue - hysteresisAmount;
 
+            // Binary/discrete sensors (e.g. water level: 0=not reached, 1=reached) must be
+            // configured with MinValue == MaxValue (e.g. min=1, max=1). This collapses span to 0,
+            // so hysteresisAmount is 0 and the recovery zone is exactly {1}.
+            // Any other range (e.g. min=0.5, max=1) causes upperBound to shrink below 1,
+            // making the normal reading appear "near the threshold edge" and the alert never resolves.
             if (lowerBound > upperBound)
             {
                 var midpoint = (threshold.MinValue + threshold.MaxValue) / 2.0;
