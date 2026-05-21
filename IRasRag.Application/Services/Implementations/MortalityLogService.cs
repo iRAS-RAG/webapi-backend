@@ -141,6 +141,10 @@ namespace IRasRag.Application.Services.Implementations
             CreateMortalityLogDto createDto
         )
         {
+            var batchRepository = _unitOfWork.GetRepository<FarmingBatch>();
+            var userRepository = _unitOfWork.GetRepository<User>();
+            var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
+
             try
             {
                 _logger.LogInformation(
@@ -176,23 +180,22 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Verify BatchId exists
-                var batchRepository = _unitOfWork.GetRepository<FarmingBatch>();
-                var batchExists = await batchRepository.AnyAsync(b => b.Id == createDto.BatchId);
+                await _unitOfWork.BeginTransactionAsync();
 
-                if (!batchExists)
+                var batch = await batchRepository.GetByIdAsync(createDto.BatchId);
+                if (batch == null)
                 {
                     _logger.LogWarning(
                         "Không tìm thấy lô nuôi với Id: {BatchId}",
                         createDto.BatchId
                     );
+                    await _unitOfWork.RollbackTransactionAsync();
                     return Result<MortalityLogDto>.Failure(
                         "Không tìm thấy lô nuôi",
                         ResultType.NotFound
                     );
                 }
 
-                var userRepository = _unitOfWork.GetRepository<User>();
                 var userExists = await userRepository.AnyAsync(u => u.Id == createDto.UserId);
 
                 if (!userExists)
@@ -201,16 +204,36 @@ namespace IRasRag.Application.Services.Implementations
                         "Không tìm thấy người dùng với Id: {UserId}",
                         createDto.UserId
                     );
+                    await _unitOfWork.RollbackTransactionAsync();
                     return Result<MortalityLogDto>.Failure(
                         "Không tìm thấy người dùng",
                         ResultType.NotFound
                     );
                 }
 
-                var mortalityLogRepository = _unitOfWork.GetRepository<MortalityLog>();
+                if (createDto.Quantity > batch.CurrentQuantity)
+                {
+                    _logger.LogWarning(
+                        "Số lượng hao hụt ({Quantity}) vượt quá số lượng hiện tại của lô ({CurrentQuantity})",
+                        createDto.Quantity,
+                        batch.CurrentQuantity
+                    );
+
+                    await _unitOfWork.RollbackTransactionAsync();
+
+                    return Result<MortalityLogDto>.Failure(
+                        "Số lượng hao hụt không được lớn hơn số lượng hiện tại của lô",
+                        ResultType.BadRequest
+                    );
+                }
+
                 var mortalityLog = _mapper.Map<MortalityLog>(createDto);
 
                 await mortalityLogRepository.AddAsync(mortalityLog);
+
+                batch.CurrentQuantity -= createDto.Quantity;
+                batchRepository.Update(batch);
+
                 await _unitOfWork.SaveChangesAsync();
 
                 var mortalityLogDto = await mortalityLogRepository.FirstOrDefaultAsync(
@@ -223,11 +246,14 @@ namespace IRasRag.Application.Services.Implementations
                         "Không thể tải lại nhật ký tử vong vừa tạo với Id: {Id}",
                         mortalityLog.Id
                     );
+                    await _unitOfWork.RollbackTransactionAsync();
                     return Result<MortalityLogDto>.Failure(
                         "Đã xảy ra lỗi khi tạo nhật ký tử vong",
                         ResultType.Unexpected
                     );
                 }
+
+                await _unitOfWork.CommitTransactionAsync();
 
                 _logger.LogInformation(
                     "Tạo nhật ký tử vong thành công: {Id} - BatchId: {BatchId}, UserId: {UserId}, Quantity: {Quantity}",
@@ -244,6 +270,19 @@ namespace IRasRag.Application.Services.Implementations
             }
             catch (Exception ex)
             {
+                try
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                }
+                catch (Exception rollbackEx)
+                {
+                    _logger.LogWarning(
+                        rollbackEx,
+                        "Không thể rollback transaction khi tạo nhật ký tử vong cho BatchId: {BatchId}",
+                        createDto.BatchId
+                    );
+                }
+
                 _logger.LogError(
                     ex,
                     "Lỗi khi tạo nhật ký tử vong cho BatchId: {BatchId}",

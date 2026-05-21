@@ -427,9 +427,7 @@ namespace IRasRag.Application.Services.Implementations
                     var normalizedRoleName = dto.RoleName.Trim().ToLower();
                     updatedRole = await _unitOfWork
                         .GetRepository<Role>()
-                        .FirstOrDefaultAsync(r =>
-                            r.Name.ToLower() == normalizedRoleName
-                        );
+                        .FirstOrDefaultAsync(r => r.Name.ToLower() == normalizedRoleName);
                     if (updatedRole == null)
                     {
                         return Result<UserDto>.Failure(

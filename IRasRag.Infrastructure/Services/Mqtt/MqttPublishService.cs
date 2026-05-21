@@ -1,11 +1,11 @@
+using System.Text;
+using System.Text.Json;
 using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Models.Mqtt;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
-using System.Text;
-using System.Text.Json;
 
 namespace IRasRag.Infrastructure.Services.Mqtt
 {
@@ -17,24 +17,32 @@ namespace IRasRag.Infrastructure.Services.Mqtt
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
         public MqttPublishService(
             IMqttClient client,
             IOptions<MqttSettings> options,
-            ILogger<MqttPublishService> logger)
+            ILogger<MqttPublishService> logger
+        )
         {
             _client = client;
             _mqttSettings = options.Value;
             _logger = logger;
         }
 
-        public async Task PublishCommandAsync(string macAddress, DeviceCommand command, CancellationToken ct = default)
+        public async Task PublishCommandAsync(
+            string macAddress,
+            DeviceCommand command,
+            CancellationToken ct = default
+        )
         {
             if (!_client.IsConnected)
             {
-                _logger.LogWarning("MQTT client is not connected. Cannot publish command to {MacAddress}.", macAddress);
+                _logger.LogWarning(
+                    "MQTT client is not connected. Cannot publish command to {MacAddress}.",
+                    macAddress
+                );
                 throw new InvalidOperationException("MQTT client is not connected.");
             }
 

@@ -1,7 +1,7 @@
+using System.Security.Claims;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
 
 namespace IRasRag.API.Hubs
 {

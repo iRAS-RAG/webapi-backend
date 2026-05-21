@@ -24,7 +24,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         public TelemetryLogBatchWriter(
             IServiceScopeFactory scopeFactory,
             IOptions<LogBatchWriterSettings> settings,
-            ILogger<TelemetryLogBatchWriter> logger)
+            ILogger<TelemetryLogBatchWriter> logger
+        )
         {
             _scopeFactory = scopeFactory;
             _settings = settings.Value;
@@ -35,13 +36,15 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 {
                     FullMode = BoundedChannelFullMode.Wait,
                     SingleReader = true,
-                    SingleWriter = false
-                });
+                    SingleWriter = false,
+                }
+            );
         }
 
         public async Task EnqueueBatchAsync(
             IReadOnlyCollection<TelemetryLogWriteModel> logs,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             foreach (var log in logs)
             {
@@ -62,7 +65,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 {
                     var now = DateTime.UtcNow;
 
-                    // Time to flush — window expired
+                    // Time to flush ï¿½ window expired
                     if (now >= nextFlush)
                     {
                         await FlushWindowsAsync(windows, stoppingToken);
@@ -81,7 +84,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     var completed = await Task.WhenAny(waitTask, delayTask);
 
                     if (completed == delayTask)
-                        continue; // window expired — loop back to flush
+                        continue; // window expired ï¿½ loop back to flush
 
                     if (!await waitTask)
                         break; // channel completed
@@ -102,10 +105,13 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         }
                         else
                         {
-                            // Late reading from previous window — log and discard
+                            // Late reading from previous window ï¿½ log and discard
                             _logger.LogWarning(
-                                "Late reading for sensor {SensorId} belongs to window {WindowKey}, current window {WindowStart} — discarding",
-                                item.SensorId, windowKey, windowStart);
+                                "Late reading for sensor {SensorId} belongs to window {WindowKey}, current window {WindowStart} ï¿½ discarding",
+                                item.SensorId,
+                                windowKey,
+                                windowStart
+                            );
                         }
                     }
                 }
@@ -124,9 +130,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
         private async Task FlushWindowsAsync(
             Dictionary<Guid, SensorWindowAccumulator> windows,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            if (windows.Count == 0) return;
+            if (windows.Count == 0)
+                return;
 
             var entities = windows
                 .Select(kvp => kvp.Value.Flush(kvp.Key))
@@ -134,7 +142,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 .Cast<SensorLog>()
                 .ToList();
 
-            if (entities.Count == 0) return;
+            if (entities.Count == 0)
+                return;
 
             // Retry logic stays exactly the same as before
             await PersistWithRetryAsync(entities, cancellationToken);
@@ -143,7 +152,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         private async Task PersistWithRetryAsync(
             List<SensorLog> logs,
             CancellationToken cancellationToken,
-            int requeueCount = 0)
+            int requeueCount = 0
+        )
         {
             if (logs.Count == 0)
                 return;
@@ -166,7 +176,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     _logger.LogDebug(
                         "Flushed telemetry log batch with {Count} items on attempt {Attempt}",
                         logs.Count,
-                        attempt);
+                        attempt
+                    );
                     return;
                 }
                 catch (OperationCanceledException)
@@ -182,7 +193,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
                     // Exponential backoff with jitter to avoid overloading the database during transient issues
                     var backoff = TimeSpan.FromMilliseconds(
-                        RetryBaseDelay.TotalMilliseconds * Math.Pow(2, attempt - 1));
+                        RetryBaseDelay.TotalMilliseconds * Math.Pow(2, attempt - 1)
+                    );
                     var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(25, 125));
                     var delay = backoff + jitter;
 
@@ -191,7 +203,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         "Batch insert failed on attempt {Attempt}/{MaxAttempts}. Retrying in {DelayMs} ms",
                         attempt,
                         _settings.MaxRetryAttempts,
-                        delay.TotalMilliseconds);
+                        delay.TotalMilliseconds
+                    );
 
                     await Task.Delay(delay, cancellationToken);
                 }
@@ -201,7 +214,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 lastException,
                 "Batch insert failed after {MaxAttempts} attempts. Re-queueing {Count} logs",
                 _settings.MaxRetryAttempts,
-                logs.Count);
+                logs.Count
+            );
 
             // Small delay before re-queuing to avoid tight failure loops
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
@@ -211,7 +225,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         private async Task RequeueSummariesAsync(
             List<SensorLog> logs,
             int requeueCount,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             if (requeueCount > _settings.MaxRequeueCount)
             {
@@ -219,7 +234,10 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 {
                     _logger.LogError(
                         "Dropping sensor log summary for sensor {SensorId} period {PeriodStart} after {RequeueCount} requeues",
-                        log.SensorId, log.PeriodStart, requeueCount);
+                        log.SensorId,
+                        log.PeriodStart,
+                        requeueCount
+                    );
                 }
                 return;
             }
@@ -245,12 +263,14 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         public void Add(double value, bool isWarning)
         {
             _samples.Add(value);
-            if (isWarning) _hasWarning = true;
+            if (isWarning)
+                _hasWarning = true;
         }
 
         public SensorLog? Flush(Guid sensorId)
         {
-            if (_samples.Count == 0) return null;
+            if (_samples.Count == 0)
+                return null;
 
             return new SensorLog
             {
@@ -260,13 +280,19 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 Min = _samples.Min(),
                 Max = _samples.Max(),
                 SampleCount = _samples.Count,
-                HasWarning = _hasWarning
+                HasWarning = _hasWarning,
             };
         }
-        public static DateTime GetWindowStart(DateTime timestamp)
-            => new DateTime(
-                timestamp.Year, timestamp.Month, timestamp.Day,
-                timestamp.Hour, timestamp.Minute, 0,
-                DateTimeKind.Utc);
+
+        public static DateTime GetWindowStart(DateTime timestamp) =>
+            new DateTime(
+                timestamp.Year,
+                timestamp.Month,
+                timestamp.Day,
+                timestamp.Hour,
+                timestamp.Minute,
+                0,
+                DateTimeKind.Utc
+            );
     }
 }

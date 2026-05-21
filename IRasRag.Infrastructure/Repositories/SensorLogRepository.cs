@@ -30,16 +30,19 @@ namespace IRasRag.Infrastructure.Repositories
             // Fetch 1-minute summary rows for the range
             var filtered = await GetQueryable()
                 .AsNoTracking()
-                .Where(sl => sl.SensorId == sensorId
-                          && sl.PeriodStart >= from
-                          && sl.PeriodStart < to)
+                .Where(sl =>
+                    sl.SensorId == sensorId && sl.PeriodStart >= from && sl.PeriodStart < to
+                )
                 .ToListAsync();
 
             // Re-bucket in memory for intervals > 1 minute
             // Weighted average preserves accuracy for windows with fewer than 60 samples
             var grouped = filtered
-                .GroupBy(x => x.PeriodStart.Ticks / TimeSpan.FromMinutes(interval).Ticks
-                                                  * TimeSpan.FromMinutes(interval).Ticks)
+                .GroupBy(x =>
+                    x.PeriodStart.Ticks
+                    / TimeSpan.FromMinutes(interval).Ticks
+                    * TimeSpan.FromMinutes(interval).Ticks
+                )
                 .Select(g => new
                 {
                     Bucket = g.Key,
@@ -96,17 +99,18 @@ namespace IRasRag.Infrastructure.Repositories
             var stride = TimeSpan.FromMinutes(interval);
 
             // date_bin buckets the 1-min PeriodStart into the requested interval
-            // Sum(Average * SampleCount) / Sum(SampleCount) is the weighted average 
-            var buckets = await _context.Set<SensorLog>()
+            // Sum(Average * SampleCount) / Sum(SampleCount) is the weighted average
+            var buckets = await _context
+                .Set<SensorLog>()
                 .AsNoTracking()
-                .Where(sl => sl.SensorId == sensorId
-                          && sl.PeriodStart >= utcFrom
-                          && sl.PeriodStart < utcTo)
+                .Where(sl =>
+                    sl.SensorId == sensorId && sl.PeriodStart >= utcFrom && sl.PeriodStart < utcTo
+                )
                 .GroupBy(sl => PgFunctions.DateBin(stride, sl.PeriodStart, utcFrom))
                 .Select(g => new
                 {
                     BucketStart = g.Key,
-                    Avg = g.Sum(x => x.Average * x.SampleCount) / g.Sum(x => x.SampleCount)
+                    Avg = g.Sum(x => x.Average * x.SampleCount) / g.Sum(x => x.SampleCount),
                 })
                 .OrderBy(x => x.BucketStart)
                 .ToListAsync();
@@ -114,7 +118,8 @@ namespace IRasRag.Infrastructure.Repositories
             // Create a lookup of bucket index to average value
             var lookup = buckets.ToDictionary(
                 b => (long)(b.BucketStart - utcFrom).TotalMinutes / interval,
-                b => b.Avg);
+                b => b.Avg
+            );
 
             // Fill in missing buckets with nulls
             var dataset = Enumerable

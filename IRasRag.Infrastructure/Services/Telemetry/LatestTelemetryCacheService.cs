@@ -1,8 +1,8 @@
 ﻿namespace IRasRag.Infrastructure.Services.Telemetry
 {
+    using System.Collections.Concurrent;
     using IRasRag.Application.Common.Interfaces.Telemetry;
     using IRasRag.Application.Common.Models.Telemetry;
-    using System.Collections.Concurrent;
 
     public class LatestTelemetryCacheService : ILatestTelemetryCacheService
     {
@@ -12,14 +12,15 @@
         {
             _cache.AddOrUpdate(
                 sensorId,
-                _ => new LiveReading(value, timestamp),  
+                _ => new LiveReading(value, timestamp),
                 (_, existing) =>
                 {
                     if (timestamp >= existing.Timestamp)
-                        return new LiveReading (value, timestamp);
+                        return new LiveReading(value, timestamp);
 
                     return existing;
-                });
+                }
+            );
         }
 
         public LiveReading? Get(Guid sensorId)

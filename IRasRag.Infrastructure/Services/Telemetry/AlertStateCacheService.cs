@@ -20,10 +20,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         public void Set(Guid fishTankId, Guid sensorTypeId, Guid? farmingBatchId, AlertState state)
         {
             var key = $"alert:state:{fishTankId}:{sensorTypeId}:{farmingBatchId}";
-            _cache.Set(key, state, new MemoryCacheEntryOptions
-            {
-                SlidingExpiration = TimeSpan.FromMinutes(5)
-            });
+            _cache.Set(
+                key,
+                state,
+                new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(5) }
+            );
         }
 
         public async Task<AlertState?> Get(Guid fishTankId, Guid sensorTypeId, Guid? farmingBatchId)
@@ -34,15 +35,18 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
             using var scope = _scopeFactory.CreateScope();
             var alertRepo = scope.ServiceProvider.GetRequiredService<IAlertRepository>();
-            var alert = await alertRepo.GetLatestActiveAlertByScope(fishTankId, sensorTypeId, farmingBatchId);
+            var alert = await alertRepo.GetLatestActiveAlertByScope(
+                fishTankId,
+                sensorTypeId,
+                farmingBatchId
+            );
 
             if (alert != null)
             {
                 var existState = new AlertState
                 {
                     ActiveAlertId = alert.Id,
-                    LastValue = alert.TriggerValue
-
+                    LastValue = alert.TriggerValue,
                 };
                 Set(fishTankId, sensorTypeId, farmingBatchId, existState);
                 return existState;

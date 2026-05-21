@@ -24,13 +24,16 @@ namespace IRasRag.Application.Common.Utils
             IOptions<AlertSettings> settings,
             IUnitOfWork unitOfWork,
             ILogger<AlertStateEvaluator> logger,
-            ILiveDataNotifier liveDataNotifier)
+            ILiveDataNotifier liveDataNotifier
+        )
         {
-            _alertStateCache = alertStateCache ?? throw new ArgumentNullException(nameof(alertStateCache));
+            _alertStateCache =
+                alertStateCache ?? throw new ArgumentNullException(nameof(alertStateCache));
             _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _liveDataNotifier = liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
+            _liveDataNotifier =
+                liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
 
             ValidateSettings(_settings);
         }
@@ -43,32 +46,57 @@ namespace IRasRag.Application.Common.Utils
             SpeciesThreshold threshold,
             double value,
             string sensorName,
-            string? batchName)
+            string? batchName
+        )
         {
             ArgumentNullException.ThrowIfNull(threshold);
 
             try
             {
-                var state = await _alertStateCache.Get(tankId, sensorTypeId, batchId)
-                            ?? new AlertState();
+                var state =
+                    await _alertStateCache.Get(tankId, sensorTypeId, batchId) ?? new AlertState();
 
                 var isBreach = value < threshold.MinValue || value > threshold.MaxValue;
                 var isInRecoveryZone = IsInRecoveryZone(value, threshold);
 
                 if (state.ActiveAlertId.HasValue)
                 {
-                    await HandleActiveAlertAsync(tankId, sensorTypeId, batchId, threshold, value, state, isBreach, isInRecoveryZone);
+                    await HandleActiveAlertAsync(
+                        tankId,
+                        sensorTypeId,
+                        batchId,
+                        threshold,
+                        value,
+                        state,
+                        isBreach,
+                        isInRecoveryZone
+                    );
                     return;
                 }
 
-                await HandleNoActiveAlertAsync(tankId, sensorId, sensorTypeId, batchId, threshold, value, state, isBreach, sensorName, batchName);
+                await HandleNoActiveAlertAsync(
+                    tankId,
+                    sensorId,
+                    sensorTypeId,
+                    batchId,
+                    threshold,
+                    value,
+                    state,
+                    isBreach,
+                    sensorName,
+                    batchName
+                );
             }
             catch (Exception ex)
             {
                 // Log and swallow � one bad reading should never stop ingestion
-                _logger.LogError(ex,
+                _logger.LogError(
+                    ex,
                     "Alert evaluation failed for tank {TankId}, sensorType {SensorTypeId}. Value: {Value}",
-                    tankId, sensorTypeId, value);
+                    tankId,
+                    sensorTypeId,
+                    value
+                );
             }
         }
 
@@ -80,48 +108,69 @@ namespace IRasRag.Application.Common.Utils
             double value,
             AlertState state,
             bool isBreach,
-            bool isInRecoveryZone)
+            bool isInRecoveryZone
+        )
         {
             if (isBreach)
             {
-                _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-                {
-                    ActiveAlertId = state.ActiveAlertId,
-                    BreachCount = state.BreachCount + 1,
-                    ResolveCount = 0,
-                    LastValue = value
-                });
+                _alertStateCache.Set(
+                    tankId,
+                    sensorTypeId,
+                    batchId,
+                    new AlertState
+                    {
+                        ActiveAlertId = state.ActiveAlertId,
+                        BreachCount = state.BreachCount + 1,
+                        ResolveCount = 0,
+                        LastValue = value,
+                    }
+                );
                 return;
             }
 
             if (!isInRecoveryZone)
             {
                 // Still near threshold edge; keep alert open and require consecutive stable samples.
-                _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-                {
-                    ActiveAlertId = state.ActiveAlertId,
-                    BreachCount = state.BreachCount,
-                    ResolveCount = 0,
-                    LastValue = value
-                });
+                _alertStateCache.Set(
+                    tankId,
+                    sensorTypeId,
+                    batchId,
+                    new AlertState
+                    {
+                        ActiveAlertId = state.ActiveAlertId,
+                        BreachCount = state.BreachCount,
+                        ResolveCount = 0,
+                        LastValue = value,
+                    }
+                );
                 return;
             }
 
             var nextResolveCount = state.ResolveCount + 1;
             if (nextResolveCount < _settings.ResolveCount)
             {
-                _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-                {
-                    ActiveAlertId = state.ActiveAlertId,
-                    BreachCount = state.BreachCount,
-                    ResolveCount = nextResolveCount,
-                    LastValue = value
-                });
+                _alertStateCache.Set(
+                    tankId,
+                    sensorTypeId,
+                    batchId,
+                    new AlertState
+                    {
+                        ActiveAlertId = state.ActiveAlertId,
+                        BreachCount = state.BreachCount,
+                        ResolveCount = nextResolveCount,
+                        LastValue = value,
+                    }
+                );
                 return;
             }
 
-            var alert = await _unitOfWork.GetRepository<Alert>().GetByIdAsync(state.ActiveAlertId!.Value);
-            if (alert != null && (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED))
+            var alert = await _unitOfWork
+                .GetRepository<Alert>()
+                .GetByIdAsync(state.ActiveAlertId!.Value);
+            if (
+                alert != null
+                && (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
+            )
             {
                 alert.ResolvedAt = DateTime.UtcNow;
                 alert.Status = AlertStatus.RESOLVED;
@@ -142,30 +191,41 @@ namespace IRasRag.Application.Common.Utils
             AlertState state,
             bool isBreach,
             string sensorName,
-            string? batchName)
+            string? batchName
+        )
         {
             if (!isBreach)
             {
-                _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-                {
-                    ActiveAlertId = null,
-                    BreachCount = 0,
-                    ResolveCount = 0,
-                    LastValue = value
-                });
+                _alertStateCache.Set(
+                    tankId,
+                    sensorTypeId,
+                    batchId,
+                    new AlertState
+                    {
+                        ActiveAlertId = null,
+                        BreachCount = 0,
+                        ResolveCount = 0,
+                        LastValue = value,
+                    }
+                );
                 return;
             }
 
             var nextBreachCount = state.BreachCount + 1;
             if (nextBreachCount < _settings.BreachConfirmationCount)
             {
-                _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-                {
-                    ActiveAlertId = null,
-                    BreachCount = nextBreachCount,
-                    ResolveCount = 0,
-                    LastValue = value
-                });
+                _alertStateCache.Set(
+                    tankId,
+                    sensorTypeId,
+                    batchId,
+                    new AlertState
+                    {
+                        ActiveAlertId = null,
+                        BreachCount = nextBreachCount,
+                        ResolveCount = 0,
+                        LastValue = value,
+                    }
+                );
                 return;
             }
 
@@ -179,30 +239,37 @@ namespace IRasRag.Application.Common.Utils
                 SpeciesThresholdId = threshold.Id,
                 TriggerValue = value,
                 RaisedAt = DateTime.UtcNow,
-                Status = AlertStatus.OPEN
+                Status = AlertStatus.OPEN,
             };
 
             await _unitOfWork.GetRepository<Alert>().AddAsync(newAlert);
             await _unitOfWork.SaveChangesAsync();
 
-            _alertStateCache.Set(tankId, sensorTypeId, batchId, new AlertState
-            {
-                ActiveAlertId = newAlert.Id,
-                BreachCount = nextBreachCount,
-                ResolveCount = 0,
-                LastValue = value
-            });
+            _alertStateCache.Set(
+                tankId,
+                sensorTypeId,
+                batchId,
+                new AlertState
+                {
+                    ActiveAlertId = newAlert.Id,
+                    BreachCount = nextBreachCount,
+                    ResolveCount = 0,
+                    LastValue = value,
+                }
+            );
 
-            await _liveDataNotifier.PushAlertAsync(new AlertPush(
-                AlertId: newAlert.Id,
-                TankId: tankId,
-                SensorName: sensorName,
-                BatchName: batchName,
-                TriggerValue: value,
-                MinValue: threshold.MinValue,
-                MaxValue: threshold.MaxValue,
-                RaisedAt: newAlert.RaisedAt));
-
+            await _liveDataNotifier.PushAlertAsync(
+                new AlertPush(
+                    AlertId: newAlert.Id,
+                    TankId: tankId,
+                    SensorName: sensorName,
+                    BatchName: batchName,
+                    TriggerValue: value,
+                    MinValue: threshold.MinValue,
+                    MaxValue: threshold.MaxValue,
+                    RaisedAt: newAlert.RaisedAt
+                )
+            );
         }
 
         private bool IsInRecoveryZone(double value, SpeciesThreshold threshold)
@@ -227,17 +294,26 @@ namespace IRasRag.Application.Common.Utils
         {
             if (settings.BreachConfirmationCount < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(settings.BreachConfirmationCount), "MaxBreachCount must be >= 1.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(settings.BreachConfirmationCount),
+                    "MaxBreachCount must be >= 1."
+                );
             }
 
             if (settings.ResolveCount < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(settings.ResolveCount), "ResolveCount must be >= 1.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(settings.ResolveCount),
+                    "ResolveCount must be >= 1."
+                );
             }
 
             if (settings.HysteresisPercentage < 0 || settings.HysteresisPercentage >= 0.5)
             {
-                throw new ArgumentOutOfRangeException(nameof(settings.HysteresisPercentage), "HysteresisPercentage must be in range [0, 0.5).");
+                throw new ArgumentOutOfRangeException(
+                    nameof(settings.HysteresisPercentage),
+                    "HysteresisPercentage must be in range [0, 0.5)."
+                );
             }
         }
     }

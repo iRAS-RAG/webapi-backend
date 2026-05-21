@@ -1,4 +1,5 @@
-﻿using IRasRag.Application.Common.Interfaces.Persistence;
+﻿using System.Text.Json;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Mqtt;
@@ -8,7 +9,6 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace IRasRag.Infrastructure.Services.Telemetry
 {
@@ -29,7 +29,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             ILatestTelemetryCacheService latestTelemetryCache,
             ILogger<TelemetryDispatchService> logger,
             IAlertStateEvaluator alertStateEvaluator,
-            ILiveDataNotifier liveDataNotifier)
+            ILiveDataNotifier liveDataNotifier
+        )
         {
             _unitOfWork = unitOfWork;
             _cache = cache;
@@ -58,11 +59,17 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             {
                 _logger.LogInformation(
                     "No active batch for tank {TankId}, persisting logs without alert evaluation",
-                    masterboard.FishTankId);
+                    masterboard.FishTankId
+                );
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null);
+                    telemetry,
+                    masterboard.Id,
+                    masterboard.FishTankId,
+                    timestamp,
+                    thresholds: null,
+                    batch: null
+                );
                 return;
             }
 
@@ -72,20 +79,34 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             {
                 _logger.LogWarning(
                     "No SpeciesStageConfig found for batch {BatchId}, persisting logs without alert evaluation",
-                    batch.Id);
+                    batch.Id
+                );
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null);
+                    telemetry,
+                    masterboard.Id,
+                    masterboard.FishTankId,
+                    timestamp,
+                    thresholds: null,
+                    batch: null
+                );
                 return;
             }
 
             // Step 3: Resolve sensors and thresholds
-            var thresholds = await _cache.GetThresholdsAsync(stageConfig.SpeciesId, stageConfig.GrowthStageId);
+            var thresholds = await _cache.GetThresholdsAsync(
+                stageConfig.SpeciesId,
+                stageConfig.GrowthStageId
+            );
 
             await PersistLogsAsync(
-                telemetry, masterboard.Id, masterboard.FishTankId,
-                timestamp, thresholds, batch);
+                telemetry,
+                masterboard.Id,
+                masterboard.FishTankId,
+                timestamp,
+                thresholds,
+                batch
+            );
         }
 
         private async Task PersistLogsAsync(
@@ -94,7 +115,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             Guid tankId,
             DateTime timestamp,
             Dictionary<Guid, SpeciesThreshold>? thresholds,
-            FarmingBatch? batch)
+            FarmingBatch? batch
+        )
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
             var bufferedLogs = new List<TelemetryLogWriteModel>();
@@ -106,7 +128,9 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 {
                     _logger.LogWarning(
                         "No sensor found for pin {Pin} on masterboard {MasterboardId}, skipping",
-                        reading.Pin, masterboardId);
+                        reading.Pin,
+                        masterboardId
+                    );
                     continue;
                 }
 
@@ -115,28 +139,39 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
                 // Enqueue live reading — decoupled from ingestion path via Channel<T>
                 _liveDataNotifier.EnqueueTelemetry(
-                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp));
+                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp)
+                );
 
                 // Evaluate thresholds and prepare log entry
                 var isWarning = false;
 
-                if (thresholds != null && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold))
+                if (
+                    thresholds != null
+                    && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold)
+                )
                 {
                     isWarning = ThresholdEvaluator.IsViolation(reading.Val, threshold);
 
                     if (batch != null)
                     {
                         await _alertStateEvaluator.EvaluateAsync(
-                            tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val,
-                            sensor.Name, batch.Name);
+                            tankId,
+                            sensor.Id,
+                            sensor.SensorTypeId,
+                            batch.Id,
+                            threshold,
+                            reading.Val,
+                            sensor.Name,
+                            batch.Name
+                        );
                     }
-
                 }
                 else if (thresholds == null)
                 {
                     _logger.LogInformation(
                         "No threshold configured for sensor type {SensorTypeId}, skipping alert evaluation",
-                        sensor.SensorTypeId);
+                        sensor.SensorTypeId
+                    );
                 }
 
                 bufferedLogs.Add(
@@ -145,9 +180,10 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         SensorId = sensor.Id,
                         Data = reading.Val,
                         IsWarning = isWarning,
-                        CreatedAt = timestamp
-                    });
-            } 
+                        CreatedAt = timestamp,
+                    }
+                );
+            }
 
             if (bufferedLogs.Count > 0)
             {

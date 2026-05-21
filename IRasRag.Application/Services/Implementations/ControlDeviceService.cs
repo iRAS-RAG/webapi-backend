@@ -514,10 +514,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (masterBoard == null)
                 {
-                    _logger.LogWarning(
-                        "MasterBoard not found for control device: {Id}",
-                        id
-                    );
+                    _logger.LogWarning("MasterBoard not found for control device: {Id}", id);
                     return Result<ControlDeviceDto>.Failure(
                         "Không tìm thấy bảng mạch của thiết bị điều khiển",
                         ResultType.NotFound

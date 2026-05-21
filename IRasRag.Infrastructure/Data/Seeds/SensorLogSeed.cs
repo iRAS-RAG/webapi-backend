@@ -45,7 +45,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog1Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase,                             // 00:00–04:00
+                    PeriodStart = SeedBase, // 00:00–04:00
                     Average = 27.9,
                     Min = 27.5,
                     Max = 28.4,
@@ -57,7 +57,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog2Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase.AddHours(4),                 // 04:00–08:00
+                    PeriodStart = SeedBase.AddHours(4), // 04:00–08:00
                     Average = 28.6,
                     Min = 28.1,
                     Max = 29.1,
@@ -69,7 +69,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog3Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase.AddHours(8),                 // 08:00–12:00
+                    PeriodStart = SeedBase.AddHours(8), // 08:00–12:00
                     Average = 29.8,
                     Min = 29.1,
                     Max = 30.4,
@@ -81,7 +81,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog4Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase.AddHours(12),                // 12:00–16:00  ← warning period
+                    PeriodStart = SeedBase.AddHours(12), // 12:00–16:00  ← warning period
                     Average = 31.1,
                     Min = 30.5,
                     Max = 31.8,
@@ -93,7 +93,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog5Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase.AddHours(16),                // 16:00–20:00
+                    PeriodStart = SeedBase.AddHours(16), // 16:00–20:00
                     Average = 30.3,
                     Min = 29.8,
                     Max = 30.9,
@@ -105,7 +105,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = TempLog6Id,
                     SensorId = SensorSeed.TemperatureSensor1Id,
-                    PeriodStart = SeedBase.AddHours(20),                // 20:00–24:00
+                    PeriodStart = SeedBase.AddHours(20), // 20:00–24:00
                     Average = 29.0,
                     Min = 28.6,
                     Max = 29.5,
@@ -113,13 +113,12 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
                 },
-
                 // ── Temperature Sensor 2 ──────────────────────────────────────
                 new SensorLog
                 {
                     Id = TempLog7Id,
                     SensorId = SensorSeed.TemperatureSensor2Id,
-                    PeriodStart = SeedBase,                             // 00:00–04:00
+                    PeriodStart = SeedBase, // 00:00–04:00
                     Average = 27.0,
                     Min = 26.8,
                     Max = 27.4,
@@ -127,13 +126,12 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(4),
                 },
-
                 // ── pH Sensor 1 ───────────────────────────────────────────────
                 new SensorLog
                 {
                     Id = PhLog1Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase,                             // 00:00–04:00
+                    PeriodStart = SeedBase, // 00:00–04:00
                     Average = 7.1,
                     Min = 7.0,
                     Max = 7.2,
@@ -145,7 +143,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = PhLog2Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase.AddHours(4),                 // 04:00–08:00
+                    PeriodStart = SeedBase.AddHours(4), // 04:00–08:00
                     Average = 7.3,
                     Min = 7.2,
                     Max = 7.4,
@@ -157,7 +155,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = PhLog3Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase.AddHours(8),                 // 08:00–12:00
+                    PeriodStart = SeedBase.AddHours(8), // 08:00–12:00
                     Average = 7.5,
                     Min = 7.4,
                     Max = 7.6,
@@ -169,7 +167,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = PhLog4Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase.AddHours(12),                // 12:00–16:00
+                    PeriodStart = SeedBase.AddHours(12), // 12:00–16:00
                     Average = 7.4,
                     Min = 7.3,
                     Max = 7.5,
@@ -181,7 +179,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = PhLog5Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase.AddHours(16),                // 16:00–20:00
+                    PeriodStart = SeedBase.AddHours(16), // 16:00–20:00
                     Average = 7.6,
                     Min = 7.5,
                     Max = 7.7,
@@ -193,7 +191,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = PhLog6Id,
                     SensorId = SensorSeed.PhSensor1Id,
-                    PeriodStart = SeedBase.AddHours(20),                // 20:00–24:00
+                    PeriodStart = SeedBase.AddHours(20), // 20:00–24:00
                     Average = 7.2,
                     Min = 7.1,
                     Max = 7.3,
@@ -201,13 +199,12 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
                 },
-
                 // ── Dissolved Oxygen Sensor 1 ─────────────────────────────────
                 new SensorLog
                 {
                     Id = DoLog1Id,
                     SensorId = SensorSeed.DoSensor1Id,
-                    PeriodStart = SeedBase.AddHours(20),                // 20:00–24:00
+                    PeriodStart = SeedBase.AddHours(20), // 20:00–24:00
                     Average = 6.8,
                     Min = 6.5,
                     Max = 7.1,

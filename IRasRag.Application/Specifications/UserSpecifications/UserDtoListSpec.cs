@@ -23,7 +23,12 @@ namespace IRasRag.Application.Specifications.UserSpecifications
 
             ApplySearch(
                 request.SearchTerm,
-                [u => u.Email, u => u.FirstName, u => u.LastName, u => u.Role != null ? u.Role.Name : string.Empty]
+                [
+                    u => u.Email,
+                    u => u.FirstName,
+                    u => u.LastName,
+                    u => u.Role != null ? u.Role.Name : string.Empty,
+                ]
             );
 
             ApplyFilter(request.IsDeleted, u => u.IsDeleted == request.IsDeleted);

@@ -1,7 +1,7 @@
+using System.Threading.Channels;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Models.Realtime;
 using Microsoft.AspNetCore.SignalR;
-using System.Threading.Channels;
 
 namespace IRasRag.API.Hubs
 {
@@ -13,18 +13,19 @@ namespace IRasRag.API.Hubs
         public SignalRLiveDataNotifier(IHubContext<TelemetryHub> hub)
         {
             _hub = hub;
-            _channel = Channel.CreateBounded<TelemetryPush>(new BoundedChannelOptions(2000)
-            {
-                FullMode = BoundedChannelFullMode.DropOldest,
-                SingleReader = true,
-                SingleWriter = false
-            });
+            _channel = Channel.CreateBounded<TelemetryPush>(
+                new BoundedChannelOptions(2000)
+                {
+                    FullMode = BoundedChannelFullMode.DropOldest,
+                    SingleReader = true,
+                    SingleWriter = false,
+                }
+            );
         }
 
         public ChannelReader<TelemetryPush> Reader => _channel.Reader;
 
-        public void EnqueueTelemetry(TelemetryPush push)
-            => _channel.Writer.TryWrite(push);
+        public void EnqueueTelemetry(TelemetryPush push) => _channel.Writer.TryWrite(push);
 
         public Task PushTelemetryAsync(TelemetryPush push)
         {

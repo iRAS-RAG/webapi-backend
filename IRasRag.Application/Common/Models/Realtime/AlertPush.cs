@@ -8,5 +8,6 @@ namespace IRasRag.Application.Common.Models.Realtime
         double TriggerValue,
         double MinValue,
         double MaxValue,
-        DateTime RaisedAt);
+        DateTime RaisedAt
+    );
 }

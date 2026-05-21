@@ -26,7 +26,8 @@ namespace IRasRag.Application.Common.Utils
             Guid? batchId = null
         )
         {
-            var allowedTankIds = await unitOfWork.GetRepository<FishTank>()
+            var allowedTankIds = await unitOfWork
+                .GetRepository<FishTank>()
                 .ListAsync(new UserAllowedFishTankSpec(userId, farmId, batchId));
             return allowedTankIds.ToHashSet();
         }

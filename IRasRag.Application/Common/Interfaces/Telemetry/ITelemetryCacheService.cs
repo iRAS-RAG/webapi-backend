@@ -7,7 +7,10 @@ namespace IRasRag.Application.Common.Interfaces.Telemetry
         Task<MasterBoard?> GetMasterboardByMacAsync(string mac);
         Task<FarmingBatch?> GetActiveBatchAsync(Guid tankId);
         Task<Dictionary<int, Sensor>> GetSensorsByMasterboardAsync(Guid masterboardId);
-        Task<Dictionary<Guid, SpeciesThreshold>> GetThresholdsAsync(Guid speciesId, Guid growthStageId);
+        Task<Dictionary<Guid, SpeciesThreshold>> GetThresholdsAsync(
+            Guid speciesId,
+            Guid growthStageId
+        );
         Task<SpeciesStageConfig?> GetStageConfigAsync(Guid stageConfigId);
         void InvalidateBatch(Guid tankId);
         void InvalidateStageConfig(Guid stageConfigId);
