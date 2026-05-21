@@ -15,7 +15,7 @@ namespace IRasRag.Application.Common.Settings
         public string? DefaultStage { get; set; } = null;
 
         // IoT Gateway endpoints
-        public string IotIngestPath { get; set; } = "/iot/ingest";
+        public string IotBatchIngestPath { get; set; } = "/iot/ingest/batch";
         public string IotStreamStatsPath { get; set; } = "/iot/stream/stats";
         public string IotStreamPeekPath { get; set; } = "/iot/stream/peek";
 

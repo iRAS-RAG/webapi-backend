@@ -1,6 +1,8 @@
-﻿using IRasRag.Application.Common.Interfaces.Persistence;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
+using IRasRag.Application.Common.Models.Advisory;
 using IRasRag.Application.Common.Models.Mqtt;
 using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
@@ -8,7 +10,6 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace IRasRag.Infrastructure.Services.Telemetry
 {
@@ -21,6 +22,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         private readonly ILogger<TelemetryDispatchService> _logger;
         private readonly IAlertStateEvaluator _alertStateEvaluator;
         private readonly ILiveDataNotifier _liveDataNotifier;
+        private readonly IIoTIngestBatchWriter _iotIngestBatchWriter;
 
         public TelemetryDispatchService(
             IUnitOfWork unitOfWork,
@@ -29,7 +31,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             ILatestTelemetryCacheService latestTelemetryCache,
             ILogger<TelemetryDispatchService> logger,
             IAlertStateEvaluator alertStateEvaluator,
-            ILiveDataNotifier liveDataNotifier)
+            ILiveDataNotifier liveDataNotifier,
+            IIoTIngestBatchWriter iotIngestBatchWriter)
         {
             _unitOfWork = unitOfWork;
             _cache = cache;
@@ -38,6 +41,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             _logger = logger;
             _alertStateEvaluator = alertStateEvaluator;
             _liveDataNotifier = liveDataNotifier;
+            _iotIngestBatchWriter = iotIngestBatchWriter;
         }
 
         public async Task DispatchAsync(SensorTelemetry telemetry, string macFromTopic)
@@ -61,8 +65,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     masterboard.FishTankId);
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null);
+                    telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
+                    timestamp, thresholds: null, batch: null, species: null, stage: null);
                 return;
             }
 
@@ -75,8 +79,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     batch.Id);
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null);
+                    telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
+                    timestamp, thresholds: null, batch: null, species: null, stage: null);
                 return;
             }
 
@@ -84,20 +88,26 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             var thresholds = await _cache.GetThresholdsAsync(stageConfig.SpeciesId, stageConfig.GrowthStageId);
 
             await PersistLogsAsync(
-                telemetry, masterboard.Id, masterboard.FishTankId,
-                timestamp, thresholds, batch);
+                telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
+                timestamp, thresholds, batch,
+                species: stageConfig.Species.Name,
+                stage: stageConfig.GrowthStage.Name);
         }
 
         private async Task PersistLogsAsync(
             SensorTelemetry telemetry,
             Guid masterboardId,
+            Guid farmId,
             Guid tankId,
             DateTime timestamp,
             Dictionary<Guid, SpeciesThreshold>? thresholds,
-            FarmingBatch? batch)
+            FarmingBatch? batch,
+            string? species,
+            string? stage)
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
             var bufferedLogs = new List<TelemetryLogWriteModel>();
+            var metrics = new List<IoTMetric>();
 
             foreach (var reading in telemetry.Readings)
             {
@@ -130,7 +140,6 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                             tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val,
                             sensor.Name, batch.Name);
                     }
-
                 }
                 else if (thresholds == null)
                 {
@@ -147,11 +156,49 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         IsWarning = isWarning,
                         CreatedAt = timestamp
                     });
-            } 
+
+                if (sensor.SensorType?.Code != null)
+                    metrics.Add(new IoTMetric
+                    {
+                        Code = sensor.SensorType.Code,
+                        Value = reading.Val,
+                        Unit = sensor.SensorType.UnitOfMeasure
+                    });
+            }
 
             if (bufferedLogs.Count > 0)
-            {
                 await _logBatchWriter.EnqueueBatchAsync(bufferedLogs);
+
+            TryIngestAdvisoryAsync(farmId, tankId, timestamp, species, stage, metrics);
+        }
+
+        private void TryIngestAdvisoryAsync(
+            Guid farmId,
+            Guid tankId,
+            DateTime timestamp,
+            string? species,
+            string? stage,
+            List<IoTMetric> metrics)
+        {
+            try
+            {
+                var payload = new IoTIngestPayload
+                {
+                    FarmId = farmId.ToString(),
+                    TankId = tankId.ToString(),
+                    Ts = timestamp.ToString("o"),
+                    Species = species,
+                    Stage = stage,
+                    Metrics = metrics.Count > 0 ? metrics : null
+                };
+
+                _iotIngestBatchWriter.Enqueue(payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Advisory IoT enqueue failed for farm {FarmId}/tank {TankId} — continuing",
+                    farmId, tankId);
             }
         }
     }
