@@ -35,8 +35,7 @@ namespace IRasRag.Infrastructure.Filters
                 return;
             }
 
-            if (job.Method.Name != nameof(IDocumentIngestJob.RunAsync) &&
-                job.Method.Name != nameof(IDocumentIngestJob.RunAlwaysFailAsync))
+            if (job.Method.Name != nameof(IDocumentIngestJob.RunAsync))
             {
                 _logger.LogDebug("DocumentIngestFailedFilter: skipping method {Method}", job.Method.Name);
                 return;
