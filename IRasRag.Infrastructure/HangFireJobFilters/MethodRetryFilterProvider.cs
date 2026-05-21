@@ -11,9 +11,13 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
         private static readonly int[] DocumentIngestDelays = [10, 30, 60, 120];
         private static readonly int[] ThresholdSyncCreateDelays = [5, 10, 20, 40, 80];
         private static readonly int[] CloudDeleteDelays = [30, 60, 120, 300, 600];
+        private static readonly int[] CatalogSyncDelays = [5, 10, 20, 40, 80];
 
         public IEnumerable<JobFilter> GetFilters(Job job)
         {
+            if (job?.Method?.DeclaringType == null)
+                yield break;
+
             if (job.Method.DeclaringType == typeof(IDocumentIngestJob))
             {
                 if (job.Method.Name == nameof(IDocumentIngestJob.RunAsync))
@@ -34,6 +38,14 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                         delays: ThresholdSyncCreateDelays,
                         exceeded: AttemptsExceededAction.Fail);
                 }
+            }
+
+            if (job.Method.DeclaringType == typeof(ICatalogSyncJob))
+            {
+                yield return BuildRetryFilter(
+                    attempts: 5,
+                    delays: CatalogSyncDelays,
+                    exceeded: AttemptsExceededAction.Fail);
             }
 
             if (job.Method.DeclaringType == typeof(ICloudFileStorageService))

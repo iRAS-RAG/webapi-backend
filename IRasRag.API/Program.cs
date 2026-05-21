@@ -4,9 +4,12 @@ using Hangfire.Common;
 using IRasRag.API.DI;
 using IRasRag.API.Hubs;
 using IRasRag.API.Middlewares;
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.DI;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Filters;
+using IRasRag.Infrastructure.HangFireJobFilters;
 
 namespace IRasRag.API
 {
@@ -30,6 +33,13 @@ namespace IRasRag.API
             builder.Services.AddMemoryCache();
 
             var app = builder.Build();
+
+            app.Lifetime.ApplicationStarted.Register(() =>
+            {
+                using var scope = app.Services.CreateScope();
+                var jobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobService>();
+                jobs.Enqueue<ICatalogSyncJob>(j => j.SyncAllAsync());
+            });
 
             GlobalJobFilters.Filters.Add(new DocumentIngestFailedFilter(
                 app.Services.GetRequiredService<IServiceScopeFactory>(),

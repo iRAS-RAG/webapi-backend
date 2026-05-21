@@ -66,6 +66,18 @@ namespace IRasRag.Infrastructure.DI
                 client.BaseAddress = new Uri(settings.ChatBaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
+            services.AddHttpClient<IIoTIngestClient, IoTIngestClient>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                client.BaseAddress = new Uri(settings.IotGatewayBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+            services.AddHttpClient<ICatalogSyncClient, CatalogSyncClient>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -83,12 +95,17 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
             services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
             services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
+            services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
 
             // Telemetry
             services.AddSingleton<TelemetryLogBatchWriter>();
             services.AddSingleton<ITelemetryLogBatchWriter>(sp =>
                 sp.GetRequiredService<TelemetryLogBatchWriter>());
             services.AddHostedService(sp => sp.GetRequiredService<TelemetryLogBatchWriter>());
+            services.AddSingleton<IoTIngestBatchWriter>();
+            services.AddSingleton<IIoTIngestBatchWriter>(sp =>
+                sp.GetRequiredService<IoTIngestBatchWriter>());
+            services.AddHostedService(sp => sp.GetRequiredService<IoTIngestBatchWriter>());
             services.AddScoped<ITelemetryCacheService, TelemetryCacheService>();
             services.AddScoped<ITelemetryDispatchService, TelemetryDispatchService>();
             services.AddSingleton<ILatestTelemetryCacheService, LatestTelemetryCacheService>();
