@@ -169,6 +169,24 @@ namespace IRasRag.API.Controllers
         }
 
         /// <summary>
+        /// Đồng bộ lại tài liệu thất bại theo Id
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{id}/resync")]
+        public async Task<IActionResult> ResyncDocument(Guid id)
+        {
+            var result = await _documentService.ResyncDocumentAsync(id);
+
+            return result.Type switch
+            {
+                ResultType.NotFound => NotFound(new { result.Message }),
+                ResultType.BadRequest => BadRequest(new { result.Message }),
+                ResultType.Unexpected => StatusCode(500, new { result.Message }),
+                _ => Ok(new { result.Message }),
+            };
+        }
+
+        /// <summary>
         /// Xóa tài liệu
         /// </summary>
         [Authorize(Roles = "Admin")]

@@ -11,5 +11,6 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result> CreateDocumentAsync(CreateDocumentDto dto);
         Task<Result> UpdateDocumentAsync(Guid id, UpdateDocumentDto updateDto);
         Task<Result> DeleteDocumentAsync(Guid id);
+        Task<Result> ResyncDocumentAsync(Guid id);
     }
 }
