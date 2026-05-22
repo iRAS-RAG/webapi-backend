@@ -113,13 +113,22 @@ namespace IRasRag.Application.Services.Implementations
                 if (requestedSeq > maxSeq + 1)
                     requestedSeq = maxSeq + 1;
 
-                // shift
+                // shift using a safe two-phase approach to avoid unique index cycles
                 var toShift = existingForSpecies
                     .Where(s => s.Sequence >= requestedSeq)
                     .OrderByDescending(s => s.Sequence)
                     .ToList();
-                foreach (var s in toShift)
-                    s.Sequence = s.Sequence + 1;
+                const int OFFSET = 1000000;
+                if (toShift.Count > 0)
+                {
+                    foreach (var s in toShift)
+                        s.Sequence = s.Sequence + OFFSET;
+
+                    await _unitOfWork.SaveChangesAsync();
+
+                    foreach (var s in toShift)
+                        s.Sequence = s.Sequence - OFFSET + 1;
+                }
 
                 newConfig.Sequence = requestedSeq;
 
@@ -349,31 +358,60 @@ namespace IRasRag.Application.Services.Implementations
                         requestedSeq = maxSeq + 1;
 
                     // If moving down (increasing sequence), shift others between old+1 and new down by -1
+                    // using a two-phase offset update to avoid unique index cycles
                     var oldSeq = config.Sequence;
+                    const int OFFSET = 1000000;
                     if (requestedSeq > oldSeq)
                     {
-                        var between = existing.Where(s =>
-                            s.Sequence > oldSeq && s.Sequence <= requestedSeq
-                        );
-                        foreach (var s in between)
-                            s.Sequence = s.Sequence - 1;
+                        var between = existing
+                            .Where(s => s.Sequence > oldSeq && s.Sequence <= requestedSeq)
+                            .OrderByDescending(s => s.Sequence)
+                            .ToList();
+                        if (between.Count > 0)
+                        {
+                            foreach (var s in between)
+                                s.Sequence = s.Sequence + OFFSET;
+
+                            await _unitOfWork.SaveChangesAsync();
+
+                            foreach (var s in between)
+                                s.Sequence = s.Sequence - OFFSET - 1;
+                        }
                     }
                     else if (requestedSeq < oldSeq)
                     {
-                        var between = existing.Where(s =>
-                            s.Sequence >= requestedSeq && s.Sequence < oldSeq
-                        );
-                        foreach (var s in between)
-                            s.Sequence = s.Sequence + 1;
+                        var between = existing
+                            .Where(s => s.Sequence >= requestedSeq && s.Sequence < oldSeq)
+                            .OrderBy(s => s.Sequence)
+                            .ToList();
+                        if (between.Count > 0)
+                        {
+                            foreach (var s in between)
+                                s.Sequence = s.Sequence + OFFSET;
+
+                            await _unitOfWork.SaveChangesAsync();
+
+                            foreach (var s in between)
+                                s.Sequence = s.Sequence - OFFSET + 1;
+                        }
                     }
 
                     // finally map and set sequence
                     _mapper.Map(dto, config);
                     config.Sequence = requestedSeq;
+                    // only update amount/frequency when provided
+                    if (dto.AmountPer100Fish != null)
+                        config.AmountPer100Fish = dto.AmountPer100Fish.Value;
+                    if (dto.FrequencyPerDay != null)
+                        config.FrequencyPerDay = dto.FrequencyPerDay.Value;
                 }
                 else
                 {
                     _mapper.Map(dto, config);
+                    if (dto.AmountPer100Fish != null)
+                        config.AmountPer100Fish = dto.AmountPer100Fish.Value;
+                    if (dto.FrequencyPerDay != null)
+                        config.FrequencyPerDay = dto.FrequencyPerDay.Value;
                 }
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateStageConfig(id);

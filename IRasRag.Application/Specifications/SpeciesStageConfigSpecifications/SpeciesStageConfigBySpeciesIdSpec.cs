@@ -34,7 +34,7 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                 );
             }
 
-            ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "speciesname");
+            ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "sequence");
 
             Query
                 .Where(config => config.SpeciesId == speciesId)

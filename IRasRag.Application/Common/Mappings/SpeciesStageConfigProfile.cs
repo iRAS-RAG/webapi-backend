@@ -41,16 +41,12 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.Species, opt => opt.Ignore())
                 .ForMember(dest => dest.GrowthStage, opt => opt.Ignore())
                 .ForMember(dest => dest.FeedTypes, opt => opt.Ignore())
+                .ForMember(dest => dest.AmountPer100Fish, opt => opt.Ignore())
+                .ForMember(dest => dest.FrequencyPerDay, opt => opt.Ignore())
                 .ForMember(dest => dest.SpeciesId, opt => opt.Ignore())
                 .ForMember(dest => dest.GrowthStageId, opt => opt.Ignore())
                 .ForMember(dest => dest.FarmingBatches, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-
-            CreateMap<UpdateSpeciesStageConfigDto, SpeciesStageConfig>()
-                .ForMember(
-                    dest => dest.Sequence,
-                    opt => opt.Condition(src => src.Sequence != null)
-                );
         }
     }
 }
