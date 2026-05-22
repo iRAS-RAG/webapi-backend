@@ -369,10 +369,9 @@ namespace IRasRag.Application.Services.Implementations
             {
                 return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
             }
-            var deathCount = await _unitOfWork.MoralityLogs.ComputeDeathCountByBatch(id);
+
             batch.Status = FarmingBatchStatus.HARVESTED;
             batch.ActualHarvestDate = harvestDate;
-            batch.CurrentQuantity = batch.InitialQuantity - deathCount;
 
             await _unitOfWork.SaveChangesAsync();
             _telemetryCache.InvalidateBatch(batch.FishTankId);

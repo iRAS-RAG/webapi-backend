@@ -20,11 +20,9 @@ namespace IRasRag.Infrastructure.Persistence
         {
             _context = context;
             SensorLogs = new SensorLogRepository(_context);
-            MoralityLogs = new MoralityLogRepository(_context);
         }
 
         public ISensorLogRepository SensorLogs { get; private set; }
-        public IMoralityLogRepository MoralityLogs { get; private set; }
 
         public IRepository<T> GetRepository<T>()
             where T : BaseEntity
