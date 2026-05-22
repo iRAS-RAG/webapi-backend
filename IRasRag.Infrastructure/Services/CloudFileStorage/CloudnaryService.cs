@@ -2,7 +2,7 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Hangfire;
-using IRasRag.Application.Common.Interfaces.Cloudinary;
+using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

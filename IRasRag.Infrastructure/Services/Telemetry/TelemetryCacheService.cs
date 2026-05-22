@@ -1,5 +1,7 @@
 ﻿using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
+using IRasRag.Application.Specifications.SensorSpecifications;
+using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Caching.Memory;
@@ -61,7 +63,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
             var masterboard = await _unitOfWork
                 .GetRepository<MasterBoard>()
-                .FirstOrDefaultAsync(m => m.MacAddress == mac);
+                .FirstOrDefaultAsync(new MasterboardByMacSpec(mac));
 
             if (masterboard == null)
             {
@@ -83,7 +85,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
             var sensors = await _unitOfWork
                 .GetRepository<Sensor>()
-                .FindAllAsync(s => s.MasterBoardId == masterboardId);
+                .ListAsync(new SensorsByMasterboardSpec(masterboardId));
 
             var dict = sensors.ToDictionary(s => s.PinCode, s => s);
 
@@ -123,7 +125,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
             var config = await _unitOfWork
                 .GetRepository<SpeciesStageConfig>()
-                .FirstOrDefaultAsync(c => c.Id == stageConfigId);
+                .FirstOrDefaultAsync(new SpeciesStageConfigWithNamesSpec(stageConfigId));
 
             if (config == null)
             {

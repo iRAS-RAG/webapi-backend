@@ -36,6 +36,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Nhiệt độ nước",
                     MeasureType = "Nhiệt độ",
                     UnitOfMeasure = "Độ C",
+                    Code = "waterTemp",
                 },
                 new SensorType
                 {
@@ -43,6 +44,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Độ pH",
                     MeasureType = "Tính axit",
                     UnitOfMeasure = "pH",
+                    Code = "pH",
                 },
                 new SensorType
                 {
@@ -50,6 +52,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "TDS",
                     MeasureType = "Tổng chất rắn hòa tan",
                     UnitOfMeasure = "ppm",
+                    Code = "tds",
                 },
                 new SensorType
                 {
@@ -57,6 +60,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Lưu lượng nước",
                     MeasureType = "Lưu lượng",
                     UnitOfMeasure = "L/min",
+                    Code = "flowRate",
                 },
                 new SensorType
                 {
@@ -64,6 +68,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Mực nước",
                     MeasureType = "Mức nước",
                     UnitOfMeasure = "0/1",
+                    Code = "waterLevel",
                 },
             };
     }

@@ -1,3 +1,4 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -14,18 +15,21 @@ namespace IRasRag.API.Controllers
         private readonly IGrowthStageService _growthStageService;
         private readonly ISpeciesThresholdService _speciesThresholdService;
         private readonly ISpeciesStageConfigService _speciesStageConfigService;
+        private readonly HttpContextUtils _httpContextUtils;
         private readonly ILogger<ConfigController> _logger;
 
         public ConfigController(
             IGrowthStageService growthStageService,
             ISpeciesThresholdService speciesThresholdService,
             ISpeciesStageConfigService speciesStageConfigService,
+            HttpContextUtils httpContextUtils,
             ILogger<ConfigController> logger
         )
         {
             _growthStageService = growthStageService;
             _speciesThresholdService = speciesThresholdService;
             _speciesStageConfigService = speciesStageConfigService;
+            _httpContextUtils = httpContextUtils;
             _logger = logger;
         }
 
@@ -229,7 +233,8 @@ namespace IRasRag.API.Controllers
         {
             try
             {
-                var result = await _speciesThresholdService.CreateSpeciesThreshold(dto);
+                var userId = _httpContextUtils.GetUserId();
+                var result = await _speciesThresholdService.CreateSpeciesThreshold(dto, userId);
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),

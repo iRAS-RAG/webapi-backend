@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using IRasRag.Domain.Common;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Domain.Entities
 {
@@ -9,8 +10,7 @@ namespace IRasRag.Domain.Entities
         [MaxLength(255)]
         public string Title { get; set; }
 
-        [Required]
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         [Required]
         public Guid UploadedByUserId { get; set; }
@@ -21,6 +21,9 @@ namespace IRasRag.Domain.Entities
 
         [Required]
         public DateTime UploadedAt { get; set; }
+
+        [Required]
+        public DocumentRagStatus RagStatus { get; set; } = DocumentRagStatus.Pending;
 
         // Navigation properties
         public ICollection<Recommendation> Recommendations { get; set; }

@@ -8,14 +8,13 @@ namespace IRasRag.Domain.Entities
         [Required]
         public Guid AlertId { get; set; }
 
-        [Required]
-        public Guid DocumentId { get; set; }
+        public Guid? DocumentId { get; set; }
 
         [Required]
         public string SuggestionText { get; set; }
 
         // Navigation properties
         public Alert Alert { get; set; }
-        public Document Document { get; set; }
+        public Document? Document { get; set; }
     }
 }

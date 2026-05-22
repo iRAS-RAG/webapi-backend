@@ -190,6 +190,13 @@ namespace IRasRag.API.DI
             services.AddHangfire(configuration =>
                 configuration
                     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                    .UseFilter(
+                        new AutomaticRetryAttribute
+                        {
+                            Attempts = 5,
+                            OnAttemptsExceeded = AttemptsExceededAction.Fail,
+                        }
+                    )
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
                     .UsePostgreSqlStorage(

@@ -463,7 +463,6 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("content");
 
@@ -480,6 +479,14 @@ namespace IRasRag.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_at");
+
+                    b.Property<string>("RagStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pending")
+                        .HasColumnName("rag_status");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -510,6 +517,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Content = "Khi nhiệt độ nước vượt quá 30°C:\n1. Tăng lưu lượng nước tuần hoàn\n2. Bật hệ thống làm mát\n3. Giảm mật độ thả nuôi nếu cần\n4. Kiểm tra hàm lượng oxy hòa tan\n5. Theo dõi hành vi của cá",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/seed/documents/doc1-huong-dan-xu-ly-nhiet-do-cao.pdf",
+                            RagStatus = "Pending",
                             Title = "Hướng dẫn xử lý nhiệt độ cao trong bể nuôi",
                             UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
@@ -520,6 +528,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Content = "Để duy trì độ pH ổn định:\n1. Kiểm tra độ kiềm của nước\n2. Sử dụng vôi nông nghiệp để tăng pH\n3. Sử dụng axit citric để giảm pH\n4. Theo dõi pH hàng ngày\n5. Đảm bảo hệ thống lọc sinh học hoạt động tốt",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/seed/documents/doc2-quy-trinh-dieu-chinh-do-ph.pdf",
+                            RagStatus = "Pending",
                             Title = "Quy trình điều chỉnh độ pH trong hệ thống RAS",
                             UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
@@ -530,6 +539,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Content = "Các thông số quan trọng cần theo dõi:\n1. Nhiệt độ: 25-30°C\n2. pH: 6.5-8.5\n3. Oxy hòa tan: >5 mg/L\n4. Ammonia: <0.1 mg/L\n5. Nitrite: <0.2 mg/L\n6. Nitrate: <50 mg/L\nThực hiện kiểm tra hàng ngày và ghi chép đầy đủ.",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/seed/documents/doc3-quan-ly-chat-luong-nuoc.pdf",
+                            RagStatus = "Pending",
                             Title = "Hướng dẫn quản lý chất lượng nước trong nuôi trồng thủy sản",
                             UploadedAt = new DateTime(2024, 1, 10, 9, 0, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
@@ -1365,7 +1375,7 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("DocumentId")
+                    b.Property<Guid?>("DocumentId")
                         .HasColumnType("uuid")
                         .HasColumnName("document_id");
 
@@ -1825,6 +1835,12 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1860,6 +1876,7 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            Code = "waterTemp",
                             MeasureType = "Nhiệt độ",
                             Name = "Nhiệt độ nước",
                             UnitOfMeasure = "Độ C"
@@ -1867,6 +1884,7 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            Code = "pH",
                             MeasureType = "Tính axit",
                             Name = "Độ pH",
                             UnitOfMeasure = "pH"
@@ -1874,6 +1892,7 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            Code = "tds",
                             MeasureType = "Tổng chất rắn hòa tan",
                             Name = "TDS",
                             UnitOfMeasure = "ppm"
@@ -1881,6 +1900,7 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            Code = "flowRate",
                             MeasureType = "Lưu lượng",
                             Name = "Lưu lượng nước",
                             UnitOfMeasure = "L/min"
@@ -1888,6 +1908,7 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            Code = "waterLevel",
                             MeasureType = "Mức nước",
                             Name = "Mực nước",
                             UnitOfMeasure = "0/1"
@@ -2038,6 +2059,11 @@ namespace IRasRag.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("AdvisoryThresholdId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("advisory_threshold_id");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2585,8 +2611,7 @@ namespace IRasRag.Infrastructure.Migrations
                     b.HasOne("IRasRag.Domain.Entities.Document", "Document")
                         .WithMany("Recommendations")
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_recommendations_documents_document_id");
 
                     b.Navigation("Alert");

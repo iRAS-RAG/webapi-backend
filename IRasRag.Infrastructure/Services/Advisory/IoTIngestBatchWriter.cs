@@ -1,0 +1,79 @@
+using System.Threading.Channels;
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Models.Advisory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace IRasRag.Infrastructure.Services.Advisory
+{
+    public class IoTIngestBatchWriter : BackgroundService, IIoTIngestBatchWriter
+    {
+        private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
+
+        private readonly Channel<IoTIngestPayload> _channel;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<IoTIngestBatchWriter> _logger;
+
+        public IoTIngestBatchWriter(
+            IServiceScopeFactory scopeFactory,
+            ILogger<IoTIngestBatchWriter> logger
+        )
+        {
+            _scopeFactory = scopeFactory;
+            _logger = logger;
+            _channel = Channel.CreateBounded<IoTIngestPayload>(
+                new BoundedChannelOptions(1000)
+                {
+                    FullMode = BoundedChannelFullMode.DropNewest,
+                    SingleReader = true,
+                    SingleWriter = false,
+                }
+            );
+        }
+
+        public void Enqueue(IoTIngestPayload payload) => _channel.Writer.TryWrite(payload);
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            try
+            {
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await Task.Delay(FlushInterval, stoppingToken);
+                    await FlushAsync(stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                await FlushAsync(CancellationToken.None);
+            }
+        }
+
+        private async Task FlushAsync(CancellationToken ct)
+        {
+            var events = new List<IoTIngestPayload>();
+            while (_channel.Reader.TryRead(out var item))
+                events.Add(item);
+
+            if (events.Count == 0)
+                return;
+
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var client = scope.ServiceProvider.GetRequiredService<IIoTIngestClient>();
+                await client.IngestBatchAsync(new IoTBatchIngestPayload { Events = events }, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Advisory IoT batch ingest failed for {Count} events — discarding",
+                    events.Count
+                );
+            }
+        }
+    }
+}

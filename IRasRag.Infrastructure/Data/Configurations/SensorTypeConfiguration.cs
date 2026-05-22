@@ -11,6 +11,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
         {
             builder.ConfigureTimestamps();
 
+            builder.Property(st => st.Code).HasMaxLength(50);
+
             builder.HasData(SensorTypeSeed.SensorTypes);
         }
     }

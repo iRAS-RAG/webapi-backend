@@ -1,6 +1,7 @@
-﻿using IRasRag.Application.Common.Interfaces.Auth;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
-using IRasRag.Application.Common.Interfaces.Cloudinary;
+using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.FileExtraction;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
@@ -13,6 +14,7 @@ using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
+using IRasRag.Infrastructure.Services.Advisory;
 using IRasRag.Infrastructure.Services.Auth;
 using IRasRag.Infrastructure.Services.BackgroundJobs;
 using IRasRag.Infrastructure.Services.CloudFileStorage;
@@ -27,6 +29,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using MQTTnet;
 
 namespace IRasRag.Infrastructure.DI
@@ -43,9 +46,49 @@ namespace IRasRag.Infrastructure.DI
             services.AddServices();
             services.AddConnectionString(config, env);
             services.AddSettings(config);
+            services.AddAdvisoryHttpClients(config);
             services.AddSingleton<IMqttClient>(_ => new MqttClientFactory().CreateMqttClient());
             services.AddSingleton<IMqttPublishService, MqttPublishService>();
             services.AddHostedService<MqttBackgroundService>();
+        }
+
+        public static void AddAdvisoryHttpClients(
+            this IServiceCollection services,
+            IConfiguration config
+        )
+        {
+            services.AddHttpClient<IRagChatClient, RagChatClient>(
+                (sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                    client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                }
+            );
+            services.AddHttpClient<IThresholdSyncClient, ThresholdSyncClient>(
+                (sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                    client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                }
+            );
+            services.AddHttpClient<IIoTIngestClient, IoTIngestClient>(
+                (sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                    client.BaseAddress = new Uri(settings.IotGatewayBaseUrl);
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                }
+            );
+            services.AddHttpClient<ICatalogSyncClient, CatalogSyncClient>(
+                (sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
+                    client.BaseAddress = new Uri(settings.ChatBaseUrl);
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                }
+            );
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -61,6 +104,9 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+            services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
+            services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
+            services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
 
             // Telemetry
             services.AddSingleton<TelemetryLogBatchWriter>();
@@ -68,6 +114,11 @@ namespace IRasRag.Infrastructure.DI
                 sp.GetRequiredService<TelemetryLogBatchWriter>()
             );
             services.AddHostedService(sp => sp.GetRequiredService<TelemetryLogBatchWriter>());
+            services.AddSingleton<IoTIngestBatchWriter>();
+            services.AddSingleton<IIoTIngestBatchWriter>(sp =>
+                sp.GetRequiredService<IoTIngestBatchWriter>()
+            );
+            services.AddHostedService(sp => sp.GetRequiredService<IoTIngestBatchWriter>());
             services.AddScoped<ITelemetryCacheService, TelemetryCacheService>();
             services.AddScoped<ITelemetryDispatchService, TelemetryDispatchService>();
             services.AddSingleton<ILatestTelemetryCacheService, LatestTelemetryCacheService>();
@@ -90,6 +141,7 @@ namespace IRasRag.Infrastructure.DI
             services.Configure<MqttSettings>(config.GetSection("Mqtt"));
             services.Configure<LogBatchWriterSettings>(config.GetSection("LogBatchWriter"));
             services.Configure<AlertSettings>(config.GetSection("AlertSettings"));
+            services.Configure<AdvisorySettings>(config.GetSection("Advisory"));
 
             var mqttSettings = config.GetSection("Mqtt").Get<MqttSettings>();
             mqttSettings?.ValidateSettings();

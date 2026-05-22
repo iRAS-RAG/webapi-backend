@@ -9,6 +9,7 @@ namespace IRasRag.Application.DTOs
         public string Name { get; set; }
         public string MeasureType { get; set; }
         public string UnitOfMeasure { get; set; }
+        public string? Code { get; set; }
     }
 
     // Create DTO

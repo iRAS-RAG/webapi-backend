@@ -1,3 +1,5 @@
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -18,13 +20,15 @@ namespace IRasRag.Application.Common.Utils
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AlertStateEvaluator> _logger;
         private readonly ILiveDataNotifier _liveDataNotifier;
+        private readonly IBackgroundJobService _backgroundJobs;
 
         public AlertStateEvaluator(
             IAlertStateCacheService alertStateCache,
             IOptions<AlertSettings> settings,
             IUnitOfWork unitOfWork,
             ILogger<AlertStateEvaluator> logger,
-            ILiveDataNotifier liveDataNotifier
+            ILiveDataNotifier liveDataNotifier,
+            IBackgroundJobService backgroundJobs
         )
         {
             _alertStateCache =
@@ -34,6 +38,8 @@ namespace IRasRag.Application.Common.Utils
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _liveDataNotifier =
                 liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
+            _backgroundJobs =
+                backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
 
             ValidateSettings(_settings);
         }
@@ -280,6 +286,11 @@ namespace IRasRag.Application.Common.Utils
             var lowerBound = threshold.MinValue + hysteresisAmount;
             var upperBound = threshold.MaxValue - hysteresisAmount;
 
+            // Binary/discrete sensors (e.g. water level: 0=not reached, 1=reached) must be
+            // configured with MinValue == MaxValue (e.g. min=1, max=1). This collapses span to 0,
+            // so hysteresisAmount is 0 and the recovery zone is exactly {1}.
+            // Any other range (e.g. min=0.5, max=1) causes upperBound to shrink below 1,
+            // making the normal reading appear "near the threshold edge" and the alert never resolves.
             if (lowerBound > upperBound)
             {
                 var midpoint = (threshold.MinValue + threshold.MaxValue) / 2.0;

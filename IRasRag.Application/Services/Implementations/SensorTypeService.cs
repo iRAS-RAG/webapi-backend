@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -16,16 +18,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SensorTypeService> _logger;
         private readonly IMapper _mapper;
+        private readonly IBackgroundJobService _backgroundJobs;
 
         public SensorTypeService(
             IUnitOfWork unitOfWork,
             ILogger<SensorTypeService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IBackgroundJobService backgroundJobs
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _backgroundJobs = backgroundJobs;
         }
 
         #region Get Methods
@@ -193,6 +198,16 @@ namespace IRasRag.Application.Services.Implementations
                 await sensorTypeRepository.AddAsync(sensorType);
                 await _unitOfWork.SaveChangesAsync();
 
+                if (sensorType.Code != null)
+                {
+                    var code = sensorType.Code;
+                    var name = sensorType.Name;
+                    var unit = sensorType.UnitOfMeasure;
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
+                }
+
                 var sensorTypeDto = _mapper.Map<SensorTypeDto>(sensorType);
                 _logger.LogInformation(
                     "Tạo loại cảm biến thành công: {Id} - {Name}",
@@ -270,6 +285,16 @@ namespace IRasRag.Application.Services.Implementations
                 sensorTypeRepository.Update(sensorType);
                 await _unitOfWork.SaveChangesAsync();
 
+                if (sensorType.Code != null)
+                {
+                    var code = sensorType.Code;
+                    var name = sensorType.Name;
+                    var unit = sensorType.UnitOfMeasure;
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
+                }
+
                 _logger.LogInformation("Cập nhật loại cảm biến thành công: {Id}", id);
                 return Result.Success("Cập nhật loại cảm biến thành công");
             }
@@ -306,8 +331,12 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy loại cảm biến", ResultType.NotFound);
                 }
 
+                var code = sensorType.Code;
                 sensorTypeRepository.Delete(sensorType);
                 await _unitOfWork.SaveChangesAsync();
+
+                if (code != null)
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j => j.SyncDeleteAsync(code));
 
                 _logger.LogInformation("Xóa loại cảm biến thành công: {Id}", id);
                 return Result.Success("Xóa loại cảm biến thành công");
