@@ -6,9 +6,9 @@ using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Specifications.GrowthStageSpecifications
 {
-    public class GrowthStageDtoListSpec : BaseListSpec<GrowthStage, GrowthStageDto>
+    public class GrowthStageBySpeciesIdSpec : BaseListSpec<GrowthStage, GrowthStageDto>
     {
-        public GrowthStageDtoListSpec(GrowthStageListRequest request)
+        public GrowthStageBySpeciesIdSpec(Guid speciesId, GrowthStageListRequest request)
         {
             Query.AsNoTracking();
 
@@ -24,14 +24,16 @@ namespace IRasRag.Application.Specifications.GrowthStageSpecifications
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 
-            Query.Select(gs => new GrowthStageDto
-            {
-                Id = gs.Id,
-                Name = gs.Name,
-                Description = gs.Description,
-                SpeciesId = gs.SpeciesId,
-                SpeciesName = gs.Species.Name,
-            });
+            Query
+                .Where(gs => gs.SpeciesId == speciesId)
+                .Select(gs => new GrowthStageDto
+                {
+                    Id = gs.Id,
+                    Name = gs.Name,
+                    Description = gs.Description,
+                    SpeciesId = gs.SpeciesId,
+                    SpeciesName = gs.Species.Name,
+                });
         }
     }
 }

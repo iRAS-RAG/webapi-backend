@@ -31,6 +31,10 @@ namespace IRasRag.Infrastructure.Data.Configurations
             // One config per species/stage combination
             builder.HasIndex(ssc => new { ssc.SpeciesId, ssc.GrowthStageId }).IsUnique();
 
+            // Ensure sequence is required and unique per species
+            builder.Property(ssc => ssc.Sequence).IsRequired();
+            builder.HasIndex(ssc => new { ssc.SpeciesId, ssc.Sequence }).IsUnique();
+
             builder.HasData(SpeciesStageConfigSeed.SpeciesStageConfigs);
         }
     }

@@ -28,6 +28,64 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
         }
 
+        public async Task<PaginatedResult<GrowthStageDto>> GetGrowthStagesBySpeciesIdAsync(
+            Guid speciesId,
+            GrowthStageListRequest request
+        )
+        {
+            try
+            {
+                var speciesExists = await _unitOfWork
+                    .GetRepository<Species>()
+                    .AnyAsync(s => s.Id == speciesId);
+                if (!speciesExists)
+                    return new PaginatedResult<GrowthStageDto>
+                    {
+                        Message = "Loài cá không tồn tại",
+                        Data = Array.Empty<GrowthStageDto>(),
+                        Meta = null,
+                        Links = null,
+                    };
+
+                var repo = _unitOfWork.GetRepository<GrowthStage>();
+                var pagedResult = await repo.GetPagedAsync(
+                    new GrowthStageBySpeciesIdSpec(speciesId, request),
+                    request.Page,
+                    request.PageSize
+                );
+
+                return new PaginatedResult<GrowthStageDto>
+                {
+                    Message =
+                        pagedResult.Items.Count == 0
+                            ? "Không có giai đoạn sinh trưởng cho loài này"
+                            : "Lấy giai đoạn sinh trưởng cho loài thành công",
+                    Data = pagedResult.Items,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving growth stages by species id");
+                return new PaginatedResult<GrowthStageDto>
+                {
+                    Message = "Lỗi khi truy xuất giai đoạn sinh trưởng",
+                    Data = Array.Empty<GrowthStageDto>(),
+                    Meta = null,
+                    Links = null,
+                };
+            }
+        }
+
         public async Task<Result<GrowthStageDto>> CreateGrowthStageAsync(
             CreateGrowthStageDto createDto
         )
@@ -46,19 +104,40 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
+                // ensure species exists
+                var speciesExists = await _unitOfWork
+                    .GetRepository<Species>()
+                    .AnyAsync(s => s.Id == createDto.SpeciesId);
+                if (!speciesExists)
+                    return Result<GrowthStageDto>.Failure(
+                        "Loài cá không tồn tại.",
+                        ResultType.BadRequest
+                    );
+
+                // ensure unique name per species
+                var nameExists = await _unitOfWork
+                    .GetRepository<GrowthStage>()
+                    .AnyAsync(gs =>
+                        gs.SpeciesId == createDto.SpeciesId && gs.Name == createDto.Name.Trim()
+                    );
+                if (nameExists)
+                    return Result<GrowthStageDto>.Failure(
+                        "Giai đoạn với tên này đã tồn tại cho loài cá.",
+                        ResultType.Conflict
+                    );
+
                 var newGrowthStage = new GrowthStage
                 {
                     Name = createDto.Name.Trim(),
                     Description = createDto.Description.Trim(),
+                    SpeciesId = createDto.SpeciesId,
                 };
 
                 await _unitOfWork.GetRepository<GrowthStage>().AddAsync(newGrowthStage);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result<GrowthStageDto>.Success(
-                    _mapper.Map<GrowthStageDto>(newGrowthStage),
-                    "Tạo giai đoạn sinh trưởng thành công."
-                );
+                var dto = _mapper.Map<GrowthStageDto>(newGrowthStage);
+                return Result<GrowthStageDto>.Success(dto, "Tạo giai đoạn sinh trưởng thành công.");
             }
             catch (Exception ex)
             {
@@ -162,7 +241,14 @@ namespace IRasRag.Application.Services.Implementations
                     Id = growthStage.Id,
                     Name = growthStage.Name,
                     Description = growthStage.Description,
+                    SpeciesId = growthStage.SpeciesId,
                 };
+
+                // populate species name
+                var species = await _unitOfWork
+                    .GetRepository<Species>()
+                    .GetByIdAsync(growthStage.SpeciesId);
+                dto.SpeciesName = species?.Name;
 
                 return Result<GrowthStageDto>.Success(dto, "Lấy giai đoạn sinh trưởng thành công.");
             }
@@ -202,6 +288,34 @@ namespace IRasRag.Application.Services.Implementations
                 if (!string.IsNullOrWhiteSpace(descriptionToUpdate))
                 {
                     growthStage.Description = descriptionToUpdate.Trim();
+                }
+
+                if (dto.SpeciesId != null && dto.SpeciesId != Guid.Empty)
+                {
+                    var speciesExists = await _unitOfWork
+                        .GetRepository<Species>()
+                        .AnyAsync(s => s.Id == dto.SpeciesId.Value);
+                    if (!speciesExists)
+                        return Result.Failure("Loài cá không tồn tại.", ResultType.BadRequest);
+
+                    // ensure unique name per species if name was updated
+                    if (!string.IsNullOrWhiteSpace(nameToUpdate))
+                    {
+                        var nameExists = await _unitOfWork
+                            .GetRepository<GrowthStage>()
+                            .AnyAsync(gs =>
+                                gs.SpeciesId == dto.SpeciesId.Value
+                                && gs.Name == nameToUpdate.Trim()
+                                && gs.Id != id
+                            );
+                        if (nameExists)
+                            return Result.Failure(
+                                "Giai đoạn với tên này đã tồn tại cho loài cá.",
+                                ResultType.Conflict
+                            );
+                    }
+
+                    growthStage.SpeciesId = dto.SpeciesId.Value;
                 }
 
                 await _unitOfWork.SaveChangesAsync();

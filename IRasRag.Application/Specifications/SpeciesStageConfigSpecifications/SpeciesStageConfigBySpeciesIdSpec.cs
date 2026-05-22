@@ -21,6 +21,7 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                 ["growthstagename"] = s => s.GrowthStage.Name,
                 ["feedtypename"] = s =>
                     s.FeedTypes.OrderBy(ft => ft.Name).Select(ft => ft.Name).FirstOrDefault(),
+                ["sequence"] = s => s.Sequence,
             };
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -44,6 +45,7 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                     SpeciesName = config.Species.Name,
                     GrowthStageId = config.GrowthStageId,
                     GrowthStageName = config.GrowthStage.Name,
+                    Sequence = config.Sequence,
                     FeedTypeIds = config.FeedTypes.Select(ft => ft.Id).ToList(),
                     FeedTypeNames = config.FeedTypes.Select(ft => ft.Name).ToList(),
                     AmountPer100Fish = config.AmountPer100Fish,

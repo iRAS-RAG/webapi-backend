@@ -21,6 +21,10 @@ namespace IRasRag.Domain.Entities
 
         public int? ExpectedDurationDays { get; set; } // How many days the fish typically stay in this stage
 
+        // Sequence defines the order of this stage within the species' stage list (1-based)
+        [Required]
+        public int Sequence { get; set; }
+
         // Navigation properties
         public Species Species { get; set; }
         public GrowthStage GrowthStage { get; set; }

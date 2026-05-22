@@ -33,6 +33,45 @@ namespace IRasRag.API.Controllers
             _logger = logger;
         }
 
+        [HttpGet("growth-stages/by-species/{speciesId}")]
+        public async Task<IActionResult> GetGrowthStagesBySpeciesId(
+            Guid speciesId,
+            [FromQuery] GrowthStageListRequest request
+        )
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
+                }
+
+                if (request.PageSize > 100)
+                {
+                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
+                }
+
+                var result = await _growthStageService.GetGrowthStagesBySpeciesIdAsync(
+                    speciesId,
+                    request
+                );
+                return result.Meta == null && (result.Data == null || result.Data.Count == 0)
+                    ? NotFound(new { result.Message })
+                    : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving growth stages by species id: {SpeciesId}",
+                    speciesId
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         // ─── Growth Stages ────────────────────────────────────────────────────────
 
         [Authorize(Roles = "Supervisor")]
@@ -41,6 +80,11 @@ namespace IRasRag.API.Controllers
         {
             try
             {
+                if (dto.SpeciesId == Guid.Empty)
+                {
+                    return BadRequest(new { Message = "SpeciesId là bắt buộc." });
+                }
+
                 var result = await _growthStageService.CreateGrowthStageAsync(dto);
 
                 return result.Type switch
@@ -125,10 +169,16 @@ namespace IRasRag.API.Controllers
         {
             try
             {
+                // SpeciesId is optional on update; if provided, validate it
+                if (dto.SpeciesId != null && dto.SpeciesId == Guid.Empty)
+                {
+                    return BadRequest(new { Message = "SpeciesId không hợp lệ." });
+                }
+
                 var result = await _growthStageService.UpdateGrowthStageAsync(id, dto);
                 return result.Type switch
                 {
-                    ResultType.Ok => Ok(result.Message),
+                    ResultType.Ok => Ok(new { result.Message }),
                     ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),

@@ -9,6 +9,10 @@ namespace IRasRag.Application.Services.Interfaces
         Task<PaginatedResult<GrowthStageDto>> GetAllGrowthStagesAsync(
             GrowthStageListRequest request
         );
+        Task<PaginatedResult<GrowthStageDto>> GetGrowthStagesBySpeciesIdAsync(
+            Guid speciesId,
+            GrowthStageListRequest request
+        );
         Task<Result<GrowthStageDto>> GetGrowthStageByIdAsync(Guid id);
         Task<Result<GrowthStageDto>> CreateGrowthStageAsync(CreateGrowthStageDto createDto);
         Task<Result> UpdateGrowthStageAsync(Guid id, UpdateGrowthStageDto updateDto);

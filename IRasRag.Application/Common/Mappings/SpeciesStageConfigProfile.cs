@@ -18,6 +18,10 @@ namespace IRasRag.Application.Common.Mappings
                     opt => opt.MapFrom(src => src.FeedTypes.Select(ft => ft.Name))
                 );
 
+            // map sequence as well
+            CreateMap<SpeciesStageConfig, SpeciesStageConfigDto>()
+                .ForMember(dest => dest.Sequence, opt => opt.MapFrom(src => src.Sequence));
+
             CreateMap<CreateSpeciesStageConfigDto, SpeciesStageConfig>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedAt, opt => opt.Ignore())
@@ -26,6 +30,9 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.GrowthStage, opt => opt.Ignore())
                 .ForMember(dest => dest.FeedTypes, opt => opt.Ignore())
                 .ForMember(dest => dest.FarmingBatches, opt => opt.Ignore());
+
+            CreateMap<CreateSpeciesStageConfigDto, SpeciesStageConfig>()
+                .ForMember(dest => dest.Sequence, opt => opt.MapFrom(src => src.Sequence));
 
             CreateMap<UpdateSpeciesStageConfigDto, SpeciesStageConfig>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -38,6 +45,12 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(dest => dest.GrowthStageId, opt => opt.Ignore())
                 .ForMember(dest => dest.FarmingBatches, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateSpeciesStageConfigDto, SpeciesStageConfig>()
+                .ForMember(
+                    dest => dest.Sequence,
+                    opt => opt.Condition(src => src.Sequence != null)
+                );
         }
     }
 }

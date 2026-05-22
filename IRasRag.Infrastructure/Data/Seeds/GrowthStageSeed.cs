@@ -16,6 +16,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new GrowthStage
                 {
                     Id = FryStageId,
+                    SpeciesId = SpeciesSeed.TilapiaId,
                     Name = "Cá bột",
                     Description =
                         "Giai đoạn từ khi nở đến khi cá phát triển đủ lớn để chuyển sang giai đoạn cá giống.",
@@ -23,6 +24,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new GrowthStage
                 {
                     Id = JuvenileStageId,
+                    SpeciesId = SpeciesSeed.TilapiaId,
                     Name = "Cá giống",
                     Description = "Giai đoạn từ cá bột đến khi cá đạt kích thước thương phẩm.",
                 },

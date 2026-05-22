@@ -57,6 +57,17 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
+                // ensure the growth stage belongs to the same species
+                var growthStage = await _unitOfWork
+                    .GetRepository<GrowthStage>()
+                    .GetByIdAsync(dto.GrowthStageId);
+
+                if (growthStage == null || growthStage.SpeciesId != dto.SpeciesId)
+                    return Result<SpeciesStageConfigDto>.Failure(
+                        "Giai đoạn sinh trưởng không thuộc loài cá được chỉ định.",
+                        ResultType.BadRequest
+                    );
+
                 if (dto.FeedTypeIds == null || dto.FeedTypeIds.Count == 0)
                     return Result<SpeciesStageConfigDto>.Failure(
                         "Phải chọn ít nhất một kiểu cho ăn.",
@@ -89,7 +100,30 @@ namespace IRasRag.Application.Services.Implementations
                 var newConfig = _mapper.Map<SpeciesStageConfig>(dto);
                 newConfig.FeedTypes = feedTypes.ToList();
 
-                await _unitOfWork.GetRepository<SpeciesStageConfig>().AddAsync(newConfig);
+                // Auto-adjust sequences: shift existing sequences >= requested sequence up by 1
+                var repo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var existingForSpecies = await repo.FindAllAsync(ssc =>
+                    ssc.SpeciesId == dto.SpeciesId
+                );
+                var maxSeq =
+                    existingForSpecies.Count == 0 ? 0 : existingForSpecies.Max(s => s.Sequence);
+
+                // normalize requested sequence to be at least 1 and at most maxSeq+1
+                var requestedSeq = dto.Sequence < 1 ? 1 : dto.Sequence;
+                if (requestedSeq > maxSeq + 1)
+                    requestedSeq = maxSeq + 1;
+
+                // shift
+                var toShift = existingForSpecies
+                    .Where(s => s.Sequence >= requestedSeq)
+                    .OrderByDescending(s => s.Sequence)
+                    .ToList();
+                foreach (var s in toShift)
+                    s.Sequence = s.Sequence + 1;
+
+                newConfig.Sequence = requestedSeq;
+
+                await repo.AddAsync(newConfig);
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result<SpeciesStageConfigDto>.Success(
@@ -301,7 +335,46 @@ namespace IRasRag.Application.Services.Implementations
                     config.FeedTypes = feedTypes.ToList();
                 }
 
-                _mapper.Map(dto, config);
+                // If sequence is provided, auto-adjust other sequences to make room
+                if (dto.Sequence != null)
+                {
+                    var repo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                    var existing = await repo.FindAllAsync(s =>
+                        s.SpeciesId == config.SpeciesId && s.Id != id
+                    );
+                    var maxSeq = existing.Count == 0 ? 0 : existing.Max(s => s.Sequence);
+
+                    var requestedSeq = dto.Sequence.Value < 1 ? 1 : dto.Sequence.Value;
+                    if (requestedSeq > maxSeq + 1)
+                        requestedSeq = maxSeq + 1;
+
+                    // If moving down (increasing sequence), shift others between old+1 and new down by -1
+                    var oldSeq = config.Sequence;
+                    if (requestedSeq > oldSeq)
+                    {
+                        var between = existing.Where(s =>
+                            s.Sequence > oldSeq && s.Sequence <= requestedSeq
+                        );
+                        foreach (var s in between)
+                            s.Sequence = s.Sequence - 1;
+                    }
+                    else if (requestedSeq < oldSeq)
+                    {
+                        var between = existing.Where(s =>
+                            s.Sequence >= requestedSeq && s.Sequence < oldSeq
+                        );
+                        foreach (var s in between)
+                            s.Sequence = s.Sequence + 1;
+                    }
+
+                    // finally map and set sequence
+                    _mapper.Map(dto, config);
+                    config.Sequence = requestedSeq;
+                }
+                else
+                {
+                    _mapper.Map(dto, config);
+                }
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateStageConfig(id);
 
