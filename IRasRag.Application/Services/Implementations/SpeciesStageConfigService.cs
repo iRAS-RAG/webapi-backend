@@ -161,9 +161,44 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
 
-                _unitOfWork.GetRepository<SpeciesStageConfig>().Delete(config);
+                // Capture species and sequence before deleting so we can re-sequence remaining items
+                var speciesId = config.SpeciesId;
+                var deletedSeq = config.Sequence;
+
+                var repo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+
+                repo.Delete(config);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Re-sequence all remaining configs for the species to be contiguous starting at 1
+                var allForSpecies = await repo.FindAllAsync(s => s.SpeciesId == speciesId);
+                var ordered = allForSpecies.OrderBy(s => s.Sequence).ToList();
+
+                const int OFFSET = 1000000;
+                if (ordered.Count > 0)
+                {
+                    // assign temporary large values to avoid unique index conflicts
+                    foreach (var s in ordered)
+                        s.Sequence = s.Sequence + OFFSET;
+
+                    await _unitOfWork.SaveChangesAsync();
+
+                    // set contiguous sequence values starting from 1
+                    for (int i = 0; i < ordered.Count; i++)
+                    {
+                        ordered[i].Sequence = i + 1;
+                    }
+
+                    await _unitOfWork.SaveChangesAsync();
+
+                    // Invalidate telemetry cache for adjusted configs
+                    foreach (var s in ordered)
+                        _telemetryCache.InvalidateStageConfig(s.Id);
+                }
+
+                // Invalidate cache for the deleted config id as well
                 _telemetryCache.InvalidateStageConfig(id);
+
                 return Result.Success("Xóa cấu hình giai đoạn sinh trưởng của cá thành công.");
             }
             catch (Exception ex)
