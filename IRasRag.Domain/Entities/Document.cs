@@ -10,8 +10,6 @@ namespace IRasRag.Domain.Entities
         [MaxLength(255)]
         public string Title { get; set; }
 
-        public string? Content { get; set; }
-
         [Required]
         public Guid UploadedByUserId { get; set; }
 
