@@ -9,6 +9,7 @@ namespace IRasRag.Application.DTOs
         public Guid Id { get; set; }
         public Guid FishTankId { get; set; }
         public string FishTankName { get; set; } = string.Empty;
+        public double TankVolume { get; set; }
         public string Name { get; set; } = string.Empty;
         public Guid SpeciesStageConfigId { get; set; }
         public Guid SpeciesId { get; set; }
@@ -29,7 +30,7 @@ namespace IRasRag.Application.DTOs
 
     public class ActiveFarmingBatchResponseDto
     {
-        public string FarmingBatchName { get; set; }
+        public string FarmingBatchName { get; set; } = string.Empty;
         public string FishTankName { get; set; } = string.Empty;
         public string SpeciesName { get; set; } = string.Empty;
         public int CurrentQuantity { get; set; }

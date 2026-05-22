@@ -20,7 +20,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     SpeciesName = fb.CurrentStageConfig.Species.Name,
                     CurrentQuantity = (int)fb.CurrentQuantity,
                     TankVolume = Math.Round(
-                        Math.PI * fb.FishTank.Height * fb.FishTank.Height * fb.FishTank.Radius,
+                        Math.PI * fb.FishTank.Radius * fb.FishTank.Radius * fb.FishTank.Height,
                         2
                     ),
                 });
