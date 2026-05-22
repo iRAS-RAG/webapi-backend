@@ -27,11 +27,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new Document
                 {
                     Id = Doc1Id,
-                    Title = "Hướng dẫn xử lý nhiệt độ cao trong bể nuôi",
-                    Content =
-                        "Khi nhiệt độ nước vượt quá 30°C:\n1. Tăng lưu lượng nước tuần hoàn\n2. Bật hệ thống làm mát\n3. Giảm mật độ thả nuôi nếu cần\n4. Kiểm tra hàm lượng oxy hòa tan\n5. Theo dõi hành vi của cá",
+                    Title = "Kĩ thuật nuôi cua biển",
                     FileUrl =
-                        "https://res.cloudinary.com/seed/documents/doc1-huong-dan-xu-ly-nhiet-do-cao.pdf",
+                        "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455970/IRAS-RAG/documents/KT_nu%C3%B4i_cua_bi%E1%BB%83n_lcsego.pdf",
                     UploadedByUserId = UserSeed.AdminId,
                     UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
@@ -40,11 +38,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new Document
                 {
                     Id = Doc2Id,
-                    Title = "Quy trình điều chỉnh độ pH trong hệ thống RAS",
-                    Content =
-                        "Để duy trì độ pH ổn định:\n1. Kiểm tra độ kiềm của nước\n2. Sử dụng vôi nông nghiệp để tăng pH\n3. Sử dụng axit citric để giảm pH\n4. Theo dõi pH hàng ngày\n5. Đảm bảo hệ thống lọc sinh học hoạt động tốt",
+                    Title = "Cẩm nang nuôi cá nước tĩnh Mè Trôi Trắm Chép",
                     FileUrl =
-                        "https://res.cloudinary.com/seed/documents/doc2-quy-trinh-dieu-chinh-do-ph.pdf",
+                        "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455830/IRAS-RAG/documents/C%E1%BA%A9m_nang_nu%C3%B4i_c%C3%A1_n%C6%B0%E1%BB%9Bc_t%C4%A9nh_M%C3%A8_Tr%C3%B4i_Tr%E1%BA%AFm_Ch%C3%A9p_lfmxrd.pdf",
                     UploadedByUserId = UserSeed.SupervisorId,
                     UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
@@ -53,11 +49,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new Document
                 {
                     Id = Doc3Id,
-                    Title = "Hướng dẫn quản lý chất lượng nước trong nuôi trồng thủy sản",
-                    Content =
-                        "Các thông số quan trọng cần theo dõi:\n1. Nhiệt độ: 25-30°C\n2. pH: 6.5-8.5\n3. Oxy hòa tan: >5 mg/L\n4. Ammonia: <0.1 mg/L\n5. Nitrite: <0.2 mg/L\n6. Nitrate: <50 mg/L\nThực hiện kiểm tra hàng ngày và ghi chép đầy đủ.",
+                    Title = "Kĩ thuật nuôi cá rô",
                     FileUrl =
-                        "https://res.cloudinary.com/seed/documents/doc3-quan-ly-chat-luong-nuoc.pdf",
+                        "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1778650465/IRAS-RAG/documents/KT_nu%C3%B4i_c%C3%A1_r%C3%B4_siwemh.pdf",
                     UploadedByUserId = UserSeed.AdminId,
                     UploadedAt = new DateTime(2024, 01, 10, 9, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,

@@ -19,7 +19,6 @@ namespace IRasRag.Application.Specifications.DocumentSpecifications
                 {
                     Id = d.Id,
                     Title = d.Title,
-                    Content = d.Content,
                     FileUrl = d.FileUrl,
                     UploadedByUserId = d.UploadedByUserId,
                     UploadedByUserEmail = d.UploadedByUser.Email,

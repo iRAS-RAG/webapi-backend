@@ -1,4 +1,4 @@
-using AutoMapper;
+ using AutoMapper;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Application.Common.Interfaces.FileExtraction;
@@ -12,6 +12,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.DocumentSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -285,6 +286,43 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật tài liệu với Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi cập nhật tài liệu", ResultType.Unexpected);
+            }
+        }
+        #endregion
+
+        #region Resync Method
+        public async Task<Result> ResyncDocumentAsync(Guid id)
+        {
+            try
+            {
+                var documentRepository = _unitOfWork.GetRepository<Document>();
+                var document = await documentRepository.GetByIdAsync(id);
+
+                if (document == null)
+                    return Result.Failure("Không tìm thấy tài liệu", ResultType.NotFound);
+
+                if (document.RagStatus != DocumentRagStatus.Failed)
+                    return Result.Failure(
+                        "Chỉ có thể đồng bộ lại tài liệu có trạng thái thất bại",
+                        ResultType.BadRequest
+                    );
+
+                document.RagStatus = DocumentRagStatus.Pending;
+                documentRepository.Update(document);
+                await _unitOfWork.SaveChangesAsync();
+
+                _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
+
+                _logger.LogInformation("Bắt đầu đồng bộ lại tài liệu với Id: {Id}", id);
+                return Result.Success("Bắt đầu đồng bộ lại tài liệu thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi đồng bộ lại tài liệu với Id: {Id}", id);
+                return Result.Failure(
+                    "Đã xảy ra lỗi khi đồng bộ lại tài liệu",
+                    ResultType.Unexpected
+                );
             }
         }
         #endregion
