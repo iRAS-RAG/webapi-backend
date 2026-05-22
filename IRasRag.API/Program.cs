@@ -60,7 +60,7 @@ namespace IRasRag.API
                 app.UseHttpsRedirection();
             }
 
-            app.UseRateLimiter();
+            //app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
