@@ -16,7 +16,8 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 {
                     Id = ft.Id,
                     Name = ft.Name,
-                    Volume = Math.Round((Math.PI * ft.Radius * ft.Radius * ft.Height), 2),
+                    Height = ft.Height,
+                    Radius = ft.Radius,
                     FarmId = ft.FarmId,
                     FarmName = ft.Farm.Name,
                     TopicCode = ft.TopicCode,

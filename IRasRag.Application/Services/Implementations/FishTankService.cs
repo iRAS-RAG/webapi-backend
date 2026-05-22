@@ -83,7 +83,8 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = newFishTank.Id,
                     Name = newFishTank.Name,
-                    Volume = Math.PI * newFishTank.Radius * newFishTank.Radius * newFishTank.Height,
+                    Height = newFishTank.Height,
+                    Radius = newFishTank.Radius,
                     FarmId = newFishTank.FarmId,
                     FarmName = farm.Name,
                     TopicCode = newFishTank.TopicCode,
@@ -275,7 +276,8 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     Id = fishTank.Id,
                     Name = fishTank.Name,
-                    Volume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height,
+                    Height = fishTank.Height,
+                    Radius = fishTank.Radius,
                     FarmId = fishTank.FarmId,
                     FarmName = farmName,
                     TopicCode = fishTank.TopicCode,

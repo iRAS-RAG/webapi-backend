@@ -9,10 +9,8 @@ namespace IRasRag.Application.Common.Mappings
         public FishTankProfile()
         {
             CreateMap<FishTank, FishTankDto>()
-                .ForMember(
-                    d => d.Volume,
-                    opt => opt.MapFrom(s => Math.PI * s.Radius * s.Radius * s.Height)
-                )
+                .ForMember(d => d.Height, opt => opt.MapFrom(s => s.Height))
+                .ForMember(d => d.Radius, opt => opt.MapFrom(s => s.Radius))
                 .ForMember(d => d.CurrentSpecies, opt => opt.Ignore())
                 .ForMember(d => d.CurrentCount, opt => opt.Ignore())
                 .ForMember(d => d.HasOpenAlert, opt => opt.Ignore());

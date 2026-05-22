@@ -7,7 +7,8 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public double Volume { get; set; }
+        public double Height { get; set; }
+        public double Radius { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
@@ -21,7 +22,8 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public double Volume { get; set; }
+        public double Height { get; set; }
+        public double Radius { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
