@@ -21,13 +21,13 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .HasOne(x => x.SpeciesStageConfig)
                 .WithMany(x => x.SpeciesStageConfigFeedTypes)
                 .HasForeignKey(x => x.SpeciesStageConfigId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder
                 .HasOne(x => x.FeedType)
                 .WithMany(x => x.SpeciesStageConfigFeedTypes)
                 .HasForeignKey(x => x.FeedTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(x => x.FeedTypeId);
 
