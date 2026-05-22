@@ -15,7 +15,10 @@ namespace IRasRag.Infrastructure.Services.Advisory
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<IoTIngestBatchWriter> _logger;
 
-        public IoTIngestBatchWriter(IServiceScopeFactory scopeFactory, ILogger<IoTIngestBatchWriter> logger)
+        public IoTIngestBatchWriter(
+            IServiceScopeFactory scopeFactory,
+            ILogger<IoTIngestBatchWriter> logger
+        )
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -24,12 +27,12 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 {
                     FullMode = BoundedChannelFullMode.DropNewest,
                     SingleReader = true,
-                    SingleWriter = false
-                });
+                    SingleWriter = false,
+                }
+            );
         }
 
-        public void Enqueue(IoTIngestPayload payload)
-            => _channel.Writer.TryWrite(payload);
+        public void Enqueue(IoTIngestPayload payload) => _channel.Writer.TryWrite(payload);
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -54,7 +57,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
             while (_channel.Reader.TryRead(out var item))
                 events.Add(item);
 
-            if (events.Count == 0) return;
+            if (events.Count == 0)
+                return;
 
             try
             {
@@ -64,8 +68,11 @@ namespace IRasRag.Infrastructure.Services.Advisory
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex,
-                    "Advisory IoT batch ingest failed for {Count} events — discarding", events.Count);
+                _logger.LogWarning(
+                    ex,
+                    "Advisory IoT batch ingest failed for {Count} events — discarding",
+                    events.Count
+                );
             }
         }
     }

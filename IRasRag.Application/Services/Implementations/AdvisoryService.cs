@@ -22,7 +22,8 @@ namespace IRasRag.Application.Services.Implementations
             IUnitOfWork unitOfWork,
             IRagChatClient ragChatClient,
             IOptions<AdvisorySettings> settings,
-            ILogger<AdvisoryService> logger)
+            ILogger<AdvisoryService> logger
+        )
         {
             _unitOfWork = unitOfWork;
             _ragChatClient = ragChatClient;
@@ -42,7 +43,8 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     _logger.LogWarning(
                         "Advisory: alert context not found for alert {AlertId}",
-                        alertId);
+                        alertId
+                    );
 
                     return;
                 }
@@ -57,7 +59,8 @@ namespace IRasRag.Application.Services.Implementations
                     Stage: context.StageName,
                     Message: message,
                     TimeRange: _settings.DefaultTimeRange,
-                    AllowWebSearch: _settings.AllowWebSearch);
+                    AllowWebSearch: _settings.AllowWebSearch
+                );
 
                 var response = await _ragChatClient.ChatAsync(chatRequest);
 
@@ -65,7 +68,8 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     _logger.LogWarning(
                         "Advisory: empty answer from RAG for alert {AlertId}",
-                        alertId);
+                        alertId
+                    );
 
                     return;
                 }
@@ -78,9 +82,7 @@ namespace IRasRag.Application.Services.Implementations
                     SuggestionText = response.Answer.Trim(),
                 };
 
-                await _unitOfWork
-                    .GetRepository<Recommendation>()
-                    .AddAsync(recommendation);
+                await _unitOfWork.GetRepository<Recommendation>().AddAsync(recommendation);
 
                 await _unitOfWork.SaveChangesAsync();
 
@@ -88,7 +90,8 @@ namespace IRasRag.Application.Services.Implementations
                     "Advisory: recommendation {RecId} saved for alert {AlertId} (basis={Basis})",
                     recommendation.Id,
                     alertId,
-                    response.AnswerBasis);
+                    response.AnswerBasis
+                );
             }
             catch (Exception ex)
             {
@@ -96,7 +99,8 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(
                     ex,
                     "Advisory: unhandled error generating recommendation for alert {AlertId}",
-                    alertId);
+                    alertId
+                );
             }
         }
 
@@ -104,22 +108,20 @@ namespace IRasRag.Application.Services.Implementations
             Guid tankId,
             Guid userId,
             string message,
-            CancellationToken ct = default)
+            CancellationToken ct = default
+        )
         {
-            var tank = await _unitOfWork
-                .GetRepository<FishTank>()
-                .GetByIdAsync(tankId);
+            var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
 
             if (tank == null)
             {
                 _logger.LogWarning(
                     "Advisory chat: tank {TankId} not found for user {UserId}",
                     tankId,
-                    userId);
+                    userId
+                );
 
-                return new AdvisoryChatResult(
-                    "Không tìm thấy bể nuôi.",
-                    IsOffTopic: false);
+                return new AdvisoryChatResult("Không tìm thấy bể nuôi.", IsOffTopic: false);
             }
 
             var context = await _unitOfWork
@@ -134,7 +136,8 @@ namespace IRasRag.Application.Services.Implementations
                 Stage: context?.StageName ?? "unknown",
                 Message: message,
                 TimeRange: _settings.DefaultTimeRange,
-                AllowWebSearch: _settings.AllowWebSearch);
+                AllowWebSearch: _settings.AllowWebSearch
+            );
 
             var response = await _ragChatClient.ChatAsync(chatRequest, ct);
 
@@ -143,11 +146,13 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogWarning(
                     "Advisory chat: empty answer from RAG for user {UserId}, tank {TankId}",
                     userId,
-                    tankId);
+                    tankId
+                );
 
                 return new AdvisoryChatResult(
                     "Không thể lấy câu trả lời từ hệ thống tư vấn. Vui lòng thử lại.",
-                    IsOffTopic: false);
+                    IsOffTopic: false
+                );
             }
 
             var isOffTopic = response.IntentSource == "off_topic";
@@ -157,42 +162,48 @@ namespace IRasRag.Application.Services.Implementations
                 response.IntentSource,
                 response.AnswerBasis,
                 userId,
-                tankId);
+                tankId
+            );
 
             return new AdvisoryChatResult(
                 response.Answer.Trim(),
                 IsOffTopic: isOffTopic,
-                Citations: response.Citations);
+                Citations: response.Citations
+            );
         }
 
         private static string BuildRecommendationMessage(AlertContext context)
         {
-            var unit = string.IsNullOrWhiteSpace(context.Unit)
-                ? ""
-                : $" {context.Unit}";
+            var unit = string.IsNullOrWhiteSpace(context.Unit) ? "" : $" {context.Unit}";
 
             var message =
-                $"{context.SensorTypeName} tại bể {context.TankName} " +
-                $"đo được {context.TriggerValue}{unit} " +
-                $"(ngưỡng: {context.MinThreshold}–{context.MaxThreshold}{unit}). ";
+                $"{context.SensorTypeName} tại bể {context.TankName} "
+                + $"đo được {context.TriggerValue}{unit} "
+                + $"(ngưỡng: {context.MinThreshold}–{context.MaxThreshold}{unit}). ";
 
-            var hasSpecies =
-                !string.Equals(context.SpeciesName, "unknown", StringComparison.OrdinalIgnoreCase);
+            var hasSpecies = !string.Equals(
+                context.SpeciesName,
+                "unknown",
+                StringComparison.OrdinalIgnoreCase
+            );
 
-            var hasStage =
-                !string.Equals(context.StageName, "unknown", StringComparison.OrdinalIgnoreCase);
+            var hasStage = !string.Equals(
+                context.StageName,
+                "unknown",
+                StringComparison.OrdinalIgnoreCase
+            );
 
             if (hasSpecies && hasStage)
             {
                 message +=
-                    $"Đối tượng nuôi: {context.SpeciesName}, giai đoạn {context.StageName}. " +
-                    $"Theo SOP cần xử lý như thế nào ? Đưa ra đề xuất ngắn gọn và phù hợp.";
+                    $"Đối tượng nuôi: {context.SpeciesName}, giai đoạn {context.StageName}. "
+                    + $"Theo SOP cần xử lý như thế nào ? Đưa ra đề xuất ngắn gọn và phù hợp.";
             }
             else
             {
                 message +=
-                    "Hiện không có vụ nuôi đang hoạt động trong bể. " +
-                    "Hãy đánh giá mức độ bất thường của chỉ số nước và đề xuất hành động phù hợp.";
+                    "Hiện không có vụ nuôi đang hoạt động trong bể. "
+                    + "Hãy đánh giá mức độ bất thường của chỉ số nước và đề xuất hành động phù hợp.";
             }
 
             return message;

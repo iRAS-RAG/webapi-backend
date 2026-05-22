@@ -17,15 +17,14 @@ namespace IRasRag.Infrastructure.Migrations
                 type: "character varying(20)",
                 maxLength: 20,
                 nullable: false,
-                defaultValue: "Pending");
+                defaultValue: "Pending"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "rag_status",
-                table: "documents");
+            migrationBuilder.DropColumn(name: "rag_status", table: "documents");
         }
     }
 }

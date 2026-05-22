@@ -203,7 +203,9 @@ namespace IRasRag.Application.Services.Implementations
                     var code = sensorType.Code;
                     var name = sensorType.Name;
                     var unit = sensorType.UnitOfMeasure;
-                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j => j.SyncUpsertAsync(code, name, unit));
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
                 }
 
                 var sensorTypeDto = _mapper.Map<SensorTypeDto>(sensorType);
@@ -288,7 +290,9 @@ namespace IRasRag.Application.Services.Implementations
                     var code = sensorType.Code;
                     var name = sensorType.Name;
                     var unit = sensorType.UnitOfMeasure;
-                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j => j.SyncUpsertAsync(code, name, unit));
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
                 }
 
                 _logger.LogInformation("Cập nhật loại cảm biến thành công: {Id}", id);

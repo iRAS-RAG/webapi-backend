@@ -13,7 +13,8 @@ namespace IRasRag.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "fk_recommendations_documents_document_id",
-                table: "recommendations");
+                table: "recommendations"
+            );
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "document_id",
@@ -21,7 +22,8 @@ namespace IRasRag.Infrastructure.Migrations
                 type: "uuid",
                 nullable: true,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: "uuid"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "fk_recommendations_documents_document_id",
@@ -29,7 +31,8 @@ namespace IRasRag.Infrastructure.Migrations
                 column: "document_id",
                 principalTable: "documents",
                 principalColumn: "id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.SetNull
+            );
         }
 
         /// <inheritdoc />
@@ -37,7 +40,8 @@ namespace IRasRag.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "fk_recommendations_documents_document_id",
-                table: "recommendations");
+                table: "recommendations"
+            );
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "document_id",
@@ -47,7 +51,8 @@ namespace IRasRag.Infrastructure.Migrations
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
-                oldNullable: true);
+                oldNullable: true
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "fk_recommendations_documents_document_id",
@@ -55,7 +60,8 @@ namespace IRasRag.Infrastructure.Migrations
                 column: "document_id",
                 principalTable: "documents",
                 principalColumn: "id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.Restrict
+            );
         }
     }
 }

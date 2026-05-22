@@ -24,21 +24,35 @@ namespace IRasRag.Infrastructure.Services.Advisory
             _settings = settings.Value;
         }
 
-        public async Task IngestBatchAsync(IoTBatchIngestPayload payload, CancellationToken ct = default)
+        public async Task IngestBatchAsync(
+            IoTBatchIngestPayload payload,
+            CancellationToken ct = default
+        )
         {
-            var response = await _http.PostAsJsonAsync(_settings.IotBatchIngestPath, payload, SerializerOptions, ct);
+            var response = await _http.PostAsJsonAsync(
+                _settings.IotBatchIngestPath,
+                payload,
+                SerializerOptions,
+                ct
+            );
 
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException(
-                    $"Advisory IoT batch ingest POST {_settings.IotBatchIngestPath} returned {(int)response.StatusCode} " +
-                    $"for {payload.Events.Count} events");
+                    $"Advisory IoT batch ingest POST {_settings.IotBatchIngestPath} returned {(int)response.StatusCode} "
+                        + $"for {payload.Events.Count} events"
+                );
         }
 
         private sealed class IngestResponseDto
         {
-            [JsonPropertyName("status")] public string? Status { get; set; }
-            [JsonPropertyName("queued")] public bool Queued { get; set; }
-            [JsonPropertyName("entryId")] public string? EntryId { get; set; }
+            [JsonPropertyName("status")]
+            public string? Status { get; set; }
+
+            [JsonPropertyName("queued")]
+            public bool Queued { get; set; }
+
+            [JsonPropertyName("entryId")]
+            public string? EntryId { get; set; }
         }
     }
 }

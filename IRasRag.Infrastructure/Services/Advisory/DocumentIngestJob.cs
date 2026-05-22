@@ -16,7 +16,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
         public DocumentIngestJob(
             IUnitOfWork unitOfWork,
             IRagChatClient ragChatClient,
-            ILogger<DocumentIngestJob> logger)
+            ILogger<DocumentIngestJob> logger
+        )
         {
             _unitOfWork = unitOfWork;
             _ragChatClient = ragChatClient;
@@ -29,7 +30,10 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             if (document == null)
             {
-                _logger.LogWarning("RAG ingest: document {DocumentId} not found, skipping", documentId);
+                _logger.LogWarning(
+                    "RAG ingest: document {DocumentId} not found, skipping",
+                    documentId
+                );
                 return;
             }
 
@@ -39,17 +43,22 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            var response = await _ragChatClient.IngestDocumentByUrlAsync(document.FileUrl, document.Title);
+            var response = await _ragChatClient.IngestDocumentByUrlAsync(
+                document.FileUrl,
+                document.Title
+            );
 
             if (response == null || (response.Status != "ok" && response.Status != "exists"))
             {
                 _logger.LogWarning(
                     "RAG ingest: failed for document {DocumentId} (status={Status}), will retry",
                     documentId,
-                    response?.Status);
+                    response?.Status
+                );
 
                 throw new InvalidOperationException(
-                    $"RAG ingest returned non-ok status for document {documentId}.");
+                    $"RAG ingest returned non-ok status for document {documentId}."
+                );
             }
 
             document.RagStatus = DocumentRagStatus.Indexed;
@@ -58,12 +67,14 @@ namespace IRasRag.Infrastructure.Services.Advisory
             if (response.Status == "exists")
                 _logger.LogInformation(
                     "RAG ingest: document {DocumentId} already indexed (exists), marked as Indexed",
-                    documentId);
+                    documentId
+                );
             else
                 _logger.LogInformation(
                     "RAG ingest: document {DocumentId} indexed ({Chunks} chunks)",
                     documentId,
-                    response.Chunks);
+                    response.Chunks
+                );
         }
 
         public async Task MarkAsFailedAsync(Guid documentId)
@@ -74,7 +85,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
             {
                 _logger.LogWarning(
                     "RAG ingest filter: document {DocumentId} not found when marking Failed",
-                    documentId);
+                    documentId
+                );
                 return;
             }
 
@@ -84,7 +96,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             _logger.LogWarning(
                 "RAG ingest: all retries exhausted for document {DocumentId}, marked as Failed",
-                documentId);
+                documentId
+            );
         }
     }
 }

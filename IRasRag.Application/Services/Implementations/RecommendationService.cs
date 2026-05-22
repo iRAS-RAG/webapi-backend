@@ -163,7 +163,9 @@ namespace IRasRag.Application.Services.Implementations
                 if (createDto.DocumentId.HasValue)
                 {
                     var documentRepository = _unitOfWork.GetRepository<Document>();
-                    var document = await documentRepository.GetByIdAsync(createDto.DocumentId.Value);
+                    var document = await documentRepository.GetByIdAsync(
+                        createDto.DocumentId.Value
+                    );
 
                     if (document == null)
                     {

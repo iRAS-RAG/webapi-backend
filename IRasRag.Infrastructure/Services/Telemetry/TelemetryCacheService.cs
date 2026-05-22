@@ -22,7 +22,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         public TelemetryCacheService(
             IUnitOfWork unitOfWork,
             IMemoryCache cache,
-            ILogger<TelemetryCacheService> logger)
+            ILogger<TelemetryCacheService> logger
+        )
         {
             _unitOfWork = unitOfWork;
             _cache = cache;
@@ -36,8 +37,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             if (_cache.TryGetValue(key, out FarmingBatch? cached))
                 return cached;
 
-            var batch = await _unitOfWork.GetRepository<FarmingBatch>()
-                .FirstOrDefaultAsync(b => b.FishTankId == tankId && b.Status == FarmingBatchStatus.ACTIVE);
+            var batch = await _unitOfWork
+                .GetRepository<FarmingBatch>()
+                .FirstOrDefaultAsync(b =>
+                    b.FishTankId == tankId && b.Status == FarmingBatchStatus.ACTIVE
+                );
 
             if (batch == null)
             {
@@ -57,7 +61,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             if (_cache.TryGetValue(key, out MasterBoard? cached))
                 return cached;
 
-            var masterboard = await _unitOfWork.GetRepository<MasterBoard>()
+            var masterboard = await _unitOfWork
+                .GetRepository<MasterBoard>()
                 .FirstOrDefaultAsync(new MasterboardByMacSpec(mac));
 
             if (masterboard == null)
@@ -78,7 +83,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             if (_cache.TryGetValue(key, out Dictionary<int, Sensor>? cached) && cached != null)
                 return cached;
 
-            var sensors = await _unitOfWork.GetRepository<Sensor>()
+            var sensors = await _unitOfWork
+                .GetRepository<Sensor>()
                 .ListAsync(new SensorsByMasterboardSpec(masterboardId));
 
             var dict = sensors.ToDictionary(s => s.PinCode, s => s);
@@ -87,14 +93,21 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             return dict;
         }
 
-        public async Task<Dictionary<Guid, SpeciesThreshold>> GetThresholdsAsync(Guid speciesId, Guid growthStageId)
+        public async Task<Dictionary<Guid, SpeciesThreshold>> GetThresholdsAsync(
+            Guid speciesId,
+            Guid growthStageId
+        )
         {
             var key = $"thresholds:{speciesId}:{growthStageId}";
 
-            if (_cache.TryGetValue(key, out Dictionary<Guid, SpeciesThreshold>? cached) && cached != null)
+            if (
+                _cache.TryGetValue(key, out Dictionary<Guid, SpeciesThreshold>? cached)
+                && cached != null
+            )
                 return cached;
 
-            var thresholds = await _unitOfWork.GetRepository<SpeciesThreshold>()
+            var thresholds = await _unitOfWork
+                .GetRepository<SpeciesThreshold>()
                 .FindAllAsync(t => t.SpeciesId == speciesId && t.GrowthStageId == growthStageId);
 
             var dict = thresholds.ToDictionary(t => t.SensorTypeId, t => t);
@@ -110,12 +123,16 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             if (_cache.TryGetValue(key, out SpeciesStageConfig? cached))
                 return cached;
 
-            var config = await _unitOfWork.GetRepository<SpeciesStageConfig>()
+            var config = await _unitOfWork
+                .GetRepository<SpeciesStageConfig>()
                 .FirstOrDefaultAsync(new SpeciesStageConfigWithNamesSpec(stageConfigId));
 
             if (config == null)
             {
-                _logger.LogWarning("No SpeciesStageConfig found for id {StageConfigId}", stageConfigId);
+                _logger.LogWarning(
+                    "No SpeciesStageConfig found for id {StageConfigId}",
+                    stageConfigId
+                );
                 _cache.Set(key, (SpeciesStageConfig?)null, NullTtl);
                 return null;
             }
@@ -135,7 +152,10 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         {
             var key = $"stageconfig:{stageConfigId}";
             _cache.Remove(key);
-            _logger.LogInformation("Invalidated stage config cache for id {StageConfigId}", stageConfigId);
+            _logger.LogInformation(
+                "Invalidated stage config cache for id {StageConfigId}",
+                stageConfigId
+            );
         }
 
         public void InvalidateMasterboard(string mac)
@@ -149,14 +169,21 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         {
             var key = $"sensors:masterboard:{masterboardId}";
             _cache.Remove(key);
-            _logger.LogInformation("Invalidated sensors cache for masterboard {MasterboardId}", masterboardId);
+            _logger.LogInformation(
+                "Invalidated sensors cache for masterboard {MasterboardId}",
+                masterboardId
+            );
         }
 
         public void InvalidateThresholds(Guid speciesId, Guid growthStageId)
         {
             var key = $"thresholds:{speciesId}:{growthStageId}";
             _cache.Remove(key);
-            _logger.LogInformation("Invalidated thresholds cache for species {SpeciesId} stage {GrowthStageId}", speciesId, growthStageId);
+            _logger.LogInformation(
+                "Invalidated thresholds cache for species {SpeciesId} stage {GrowthStageId}",
+                speciesId,
+                growthStageId
+            );
         }
     }
 }

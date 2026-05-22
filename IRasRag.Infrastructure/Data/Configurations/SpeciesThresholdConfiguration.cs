@@ -11,8 +11,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
         {
             builder.ConfigureTimestamps();
 
-            builder.Property(st => st.AdvisoryThresholdId)
-                .HasMaxLength(100);
+            builder.Property(st => st.AdvisoryThresholdId).HasMaxLength(100);
 
             builder
                 .HasOne(st => st.Species)

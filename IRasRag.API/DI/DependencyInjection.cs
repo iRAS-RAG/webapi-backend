@@ -70,13 +70,15 @@ namespace IRasRag.API.DI
                         {
                             var accessToken = context.Request.Query["access_token"];
                             var path = context.HttpContext.Request.Path;
-                            if (!string.IsNullOrEmpty(accessToken) &&
-                                path.StartsWithSegments("/hubs/telemetry"))
+                            if (
+                                !string.IsNullOrEmpty(accessToken)
+                                && path.StartsWithSegments("/hubs/telemetry")
+                            )
                             {
                                 context.Token = accessToken;
                             }
                             return Task.CompletedTask;
-                        }
+                        },
                     };
                 });
         }
@@ -188,7 +190,13 @@ namespace IRasRag.API.DI
             services.AddHangfire(configuration =>
                 configuration
                     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                    .UseFilter(new AutomaticRetryAttribute { Attempts = 5, OnAttemptsExceeded = AttemptsExceededAction.Fail })
+                    .UseFilter(
+                        new AutomaticRetryAttribute
+                        {
+                            Attempts = 5,
+                            OnAttemptsExceeded = AttemptsExceededAction.Fail,
+                        }
+                    )
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
                     .UsePostgreSqlStorage(

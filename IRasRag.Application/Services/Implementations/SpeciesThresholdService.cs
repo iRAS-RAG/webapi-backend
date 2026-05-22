@@ -104,7 +104,9 @@ namespace IRasRag.Application.Services.Implementations
                     .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(newThreshold.Id));
 
                 var userIdStr = userId?.ToString();
-                _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncCreateAsync(newThreshold.Id, userIdStr));
+                _backgroundJobs.Enqueue<IThresholdSyncJob>(j =>
+                    j.SyncCreateAsync(newThreshold.Id, userIdStr)
+                );
 
                 return Result<SpeciesThresholdDto>.Success(
                     thresholdDto!,
@@ -285,7 +287,9 @@ namespace IRasRag.Application.Services.Implementations
                 if (threshold.AdvisoryThresholdId != null)
                 {
                     var advisoryId = threshold.AdvisoryThresholdId;
-                    _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncUpdateAsync(advisoryId, threshold.MinValue, threshold.MaxValue));
+                    _backgroundJobs.Enqueue<IThresholdSyncJob>(j =>
+                        j.SyncUpdateAsync(advisoryId, threshold.MinValue, threshold.MaxValue)
+                    );
                 }
 
                 return Result.Success("Cập nhật ngưỡng sinh trưởng thành công.");

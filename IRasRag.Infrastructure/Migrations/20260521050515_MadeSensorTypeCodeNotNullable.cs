@@ -20,7 +20,8 @@ namespace IRasRag.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "character varying(50)",
                 oldMaxLength: 50,
-                oldNullable: true);
+                oldNullable: true
+            );
         }
 
         /// <inheritdoc />
@@ -34,7 +35,8 @@ namespace IRasRag.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "character varying(50)",
-                oldMaxLength: 50);
+                oldMaxLength: 50
+            );
         }
     }
 }

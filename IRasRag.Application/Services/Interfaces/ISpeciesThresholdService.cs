@@ -12,7 +12,10 @@ namespace IRasRag.Application.Services.Interfaces
         );
         Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdById(Guid id);
         Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdBySpecies(Guid speciesId);
-        Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(CreateSpeciesThresholdDto dto, Guid? userId = null);
+        Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(
+            CreateSpeciesThresholdDto dto,
+            Guid? userId = null
+        );
         Task<Result> UpdateSpeciesThreshold(Guid id, UpdateSpeciesThresholdDto dto);
         Task<Result> DeleteSpeciesThreshold(Guid id);
     }

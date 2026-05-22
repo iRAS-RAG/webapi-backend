@@ -8,7 +8,8 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
     {
         public AlertContextSpec(Guid id)
         {
-            Query.AsNoTracking()
+            Query
+                .AsNoTracking()
                 .Where(a => a.Id == id)
                 .Select(a => new AlertContext
                 {
@@ -23,18 +24,18 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                     MaxThreshold = a.SpeciesThreshold.MaxValue,
 
                     SpeciesName =
-                        a.FarmingBatch != null &&
-                        a.FarmingBatch.CurrentStageConfig != null &&
-                        a.FarmingBatch.CurrentStageConfig.Species != null
+                        a.FarmingBatch != null
+                        && a.FarmingBatch.CurrentStageConfig != null
+                        && a.FarmingBatch.CurrentStageConfig.Species != null
                             ? a.FarmingBatch.CurrentStageConfig.Species.Name
                             : "unknown",
 
                     StageName =
-                        a.FarmingBatch != null &&
-                        a.FarmingBatch.CurrentStageConfig != null &&
-                        a.FarmingBatch.CurrentStageConfig.GrowthStage != null
+                        a.FarmingBatch != null
+                        && a.FarmingBatch.CurrentStageConfig != null
+                        && a.FarmingBatch.CurrentStageConfig.GrowthStage != null
                             ? a.FarmingBatch.CurrentStageConfig.GrowthStage.Name
-                            : "unknown"
+                            : "unknown",
                 });
         }
     }

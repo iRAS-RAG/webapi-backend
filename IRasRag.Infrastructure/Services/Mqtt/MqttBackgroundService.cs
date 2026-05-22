@@ -1,4 +1,6 @@
-﻿using IRasRag.Application.Common.Interfaces.Telemetry;
+﻿using System.Text;
+using System.Text.Json;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Mqtt;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,8 +8,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
-using System.Text;
-using System.Text.Json;
 
 namespace IRasRag.Infrastructure.Services.Mqtt
 {
@@ -17,7 +17,13 @@ namespace IRasRag.Infrastructure.Services.Mqtt
         private readonly IMqttClient _client;
         private readonly MqttSettings _mqttSettings;
         private readonly IServiceScopeFactory _scopeFactory;
-        public MqttBackgroundService(ILogger<MqttBackgroundService> logger, IOptions<MqttSettings> options, IServiceScopeFactory scopeFactory, IMqttClient client)
+
+        public MqttBackgroundService(
+            ILogger<MqttBackgroundService> logger,
+            IOptions<MqttSettings> options,
+            IServiceScopeFactory scopeFactory,
+            IMqttClient client
+        )
         {
             _logger = logger;
             _mqttSettings = options.Value;
@@ -43,25 +49,31 @@ namespace IRasRag.Infrastructure.Services.Mqtt
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            AllowTrailingCommas = true
+            AllowTrailingCommas = true,
         };
 
         private async Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
         {
             using var scope = _scopeFactory.CreateScope();
-            var telemetryDispatchService = scope.ServiceProvider.GetRequiredService<ITelemetryDispatchService>();
+            var telemetryDispatchService =
+                scope.ServiceProvider.GetRequiredService<ITelemetryDispatchService>();
 
             try
             {
                 // Validate payload
-                if (e.ApplicationMessage?.Payload == null || e.ApplicationMessage.Payload.Length == 0)
+                if (
+                    e.ApplicationMessage?.Payload == null
+                    || e.ApplicationMessage.Payload.Length == 0
+                )
                 {
-                    _logger.LogWarning("Received empty MQTT payload on topic {Topic}",
-                        e.ApplicationMessage?.Topic);
+                    _logger.LogWarning(
+                        "Received empty MQTT payload on topic {Topic}",
+                        e.ApplicationMessage?.Topic
+                    );
                     return;
                 }
 
-                // Deserialize  
+                // Deserialize
                 var json = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var dto = JsonSerializer.Deserialize<SensorTelemetry>(json, JsonOptions);
 
@@ -76,25 +88,35 @@ namespace IRasRag.Infrastructure.Services.Mqtt
 
                 if (dto.Mac != macFromTopic)
                 {
-                    _logger.LogWarning("MAC mismatch: topic={TopicMac}, payload={PayloadMac}",
-                        macFromTopic, dto.Mac);
+                    _logger.LogWarning(
+                        "MAC mismatch: topic={TopicMac}, payload={PayloadMac}",
+                        macFromTopic,
+                        dto.Mac
+                    );
                 }
 
                 await telemetryDispatchService.DispatchAsync(dto, macFromTopic);
 
-                _logger.LogInformation("Successfully processed sensor telemetry from {MacAddress}",
-                    macFromTopic);
+                _logger.LogInformation(
+                    "Successfully processed sensor telemetry from {MacAddress}",
+                    macFromTopic
+                );
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "Invalid JSON in MQTT message: {Payload}",
-                    Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+                _logger.LogError(
+                    ex,
+                    "Invalid JSON in MQTT message: {Payload}",
+                    Encoding.UTF8.GetString(e.ApplicationMessage.Payload)
+                );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to process MQTT message from topic {Topic}",
-                    e.ApplicationMessage?.Topic);
-
+                _logger.LogError(
+                    ex,
+                    "Failed to process MQTT message from topic {Topic}",
+                    e.ApplicationMessage?.Topic
+                );
             }
         }
 
@@ -118,6 +140,7 @@ namespace IRasRag.Infrastructure.Services.Mqtt
                 await DisconnectAsync();
             }
         }
+
         private async Task ConnectAsync(CancellationToken token)
         {
             try
@@ -133,8 +156,8 @@ namespace IRasRag.Infrastructure.Services.Mqtt
                 var subscribeResult = await _client.SubscribeAsync(_mqttSettings.SubscribeTopic);
 
                 _logger.LogInformation(
-                    $"Subscribed to topic {_mqttSettings.SubscribeTopic}. Result: {subscribeResult.Items.FirstOrDefault()?.ResultCode}");
-
+                    $"Subscribed to topic {_mqttSettings.SubscribeTopic}. Result: {subscribeResult.Items.FirstOrDefault()?.ResultCode}"
+                );
 
                 _logger.LogInformation("The MQTT client is connected.");
             }
@@ -163,6 +186,7 @@ namespace IRasRag.Infrastructure.Services.Mqtt
                 _logger.LogWarning(ex, "Error while disconnecting MQTT client.");
             }
         }
+
         public override void Dispose()
         {
             _client?.Dispose();

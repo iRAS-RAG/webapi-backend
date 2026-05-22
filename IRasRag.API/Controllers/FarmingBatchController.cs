@@ -215,7 +215,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("{id}/mortality")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Operator")]
         public async Task<IActionResult> LogMortality(Guid id, [FromBody] LogMortalityRequest body)
         {
             try

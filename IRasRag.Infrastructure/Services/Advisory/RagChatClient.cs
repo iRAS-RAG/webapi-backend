@@ -19,14 +19,21 @@ namespace IRasRag.Infrastructure.Services.Advisory
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
-        public RagChatClient(HttpClient http, IOptions<AdvisorySettings> settings, ILogger<RagChatClient> logger)
+        public RagChatClient(
+            HttpClient http,
+            IOptions<AdvisorySettings> settings,
+            ILogger<RagChatClient> logger
+        )
         {
             _http = http;
             _settings = settings.Value;
             _logger = logger;
         }
 
-        public async Task<RagChatResponse?> ChatAsync(RagChatRequest request, CancellationToken ct = default)
+        public async Task<RagChatResponse?> ChatAsync(
+            RagChatRequest request,
+            CancellationToken ct = default
+        )
         {
             try
             {
@@ -42,25 +49,34 @@ namespace IRasRag.Infrastructure.Services.Advisory
                     allowWebSearch = request.AllowWebSearch,
                 };
 
-                var httpResponse = await _http.PostAsJsonAsync(_settings.ChatPath, payload, SerializerOptions, ct);
+                var httpResponse = await _http.PostAsJsonAsync(
+                    _settings.ChatPath,
+                    payload,
+                    SerializerOptions,
+                    ct
+                );
 
                 if (!httpResponse.IsSuccessStatusCode)
                 {
                     _logger.LogWarning(
                         "RAG /chat returned {Status} for userId={UserId}",
-                        (int)httpResponse.StatusCode, request.UserId);
+                        (int)httpResponse.StatusCode,
+                        request.UserId
+                    );
                     return null;
                 }
 
                 var dto = await httpResponse.Content.ReadFromJsonAsync<RagChatResponseDto>(ct);
-                if (dto == null) return null;
+                if (dto == null)
+                    return null;
 
                 return new RagChatResponse(
                     Answer: dto.Answer ?? string.Empty,
                     AnswerBasis: dto.AnswerBasis,
                     NeedsWebSearch: dto.NeedsWebSearch,
                     IntentSource: dto.IntentSource,
-                    Citations: dto.Citations);
+                    Citations: dto.Citations
+                );
             }
             catch (Exception ex)
             {
@@ -69,28 +85,43 @@ namespace IRasRag.Infrastructure.Services.Advisory
             }
         }
 
-        public async Task<RagIngestUrlResponse?> IngestDocumentByUrlAsync(string url, string title, CancellationToken ct = default)
+        public async Task<RagIngestUrlResponse?> IngestDocumentByUrlAsync(
+            string url,
+            string title,
+            CancellationToken ct = default
+        )
         {
             try
             {
                 var payload = new { url, title };
-                var httpResponse = await _http.PostAsJsonAsync(_settings.RagUploadPath, payload, SerializerOptions, ct);
+                var httpResponse = await _http.PostAsJsonAsync(
+                    _settings.RagUploadPath,
+                    payload,
+                    SerializerOptions,
+                    ct
+                );
 
                 if (!httpResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("RAG /rag/ingest-url returned {Status} for url={Url}", (int)httpResponse.StatusCode, url);
+                    _logger.LogWarning(
+                        "RAG /rag/ingest-url returned {Status} for url={Url}",
+                        (int)httpResponse.StatusCode,
+                        url
+                    );
                     return null;
                 }
 
                 var dto = await httpResponse.Content.ReadFromJsonAsync<RagIngestUrlResponseDto>(ct);
-                if (dto == null) return null;
+                if (dto == null)
+                    return null;
 
                 return new RagIngestUrlResponse(
                     Status: dto.Status ?? string.Empty,
                     Documents: dto.Documents,
                     Chunks: dto.Chunks,
                     Title: dto.Title ?? string.Empty,
-                    SourceUrl: dto.SourceUrl ?? string.Empty);
+                    SourceUrl: dto.SourceUrl ?? string.Empty
+                );
             }
             catch (Exception ex)
             {

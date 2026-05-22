@@ -5,6 +5,6 @@ namespace IRasRag.Domain.Enums
         Pending,
         Processing,
         Indexed,
-        Failed
+        Failed,
     }
 }

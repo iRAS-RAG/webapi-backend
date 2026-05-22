@@ -41,9 +41,12 @@ namespace IRasRag.API
                 jobs.Enqueue<ICatalogSyncJob>(j => j.SyncAllAsync());
             });
 
-            GlobalJobFilters.Filters.Add(new DocumentIngestFailedFilter(
-                app.Services.GetRequiredService<IServiceScopeFactory>(),
-                app.Services.GetRequiredService<ILoggerFactory>()));
+            GlobalJobFilters.Filters.Add(
+                new DocumentIngestFailedFilter(
+                    app.Services.GetRequiredService<IServiceScopeFactory>(),
+                    app.Services.GetRequiredService<ILoggerFactory>()
+                )
+            );
             JobFilterProviders.Providers.Add(new MethodRetryFilterProvider());
 
             // Configure the HTTP request pipeline.

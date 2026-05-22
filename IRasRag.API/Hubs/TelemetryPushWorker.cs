@@ -24,9 +24,11 @@ namespace IRasRag.API.Hubs
             {
                 var now = DateTime.UtcNow;
 
-                // Check if we've sent a push for this sensor recently 
-                if (lastSent.TryGetValue(push.SensorId, out var last) &&
-                    (now - last) < ThrottleInterval)
+                // Check if we've sent a push for this sensor recently
+                if (
+                    lastSent.TryGetValue(push.SensorId, out var last)
+                    && (now - last) < ThrottleInterval
+                )
                 {
                     continue;
                 }
@@ -38,7 +40,11 @@ namespace IRasRag.API.Hubs
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "SignalR push failed for sensor {SensorId}", push.SensorId);
+                    _logger.LogWarning(
+                        ex,
+                        "SignalR push failed for sensor {SensorId}",
+                        push.SensorId
+                    );
                 }
             }
         }

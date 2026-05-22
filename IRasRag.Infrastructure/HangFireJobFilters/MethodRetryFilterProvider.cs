@@ -25,7 +25,8 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                     yield return BuildRetryFilter(
                         attempts: 4,
                         delays: DocumentIngestDelays,
-                        exceeded: AttemptsExceededAction.Fail);
+                        exceeded: AttemptsExceededAction.Fail
+                    );
                 }
             }
 
@@ -36,7 +37,8 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                     yield return BuildRetryFilter(
                         attempts: 5,
                         delays: ThresholdSyncCreateDelays,
-                        exceeded: AttemptsExceededAction.Fail);
+                        exceeded: AttemptsExceededAction.Fail
+                    );
                 }
             }
 
@@ -45,7 +47,8 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                 yield return BuildRetryFilter(
                     attempts: 5,
                     delays: CatalogSyncDelays,
-                    exceeded: AttemptsExceededAction.Fail);
+                    exceeded: AttemptsExceededAction.Fail
+                );
             }
 
             if (job.Method.DeclaringType == typeof(ICloudFileStorageService))
@@ -55,7 +58,8 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                     yield return BuildRetryFilter(
                         attempts: 5,
                         delays: CloudDeleteDelays,
-                        exceeded: AttemptsExceededAction.Fail);
+                        exceeded: AttemptsExceededAction.Fail
+                    );
                 }
             }
         }
@@ -63,17 +67,19 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
         private static JobFilter BuildRetryFilter(
             int attempts,
             int[]? delays,
-            AttemptsExceededAction exceeded)
+            AttemptsExceededAction exceeded
+        )
         {
             return new JobFilter(
                 new AutomaticRetryAttribute
                 {
                     Attempts = attempts,
                     DelaysInSeconds = delays,
-                    OnAttemptsExceeded = exceeded
+                    OnAttemptsExceeded = exceeded,
                 },
                 JobFilterScope.Method,
-                null);
+                null
+            );
         }
     }
 }

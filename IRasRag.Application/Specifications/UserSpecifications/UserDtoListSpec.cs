@@ -17,13 +17,18 @@ namespace IRasRag.Application.Specifications.UserSpecifications
                 ["email"] = u => u.Email,
                 ["firstname"] = u => u.FirstName,
                 ["lastname"] = u => u.LastName,
-                ["rolename"] = u => u.Role.Name,
+                ["rolename"] = u => u.Role != null ? u.Role.Name : string.Empty,
                 ["isdeleted"] = u => u.IsDeleted,
             };
 
             ApplySearch(
                 request.SearchTerm,
-                [u => u.Email, u => u.FirstName, u => u.LastName, u => u.Role.Name]
+                [
+                    u => u.Email,
+                    u => u.FirstName,
+                    u => u.LastName,
+                    u => u.Role != null ? u.Role.Name : string.Empty,
+                ]
             );
 
             ApplyFilter(request.IsDeleted, u => u.IsDeleted == request.IsDeleted);
@@ -37,7 +42,7 @@ namespace IRasRag.Application.Specifications.UserSpecifications
                 Email = u.Email,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
-                RoleName = u.Role.Name,
+                RoleName = u.Role != null ? u.Role.Name : string.Empty,
                 IsDeleted = u.IsDeleted,
             });
         }

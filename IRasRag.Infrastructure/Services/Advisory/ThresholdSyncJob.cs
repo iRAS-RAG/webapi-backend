@@ -1,7 +1,7 @@
 using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
-using IRasRag.Application.Common.Interfaces.Persistence;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Infrastructure.Services.Advisory
@@ -15,7 +15,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
         public ThresholdSyncJob(
             IUnitOfWork unitOfWork,
             IThresholdSyncClient syncClient,
-            ILogger<ThresholdSyncJob> logger)
+            ILogger<ThresholdSyncJob> logger
+        )
         {
             _unitOfWork = unitOfWork;
             _syncClient = syncClient;
@@ -32,7 +33,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
             {
                 _logger.LogWarning(
                     "Advisory sync create skipped: threshold {ThresholdId} no longer exists",
-                    thresholdId);
+                    thresholdId
+                );
                 return;
             }
 
@@ -42,7 +44,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             if (dto == null)
                 throw new InvalidOperationException(
-                    $"Advisory sync create failed: DTO not found for threshold {thresholdId}");
+                    $"Advisory sync create failed: DTO not found for threshold {thresholdId}"
+                );
 
             var advisoryId = await _syncClient.CreateAsync(
                 userId,
@@ -50,14 +53,17 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 dto.GrowthStageName,
                 dto.SensorTypeName,
                 dto.MinValue,
-                dto.MaxValue);
+                dto.MaxValue
+            );
 
             threshold.AdvisoryThresholdId = advisoryId;
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation(
                 "Advisory sync create succeeded: threshold {ThresholdId} → advisory {AdvisoryId}",
-                thresholdId, advisoryId);
+                thresholdId,
+                advisoryId
+            );
         }
 
         public async Task SyncUpdateAsync(string advisoryId, double min, double max)
@@ -66,7 +72,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             _logger.LogInformation(
                 "Advisory sync update succeeded for advisory threshold {AdvisoryId}",
-                advisoryId);
+                advisoryId
+            );
         }
 
         public async Task SyncDeleteAsync(string advisoryId)
@@ -75,7 +82,8 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             _logger.LogInformation(
                 "Advisory sync delete succeeded for advisory threshold {AdvisoryId}",
-                advisoryId);
+                advisoryId
+            );
         }
     }
 }

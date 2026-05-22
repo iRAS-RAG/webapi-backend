@@ -9,7 +9,8 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
             string param,
             double min,
             double max,
-            CancellationToken ct = default);
+            CancellationToken ct = default
+        );
 
         Task UpdateAsync(string advisoryId, double min, double max, CancellationToken ct = default);
 

@@ -11,7 +11,11 @@ namespace IRasRag.Infrastructure.Services.Advisory
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CatalogSyncJob> _logger;
 
-        public CatalogSyncJob(ICatalogSyncClient syncClient, IUnitOfWork unitOfWork, ILogger<CatalogSyncJob> logger)
+        public CatalogSyncJob(
+            ICatalogSyncClient syncClient,
+            IUnitOfWork unitOfWork,
+            ILogger<CatalogSyncJob> logger
+        )
         {
             _syncClient = syncClient;
             _unitOfWork = unitOfWork;
@@ -22,16 +26,14 @@ namespace IRasRag.Infrastructure.Services.Advisory
         {
             await _syncClient.UpsertAsync(code, labelVi, unit);
 
-            _logger.LogInformation(
-                "Advisory catalog upsert succeeded for code '{Code}'", code);
+            _logger.LogInformation("Advisory catalog upsert succeeded for code '{Code}'", code);
         }
 
         public async Task SyncDeleteAsync(string code)
         {
             await _syncClient.DeleteAsync(code);
 
-            _logger.LogInformation(
-                "Advisory catalog delete succeeded for code '{Code}'", code);
+            _logger.LogInformation("Advisory catalog delete succeeded for code '{Code}'", code);
         }
 
         public async Task SyncAllAsync()
@@ -39,7 +41,10 @@ namespace IRasRag.Infrastructure.Services.Advisory
             var repo = _unitOfWork.GetRepository<SensorType>();
             var all = await repo.FindAllAsync(st => st.Code != null);
 
-            _logger.LogInformation("Advisory catalog bulk sync starting for {Count} sensor type(s)", all.Count);
+            _logger.LogInformation(
+                "Advisory catalog bulk sync starting for {Count} sensor type(s)",
+                all.Count
+            );
 
             foreach (var st in all)
                 await _syncClient.UpsertAsync(st.Code!, st.Name, st.UnitOfMeasure);

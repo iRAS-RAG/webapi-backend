@@ -60,10 +60,18 @@ namespace IRasRag.Test.UnitTests.Application
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
             _backgroundJobsMock = new Mock<IBackgroundJobService>();
             _backgroundJobsMock
-                .Setup(b => b.Enqueue(It.IsAny<System.Linq.Expressions.Expression<Func<object, Task>>>()))
+                .Setup(b =>
+                    b.Enqueue(It.IsAny<System.Linq.Expressions.Expression<Func<object, Task>>>())
+                )
                 .Returns("job-id");
 
-            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper, _telemetryCacheMock.Object, _backgroundJobsMock.Object);
+            _sut = new SpeciesThresholdService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _telemetryCacheMock.Object,
+                _backgroundJobsMock.Object
+            );
         }
 
         #region CreateSpeciesThreshold

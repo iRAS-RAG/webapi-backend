@@ -11,7 +11,8 @@ namespace IRasRag.Application.Common.Mappings
             CreateMap<Recommendation, RecommendationDto>()
                 .ForMember(
                     dest => dest.DocumentTitle,
-                    opt => opt.MapFrom(src => src.Document != null ? src.Document.Title : string.Empty)
+                    opt =>
+                        opt.MapFrom(src => src.Document != null ? src.Document.Title : string.Empty)
                 );
 
             CreateMap<CreateRecommendationDto, Recommendation>(MemberList.Source);

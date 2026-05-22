@@ -9,22 +9,21 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
     {
         public RagChatContextSpec(Guid tankId)
         {
-            Query.AsNoTracking()
+            Query
+                .AsNoTracking()
                 .Where(t => t.Id == tankId)
-                .Select(t => t.FarmingBatches
-                    .Where(fb =>
-                        fb.Status == FarmingBatchStatus.ACTIVE &&
-                        fb.CurrentStageConfig != null)
-                    .Select(fb => new RagChatContext
-                    {
-                        SpeciesName = fb.CurrentStageConfig!.Species.Name,
-                        StageName = fb.CurrentStageConfig!.GrowthStage.Name
-                    })
-                    .FirstOrDefault() ?? new RagChatContext
-                    {
-                        SpeciesName = "unknown",
-                        StageName = "unknown"
-                    });
+                .Select(t =>
+                    t.FarmingBatches.Where(fb =>
+                            fb.Status == FarmingBatchStatus.ACTIVE && fb.CurrentStageConfig != null
+                        )
+                        .Select(fb => new RagChatContext
+                        {
+                            SpeciesName = fb.CurrentStageConfig!.Species.Name,
+                            StageName = fb.CurrentStageConfig!.GrowthStage.Name,
+                        })
+                        .FirstOrDefault()
+                    ?? new RagChatContext { SpeciesName = "unknown", StageName = "unknown" }
+                );
         }
     }
 }

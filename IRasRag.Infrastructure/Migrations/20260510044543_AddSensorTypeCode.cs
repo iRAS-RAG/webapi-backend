@@ -16,50 +16,54 @@ namespace IRasRag.Infrastructure.Migrations
                 table: "sensor_types",
                 type: "character varying(50)",
                 maxLength: 50,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.UpdateData(
                 table: "sensor_types",
                 keyColumn: "id",
                 keyValue: new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                 column: "code",
-                value: "waterTemp");
+                value: "waterTemp"
+            );
 
             migrationBuilder.UpdateData(
                 table: "sensor_types",
                 keyColumn: "id",
                 keyValue: new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                 column: "code",
-                value: "pH");
+                value: "pH"
+            );
 
             migrationBuilder.UpdateData(
                 table: "sensor_types",
                 keyColumn: "id",
                 keyValue: new Guid("eeeeeeee-0000-0000-0000-000000000003"),
                 column: "code",
-                value: "tds");
+                value: "tds"
+            );
 
             migrationBuilder.UpdateData(
                 table: "sensor_types",
                 keyColumn: "id",
                 keyValue: new Guid("eeeeeeee-0000-0000-0000-000000000004"),
                 column: "code",
-                value: "flowRate");
+                value: "flowRate"
+            );
 
             migrationBuilder.UpdateData(
                 table: "sensor_types",
                 keyColumn: "id",
                 keyValue: new Guid("eeeeeeee-0000-0000-0000-000000000005"),
                 column: "code",
-                value: "waterLevel");
+                value: "waterLevel"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "code",
-                table: "sensor_types");
+            migrationBuilder.DropColumn(name: "code", table: "sensor_types");
         }
     }
 }

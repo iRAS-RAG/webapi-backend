@@ -12,7 +12,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
         {
             builder.ConfigureTimestamps();
 
-            builder.Property(d => d.RagStatus)
+            builder
+                .Property(d => d.RagStatus)
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .HasDefaultValue(DocumentRagStatus.Pending);

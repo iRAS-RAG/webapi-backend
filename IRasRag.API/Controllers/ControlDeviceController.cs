@@ -180,7 +180,9 @@ namespace IRasRag.API.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                    return BadRequest(new { Message = "Dữ liệu không hợp lệ", Errors = ModelState });
+                    return BadRequest(
+                        new { Message = "Dữ liệu không hợp lệ", Errors = ModelState }
+                    );
 
                 var result = await _controlDeviceService.ToggleControlDeviceAsync(id, toggleDto);
 

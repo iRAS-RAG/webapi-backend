@@ -139,9 +139,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 // Validate SensorLog exists
                 var sensorRepo = _unitOfWork.GetRepository<Sensor>();
-                var sensorLogExists = await sensorRepo.AnyAsync(s =>
-                    s.Id == createDto.SensorId
-                );
+                var sensorLogExists = await sensorRepo.AnyAsync(s => s.Id == createDto.SensorId);
                 if (!sensorLogExists)
                 {
                     return Result<AlertDto>.Failure("Sensor không tồn tại", ResultType.NotFound);

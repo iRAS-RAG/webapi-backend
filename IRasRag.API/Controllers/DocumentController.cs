@@ -108,8 +108,8 @@ namespace IRasRag.API.Controllers
             {
                 FileStream = file.OpenReadStream(),
                 FileTitle = string.IsNullOrWhiteSpace(fileTitle)
-                            ? Path.GetFileNameWithoutExtension(file.FileName)
-                            : fileTitle,
+                    ? Path.GetFileNameWithoutExtension(file.FileName)
+                    : fileTitle,
                 FileName = file.FileName,
                 FileSize = file.Length,
                 UploadedByUserId = userId.Value,

@@ -5,9 +5,6 @@ public sealed class MasterboardByMacSpec : Specification<MasterBoard>
 {
     public MasterboardByMacSpec(string mac)
     {
-        Query
-            .AsNoTracking()
-            .Where(m => m.MacAddress == mac)
-            .Include(m => m.FishTank);
+        Query.AsNoTracking().Where(m => m.MacAddress == mac).Include(m => m.FishTank);
     }
 }

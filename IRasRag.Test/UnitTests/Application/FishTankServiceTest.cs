@@ -91,12 +91,8 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Tạo bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Name.Should().Be(createDto.Name);
-            result
-                .Data.Volume.Should()
-                .BeApproximately(
-                    (float)(Math.PI * createDto.Radius * createDto.Radius * createDto.Height),
-                    0.001f
-                );
+            result.Data.Height.Should().Be(createDto.Height);
+            result.Data.Radius.Should().Be(createDto.Radius);
             result.Data.FarmId.Should().Be(createDto.FarmId);
             result.Data.FarmName.Should().Be(farm.Name);
             result.Data.TopicCode.Should().Be(createDto.TopicCode);
@@ -440,7 +436,8 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Id = fishTankId,
                 Name = "Bể cá số 1",
-                Volume = (float)(Math.PI * 3.0f * 3.0f * 2.5f),
+                Height = 2.5f,
+                Radius = 3.0f,
                 FarmId = farmId,
                 FarmName = "Trang trại ABC",
                 TopicCode = "TOPIC001",
@@ -466,7 +463,8 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Id.Should().Be(fishTankId);
             result.Data.Name.Should().Be(fishTank.Name);
-            result.Data.Volume.Should().BeApproximately(fishTank.Volume, 0.001f);
+            result.Data.Height.Should().Be(fishTank.Height);
+            result.Data.Radius.Should().Be(fishTank.Radius);
             result.Data.FarmId.Should().Be(fishTank.FarmId);
             result.Data.FarmName.Should().Be(fishTank.FarmName);
             result.Data.TopicCode.Should().Be(fishTank.TopicCode);
@@ -698,7 +696,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
             result
-                .Data.Select(x => x.Volume)
+                .Data.Select(x => Math.Round(Math.PI * x.Radius * x.Radius * x.Height, 2))
                 .Should()
                 .ContainInOrder(
                     Math.Round(Math.PI * 4.5f * 4.5f * 5.0f, 2),
@@ -806,15 +804,8 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[1].Id,
                                     Name = entities[1].Name,
-                                    Volume = Math.Round(
-                                        (
-                                            Math.PI
-                                            * entities[1].Radius
-                                            * entities[1].Radius
-                                            * entities[1].Height
-                                        ),
-                                        2
-                                    ),
+                                    Height = entities[1].Height,
+                                    Radius = entities[1].Radius,
                                     FarmId = entities[1].FarmId,
                                     FarmName = entities[1].Farm.Name,
                                     TopicCode = entities[1].TopicCode,
@@ -827,15 +818,8 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[2].Id,
                                     Name = entities[2].Name,
-                                    Volume = Math.Round(
-                                        (
-                                            Math.PI
-                                            * entities[2].Radius
-                                            * entities[2].Radius
-                                            * entities[2].Height
-                                        ),
-                                        2
-                                    ),
+                                    Height = entities[2].Height,
+                                    Radius = entities[2].Radius,
                                     FarmId = entities[2].FarmId,
                                     FarmName = entities[2].Farm.Name,
                                     TopicCode = entities[2].TopicCode,
@@ -848,15 +832,8 @@ namespace IRasRag.Test.UnitTests.Application
                                 {
                                     Id = entities[0].Id,
                                     Name = entities[0].Name,
-                                    Volume = Math.Round(
-                                        (
-                                            Math.PI
-                                            * entities[0].Radius
-                                            * entities[0].Radius
-                                            * entities[0].Height
-                                        ),
-                                        2
-                                    ),
+                                    Height = entities[0].Height,
+                                    Radius = entities[0].Radius,
                                     FarmId = entities[0].FarmId,
                                     FarmName = entities[0].Farm.Name,
                                     TopicCode = entities[0].TopicCode,

@@ -38,7 +38,6 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
             ApplyFilter(request.SensorId, a => a.SensorId == request.SensorId);
             ApplyFilter(request.BatchId, a => a.FarmingBatchId == request.BatchId);
 
-
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "raisedat");
 
             Query.Select(a => new AlertDto

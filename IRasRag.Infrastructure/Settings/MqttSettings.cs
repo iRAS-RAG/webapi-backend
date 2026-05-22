@@ -10,10 +10,7 @@
         public string Password { get; set; }
         public string SubscribeTopic { get; set; }
         public string CommandTopicTemplate { get; set; }
-        public bool UseTls
-        {
-            get; set;
-        }
+        public bool UseTls { get; set; } = false;
 
         public void ValidateSettings()
         {

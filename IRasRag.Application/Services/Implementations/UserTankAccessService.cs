@@ -22,13 +22,19 @@ namespace IRasRag.Application.Services.Implementations
         {
             var key = $"user:{userId}:tanks";
 
-            var result = await _cache.GetOrCreateAsync(key, async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = CacheTtl;
+            var result =
+                await _cache.GetOrCreateAsync(
+                    key,
+                    async entry =>
+                    {
+                        entry.AbsoluteExpirationRelativeToNow = CacheTtl;
 
-                return await UserScopeHelper
-                    .GetUserTankIdsAsync(_unitOfWork, userId);
-            }) ?? throw new InvalidOperationException("Unexpected null result when retrieving user tank access.");
+                        return await UserScopeHelper.GetUserTankIdsAsync(_unitOfWork, userId);
+                    }
+                )
+                ?? throw new InvalidOperationException(
+                    "Unexpected null result when retrieving user tank access."
+                );
 
             return new HashSet<Guid>(result);
         }

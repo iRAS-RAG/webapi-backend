@@ -24,17 +24,28 @@ namespace IRasRag.Infrastructure.Services.Advisory
             _settings = settings.Value;
         }
 
-        public async Task UpsertAsync(string code, string? labelVi, string? unit, CancellationToken ct = default)
+        public async Task UpsertAsync(
+            string code,
+            string? labelVi,
+            string? unit,
+            CancellationToken ct = default
+        )
         {
             var payload = new CatalogUpsertPayload(code, labelVi, unit);
-            var response = await _http.PostAsJsonAsync(_settings.CatalogPath, payload, SerializerOptions, ct);
+            var response = await _http.PostAsJsonAsync(
+                _settings.CatalogPath,
+                payload,
+                SerializerOptions,
+                ct
+            );
 
             if (!response.IsSuccessStatusCode)
             {
                 var detail = await TryReadDetailAsync(response, ct);
                 var suffix = detail is not null ? $": {detail}" : string.Empty;
                 throw new HttpRequestException(
-                    $"Advisory POST {_settings.CatalogPath} returned {(int)response.StatusCode} for code '{code}'{suffix}");
+                    $"Advisory POST {_settings.CatalogPath} returned {(int)response.StatusCode} for code '{code}'{suffix}"
+                );
             }
         }
 
@@ -44,14 +55,21 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException(
-                    $"Advisory DELETE {_settings.CatalogPath}/{code} returned {(int)response.StatusCode}");
+                    $"Advisory DELETE {_settings.CatalogPath}/{code} returned {(int)response.StatusCode}"
+                );
         }
 
-        private static async Task<string?> TryReadDetailAsync(HttpResponseMessage response, CancellationToken ct)
+        private static async Task<string?> TryReadDetailAsync(
+            HttpResponseMessage response,
+            CancellationToken ct
+        )
         {
             try
             {
-                var body = await response.Content.ReadFromJsonAsync<ErrorBody>(SerializerOptions, ct);
+                var body = await response.Content.ReadFromJsonAsync<ErrorBody>(
+                    SerializerOptions,
+                    ct
+                );
                 return body?.Detail;
             }
             catch
@@ -63,9 +81,9 @@ namespace IRasRag.Infrastructure.Services.Advisory
         private sealed record CatalogUpsertPayload(
             [property: JsonPropertyName("code")] string Code,
             [property: JsonPropertyName("label_vi")] string? LabelVi,
-            [property: JsonPropertyName("unit")] string? Unit);
+            [property: JsonPropertyName("unit")] string? Unit
+        );
 
-        private sealed record ErrorBody(
-            [property: JsonPropertyName("detail")] string? Detail);
+        private sealed record ErrorBody([property: JsonPropertyName("detail")] string? Detail);
     }
 }

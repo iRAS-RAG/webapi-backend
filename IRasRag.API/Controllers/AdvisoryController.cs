@@ -1,6 +1,6 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.API.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +20,8 @@ namespace IRasRag.API.Controllers
             IAdvisoryService advisoryService,
             IUserTankAccessService tankAccessService,
             HttpContextUtils httpContextUtils,
-            ILogger<AdvisoryController> logger)
+            ILogger<AdvisoryController> logger
+        )
         {
             _advisoryService = advisoryService;
             _tankAccessService = tankAccessService;
@@ -34,7 +35,8 @@ namespace IRasRag.API.Controllers
         [HttpPost("chat")]
         public async Task<IActionResult> ChatAsync(
             [FromBody] AdvisoryChatRequest request,
-            CancellationToken ct)
+            CancellationToken ct
+        )
         {
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
@@ -45,12 +47,29 @@ namespace IRasRag.API.Controllers
 
             try
             {
-                var result = await _advisoryService.ChatAsync(request.TankId, userId.Value, request.Message, ct);
-                return Ok(new { result.Answer, result.IsOffTopic, result.Citations });
+                var result = await _advisoryService.ChatAsync(
+                    request.TankId,
+                    userId.Value,
+                    request.Message,
+                    ct
+                );
+                return Ok(
+                    new
+                    {
+                        result.Answer,
+                        result.IsOffTopic,
+                        result.Citations,
+                    }
+                );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing advisory chat for user {UserId}, tank {TankId}", userId, request.TankId);
+                _logger.LogError(
+                    ex,
+                    "Error processing advisory chat for user {UserId}, tank {TankId}",
+                    userId,
+                    request.TankId
+                );
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }

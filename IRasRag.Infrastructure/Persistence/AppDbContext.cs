@@ -120,7 +120,8 @@ namespace IRasRag.Infrastructure.Persistence
             // ====================================
             // Custom DbFunctions
             // ====================================
-            modelBuilder.HasDbFunction(
+            modelBuilder
+                .HasDbFunction(
                     typeof(PgFunctions).GetMethod(
                         nameof(PgFunctions.DateBin),
                         new[] { typeof(TimeSpan), typeof(DateTime), typeof(DateTime) }
@@ -189,7 +190,8 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    if(entry.Entity.CreatedAt == null) entry.Entity.CreatedAt = now;
+                    if (entry.Entity.CreatedAt == null)
+                        entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)
@@ -225,7 +227,8 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    if(entry.Entity.CreatedAt == null) entry.Entity.CreatedAt = now;
+                    if (entry.Entity.CreatedAt == null)
+                        entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)

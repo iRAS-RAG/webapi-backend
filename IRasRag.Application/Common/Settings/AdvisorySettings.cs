@@ -39,5 +39,4 @@ namespace IRasRag.Application.Common.Settings
         public string AdminRagChunksPath { get; set; } = "/admin/rag/chunks";
         public string AdminDataSensorPath { get; set; } = "/admin/data/sensor";
     }
-
 }

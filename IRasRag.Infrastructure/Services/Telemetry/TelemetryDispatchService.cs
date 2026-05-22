@@ -32,7 +32,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             ILogger<TelemetryDispatchService> logger,
             IAlertStateEvaluator alertStateEvaluator,
             ILiveDataNotifier liveDataNotifier,
-            IIoTIngestBatchWriter iotIngestBatchWriter)
+            IIoTIngestBatchWriter iotIngestBatchWriter
+        )
         {
             _unitOfWork = unitOfWork;
             _cache = cache;
@@ -62,11 +63,20 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             {
                 _logger.LogInformation(
                     "No active batch for tank {TankId}, persisting logs without alert evaluation",
-                    masterboard.FishTankId);
+                    masterboard.FishTankId
+                );
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null, species: null, stage: null);
+                    telemetry,
+                    masterboard.Id,
+                    masterboard.FishTank.FarmId,
+                    masterboard.FishTankId,
+                    timestamp,
+                    thresholds: null,
+                    batch: null,
+                    species: null,
+                    stage: null
+                );
                 return;
             }
 
@@ -76,22 +86,40 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             {
                 _logger.LogWarning(
                     "No SpeciesStageConfig found for batch {BatchId}, persisting logs without alert evaluation",
-                    batch.Id);
+                    batch.Id
+                );
 
                 await PersistLogsAsync(
-                    telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
-                    timestamp, thresholds: null, batch: null, species: null, stage: null);
+                    telemetry,
+                    masterboard.Id,
+                    masterboard.FishTank.FarmId,
+                    masterboard.FishTankId,
+                    timestamp,
+                    thresholds: null,
+                    batch: null,
+                    species: null,
+                    stage: null
+                );
                 return;
             }
 
             // Step 3: Resolve sensors and thresholds
-            var thresholds = await _cache.GetThresholdsAsync(stageConfig.SpeciesId, stageConfig.GrowthStageId);
+            var thresholds = await _cache.GetThresholdsAsync(
+                stageConfig.SpeciesId,
+                stageConfig.GrowthStageId
+            );
 
             await PersistLogsAsync(
-                telemetry, masterboard.Id, masterboard.FishTank.FarmId, masterboard.FishTankId,
-                timestamp, thresholds, batch,
+                telemetry,
+                masterboard.Id,
+                masterboard.FishTank.FarmId,
+                masterboard.FishTankId,
+                timestamp,
+                thresholds,
+                batch,
                 species: stageConfig.Species.Name,
-                stage: stageConfig.GrowthStage.Name);
+                stage: stageConfig.GrowthStage.Name
+            );
         }
 
         private async Task PersistLogsAsync(
@@ -103,7 +131,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             Dictionary<Guid, SpeciesThreshold>? thresholds,
             FarmingBatch? batch,
             string? species,
-            string? stage)
+            string? stage
+        )
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
             var bufferedLogs = new List<TelemetryLogWriteModel>();
@@ -116,7 +145,9 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 {
                     _logger.LogWarning(
                         "No sensor found for pin {Pin} on masterboard {MasterboardId}, skipping",
-                        reading.Pin, masterboardId);
+                        reading.Pin,
+                        masterboardId
+                    );
                     continue;
                 }
 
@@ -125,27 +156,39 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
                 // Enqueue live reading — decoupled from ingestion path via Channel<T>
                 _liveDataNotifier.EnqueueTelemetry(
-                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp));
+                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp)
+                );
 
                 // Evaluate thresholds and prepare log entry
                 var isWarning = false;
 
-                if (thresholds != null && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold))
+                if (
+                    thresholds != null
+                    && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold)
+                )
                 {
                     isWarning = ThresholdEvaluator.IsViolation(reading.Val, threshold);
 
                     if (batch != null)
                     {
                         await _alertStateEvaluator.EvaluateAsync(
-                            tankId, sensor.Id, sensor.SensorTypeId, batch.Id, threshold, reading.Val,
-                            sensor.Name, batch.Name);
+                            tankId,
+                            sensor.Id,
+                            sensor.SensorTypeId,
+                            batch.Id,
+                            threshold,
+                            reading.Val,
+                            sensor.Name,
+                            batch.Name
+                        );
                     }
                 }
                 else if (thresholds == null)
                 {
                     _logger.LogInformation(
                         "No threshold configured for sensor type {SensorTypeId}, skipping alert evaluation",
-                        sensor.SensorTypeId);
+                        sensor.SensorTypeId
+                    );
                 }
 
                 bufferedLogs.Add(
@@ -154,16 +197,19 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         SensorId = sensor.Id,
                         Data = reading.Val,
                         IsWarning = isWarning,
-                        CreatedAt = timestamp
-                    });
+                        CreatedAt = timestamp,
+                    }
+                );
 
                 if (sensor.SensorType?.Code != null)
-                    metrics.Add(new IoTMetric
-                    {
-                        Code = sensor.SensorType.Code,
-                        Value = reading.Val,
-                        Unit = sensor.SensorType.UnitOfMeasure
-                    });
+                    metrics.Add(
+                        new IoTMetric
+                        {
+                            Code = sensor.SensorType.Code,
+                            Value = reading.Val,
+                            Unit = sensor.SensorType.UnitOfMeasure,
+                        }
+                    );
             }
 
             if (bufferedLogs.Count > 0)
@@ -178,7 +224,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             DateTime timestamp,
             string? species,
             string? stage,
-            List<IoTMetric> metrics)
+            List<IoTMetric> metrics
+        )
         {
             try
             {
@@ -189,16 +236,19 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     Ts = timestamp.ToString("o"),
                     Species = species,
                     Stage = stage,
-                    Metrics = metrics.Count > 0 ? metrics : null
+                    Metrics = metrics.Count > 0 ? metrics : null,
                 };
 
                 _iotIngestBatchWriter.Enqueue(payload);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex,
+                _logger.LogWarning(
+                    ex,
                     "Advisory IoT enqueue failed for farm {FarmId}/tank {TankId} — continuing",
-                    farmId, tankId);
+                    farmId,
+                    tankId
+                );
             }
         }
     }
