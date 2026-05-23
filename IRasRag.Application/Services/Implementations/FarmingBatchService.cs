@@ -366,6 +366,8 @@ namespace IRasRag.Application.Services.Implementations
                         EstimatedStartDate = stageStart,
                         EstimatedEndDate = stageEnd,
                         ExpectedDurationDays = duration,
+                        // First stage becomes active immediately at batch StartDate
+                        ActualStartDate = batchStages.Count == 0 ? stageStart : null,
                     };
 
                     batchStages.Add(bs);
@@ -556,6 +558,16 @@ namespace IRasRag.Application.Services.Implementations
                 if (orderedStages.Any())
                 {
                     batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
+                }
+
+                // Remove navigation instances to prevent EF tracking conflicts when attaching the graph.
+                // We only need FK values persisted (e.g., SpeciesStageConfigId), navigation properties are not required here.
+                if (batch.BatchStages != null)
+                {
+                    foreach (var bs in batch.BatchStages)
+                    {
+                        bs.SpeciesStageConfig = null;
+                    }
                 }
 
                 repo.Update(batch);
