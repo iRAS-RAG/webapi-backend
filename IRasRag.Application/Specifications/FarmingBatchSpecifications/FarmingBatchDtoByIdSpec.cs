@@ -34,6 +34,9 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     UnitOfMeasure = fb.UnitOfMeasure,
                     CreatedAt = fb.CreatedAt,
                     ModifiedAt = fb.ModifiedAt,
+                    SpeciesId = fb.CurrentStageConfig.SpeciesId,
+                    EstimatedHarvestCount = fb.EstimatedHarvestCount,
+                    EstimatedHarvestWeightKg = fb.EstimatedHarvestWeightKg,
                     PlannedStages = fb
                         .BatchStages.Select(bs => new IRasRag.Application.DTOs.PlannedStageDto
                         {
@@ -45,6 +48,14 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                             ExpectedDurationDays = bs.ExpectedDurationDays,
                             EstimatedStartDate = bs.EstimatedStartDate,
                             EstimatedEndDate = bs.EstimatedEndDate,
+                            AmountPer100Fish = bs.SpeciesStageConfig.AmountPer100Fish,
+                            FrequencyPerDay = bs.SpeciesStageConfig.FrequencyPerDay,
+                            MaxStockingDensity = bs.SpeciesStageConfig.MaxStockingDensity,
+                            FeedTypeNames = bs
+                                .SpeciesStageConfig.FeedTypes.Select(ft => ft.Name)
+                                .ToList(),
+                            ExpectedWeightKgPerFish = bs.SpeciesStageConfig.ExpectedWeightKgPerFish,
+                            SurvivalRate = bs.SpeciesStageConfig.SurvivalRate,
                         })
                         .ToList(),
                 });
