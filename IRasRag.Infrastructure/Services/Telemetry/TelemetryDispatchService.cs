@@ -23,6 +23,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         private readonly IAlertStateEvaluator _alertStateEvaluator;
         private readonly ILiveDataNotifier _liveDataNotifier;
         private readonly IIoTIngestBatchWriter _iotIngestBatchWriter;
+        private readonly ITelemetryWindowService _telemetryWindow;
 
         public TelemetryDispatchService(
             IUnitOfWork unitOfWork,
@@ -32,7 +33,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             ILogger<TelemetryDispatchService> logger,
             IAlertStateEvaluator alertStateEvaluator,
             ILiveDataNotifier liveDataNotifier,
-            IIoTIngestBatchWriter iotIngestBatchWriter
+            IIoTIngestBatchWriter iotIngestBatchWriter,
+            ITelemetryWindowService telemetryWindow
         )
         {
             _unitOfWork = unitOfWork;
@@ -43,6 +45,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             _alertStateEvaluator = alertStateEvaluator;
             _liveDataNotifier = liveDataNotifier;
             _iotIngestBatchWriter = iotIngestBatchWriter;
+            _telemetryWindow = telemetryWindow;
         }
 
         public async Task DispatchAsync(SensorTelemetry telemetry, string macFromTopic)
@@ -155,9 +158,9 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 _latestTelemetryCache.Set(sensor.Id, reading.Val, timestamp);
 
                 // Enqueue live reading — decoupled from ingestion path via Channel<T>
-                _liveDataNotifier.EnqueueTelemetry(
-                    new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp)
-                );
+                var push = new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp, sensor.SensorType?.Name);
+                _liveDataNotifier.EnqueueTelemetry(push);
+                _telemetryWindow.Append(push);
 
                 // Evaluate thresholds and prepare log entry
                 var isWarning = false;
