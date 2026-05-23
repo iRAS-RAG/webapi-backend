@@ -122,6 +122,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<ITelemetryCacheService, TelemetryCacheService>();
             services.AddScoped<ITelemetryDispatchService, TelemetryDispatchService>();
             services.AddSingleton<ILatestTelemetryCacheService, LatestTelemetryCacheService>();
+            services.AddSingleton<ITelemetryWindowService, TelemetryWindowService>();
             services.AddSingleton<IAlertStateCacheService, AlertStateCacheService>();
             services.AddScoped<IAlertStateEvaluator, AlertStateEvaluator>();
 
