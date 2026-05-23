@@ -376,7 +376,22 @@ namespace IRasRag.Application.Services.Implementations
                             ResultType.BadRequest
                         );
 
-                    config.FeedTypes = feedTypes.ToList();
+                    // Avoid reassigning the same feed types which can cause EF to try inserting
+                    // duplicate join rows. Fetch existing feed type ids via spec and compare.
+                    var existingDto = await _unitOfWork
+                        .GetRepository<SpeciesStageConfig>()
+                        .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
+
+                    var existingFeedTypeIds = existingDto?.FeedTypeIds ?? new List<Guid>();
+
+                    var setsEqual =
+                        existingFeedTypeIds.Count == requestedFeedTypeIds.Count
+                        && !existingFeedTypeIds.Except(requestedFeedTypeIds).Any();
+
+                    if (!setsEqual)
+                    {
+                        config.FeedTypes = feedTypes.ToList();
+                    }
                 }
 
                 // If sequence is provided, auto-adjust other sequences to make room
