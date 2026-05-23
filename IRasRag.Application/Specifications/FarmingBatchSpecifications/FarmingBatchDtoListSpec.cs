@@ -49,6 +49,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 UnitOfMeasure = fb.UnitOfMeasure,
                 CreatedAt = fb.CreatedAt,
                 ModifiedAt = fb.ModifiedAt,
+                PlannedStages = new List<IRasRag.Application.DTOs.PlannedStageDto>(),
             });
         }
     }

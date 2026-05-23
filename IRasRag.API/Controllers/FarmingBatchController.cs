@@ -190,14 +190,18 @@ namespace IRasRag.API.Controllers
 
         [HttpPost("{id}/harvest")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> HarvestBatch(Guid id, DateTime harvestDate)
+        public async Task<IActionResult> HarvestBatch(Guid id, [FromBody] HarvestBatchRequest body)
         {
             try
             {
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _farmingBatchService.HarvestBatchAsync(id, harvestDate);
+                var result = await _farmingBatchService.HarvestBatchAsync(
+                    id,
+                    body.HarvestDate,
+                    body.Force
+                );
 
                 return result.Type switch
                 {
@@ -250,6 +254,29 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi ghi nhận tỷ lệ chết cho lô nuôi {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi ghi nhận tỷ lệ chết." });
+            }
+        }
+
+        [HttpGet("{id}/stages")]
+        public async Task<IActionResult> GetPlannedStages(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.GetPlannedStagesByBatchIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách giai đoạn cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi lấy danh sách giai đoạn." }
+                );
             }
         }
 
