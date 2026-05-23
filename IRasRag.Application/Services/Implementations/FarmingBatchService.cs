@@ -337,12 +337,10 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                // Validate FishTank exists
+                // Validate FishTank exists and load it
                 var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var fishTankExists = await fishTankRepo.AnyAsync(ft =>
-                    ft.Id == createDto.FishTankId
-                );
-                if (!fishTankExists)
+                var fishTank = await fishTankRepo.GetByIdAsync(createDto.FishTankId);
+                if (fishTank == null)
                 {
                     return Result<FarmingBatchDto>.Failure(
                         "Bể cá không tồn tại",
@@ -411,6 +409,56 @@ namespace IRasRag.Application.Services.Implementations
                     return Result<FarmingBatchDto>.Failure(
                         "Một hoặc nhiều cấu hình giai đoạn thiếu ExpectedDurationDays",
                         ResultType.BadRequest
+                    );
+                }
+
+                // Check tank capacity vs expected counts per stage using MaxStockingDensity
+                // Compute tank volume (assuming units are consistent, e.g., meters -> cubic meters)
+                var orderedStageConfigs = stageConfigs.OrderBy(s => s.Sequence).ToList();
+                try
+                {
+                    var tankVolume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
+                    if (createDto.InitialQuantity > 0)
+                    {
+                        double cumulativeSurvival = 1.0;
+                        foreach (var sc in orderedStageConfigs)
+                        {
+                            var sr = sc.SurvivalRate ?? 1.0;
+                            if (sr < 0)
+                                sr = 0;
+                            if (sr > 1)
+                                sr = 1;
+                            cumulativeSurvival *= sr;
+
+                            var expectedAtStage = (int)
+                                Math.Floor(createDto.InitialQuantity * cumulativeSurvival);
+
+                            if (
+                                sc.MaxStockingDensity.HasValue
+                                && sc.MaxStockingDensity.Value > 0
+                                && tankVolume > 0
+                            )
+                            {
+                                var maxAllowed = (int)
+                                    Math.Floor(sc.MaxStockingDensity.Value * tankVolume);
+                                if (expectedAtStage > maxAllowed)
+                                {
+                                    var stageName =
+                                        sc.GrowthStage?.Name ?? $"Giai đoạn {sc.Sequence}";
+                                    return Result<FarmingBatchDto>.Failure(
+                                        $"Dự kiến số lượng tại {stageName} ({expectedAtStage}) vượt quá sức chứa tối đa của bể ({maxAllowed}). Vui lòng giảm số lượng ban đầu hoặc chọn bể lớn hơn.",
+                                        ResultType.BadRequest
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể kiểm tra sức chứa bể - bỏ qua kiểm tra dung tích"
                     );
                 }
 
