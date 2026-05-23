@@ -32,7 +32,12 @@ namespace IRasRag.Infrastructure.Services.Mqtt
             _client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
             _client.DisconnectedAsync += async e =>
             {
-                _logger.LogWarning("MQTT disconnected. Attempting reconnect in 5s...");
+                _logger.LogWarning(
+                    "MQTT disconnected. Reason: {Reason} | WasConnected: {WasConnected} | Exception: {Exception}",
+                    e.Reason,
+                    e.ClientWasConnected,
+                    e.Exception?.Message ?? "none"
+                );
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 try
                 {
@@ -150,6 +155,7 @@ namespace IRasRag.Infrastructure.Services.Mqtt
                     .WithTcpServer(_mqttSettings.Host, _mqttSettings.Port)
                     .WithCredentials(_mqttSettings.Username, _mqttSettings.Password)
                     .WithCleanSession()
+                    .WithKeepAlivePeriod(TimeSpan.FromSeconds(60))
                     .Build();
 
                 var response = await _client.ConnectAsync(clientOptions, token);
