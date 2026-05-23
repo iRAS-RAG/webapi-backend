@@ -34,6 +34,19 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     UnitOfMeasure = fb.UnitOfMeasure,
                     CreatedAt = fb.CreatedAt,
                     ModifiedAt = fb.ModifiedAt,
+                    PlannedStages = fb
+                        .BatchStages.Select(bs => new IRasRag.Application.DTOs.PlannedStageDto
+                        {
+                            Id = bs.Id,
+                            Sequence = bs.Sequence,
+                            SpeciesStageConfigId = bs.SpeciesStageConfigId,
+                            GrowthStageId = bs.SpeciesStageConfig.GrowthStageId,
+                            StageName = bs.SpeciesStageConfig.GrowthStage.Name,
+                            ExpectedDurationDays = bs.ExpectedDurationDays,
+                            EstimatedStartDate = bs.EstimatedStartDate,
+                            EstimatedEndDate = bs.EstimatedEndDate,
+                        })
+                        .ToList(),
                 });
         }
     }

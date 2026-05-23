@@ -31,5 +31,6 @@ namespace IRasRag.Domain.Entities
         public ICollection<FeedType> FeedTypes { get; set; }
         public ICollection<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
         public ICollection<FarmingBatch> FarmingBatches { get; set; }
+        public ICollection<BatchStage> BatchStages { get; set; }
     }
 }

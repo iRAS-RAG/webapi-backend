@@ -14,7 +14,10 @@ namespace IRasRag.Application.DTOs
         public Guid SpeciesStageConfigId { get; set; }
         public Guid SpeciesId { get; set; }
         public string SpeciesName { get; set; } = string.Empty;
-        public Guid GrowthStageId { get; set; }
+
+        // Planned stages for the batch
+        public IReadOnlyList<PlannedStageDto> PlannedStages { get; set; } =
+            new List<PlannedStageDto>();
         public string StageName { get; set; } = string.Empty;
         public FarmingBatchStatus Status { get; set; }
         public BatchPausedReason? PausedReason { get; set; }
@@ -50,13 +53,8 @@ namespace IRasRag.Application.DTOs
         [Required(ErrorMessage = "SpeciesId là bắt buộc")]
         public Guid SpeciesId { get; set; }
 
-        [Required(ErrorMessage = "GrowthStageId là bắt buộc")]
-        public Guid GrowthStageId { get; set; }
-
         [Required(ErrorMessage = "Ngày bắt đầu là bắt buộc")]
         public DateTime StartDate { get; set; }
-
-        public DateTime? EstimatedHarvestDate { get; set; }
 
         [Required(ErrorMessage = "Số lượng ban đầu là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Số lượng ban đầu phải lớn hơn hoặc bằng 0")]
@@ -65,6 +63,18 @@ namespace IRasRag.Application.DTOs
         [Required(ErrorMessage = "Đơn vị đo là bắt buộc")]
         [MaxLength(20, ErrorMessage = "Đơn vị đo không được vượt quá 20 ký tự")]
         public string UnitOfMeasure { get; set; } = string.Empty;
+    }
+
+    public class PlannedStageDto
+    {
+        public Guid Id { get; set; }
+        public int Sequence { get; set; }
+        public Guid SpeciesStageConfigId { get; set; }
+        public Guid GrowthStageId { get; set; }
+        public string StageName { get; set; } = string.Empty;
+        public int ExpectedDurationDays { get; set; }
+        public DateTime EstimatedStartDate { get; set; }
+        public DateTime EstimatedEndDate { get; set; }
     }
 
     // Update DTO

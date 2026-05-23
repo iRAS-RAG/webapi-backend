@@ -43,6 +43,7 @@ namespace IRasRag.Domain.Entities
         // Navigation properties
         public FishTank FishTank { get; set; }
         public SpeciesStageConfig CurrentStageConfig { get; set; }
+        public ICollection<BatchStage> BatchStages { get; set; }
         public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<MortalityLog> MortalityLogs { get; set; }
         public ICollection<Alert> Alerts { get; set; }

@@ -207,29 +207,26 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Validate GrowthStage exists
-                var growthStageRepo = _unitOfWork.GetRepository<GrowthStage>();
-                var growthStageExists = await growthStageRepo.AnyAsync(gs =>
-                    gs.Id == createDto.GrowthStageId
+                // Load all stage configs for species ordered by sequence
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var stageConfigs = await stageConfigRepo.ListAsync(
+                    new IRasRag.Application.Specifications.SpecificationHelpers.SpecBySpeciesOrderedSpec(
+                        createDto.SpeciesId
+                    )
                 );
-                if (!growthStageExists)
+                if (stageConfigs == null || !stageConfigs.Any())
                 {
                     return Result<FarmingBatchDto>.Failure(
-                        "Giai đoạn tăng trưởng không tồn tại",
+                        "Không tìm thấy cấu hình giai đoạn cho loài này",
                         ResultType.BadRequest
                     );
                 }
 
-                // Resolve SpeciesStageConfig from Species + GrowthStage
-                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var stageConfig = await stageConfigRepo.FirstOrDefaultAsync(sc =>
-                    sc.SpeciesId == createDto.SpeciesId
-                    && sc.GrowthStageId == createDto.GrowthStageId
-                );
-                if (stageConfig == null)
+                // Ensure each stage has ExpectedDurationDays
+                if (stageConfigs.Any(sc => !sc.ExpectedDurationDays.HasValue))
                 {
                     return Result<FarmingBatchDto>.Failure(
-                        "Không tìm thấy cấu hình cho loài và giai đoạn này",
+                        "Một hoặc nhiều cấu hình giai đoạn thiếu ExpectedDurationDays",
                         ResultType.BadRequest
                     );
                 }
@@ -261,13 +258,55 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Map and create
+                // Map and create FarmingBatch
                 var farmingBatch = _mapper.Map<FarmingBatch>(createDto);
                 farmingBatch.Name = trimmedName;
                 farmingBatch.UnitOfMeasure = trimmedUnitOfMeasure;
-                farmingBatch.CurrentStageConfigId = stageConfig.Id;
+                farmingBatch.CurrentStageConfigId = stageConfigs
+                    .OrderBy(s => s.Sequence)
+                    .First()
+                    .Id;
 
+                // Build BatchStage entries from stageConfigs
+                var orderedStages = stageConfigs.OrderBy(s => s.Sequence).ToList();
+                var batchStages = new List<BatchStage>();
+                var stageStart = createDto.StartDate;
+                foreach (var sc in orderedStages)
+                {
+                    var duration = sc.ExpectedDurationDays!.Value;
+                    var stageEnd = stageStart.AddDays(duration);
+
+                    var bs = new BatchStage
+                    {
+                        Id = Guid.NewGuid(),
+                        SpeciesStageConfigId = sc.Id,
+                        Sequence = sc.Sequence,
+                        EstimatedStartDate = stageStart,
+                        EstimatedEndDate = stageEnd,
+                        ExpectedDurationDays = duration,
+                    };
+
+                    batchStages.Add(bs);
+                    // next stage start is stageEnd
+                    stageStart = stageEnd;
+                }
+
+                // Set estimated harvest date to last stage end
+                farmingBatch.EstimatedHarvestDate = batchStages.Last().EstimatedEndDate;
+
+                // Add farmingBatch and batchStages
                 await farmingBatchRepo.AddAsync(farmingBatch);
+                // Ensure batchStages point to farmingBatch after save
+                await _unitOfWork.SaveChangesAsync();
+
+                // Assign FarmingBatchId and add batch stages
+                foreach (var bs in batchStages)
+                {
+                    bs.FarmingBatchId = farmingBatch.Id;
+                }
+                var batchStageRepo = _unitOfWork.GetRepository<BatchStage>();
+                await batchStageRepo.AddRangeAsync(batchStages);
+
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
 

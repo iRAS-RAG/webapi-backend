@@ -23,7 +23,8 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(
                     dest => dest.StageName,
                     opt => opt.MapFrom(src => src.CurrentStageConfig.GrowthStage.Name)
-                );
+                )
+                .ForMember(dest => dest.PlannedStages, opt => opt.MapFrom(src => src.BatchStages));
 
             // Create DTO to Entity
             CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.None)
@@ -44,6 +45,32 @@ namespace IRasRag.Application.Common.Mappings
                     opt => opt.MapFrom(src => src.SpeciesStageConfigId)
                 )
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<BatchStage, PlannedStageDto>()
+                .ForMember(
+                    dest => dest.SpeciesStageConfigId,
+                    opt => opt.MapFrom(src => src.SpeciesStageConfigId)
+                )
+                .ForMember(
+                    dest => dest.GrowthStageId,
+                    opt => opt.MapFrom(src => src.SpeciesStageConfig.GrowthStageId)
+                )
+                .ForMember(
+                    dest => dest.StageName,
+                    opt => opt.MapFrom(src => src.SpeciesStageConfig.GrowthStage.Name)
+                )
+                .ForMember(
+                    dest => dest.ExpectedDurationDays,
+                    opt => opt.MapFrom(src => src.ExpectedDurationDays)
+                )
+                .ForMember(
+                    dest => dest.EstimatedStartDate,
+                    opt => opt.MapFrom(src => src.EstimatedStartDate)
+                )
+                .ForMember(
+                    dest => dest.EstimatedEndDate,
+                    opt => opt.MapFrom(src => src.EstimatedEndDate)
+                );
         }
     }
 }

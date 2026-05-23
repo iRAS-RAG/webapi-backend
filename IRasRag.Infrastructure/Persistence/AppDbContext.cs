@@ -97,6 +97,7 @@ namespace IRasRag.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new FeedTypeConfiguration());
             modelBuilder.ApplyConfiguration(new SpeciesStageConfigConfiguration());
             modelBuilder.ApplyConfiguration(new SpeciesStageConfigFeedTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new BatchStageConfiguration());
 
             // Hardware
             modelBuilder.ApplyConfiguration(new MasterBoardConfiguration());
