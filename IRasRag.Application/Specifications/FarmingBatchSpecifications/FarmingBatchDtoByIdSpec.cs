@@ -48,6 +48,8 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                             ExpectedDurationDays = bs.ExpectedDurationDays,
                             EstimatedStartDate = bs.EstimatedStartDate,
                             EstimatedEndDate = bs.EstimatedEndDate,
+                            ActualStartDate = bs.ActualStartDate,
+                            ActualEndDate = bs.ActualEndDate,
                             AmountPer100Fish = bs.SpeciesStageConfig.AmountPer100Fish,
                             FrequencyPerDay = bs.SpeciesStageConfig.FrequencyPerDay,
                             MaxStockingDensity = bs.SpeciesStageConfig.MaxStockingDensity,
