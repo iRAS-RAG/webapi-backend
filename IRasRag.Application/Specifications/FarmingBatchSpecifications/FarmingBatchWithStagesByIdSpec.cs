@@ -13,6 +13,12 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 .Include(fb => fb.BatchStages)
                     .ThenInclude(bs => bs.SpeciesStageConfig)
                         .ThenInclude(ssc => ssc.GrowthStage)
+                .Include(fb => fb.BatchStages)
+                    .ThenInclude(bs => bs.SpeciesStageConfig)
+                        .ThenInclude(ssc => ssc.Species)
+                .Include(fb => fb.BatchStages)
+                    .ThenInclude(bs => bs.SpeciesStageConfig)
+                        .ThenInclude(ssc => ssc.FeedTypes)
                 .AsNoTracking();
         }
     }

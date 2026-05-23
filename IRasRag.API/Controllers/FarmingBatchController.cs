@@ -257,6 +257,29 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("{id}/stages")]
+        public async Task<IActionResult> GetPlannedStages(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.GetPlannedStagesByBatchIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách giai đoạn cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi lấy danh sách giai đoạn." }
+                );
+            }
+        }
+
         [HttpGet("{id}/feeding-logs")]
         public async Task<IActionResult> GetFeedingLogs(
             Guid id,

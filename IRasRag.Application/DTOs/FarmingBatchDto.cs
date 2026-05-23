@@ -75,6 +75,12 @@ namespace IRasRag.Application.DTOs
         public int ExpectedDurationDays { get; set; }
         public DateTime EstimatedStartDate { get; set; }
         public DateTime EstimatedEndDate { get; set; }
+        public DateTime? ActualStartDate { get; set; }
+        public DateTime? ActualEndDate { get; set; }
+        public double AmountPer100Fish { get; set; }
+        public int FrequencyPerDay { get; set; }
+        public double? MaxStockingDensity { get; set; }
+        public IReadOnlyList<string> FeedTypeNames { get; set; } = new List<string>();
     }
 
     // Update DTO

@@ -33,6 +33,88 @@ namespace IRasRag.Application.Services.Implementations
             _telemetryCache = telemetryCache;
         }
 
+        public async Task<Result<IReadOnlyList<PlannedStageDto>>> GetPlannedStagesByBatchIdAsync(
+            Guid batchId
+        )
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await repo.FirstOrDefaultAsync(
+                    new FarmingBatchWithStagesByIdSpec(batchId)
+                );
+
+                if (batch == null)
+                {
+                    return Result<IReadOnlyList<PlannedStageDto>>.Failure(
+                        "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+                }
+
+                var ordered = batch.BatchStages.OrderBy(bs => bs.Sequence).ToList();
+                var dtos = new List<PlannedStageDto>();
+                var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                foreach (var bs in ordered)
+                {
+                    var ssc = bs.SpeciesStageConfig;
+                    if (ssc == null || ssc.GrowthStage == null || ssc.GrowthStageId == Guid.Empty)
+                    {
+                        // try to reload species stage config with includes
+                        var reloaded = await sscRepo.FirstOrDefaultAsync(
+                            new IRasRag.Application.Specifications.SpeciesStageConfigSpecifications.SpeciesStageConfigWithIncludesByIdSpec(
+                                bs.SpeciesStageConfigId
+                            )
+                        );
+                        if (reloaded != null)
+                        {
+                            bs.SpeciesStageConfig = reloaded;
+                            ssc = reloaded;
+                        }
+                    }
+
+                    // Build DTO explicitly to avoid relying on mapping when navigation is partially loaded
+                    var dto = new PlannedStageDto
+                    {
+                        Id = bs.Id,
+                        Sequence = bs.Sequence,
+                        SpeciesStageConfigId = bs.SpeciesStageConfigId,
+                        GrowthStageId = ssc?.GrowthStage?.Id ?? ssc?.GrowthStageId ?? Guid.Empty,
+                        StageName = ssc?.GrowthStage?.Name ?? string.Empty,
+                        ExpectedDurationDays = bs.ExpectedDurationDays,
+                        EstimatedStartDate = bs.EstimatedStartDate,
+                        EstimatedEndDate = bs.EstimatedEndDate,
+                        ActualStartDate = bs.ActualStartDate,
+                        ActualEndDate = bs.ActualEndDate,
+                        AmountPer100Fish = ssc?.AmountPer100Fish ?? 0,
+                        FrequencyPerDay = ssc?.FrequencyPerDay ?? 0,
+                        MaxStockingDensity = ssc?.MaxStockingDensity,
+                        FeedTypeNames =
+                            ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? new List<string>(),
+                    };
+
+                    dtos.Add(dto);
+                }
+
+                return Result<IReadOnlyList<PlannedStageDto>>.Success(
+                    dtos,
+                    "Lấy danh sách giai đoạn dự kiến thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi lấy giai đoạn dự kiến cho lô nuôi {BatchId}",
+                    batchId
+                );
+                return Result<IReadOnlyList<PlannedStageDto>>.Failure(
+                    "Lỗi khi lấy giai đoạn dự kiến",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
         #region Get Methods
         public async Task<PaginatedResult<FarmingBatchDto>> GetAllFarmingBatchesAsync(
             FarmingBatchListRequest request
