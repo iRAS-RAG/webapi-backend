@@ -31,6 +31,10 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 Id = fb.Id,
                 FishTankId = fb.FishTankId,
                 FishTankName = fb.FishTank.Name,
+                TankVolume = Math.Round(
+                    Math.PI * fb.FishTank.Radius * fb.FishTank.Radius * fb.FishTank.Height,
+                    2
+                ),
                 Name = fb.Name,
                 SpeciesStageConfigId = fb.CurrentStageConfigId,
                 SpeciesName = fb.CurrentStageConfig.Species.Name,
