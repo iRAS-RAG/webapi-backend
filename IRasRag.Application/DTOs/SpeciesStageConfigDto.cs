@@ -20,6 +20,10 @@ namespace IRasRag.Application.DTOs
         public double? MaxStockingDensity { get; set; }
 
         public int? ExpectedDurationDays { get; set; }
+
+        // Growth estimation
+        public double? ExpectedWeightKgPerFish { get; set; }
+        public double? SurvivalRate { get; set; }
     }
 
     public class CreateSpeciesStageConfigDto
@@ -54,6 +58,16 @@ namespace IRasRag.Application.DTOs
 
         [Range(1, int.MaxValue, ErrorMessage = "Thời gian dự kiến phải là số ngày hợp lệ.")]
         public int? ExpectedDurationDays { get; set; }
+
+        [Range(
+            0.0001,
+            double.MaxValue,
+            ErrorMessage = "Expected weight must be > 0 kg if provided."
+        )]
+        public double? ExpectedWeightKgPerFish { get; set; }
+
+        [Range(0.0, 1.0, ErrorMessage = "SurvivalRate must be between 0 and 1.")]
+        public double? SurvivalRate { get; set; }
     }
 
     public class UpdateSpeciesStageConfigDto
@@ -76,6 +90,16 @@ namespace IRasRag.Application.DTOs
 
         [Range(1, int.MaxValue, ErrorMessage = "Thời gian dự kiến phải là số ngày hợp lệ.")]
         public int? ExpectedDurationDays { get; set; }
+
+        [Range(
+            0.0001,
+            double.MaxValue,
+            ErrorMessage = "Expected weight must be > 0 kg if provided."
+        )]
+        public double? ExpectedWeightKgPerFish { get; set; }
+
+        [Range(0.0, 1.0, ErrorMessage = "SurvivalRate must be between 0 and 1.")]
+        public double? SurvivalRate { get; set; }
     }
 
     // List Request DTO

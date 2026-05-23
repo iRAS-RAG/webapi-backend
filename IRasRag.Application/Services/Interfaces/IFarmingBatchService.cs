@@ -14,6 +14,11 @@ namespace IRasRag.Application.Services.Interfaces
         > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId);
         Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id);
         Task<Result<FarmingBatchDto>> CreateFarmingBatchAsync(CreateFarmingBatchDto createDto);
+        Task<(int EstimatedCount, double? EstimatedWeightKg)> ComputeEstimatedYieldAsync(
+            Domain.Entities.FarmingBatch batch,
+            bool persist = false
+        );
+        Task<int> RecomputeEstimatedYieldBySpeciesAsync(Guid speciesId);
         Task<Result> UpdateFarmingBatchAsync(Guid id, UpdateFarmingBatchDto updateDto);
         Task<Result> HarvestBatchAsync(Guid id, DateTime harvestTime, bool force = false);
         Task<Result<IReadOnlyList<PlannedStageDto>>> GetPlannedStagesByBatchIdAsync(Guid batchId);

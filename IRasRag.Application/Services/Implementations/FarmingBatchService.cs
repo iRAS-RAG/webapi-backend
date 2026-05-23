@@ -33,6 +33,80 @@ namespace IRasRag.Application.Services.Implementations
             _telemetryCache = telemetryCache;
         }
 
+        // Compute estimated yield for a batch and optionally persist
+        public async Task<(
+            int EstimatedCount,
+            double? EstimatedWeightKg
+        )> ComputeEstimatedYieldAsync(FarmingBatch batch, bool persist = false)
+        {
+            // Load species and current stage sequence
+            var currentStage = await _unitOfWork
+                .GetRepository<SpeciesStageConfig>()
+                .GetByIdAsync(batch.CurrentStageConfigId);
+
+            if (currentStage == null)
+                return (0, null);
+
+            var speciesId = currentStage.SpeciesId;
+
+            var stages = await _unitOfWork
+                .GetRepository<SpeciesStageConfig>()
+                .FindAllAsync(s => s.SpeciesId == speciesId && s.Sequence >= currentStage.Sequence);
+
+            var ordered = stages.OrderBy(s => s.Sequence);
+            var result = IRasRag.Application.Common.Utils.YieldEstimator.Estimate(
+                ordered,
+                batch.CurrentQuantity
+            );
+
+            if (persist)
+            {
+                batch.EstimatedHarvestCount = result.EstimatedCount;
+                batch.EstimatedHarvestWeightKg = result.EstimatedWeightKg;
+                _unitOfWork.GetRepository<FarmingBatch>().Update(batch);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<int> RecomputeEstimatedYieldBySpeciesAsync(Guid speciesId)
+        {
+            try
+            {
+                var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batches = await batchRepo.GetAllAsync();
+                var recomputedCount = 0;
+
+                foreach (var batch in batches)
+                {
+                    // ensure we have current stage loaded
+                    var currentStage = await _unitOfWork
+                        .GetRepository<SpeciesStageConfig>()
+                        .GetByIdAsync(batch.CurrentStageConfigId);
+
+                    if (currentStage == null)
+                        continue;
+                    if (currentStage.SpeciesId != speciesId)
+                        continue;
+
+                    await ComputeEstimatedYieldAsync(batch, persist: true);
+                    recomputedCount++;
+                }
+
+                return recomputedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi tính lại sản lượng ước tính theo loài với SpeciesId {SpeciesId}",
+                    speciesId
+                );
+                return 0;
+            }
+        }
+
         public async Task<Result<IReadOnlyList<PlannedStageDto>>> GetPlannedStagesByBatchIdAsync(
             Guid batchId
         )
@@ -89,6 +163,8 @@ namespace IRasRag.Application.Services.Implementations
                         AmountPer100Fish = ssc?.AmountPer100Fish ?? 0,
                         FrequencyPerDay = ssc?.FrequencyPerDay ?? 0,
                         MaxStockingDensity = ssc?.MaxStockingDensity,
+                        ExpectedWeightKgPerFish = ssc?.ExpectedWeightKgPerFish,
+                        SurvivalRate = ssc?.SurvivalRate,
                         FeedTypeNames =
                             ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? new List<string>(),
                     };
@@ -228,6 +304,31 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        // Recalculate estimates for all batches of the given species
+        public async Task RecalculateEstimatesForSpeciesAsync(Guid speciesId)
+        {
+            var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+            // find batches whose current stage config belongs to this species
+            var allBatches = await batchRepo.GetAllAsync();
+            var affected = allBatches
+                .Where(b =>
+                {
+                    var cfg = b.CurrentStageConfig;
+                    return cfg != null && cfg.SpeciesId == speciesId;
+                })
+                .ToList();
+
+            foreach (var batch in affected)
+            {
+                // reload batch with current data
+                var reloaded = await batchRepo.GetByIdAsync(batch.Id);
+                if (reloaded == null)
+                    continue;
+                await ComputeEstimatedYieldAsync(reloaded, persist: true);
+                _telemetryCache.InvalidateBatch(reloaded.FishTankId);
+            }
+        }
 
         #region Create Methods
         public async Task<Result<FarmingBatchDto>> CreateFarmingBatchAsync(
@@ -392,6 +493,10 @@ namespace IRasRag.Application.Services.Implementations
                 await batchStageRepo.AddRangeAsync(batchStages);
 
                 await _unitOfWork.SaveChangesAsync();
+
+                // compute and persist estimated yield after batch and stages are created
+                await ComputeEstimatedYieldAsync(farmingBatch, persist: true);
+
                 _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
 
                 var farmingBatchDto = await _unitOfWork

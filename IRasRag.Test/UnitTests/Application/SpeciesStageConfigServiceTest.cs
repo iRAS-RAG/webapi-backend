@@ -10,6 +10,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications;
 using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
@@ -31,6 +32,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
         private readonly IMapper _mapper;
         private readonly SpeciesStageConfigService _sut;
+        private readonly Mock<IFarmingBatchService> _farmingBatchServiceMock;
 
         public SpeciesStageConfigServiceTest()
         {
@@ -55,12 +57,14 @@ namespace IRasRag.Test.UnitTests.Application
                 .Returns(_feedTypeRepoMock.Object);
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+            _farmingBatchServiceMock = new Mock<IFarmingBatchService>();
 
             _sut = new SpeciesStageConfigService(
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
                 _mapper,
-                _telemetryCacheMock.Object
+                _telemetryCacheMock.Object,
+                _farmingBatchServiceMock.Object
             );
         }
 

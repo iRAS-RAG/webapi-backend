@@ -18,18 +18,21 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<SpeciesStageConfigService> _logger;
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
+        private readonly IFarmingBatchService _farmingBatchService;
 
         public SpeciesStageConfigService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesStageConfigService> logger,
             IMapper mapper,
-            ITelemetryCacheService telemetryCache
+            ITelemetryCacheService telemetryCache,
+            IFarmingBatchService farmingBatchService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _telemetryCache = telemetryCache;
+            _farmingBatchService = farmingBatchService;
         }
 
         public async Task<Result<SpeciesStageConfigDto>> CreateSpeciesStageConfig(
@@ -134,6 +137,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 await repo.AddAsync(newConfig);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Recompute estimates for batches of this species
+                await _farmingBatchService.RecomputeEstimatedYieldBySpeciesAsync(
+                    newConfig.SpeciesId
+                );
 
                 return Result<SpeciesStageConfigDto>.Success(
                     _mapper.Map<SpeciesStageConfigDto>(newConfig),
@@ -465,6 +473,9 @@ namespace IRasRag.Application.Services.Implementations
                 }
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateStageConfig(id);
+
+                // Recompute for species after change
+                await _farmingBatchService.RecomputeEstimatedYieldBySpeciesAsync(config.SpeciesId);
 
                 return Result.Success("Cập nhật cấu hình giai đoạn sinh trưởng của cá thành công.");
             }

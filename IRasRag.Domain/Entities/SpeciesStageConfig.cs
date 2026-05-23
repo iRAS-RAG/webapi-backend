@@ -21,6 +21,13 @@ namespace IRasRag.Domain.Entities
 
         public int? ExpectedDurationDays { get; set; } // How many days the fish typically stay in this stage
 
+        // New growth estimation fields
+        // Expected average weight at end of this stage (kg per fish)
+        public double? ExpectedWeightKgPerFish { get; set; }
+
+        // Expected survival rate through this stage (0.0 - 1.0)
+        public double? SurvivalRate { get; set; }
+
         // Sequence defines the order of this stage within the species' stage list (1-based)
         [Required]
         public int Sequence { get; set; }

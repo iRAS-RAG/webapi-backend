@@ -26,6 +26,8 @@ namespace IRasRag.Application.Specifications.SpeciesStageConfigSpecifications
                     FrequencyPerDay = s.FrequencyPerDay,
                     MaxStockingDensity = s.MaxStockingDensity,
                     ExpectedDurationDays = s.ExpectedDurationDays,
+                    ExpectedWeightKgPerFish = s.ExpectedWeightKgPerFish,
+                    SurvivalRate = s.SurvivalRate,
                 });
         }
     }

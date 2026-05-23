@@ -27,6 +27,8 @@ namespace IRasRag.Application.DTOs
         public int InitialQuantity { get; set; }
         public int CurrentQuantity { get; set; }
         public string UnitOfMeasure { get; set; } = string.Empty;
+        public int? EstimatedHarvestCount { get; set; }
+        public double? EstimatedHarvestWeightKg { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
     }
@@ -81,6 +83,8 @@ namespace IRasRag.Application.DTOs
         public int FrequencyPerDay { get; set; }
         public double? MaxStockingDensity { get; set; }
         public IReadOnlyList<string> FeedTypeNames { get; set; } = new List<string>();
+        public double? ExpectedWeightKgPerFish { get; set; }
+        public double? SurvivalRate { get; set; }
     }
 
     // Update DTO

@@ -40,6 +40,10 @@ namespace IRasRag.Domain.Entities
         [MaxLength(20)]
         public string UnitOfMeasure { get; set; }
 
+        // Cached estimates
+        public int? EstimatedHarvestCount { get; set; }
+        public double? EstimatedHarvestWeightKg { get; set; }
+
         // Navigation properties
         public FishTank FishTank { get; set; }
         public SpeciesStageConfig CurrentStageConfig { get; set; }
