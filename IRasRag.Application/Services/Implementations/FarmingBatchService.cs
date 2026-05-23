@@ -400,21 +400,92 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result> HarvestBatchAsync(Guid id, DateTime harvestDate)
+        public async Task<Result> HarvestBatchAsync(
+            Guid id,
+            DateTime harvestDate,
+            bool force = false
+        )
         {
-            var batch = await _unitOfWork.GetRepository<FarmingBatch>().GetByIdAsync(id);
-
-            if (batch == null)
+            try
             {
-                return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
+                var repo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await repo.FirstOrDefaultAsync(
+                    new FarmingBatchWithStagesByIdSpec(id),
+                    QueryType.IncludeDeleted
+                );
+
+                if (batch == null)
+                {
+                    return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
+                }
+
+                if (
+                    batch.Status == FarmingBatchStatus.HARVESTED
+                    || batch.Status == FarmingBatchStatus.TERMINATED
+                )
+                {
+                    return Result.Failure(
+                        "Không thể thu hoạch lô nuôi đã thu hoạch/hủy bỏ",
+                        ResultType.BadRequest
+                    );
+                }
+
+                var orderedStages =
+                    batch.BatchStages?.OrderBy(s => s.Sequence).ToList() ?? new List<BatchStage>();
+                var plannedEnd = orderedStages.LastOrDefault()?.EstimatedEndDate;
+
+                if (plannedEnd.HasValue && harvestDate < plannedEnd.Value && !force)
+                {
+                    return Result.Failure(
+                        "Không thể thu hoạch trước ngày kết thúc dự kiến của kế hoạch. Sử dụng force=true để ghi đè.",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Update stage actuals
+                foreach (var stage in orderedStages)
+                {
+                    if (!stage.ActualStartDate.HasValue)
+                    {
+                        stage.ActualStartDate = stage.EstimatedStartDate;
+                    }
+
+                    if (stage.EstimatedEndDate <= harvestDate)
+                    {
+                        // stage completed before harvest
+                        stage.ActualEndDate = stage.EstimatedEndDate;
+                    }
+                    else if (
+                        stage.EstimatedStartDate < harvestDate
+                        && stage.EstimatedEndDate > harvestDate
+                    )
+                    {
+                        // harvested mid-stage
+                        stage.ActualEndDate = harvestDate;
+                    }
+                    else
+                    {
+                        // future stages remain with null ActualEndDate
+                    }
+                }
+
+                batch.Status = FarmingBatchStatus.HARVESTED;
+                batch.ActualHarvestDate = harvestDate;
+                if (orderedStages.Any())
+                {
+                    batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
+                }
+
+                repo.Update(batch);
+                await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateBatch(batch.FishTankId);
+                return Result.Success("Thu hoạch lô nuôi thành công");
             }
-
-            batch.Status = FarmingBatchStatus.HARVESTED;
-            batch.ActualHarvestDate = harvestDate;
-
-            await _unitOfWork.SaveChangesAsync();
-            _telemetryCache.InvalidateBatch(batch.FishTankId);
-            return Result.Success("Thu hoạch lô nuôi thành công");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi thu hoạch lô nuôi với ID {Id}", id);
+                return Result.Failure("Lỗi khi thu hoạch lô nuôi", ResultType.Unexpected);
+            }
         }
         #endregion
 

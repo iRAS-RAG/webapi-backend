@@ -23,6 +23,10 @@ namespace IRasRag.Domain.Entities
         [Required]
         public int ExpectedDurationDays { get; set; }
 
+        public DateTime? ActualStartDate { get; set; }
+
+        public DateTime? ActualEndDate { get; set; }
+
         // Navigation
         public FarmingBatch FarmingBatch { get; set; }
         public SpeciesStageConfig SpeciesStageConfig { get; set; }

@@ -190,14 +190,18 @@ namespace IRasRag.API.Controllers
 
         [HttpPost("{id}/harvest")]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> HarvestBatch(Guid id, DateTime harvestDate)
+        public async Task<IActionResult> HarvestBatch(Guid id, [FromBody] HarvestBatchRequest body)
         {
             try
             {
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _farmingBatchService.HarvestBatchAsync(id, harvestDate);
+                var result = await _farmingBatchService.HarvestBatchAsync(
+                    id,
+                    body.HarvestDate,
+                    body.Force
+                );
 
                 return result.Type switch
                 {
