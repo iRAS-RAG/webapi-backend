@@ -59,6 +59,7 @@ namespace IRasRag.API.Controllers
                         result.Answer,
                         result.IsOffTopic,
                         result.Citations,
+                        result.Intent,
                     }
                 );
             }
@@ -73,7 +74,46 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
             }
         }
+
+        /// <summary>
+        /// Đánh giá câu trả lời AI là hữu ích hay không
+        /// </summary>
+        [HttpPost("chat/feedback")]
+        public async Task<IActionResult> SubmitFeedbackAsync(
+            [FromBody] AdvisoryFeedbackRequest request,
+            CancellationToken ct
+        )
+        {
+            var userId = _httpContextUtils.GetUserId();
+            if (userId == null)
+                return Unauthorized();
+
+            if (!await _tankAccessService.CanAccessTankAsync(userId.Value, request.TankId))
+                return StatusCode(403, new { Message = "Bạn không có quyền truy cập bể nuôi này" });
+
+            var result = await _advisoryService.SubmitFeedbackAsync(
+                userId.Value,
+                request.Response,
+                request.Helpful,
+                request.Intent,
+                ct
+            );
+
+            if (result == null)
+                return StatusCode(502, new { Message = "Không thể ghi nhận phản hồi. Vui lòng thử lại." });
+
+            var message = (result.Status, result.Saved, request.Helpful) switch
+            {
+                ("ok", true, _)      => "Đã đánh dấu câu trả lời là hữu ích.",
+                ("ok", false, _)     => "Đã bỏ đánh dấu hữu ích.",
+                (_, _, true)         => "Câu trả lời này đã được đánh dấu là hữu ích trước đó.",
+                (_, _, false)        => "Câu trả lời này chưa được đánh dấu là hữu ích.",
+            };
+
+            return Ok(new { Message = message });
+        }
     }
 
     public record AdvisoryChatRequest(Guid TankId, string Message);
+    public record AdvisoryFeedbackRequest(Guid TankId, string Response, bool Helpful, string? Intent);
 }

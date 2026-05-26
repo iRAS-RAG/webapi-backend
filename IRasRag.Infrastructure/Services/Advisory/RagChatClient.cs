@@ -75,12 +75,66 @@ namespace IRasRag.Infrastructure.Services.Advisory
                     AnswerBasis: dto.AnswerBasis,
                     NeedsWebSearch: dto.NeedsWebSearch,
                     IntentSource: dto.IntentSource,
-                    Citations: dto.Citations
+                    Citations: dto.Citations,
+                    Intent: dto.Intent,
+                    Intents: dto.Intents,
+                    Confidence: dto.Confidence,
+                    Sources: dto.Sources,
+                    AnswerEngine: dto.AnswerEngine
                 );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "RAG /chat call failed for userId={UserId}", request.UserId);
+                return null;
+            }
+        }
+
+        public async Task<RagChatFeedbackResponse?> SubmitFeedbackAsync(
+            RagChatFeedbackRequest request,
+            CancellationToken ct = default
+        )
+        {
+            try
+            {
+                var payload = new
+                {
+                    userId = request.UserId,
+                    response = request.Response,
+                    helpful = request.Helpful,
+                    intent = request.Intent,
+                };
+
+                var httpResponse = await _http.PostAsJsonAsync(
+                    _settings.ChatFeedbackPath,
+                    payload,
+                    SerializerOptions,
+                    ct
+                );
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "RAG /chat/feedback returned {Status} for userId={UserId}",
+                        (int)httpResponse.StatusCode,
+                        request.UserId
+                    );
+                    return null;
+                }
+
+                var dto = await httpResponse.Content.ReadFromJsonAsync<RagChatFeedbackResponseDto>(ct);
+                if (dto == null)
+                    return null;
+
+                return new RagChatFeedbackResponse(
+                    Status: dto.Status ?? string.Empty,
+                    Saved: dto.Saved,
+                    Message: dto.Message ?? string.Empty
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RAG /chat/feedback call failed for userId={UserId}", request.UserId);
                 return null;
             }
         }
@@ -130,6 +184,18 @@ namespace IRasRag.Infrastructure.Services.Advisory
             }
         }
 
+        private sealed class RagChatFeedbackResponseDto
+        {
+            [JsonPropertyName("status")]
+            public string? Status { get; set; }
+
+            [JsonPropertyName("saved")]
+            public bool Saved { get; set; }
+
+            [JsonPropertyName("message")]
+            public string? Message { get; set; }
+        }
+
         private sealed class RagIngestUrlResponseDto
         {
             [JsonPropertyName("status")]
@@ -164,6 +230,21 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             [JsonPropertyName("citations")]
             public List<string>? Citations { get; set; }
+
+            [JsonPropertyName("intent")]
+            public string? Intent { get; set; }
+
+            [JsonPropertyName("intents")]
+            public List<string>? Intents { get; set; }
+
+            [JsonPropertyName("confidence")]
+            public double? Confidence { get; set; }
+
+            [JsonPropertyName("sources")]
+            public List<string>? Sources { get; set; }
+
+            [JsonPropertyName("answer_engine")]
+            public string? AnswerEngine { get; set; }
         }
     }
 }
