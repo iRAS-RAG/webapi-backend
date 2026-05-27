@@ -1,4 +1,5 @@
 using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,6 +25,8 @@ namespace IRasRag.Infrastructure.Data.Configurations
 
             builder.Property(bs => bs.Sequence).IsRequired();
             builder.HasIndex(bs => new { bs.FarmingBatchId, bs.Sequence }).IsUnique();
+
+            builder.HasData(BatchStageSeed.BatchStages);
         }
     }
 }

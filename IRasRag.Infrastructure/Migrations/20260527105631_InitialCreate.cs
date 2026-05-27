@@ -2283,6 +2283,66 @@ namespace IRasRag.Infrastructure.Migrations
             );
 
             migrationBuilder.InsertData(
+                table: "batch_stage",
+                columns: new[]
+                {
+                    "id",
+                    "actual_end_date",
+                    "actual_start_date",
+                    "created_at",
+                    "estimated_end_date",
+                    "estimated_start_date",
+                    "expected_duration_days",
+                    "farming_batch_id",
+                    "modified_at",
+                    "sequence",
+                    "species_stage_config_id",
+                },
+                values: new object[,]
+                {
+                    {
+                        new Guid("aaaaaaaa-0000-0000-0000-000000002101"),
+                        null,
+                        new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 2, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                        30,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        1,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
+                    },
+                    {
+                        new Guid("aaaaaaaa-0000-0000-0000-000000002102"),
+                        null,
+                        null,
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                        90,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        2,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
+                    },
+                    {
+                        new Guid("aaaaaaaa-0000-0000-0000-000000002201"),
+                        new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                        new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        30,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                        1,
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
+                    },
+                }
+            );
+
+            migrationBuilder.InsertData(
                 table: "feeding_logs",
                 columns: new[]
                 {

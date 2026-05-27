@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527104932_InitialCreate")]
+    [Migration("20260527105631_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -293,6 +293,47 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_batch_stage_farming_batch_id_sequence");
 
                     b.ToTable("batch_stage", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002101"),
+                            ActualStartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2024, 2, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 30,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 1,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002102"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2024, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 90,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 2,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002201"),
+                            ActualEndDate = new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 30,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 1,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601")
+                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Camera", b =>
