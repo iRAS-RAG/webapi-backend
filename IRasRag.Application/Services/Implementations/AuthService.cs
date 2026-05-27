@@ -21,6 +21,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IJwtService _jwtService;
         private readonly IEmailService _emailService;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IAuditLogService _auditLogService;
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -28,7 +29,8 @@ namespace IRasRag.Application.Services.Implementations
             IHashingService hasher,
             IJwtService jwtService,
             IEmailService emailService,
-            IBackgroundJobService backgroundJobService
+            IBackgroundJobService backgroundJobService,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
@@ -37,6 +39,7 @@ namespace IRasRag.Application.Services.Implementations
             _jwtService = jwtService;
             _emailService = emailService;
             _backgroundJobService = backgroundJobService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<Result<TokenResponse>> Login(LoginRequest request)
@@ -391,7 +394,7 @@ namespace IRasRag.Application.Services.Implementations
                 Timestamp = DateTime.UtcNow,
             };
 
-            await _unitOfWork.GetRepository<AuditLog>().AddAsync(auditLog);
+            await _auditLogService.AddAsync(auditLog);
         }
 
         private async Task ConsumeUserVerificationCodesAsync(Guid userId, VerificationType type)

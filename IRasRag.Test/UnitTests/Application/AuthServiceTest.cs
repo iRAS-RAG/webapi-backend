@@ -9,6 +9,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Auth;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IHashingService> _hashingServiceMock;
         private readonly Mock<IBackgroundJobService> _backgroundJobServiceMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
         private readonly AuthService _sut;
 
         public AuthServiceTest()
@@ -42,6 +44,7 @@ namespace IRasRag.Test.UnitTests.Application
             _jwtServiceMock = new Mock<IJwtService>();
             _hashingServiceMock = new Mock<IHashingService>();
             _backgroundJobServiceMock = new Mock<IBackgroundJobService>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
 
             _unitOfWorkMock.Setup(u => u.GetRepository<User>()).Returns(_userRepositoryMock.Object);
             _unitOfWorkMock.Setup(u => u.GetRepository<Role>()).Returns(_roleRepositoryMock.Object);
@@ -51,6 +54,9 @@ namespace IRasRag.Test.UnitTests.Application
             _unitOfWorkMock
                 .Setup(u => u.GetRepository<RefreshToken>())
                 .Returns(_refreshTokenRepositoryMock.Object);
+            _auditLogServiceMock
+                .Setup(s => s.AddAsync(It.IsAny<AuditLog>()))
+                .Returns(Task.CompletedTask);
 
             _sut = new AuthService(
                 _unitOfWorkMock.Object,
@@ -58,7 +64,8 @@ namespace IRasRag.Test.UnitTests.Application
                 _hashingServiceMock.Object,
                 _jwtServiceMock.Object,
                 _emailServiceMock.Object,
-                _backgroundJobServiceMock.Object
+                _backgroundJobServiceMock.Object,
+                _auditLogServiceMock.Object
             );
         }
 
