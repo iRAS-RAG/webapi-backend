@@ -1,8 +1,9 @@
 ﻿using System.Security.Claims;
+using IRasRag.Application.Common.Interfaces.Auth;
 
 namespace IRasRag.API.Utils
 {
-    public class HttpContextUtils
+    public class HttpContextUtils : ICurrentUserAccessor
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
