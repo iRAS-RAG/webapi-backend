@@ -33,6 +33,48 @@ namespace IRasRag.Application.Services.Implementations
             _telemetryCache = telemetryCache;
         }
 
+        // Helper: compute recommended initial stocking based on last stage MaxStockingDensity and tank volume.
+        // Returns null if recommendation cannot be computed.
+        private async Task<int?> GetRecommendedInitialAsync(Guid fishTankId, Guid speciesId)
+        {
+            try
+            {
+                var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
+                if (fishTank == null)
+                    return null;
+
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var stageConfigs = await stageConfigRepo.ListAsync(
+                    new IRasRag.Application.Specifications.SpecificationHelpers.SpecBySpeciesOrderedSpec(
+                        speciesId
+                    )
+                );
+                if (stageConfigs == null || !stageConfigs.Any())
+                    return null;
+
+                var tankVolume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
+                if (tankVolume <= 0)
+                    return null;
+
+                var last = stageConfigs.OrderBy(s => s.Sequence).Last();
+                if (!last.MaxStockingDensity.HasValue || last.MaxStockingDensity.Value <= 0)
+                    return null;
+
+                var recommended = (int)Math.Floor(last.MaxStockingDensity.Value * tankVolume);
+                return recommended > 0 ? recommended : null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Không thể tính mức đề nghị cho bể {FishTankId} và loài {SpeciesId}",
+                    fishTankId,
+                    speciesId
+                );
+                return null;
+            }
+        }
+
         // Compute estimated yield for a batch and optionally persist
         public async Task<(
             int EstimatedCount,
@@ -417,6 +459,32 @@ namespace IRasRag.Application.Services.Implementations
                 try
                 {
                     var tankVolume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
+                    // Minimum recommended check based on last stage density (50% threshold)
+                    try
+                    {
+                        var recommended = await GetRecommendedInitialAsync(
+                            fishTank.Id,
+                            createDto.SpeciesId
+                        );
+                        if (recommended.HasValue && createDto.InitialQuantity > 0)
+                        {
+                            var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);
+                            if (createDto.InitialQuantity < minAllowed)
+                            {
+                                return Result<FarmingBatchDto>.Failure(
+                                    $"Số lượng ban đầu ({createDto.InitialQuantity}) thấp hơn 50% mức đề nghị ({minAllowed}) cho bể này; vui lòng tăng số lượng để tận dụng bể.",
+                                    ResultType.BadRequest
+                                );
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Không thể thực hiện kiểm tra mức đề nghị - bỏ qua kiểm tra tối thiểu"
+                        );
+                    }
                     if (createDto.InitialQuantity > 0)
                     {
                         double cumulativeSurvival = 1.0;
@@ -620,6 +688,44 @@ namespace IRasRag.Application.Services.Implementations
                         "Số lượng hiện tại phải lớn hơn hoặc bằng 0",
                         ResultType.BadRequest
                     );
+                }
+
+                // Minimum recommended check on update (50% of recommended initial based on last stage density)
+                if (updateDto.CurrentQuantity.HasValue)
+                {
+                    try
+                    {
+                        var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                        var currentStageConfig = await stageConfigRepo.GetByIdAsync(
+                            farmingBatch.CurrentStageConfigId
+                        );
+                        var speciesId = currentStageConfig?.SpeciesId ?? Guid.Empty;
+                        if (speciesId != Guid.Empty)
+                        {
+                            var recommended = await GetRecommendedInitialAsync(
+                                farmingBatch.FishTankId,
+                                speciesId
+                            );
+                            if (recommended.HasValue)
+                            {
+                                var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);
+                                if (updateDto.CurrentQuantity.Value < minAllowed)
+                                {
+                                    return Result.Failure(
+                                        $"Số lượng hiện tại ({updateDto.CurrentQuantity.Value}) thấp hơn 50% mức đề nghị ({minAllowed}) cho bể này; vui lòng tăng số lượng hoặc chọn bể khác.",
+                                        ResultType.BadRequest
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Không thể thực hiện kiểm tra mức đề nghị khi cập nhật lô nuôi - bỏ qua kiểm tra tối thiểu"
+                        );
+                    }
                 }
 
                 // Map and update
