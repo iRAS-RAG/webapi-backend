@@ -8,6 +8,6 @@ namespace IRasRag.Application.Services.Interfaces
     {
         Task AddAsync(AuditLog auditLog);
 
-        Task<PagedResult<AuditLogDto>> GetPagedAsync(AuditLogQueryRequest request);
+        Task<PaginatedResult<AuditLogDto>> GetPagedAsync(AuditLogQueryRequest request);
     }
 }

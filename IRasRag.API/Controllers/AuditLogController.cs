@@ -31,9 +31,7 @@ namespace IRasRag.API.Controllers
             {
                 if (request.Page <= 0 || request.PageSize <= 0)
                 {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
+                    return BadRequest( new { Message = "Số trang và kích thước trang phải lớn hơn 0." });
                 }
 
                 if (request.PageSize > MaxPageSize)
