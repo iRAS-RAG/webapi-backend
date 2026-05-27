@@ -4,6 +4,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using IRasRag.API.Hubs;
 using IRasRag.API.Utils;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Settings;
@@ -29,6 +30,7 @@ namespace IRasRag.API.DI
             services.AddHangfireSetup(config, env);
             services.AddHttpContextAccessor();
             services.AddScoped<HttpContextUtils>();
+            services.AddScoped<ICurrentUserAccessor>(sp => sp.GetRequiredService<HttpContextUtils>());
             services.AddSignalR();
             services.AddSingleton<ILiveDataNotifier, SignalRLiveDataNotifier>();
             services.AddHostedService<TelemetryPushWorker>();

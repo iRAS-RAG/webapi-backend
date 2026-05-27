@@ -62,6 +62,7 @@ namespace IRasRag.Infrastructure.Persistence
         // ====================================
         // Advisory & Alerts
         // ====================================
+        public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Alert> Alerts { get; set; }
         public DbSet<CorrectiveAction> CorrectiveActions { get; set; }
         public DbSet<Document> Documents { get; set; }
@@ -113,6 +114,7 @@ namespace IRasRag.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new JobControlMappingConfiguration());
 
             // Advisory & Alerts
+            modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
             modelBuilder.ApplyConfiguration(new AlertConfiguration());
             modelBuilder.ApplyConfiguration(new CorrectiveActionConfiguration());
             modelBuilder.ApplyConfiguration(new DocumentConfiguration());

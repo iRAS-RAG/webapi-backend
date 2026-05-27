@@ -8,6 +8,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -20,6 +21,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IJwtService _jwtService;
         private readonly IEmailService _emailService;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IAuditLogService _auditLogService;
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -27,7 +29,8 @@ namespace IRasRag.Application.Services.Implementations
             IHashingService hasher,
             IJwtService jwtService,
             IEmailService emailService,
-            IBackgroundJobService backgroundJobService
+            IBackgroundJobService backgroundJobService,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
@@ -36,6 +39,7 @@ namespace IRasRag.Application.Services.Implementations
             _jwtService = jwtService;
             _emailService = emailService;
             _backgroundJobService = backgroundJobService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<Result<TokenResponse>> Login(LoginRequest request)
@@ -94,6 +98,14 @@ namespace IRasRag.Application.Services.Implementations
                 };
 
                 await _unitOfWork.GetRepository<RefreshToken>().AddAsync(refreshToken);
+                await WriteAuditLogAsync(
+                    user,
+                    action: "LOGIN",
+                    entityType: "Auth",
+                    entityId: user.Id.ToString(),
+                    oldValue: null,
+                    newValue: JsonSerializer.Serialize(new { AccessTokenIssued = true, RefreshTokenIssued = true })
+                );
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result<TokenResponse>.Success(
@@ -335,11 +347,54 @@ namespace IRasRag.Application.Services.Implementations
             _logger.LogInformation("Server's existing token: {ExistingToken}", existingToken);
             if (existingToken != null)
             {
+                var user = await _unitOfWork
+                    .GetRepository<User>()
+                    .FirstOrDefaultAsync(u => u.Id == existingToken.UserId);
+
                 existingToken.IsRevoked = true;
                 _unitOfWork.GetRepository<RefreshToken>().Update(existingToken);
+
+                if (user != null)
+                {
+                    await WriteAuditLogAsync(
+                        user,
+                        action: "LOGOUT",
+                        entityType: "Auth",
+                        entityId: user.Id.ToString(),
+                        oldValue: JsonSerializer.Serialize(new { IsRevoked = false }),
+                        newValue: JsonSerializer.Serialize(new { IsRevoked = true })
+                    );
+                }
+
                 await _unitOfWork.SaveChangesAsync();
             }
             return Result.Success("Đăng xuất thành công.");
+        }
+
+        private async Task WriteAuditLogAsync(
+            User user,
+            string action,
+            string entityType,
+            string entityId,
+            string? oldValue,
+            string? newValue
+        )
+        {
+            var auditLog = new AuditLog
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Action = action,
+                EntityType = entityType,
+                EntityId = entityId,
+                OldValue = oldValue,
+                NewValue = newValue,
+                Timestamp = DateTime.UtcNow,
+            };
+
+            await _auditLogService.AddAsync(auditLog);
         }
 
         private async Task ConsumeUserVerificationCodesAsync(Guid userId, VerificationType type)

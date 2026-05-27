@@ -9,11 +9,14 @@ using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Common.Utils;
+using IRasRag.Infrastructure.Interceptors;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
+using IRasRag.Infrastructure.Services;
 using IRasRag.Infrastructure.Services.Advisory;
 using IRasRag.Infrastructure.Services.Auth;
 using IRasRag.Infrastructure.Services.BackgroundJobs;
@@ -96,6 +99,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IAlertRepository, AlertRepository>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         }
 
         public static void AddServices(this IServiceCollection services)
@@ -104,6 +108,8 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IHashingService, HashingService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
+            services.AddScoped<AuditLogSaveChangesInterceptor>();
             services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
             services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
             services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
@@ -155,9 +161,12 @@ namespace IRasRag.Infrastructure.DI
         )
         {
             var connectionString = ConnectionStringResolver.Resolve(config, env);
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>((sp, options) =>
             {
-                options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
+                options
+                    .UseNpgsql(connectionString)
+                    .UseSnakeCaseNamingConvention()
+                    .AddInterceptors(sp.GetRequiredService<AuditLogSaveChangesInterceptor>());
             });
         }
     }
