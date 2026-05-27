@@ -31,6 +31,7 @@ namespace IRasRag.Application.Specifications.MortalityLogSpecifications
                 UserId = ml.UserId,
                 UserEmail = ml.User.Email,
                 Quantity = ml.Quantity,
+                LostWeightKg = ml.LostWeightKg,
                 Date = ml.Date,
                 CreatedAt = ml.CreatedAt,
                 ModifiedAt = ml.ModifiedAt,

@@ -30,7 +30,9 @@ namespace IRasRag.API.DI
             services.AddHangfireSetup(config, env);
             services.AddHttpContextAccessor();
             services.AddScoped<HttpContextUtils>();
-            services.AddScoped<ICurrentUserAccessor>(sp => sp.GetRequiredService<HttpContextUtils>());
+            services.AddScoped<ICurrentUserAccessor>(sp =>
+                sp.GetRequiredService<HttpContextUtils>()
+            );
             services.AddSignalR();
             services.AddSingleton<ILiveDataNotifier, SignalRLiveDataNotifier>();
             services.AddHostedService<TelemetryPushWorker>();

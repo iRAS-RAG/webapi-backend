@@ -9,10 +9,10 @@ using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
-using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Common.Utils;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Infrastructure.Interceptors;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
@@ -161,13 +161,15 @@ namespace IRasRag.Infrastructure.DI
         )
         {
             var connectionString = ConnectionStringResolver.Resolve(config, env);
-            services.AddDbContext<AppDbContext>((sp, options) =>
-            {
-                options
-                    .UseNpgsql(connectionString)
-                    .UseSnakeCaseNamingConvention()
-                    .AddInterceptors(sp.GetRequiredService<AuditLogSaveChangesInterceptor>());
-            });
+            services.AddDbContext<AppDbContext>(
+                (sp, options) =>
+                {
+                    options
+                        .UseNpgsql(connectionString)
+                        .UseSnakeCaseNamingConvention()
+                        .AddInterceptors(sp.GetRequiredService<AuditLogSaveChangesInterceptor>());
+                }
+            );
         }
     }
 

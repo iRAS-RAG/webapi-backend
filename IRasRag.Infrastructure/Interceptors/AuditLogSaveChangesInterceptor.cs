@@ -2,17 +2,19 @@ using System.Text.Json;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Domain.Common;
 using IRasRag.Domain.Entities;
+using IRasRag.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using IRasRag.Infrastructure.Persistence;
 
 namespace IRasRag.Infrastructure.Interceptors
 {
     public sealed class AuditLogSaveChangesInterceptor : SaveChangesInterceptor
     {
-        private static readonly HashSet<string> IgnoredEntityNames = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> IgnoredEntityNames = new(
+            StringComparer.OrdinalIgnoreCase
+        )
         {
             nameof(AuditLog),
             nameof(RefreshToken),
@@ -53,7 +55,9 @@ namespace IRasRag.Infrastructure.Interceptors
                 var userId = _currentUserAccessor.GetUserId();
                 if (userId is null)
                 {
-                    _logger.LogDebug("Skipping audit generation because no authenticated user was found.");
+                    _logger.LogDebug(
+                        "Skipping audit generation because no authenticated user was found."
+                    );
                     return await base.SavingChangesAsync(eventData, result, cancellationToken);
                 }
 
@@ -164,7 +168,10 @@ namespace IRasRag.Infrastructure.Interceptors
             {
                 "CREATE" => (null, SerializeValues(entry.CurrentValues)),
                 "DELETE" => (SerializeValues(entry.OriginalValues), null),
-                _ => (SerializeValues(entry.OriginalValues, entry.CurrentValues, true), SerializeValues(entry.CurrentValues, entry.OriginalValues, false)),
+                _ => (
+                    SerializeValues(entry.OriginalValues, entry.CurrentValues, true),
+                    SerializeValues(entry.CurrentValues, entry.OriginalValues, false)
+                ),
             };
         }
 
@@ -177,17 +184,22 @@ namespace IRasRag.Infrastructure.Interceptors
         private static bool IsSoftDelete(EntityEntry<BaseEntity> entry)
         {
             var isDeletedProperty = entry.Properties.FirstOrDefault(p =>
-                string.Equals(p.Metadata.Name, nameof(ISoftDeletable.IsDeleted), StringComparison.OrdinalIgnoreCase)
+                string.Equals(
+                    p.Metadata.Name,
+                    nameof(ISoftDeletable.IsDeleted),
+                    StringComparison.OrdinalIgnoreCase
+                )
             );
 
-            return entry.Entity is ISoftDeletable && isDeletedProperty?.CurrentValue is bool isDeleted && isDeleted;
+            return entry.Entity is ISoftDeletable
+                && isDeletedProperty?.CurrentValue is bool isDeleted
+                && isDeleted;
         }
 
         private static bool HasMeaningfulChanges(EntityEntry<BaseEntity> entry)
         {
             return entry.Properties.Any(property =>
-                !IgnoredProperties.Contains(property.Metadata.Name)
-                && property.IsModified
+                !IgnoredProperties.Contains(property.Metadata.Name) && property.IsModified
             );
         }
 

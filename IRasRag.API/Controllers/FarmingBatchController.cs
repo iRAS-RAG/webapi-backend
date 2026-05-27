@@ -238,6 +238,7 @@ namespace IRasRag.API.Controllers
                     BatchId = id,
                     UserId = userId.Value,
                     Quantity = body.Quantity,
+                    LostWeightKg = body.LostWeightKg,
                     Date = body.Date,
                 };
 
@@ -254,6 +255,42 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi ghi nhận tỷ lệ chết cho lô nuôi {Id}", id);
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi ghi nhận tỷ lệ chết." });
+            }
+        }
+
+        [HttpPost("{id}/mortality/validate")]
+        [Authorize(Roles = "Operator")]
+        public async Task<IActionResult> ValidateMortality(
+            Guid id,
+            [FromBody] LogMortalityRequest body
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _mortalityLogService.ValidateMortalityAsync(
+                    id,
+                    body.Quantity,
+                    body.LostWeightKg
+                );
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi kiểm tra hợp lệ tỷ lệ chết cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi kiểm tra hợp lệ tỷ lệ chết." }
+                );
             }
         }
 

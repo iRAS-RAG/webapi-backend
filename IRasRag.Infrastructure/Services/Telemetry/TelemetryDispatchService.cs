@@ -158,7 +158,13 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 _latestTelemetryCache.Set(sensor.Id, reading.Val, timestamp);
 
                 // Enqueue live reading — decoupled from ingestion path via Channel<T>
-                var push = new TelemetryPush(sensor.Id, tankId, reading.Val, timestamp, sensor.SensorType?.Name);
+                var push = new TelemetryPush(
+                    sensor.Id,
+                    tankId,
+                    reading.Val,
+                    timestamp,
+                    sensor.SensorType?.Name
+                );
                 _liveDataNotifier.EnqueueTelemetry(push);
                 _telemetryWindow.Append(push);
 

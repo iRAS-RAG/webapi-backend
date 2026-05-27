@@ -11,6 +11,11 @@ namespace IRasRag.Application.Services.Interfaces
         );
         Task<Result<MortalityLogDto>> GetMortalityLogByIdAsync(Guid id);
         Task<Result<MortalityLogDto>> CreateMortalityLogAsync(CreateMortalityLogDto createDto);
+        Task<Result<MortalityValidationResultDto>> ValidateMortalityAsync(
+            Guid batchId,
+            int quantity,
+            double? lostWeightKg = null
+        );
         Task<Result> UpdateMortalityLogAsync(Guid id, UpdateMortalityLogDto updateDto);
         Task<Result> DeleteMortalityLogAsync(Guid id);
     }

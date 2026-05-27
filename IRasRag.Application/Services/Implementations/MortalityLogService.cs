@@ -28,6 +28,106 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
         }
 
+        public async Task<Result<MortalityValidationResultDto>> ValidateMortalityAsync(
+            Guid batchId,
+            int quantity,
+            double? lostWeightKg = null
+        )
+        {
+            try
+            {
+                if (batchId == Guid.Empty)
+                    return Result<MortalityValidationResultDto>.Failure(
+                        "Mã lô nuôi không hợp lệ",
+                        ResultType.BadRequest
+                    );
+
+                if (quantity <= 0)
+                    return Result<MortalityValidationResultDto>.Failure(
+                        "Số lượng phải lớn hơn 0",
+                        ResultType.BadRequest
+                    );
+
+                var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await batchRepo.GetByIdAsync(batchId);
+
+                if (batch == null)
+                    return Result<MortalityValidationResultDto>.Failure(
+                        "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+
+                double? perFishKg = null;
+
+                // Prefer the current stage's expected weight (more accurate for current mortality)
+                if (batch.CurrentStageConfigId != Guid.Empty)
+                {
+                    var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                    var ssc = await sscRepo.GetByIdAsync(batch.CurrentStageConfigId);
+                    if (ssc != null && ssc.ExpectedWeightKgPerFish.HasValue)
+                    {
+                        perFishKg = ssc.ExpectedWeightKgPerFish.Value;
+                    }
+                }
+
+                // Fallback: use batch cached estimate if current-stage estimate not available
+                if (
+                    !perFishKg.HasValue
+                    && batch.EstimatedHarvestWeightKg.HasValue
+                    && batch.CurrentQuantity > 0
+                )
+                {
+                    perFishKg =
+                        batch.EstimatedHarvestWeightKg.Value / Math.Max(1, batch.CurrentQuantity);
+                }
+
+                var resultDto = new MortalityValidationResultDto();
+                if (!perFishKg.HasValue)
+                {
+                    resultDto.Message =
+                        "Không có dữ liệu trọng lượng cho lô này; không thể ước lượng. UI nên cho phép tiếp tục.";
+                    return Result<MortalityValidationResultDto>.Success(resultDto, "Ok");
+                }
+
+                resultDto.PerFishKg = perFishKg;
+                var expectedTotal = perFishKg.Value * quantity;
+                resultDto.ExpectedLostKg = expectedTotal;
+
+                // Tolerance: configurable via constant here; could be moved to config
+                const double TOLERANCE = 0.3; // 30% default
+                var minAllowed = Math.Max(0.0001, expectedTotal * (1 - TOLERANCE));
+                var maxAllowed = expectedTotal * (1 + TOLERANCE);
+
+                resultDto.MinAllowedKg = minAllowed;
+                resultDto.MaxAllowedKg = maxAllowed;
+
+                if (lostWeightKg.HasValue)
+                {
+                    resultDto.IsWithinRange =
+                        lostWeightKg.Value >= minAllowed && lostWeightKg.Value <= maxAllowed;
+                    resultDto.Message = resultDto.IsWithinRange.Value
+                        ? "Giá trị trọng lượng trong phạm vi chấp nhận được"
+                        : $"Giá trị trọng lượng ({lostWeightKg.Value:F2} kg) ngoài phạm vi dự kiến ({minAllowed:F2} - {maxAllowed:F2} kg)";
+                }
+                else
+                {
+                    resultDto.IsWithinRange = null;
+                    resultDto.Message =
+                        "Đã tính phạm vi dự kiến; gửi lostWeightKg từ client để biết kết luận";
+                }
+
+                return Result<MortalityValidationResultDto>.Success(resultDto, "Ok");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi validate mortality cho BatchId {BatchId}", batchId);
+                return Result<MortalityValidationResultDto>.Failure(
+                    "Đã xảy ra lỗi khi kiểm tra dữ liệu tử vong",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
         #region Get Methods
         public async Task<PaginatedResult<MortalityLogDto>> GetAllMortalityLogsAsync(
             MortalityLogListRequest request
@@ -171,6 +271,15 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                if (createDto.LostWeightKg <= 0)
+                {
+                    _logger.LogWarning("Tổng trọng lượng hao hụt phải lớn hơn 0");
+                    return Result<MortalityLogDto>.Failure(
+                        "Tổng trọng lượng hao hụt phải lớn hơn 0",
+                        ResultType.BadRequest
+                    );
+                }
+
                 if (createDto.UserId == Guid.Empty)
                 {
                     _logger.LogWarning("Người dùng không hợp lệ");
@@ -232,6 +341,14 @@ namespace IRasRag.Application.Services.Implementations
                 await mortalityLogRepository.AddAsync(mortalityLog);
 
                 batch.CurrentQuantity -= createDto.Quantity;
+                // If batch caches estimated harvest weight, decrease cached estimate by lost weight (if present)
+                if (batch.EstimatedHarvestWeightKg.HasValue)
+                {
+                    batch.EstimatedHarvestWeightKg = Math.Max(
+                        0,
+                        batch.EstimatedHarvestWeightKg.Value - createDto.LostWeightKg
+                    );
+                }
                 batchRepository.Update(batch);
 
                 await _unitOfWork.SaveChangesAsync();
@@ -261,6 +378,11 @@ namespace IRasRag.Application.Services.Implementations
                     mortalityLog.BatchId,
                     mortalityLog.UserId,
                     mortalityLog.Quantity
+                );
+
+                _logger.LogInformation(
+                    "Tổng trọng lượng hao hụt (kg): {LostWeightKg}",
+                    mortalityLog.LostWeightKg
                 );
 
                 return Result<MortalityLogDto>.Success(

@@ -15,6 +15,9 @@ namespace IRasRag.Domain.Entities
         public int Quantity { get; set; }
 
         [Required]
+        public double LostWeightKg { get; set; }
+
+        [Required]
         public DateTime Date { get; set; }
 
         // Navigation properties

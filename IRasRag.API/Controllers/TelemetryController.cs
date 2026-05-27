@@ -14,7 +14,10 @@ namespace IRasRag.API.Controllers
         private readonly ITelemetryWindowService _window;
         private readonly IUserTankAccessService _tankAccess;
 
-        public TelemetryController(ITelemetryWindowService window, IUserTankAccessService tankAccess)
+        public TelemetryController(
+            ITelemetryWindowService window,
+            IUserTankAccessService tankAccess
+        )
         {
             _window = window;
             _tankAccess = tankAccess;

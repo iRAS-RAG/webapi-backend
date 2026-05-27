@@ -17,49 +17,86 @@ namespace IRasRag.Infrastructure.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    first_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    last_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    entity_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    entity_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    first_name = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: true
+                    ),
+                    last_name = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: true
+                    ),
+                    email = table.Column<string>(
+                        type: "character varying(255)",
+                        maxLength: 255,
+                        nullable: false
+                    ),
+                    action = table.Column<string>(
+                        type: "character varying(50)",
+                        maxLength: 50,
+                        nullable: false
+                    ),
+                    entity_type = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
+                    entity_id = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
                     old_value = table.Column<string>(type: "text", nullable: true),
                     new_value = table.Column<string>(type: "text", nullable: true),
-                    timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    modified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    timestamp = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    created_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    modified_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_audit_logs", x => x.id);
-                });
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_action",
                 table: "audit_logs",
-                column: "action");
+                column: "action"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_type",
                 table: "audit_logs",
-                column: "entity_type");
+                column: "entity_type"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_timestamp",
                 table: "audit_logs",
-                column: "timestamp");
+                column: "timestamp"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_user_id",
                 table: "audit_logs",
-                column: "user_id");
+                column: "user_id"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "audit_logs");
+            migrationBuilder.DropTable(name: "audit_logs");
         }
     }
 }

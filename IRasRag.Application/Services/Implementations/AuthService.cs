@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text.Json;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
@@ -8,7 +9,6 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -104,7 +104,9 @@ namespace IRasRag.Application.Services.Implementations
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
                     oldValue: null,
-                    newValue: JsonSerializer.Serialize(new { AccessTokenIssued = true, RefreshTokenIssued = true })
+                    newValue: JsonSerializer.Serialize(
+                        new { AccessTokenIssued = true, RefreshTokenIssued = true }
+                    )
                 );
                 await _unitOfWork.SaveChangesAsync();
 

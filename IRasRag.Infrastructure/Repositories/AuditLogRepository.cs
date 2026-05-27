@@ -58,10 +58,7 @@ namespace IRasRag.Infrastructure.Repositories
             query = ApplySorting(query, request);
 
             var totalItems = await query.CountAsync();
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return new PagedResult<AuditLog> { Items = items, TotalItems = totalItems };
         }
