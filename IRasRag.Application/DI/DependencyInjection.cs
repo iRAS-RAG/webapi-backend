@@ -62,6 +62,7 @@ namespace IRasRag.Application.DI
             {
                 cfg.LicenseKey = config["AutoMapperKey"];
                 cfg.AddProfile<AlertProfile>();
+                cfg.AddProfile<AuditLogProfile>();
                 cfg.AddProfile<CameraProfile>();
                 cfg.AddProfile<ControlDeviceProfile>();
                 cfg.AddProfile<ControlDeviceTypeProfile>();
