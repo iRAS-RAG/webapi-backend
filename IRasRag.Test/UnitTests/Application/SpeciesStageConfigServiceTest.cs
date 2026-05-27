@@ -453,7 +453,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var configs = new List<SpeciesStageConfig>
             {
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -474,7 +474,7 @@ namespace IRasRag.Test.UnitTests.Application
                         },
                     ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -495,7 +495,7 @@ namespace IRasRag.Test.UnitTests.Application
                         },
                     ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
@@ -597,7 +597,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var configs = new List<SpeciesStageConfig>
             {
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
@@ -618,7 +618,7 @@ namespace IRasRag.Test.UnitTests.Application
                         },
                     ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },

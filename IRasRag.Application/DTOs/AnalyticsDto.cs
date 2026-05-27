@@ -15,7 +15,7 @@ namespace IRasRag.Application.DTOs
         /// <summary>
         /// List of FarmingBatch IDs to compare (at least 1 is required).
         /// </summary>
-        public List<Guid> BatchIds { get; set; } = new();
+        public List<Guid> BatchIds { get; set; } = [];
 
         /// <summary>
         /// Metrics to include in the response.
@@ -24,7 +24,7 @@ namespace IRasRag.Application.DTOs
         ///   and any sensor-type metric names (e.g. do, temperature, ph, ammonia …).
         /// Leave empty to return ALL available metrics.
         /// </summary>
-        public List<string> Metrics { get; set; } = new();
+        public List<string> Metrics { get; set; } = [];
 
         /// <summary>
         /// ID của user hiện tại. Được set bởi Controller từ JWT claims.
@@ -44,10 +44,10 @@ namespace IRasRag.Application.DTOs
         /// Normalised list of metric keys that were evaluated.
         /// Reflects the effective metrics after merging the request with what is available.
         /// </summary>
-        public List<string> EvaluatedMetrics { get; set; } = new();
+        public List<string> EvaluatedMetrics { get; set; } = [];
 
         /// <summary>One entry per requested batch.</summary>
-        public List<BatchMetricsDto> Batches { get; set; } = new();
+        public List<BatchMetricsDto> Batches { get; set; } = [];
     }
 
     /// <summary>
@@ -104,13 +104,13 @@ namespace IRasRag.Application.DTOs
         /// <summary>
         /// Phân tích số cảnh báo theo từng loại cảm biến (SensorType.Name → count).
         /// </summary>
-        public Dictionary<string, int> AlertsByType { get; set; } = new();
+        public Dictionary<string, int> AlertsByType { get; set; } = [];
 
         /// <summary>
         /// Giá trị trung bình của mỗi loại cảm biến (SensorType.Name → average value).
         /// Đơn vị đo theo SensorType.UnitOfMeasure.
         /// </summary>
-        public Dictionary<string, double> SensorAverages { get; set; } = new();
+        public Dictionary<string, double> SensorAverages { get; set; } = [];
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ namespace IRasRag.Application.DTOs
         /// <summary>
         /// Top bể nuôi có nhiều cảnh báo loại này nhất.
         /// </summary>
-        public List<TankAlertCountDto> TopTanks { get; set; } = new();
+        public List<TankAlertCountDto> TopTanks { get; set; } = [];
     }
 
     /// <summary>
@@ -256,11 +256,11 @@ namespace IRasRag.Application.DTOs
         /// Danh sách thống kê tần suất theo loại cảnh báo, sắp xếp giảm dần theo số lượng.
         /// Giới hạn theo TopN từ request.
         /// </summary>
-        public List<AlertFrequencyItemDto> ByAlertType { get; set; } = new();
+        public List<AlertFrequencyItemDto> ByAlertType { get; set; } = [];
 
         /// <summary>
         /// Xu hướng cảnh báo theo ngày trong khoảng thời gian đã chọn.
         /// </summary>
-        public List<DailyAlertTrendDto> DailyTrend { get; set; } = new();
+        public List<DailyAlertTrendDto> DailyTrend { get; set; } = [];
     }
 }

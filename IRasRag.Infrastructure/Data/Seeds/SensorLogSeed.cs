@@ -5,15 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
     public static class SensorLogSeed
     {
         // Base date: Jan 1 2026 UTC — all periods are 4-hour windows across one day.
-        private static readonly DateTime SeedBase = new DateTime(
-            2026,
-            1,
-            1,
-            0,
-            0,
-            0,
-            DateTimeKind.Utc
-        );
+        private static readonly DateTime SeedBase = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         // ── Temperature Sensor 1 — 6 × 4h periods ────────────────────────────
         public static readonly Guid TempLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001401");
@@ -38,8 +30,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid DoLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001414");
 
         public static List<SensorLog> SensorLogs =>
-            new()
-            {
+            [
                 // ── Temperature Sensor 1 ──────────────────────────────────────
                 new SensorLog
                 {
@@ -112,19 +103,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SampleCount = 8,
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
-                },
-                // ── Temperature Sensor 2 ──────────────────────────────────────
-                new SensorLog
-                {
-                    Id = TempLog7Id,
-                    SensorId = SensorSeed.TemperatureSensor2Id,
-                    PeriodStart = SeedBase, // 00:00–04:00
-                    Average = 27.0,
-                    Min = 26.8,
-                    Max = 27.4,
-                    SampleCount = 8,
-                    HasWarning = false,
-                    CreatedAt = SeedBase.AddHours(4),
                 },
                 // ── pH Sensor 1 ───────────────────────────────────────────────
                 new SensorLog
@@ -212,6 +190,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
                 },
-            };
+            ];
     }
 }

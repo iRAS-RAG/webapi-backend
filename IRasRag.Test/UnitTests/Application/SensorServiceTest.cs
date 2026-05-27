@@ -140,7 +140,7 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new SensorListRequest { Page = 1, PageSize = 10 };
             var sensors = new List<Sensor>
             {
-                new Sensor
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Sensor B",
@@ -148,7 +148,7 @@ namespace IRasRag.Test.UnitTests.Application
                     SensorType = new SensorType { Name = "pH" },
                     MasterBoard = new MasterBoard { Name = "Board 1" },
                 },
-                new Sensor
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Sensor A",
@@ -697,7 +697,7 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var logs = new List<SensorLogDto>
             {
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -705,7 +705,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PeriodStart = DateTime.UtcNow.AddMinutes(-10),
                     CreatedAt = DateTime.UtcNow.AddMinutes(-10),
                 },
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -713,7 +713,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PeriodStart = DateTime.UtcNow.AddMinutes(-5),
                     CreatedAt = DateTime.UtcNow.AddMinutes(-5),
                 },
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -769,7 +769,7 @@ namespace IRasRag.Test.UnitTests.Application
             var logs = new List<SensorLogDto>
             {
                 // Bucket 1: 00:00 UTC — values 10, 20 → avg = 15
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -778,7 +778,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PeriodStart = baseTime.AddMinutes(10),
                     CreatedAt = baseTime.AddMinutes(10),
                 },
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -788,7 +788,7 @@ namespace IRasRag.Test.UnitTests.Application
                     CreatedAt = baseTime.AddMinutes(40),
                 },
                 // Bucket 2: 01:00 UTC — values 30, 40 → avg = 35
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -797,7 +797,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PeriodStart = baseTime.AddMinutes(70),
                     CreatedAt = baseTime.AddMinutes(70),
                 },
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -815,7 +815,7 @@ namespace IRasRag.Test.UnitTests.Application
             var mockSensorLogRepository = new Mock<ISensorLogRepository>();
             var aggregatedLogs = new List<SensorLogDto>
             {
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,
@@ -824,7 +824,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PeriodStart = baseTime,
                     CreatedAt = baseTime,
                 },
-                new SensorLogDto
+                new()
                 {
                     Id = Guid.NewGuid(),
                     SensorId = sensorId,

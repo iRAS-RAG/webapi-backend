@@ -8,7 +8,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
             "aaaaaaaa-0000-0000-0000-000000000001"
         );
 
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -19,8 +19,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<Farm> Farms =>
-            new()
-            {
+            [
                 new Farm
                 {
                     Id = DefaultFarmId,
@@ -30,6 +29,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Email = "contact@aquabluefarm.vn",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

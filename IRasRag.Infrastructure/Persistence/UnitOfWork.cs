@@ -14,7 +14,7 @@ namespace IRasRag.Infrastructure.Persistence
     {
         private readonly AppDbContext _context;
         private IDbContextTransaction _transaction;
-        private readonly Dictionary<Type, object> _repositories = new();
+        private readonly Dictionary<Type, object> _repositories = [];
 
         public UnitOfWork(AppDbContext context)
         {

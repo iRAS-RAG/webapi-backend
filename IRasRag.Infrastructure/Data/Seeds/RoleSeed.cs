@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class RoleSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -27,8 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<Role> Roles =>
-            new()
-            {
+            [
                 new Role
                 {
                     Id = AdminRoleId,
@@ -47,6 +46,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Operator",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class ControlDeviceSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -21,8 +21,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Feeder1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000803");
 
         public static List<ControlDevice> ControlDevices =>
-            new()
-            {
+            [
                 new ControlDevice
                 {
                     Id = Pump1Id,
@@ -31,9 +30,10 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     State = false,
                     CommandOn = "PUMP1_ON",
                     CommandOff = "PUMP1_OFF",
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     ControlDeviceTypeId = ControlDeviceTypeSeed.PumpTypeId,
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
                 new ControlDevice
                 {
@@ -43,9 +43,10 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     State = false,
                     CommandOn = "AERATOR1_ON",
                     CommandOff = "AERATOR1_OFF",
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     ControlDeviceTypeId = ControlDeviceTypeSeed.AeratorTypeId,
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
                 new ControlDevice
                 {
@@ -55,10 +56,11 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     State = false,
                     CommandOn = "FEEDER1_ON",
                     CommandOff = "FEEDER1_OFF",
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     ControlDeviceTypeId = ControlDeviceTypeSeed.FeederTypeId,
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class JobControlMappingSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -22,8 +22,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Mapping3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001103");
 
         public static List<JobControlMapping> JobControlMappings =>
-            new()
-            {
+            [
                 new JobControlMapping
                 {
                     Id = Mapping1Id,
@@ -51,6 +50,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     TriggerCondition = JobTriggerCondition.ALWAYS,
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

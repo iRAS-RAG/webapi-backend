@@ -384,7 +384,7 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var farms = new List<Farm>
             {
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 1",
@@ -392,7 +392,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "0123",
                     Email = "farm1@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 2",
@@ -400,7 +400,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "0456",
                     Email = "farm2@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Aquaculture",
@@ -469,7 +469,7 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new FarmListRequest { Page = 1, PageSize = 10 };
             var farms = new List<Farm>
             {
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
@@ -477,7 +477,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "1",
                     Email = "z@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
@@ -485,7 +485,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "2",
                     Email = "a@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",

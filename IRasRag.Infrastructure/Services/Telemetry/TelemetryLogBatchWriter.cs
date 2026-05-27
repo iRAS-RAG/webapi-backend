@@ -251,7 +251,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
     // Helper class to accumulate sensor readings for a specific time window and compute summary statistics
     public class SensorWindowAccumulator
     {
-        private readonly List<double> _samples = new();
+        private readonly List<double> _samples = [];
         private bool _hasWarning;
         public DateTime PeriodStart { get; }
 
@@ -285,7 +285,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         }
 
         public static DateTime GetWindowStart(DateTime timestamp) =>
-            new DateTime(
+            new(
                 timestamp.Year,
                 timestamp.Month,
                 timestamp.Day,

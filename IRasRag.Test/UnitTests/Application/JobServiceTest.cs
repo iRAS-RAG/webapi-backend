@@ -67,7 +67,7 @@ namespace IRasRag.Test.UnitTests.Application
 
         // Helper tạo JobDto mẫu dùng chung trong các test
         private static JobDto BuildJobDto(Guid id, string name = "Cho ăn buổi sáng") =>
-            new JobDto
+            new()
             {
                 Id = id,
                 Name = name,
@@ -89,7 +89,7 @@ namespace IRasRag.Test.UnitTests.Application
             var jobTypeId = Guid.NewGuid();
             var jobs = new List<Job>
             {
-                new Job
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Sục khí định kỳ",
@@ -99,7 +99,7 @@ namespace IRasRag.Test.UnitTests.Application
                     DefaultState = false,
                     ExecutionDays = "ALL",
                 },
-                new Job
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Cho ăn buổi sáng",
@@ -199,7 +199,7 @@ namespace IRasRag.Test.UnitTests.Application
             var jobTypeId = Guid.NewGuid();
             var jobs = new List<Job>
             {
-                new Job
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Job A",
@@ -209,7 +209,7 @@ namespace IRasRag.Test.UnitTests.Application
                     DefaultState = false,
                     ExecutionDays = "ALL",
                 },
-                new Job
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Job B",
@@ -431,15 +431,15 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "Kiểm soát nhiệt độ",
                 JobTypeId = jobTypeId,
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto
+                Mappings =
+                [
+                    new()
                     {
                         ControlDeviceId = deviceId,
                         TargetState = true,
                         TriggerCondition = JobTriggerCondition.ABOVE_MAX,
                     },
-                },
+                ],
             };
             var expectedDto = BuildJobDto(Guid.NewGuid(), createDto.Name);
 
@@ -629,11 +629,11 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "Job trùng mapping",
                 JobTypeId = jobTypeId,
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = true },
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = false }, // Trùng
-                },
+                Mappings =
+                [
+                    new() { ControlDeviceId = deviceId, TargetState = true },
+                    new() { ControlDeviceId = deviceId, TargetState = false }, // Trùng
+                ],
             };
 
             _jobTypeRepoMock
@@ -663,10 +663,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 Name = "Job với mapping lỗi",
                 JobTypeId = jobTypeId,
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = true },
-                },
+                Mappings = [new() { ControlDeviceId = deviceId, TargetState = true }],
             };
 
             _jobTypeRepoMock
@@ -943,7 +940,7 @@ namespace IRasRag.Test.UnitTests.Application
             var newDeviceId = Guid.NewGuid();
             var existingMappings = new List<JobControlMapping>
             {
-                new JobControlMapping
+                new()
                 {
                     Id = Guid.NewGuid(),
                     JobId = jobId,
@@ -994,14 +991,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var updateDto = new UpdateJobDto
             {
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto
-                    {
-                        ControlDeviceId = newDeviceId,
-                        TargetState = false,
-                    },
-                },
+                Mappings = [new() { ControlDeviceId = newDeviceId, TargetState = false }],
             };
 
             // Act
@@ -1030,13 +1020,13 @@ namespace IRasRag.Test.UnitTests.Application
             var jobId = Guid.NewGuid();
             var existingMappings = new List<JobControlMapping>
             {
-                new JobControlMapping
+                new()
                 {
                     Id = Guid.NewGuid(),
                     JobId = jobId,
                     ControlDeviceId = Guid.NewGuid(),
                 },
-                new JobControlMapping
+                new()
                 {
                     Id = Guid.NewGuid(),
                     JobId = jobId,
@@ -1076,7 +1066,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(BuildJobDto(jobId));
 
             // Truyền mảng rỗng → xóa hết mappings
-            var updateDto = new UpdateJobDto { Mappings = new List<CreateJobMappingItemDto>() };
+            var updateDto = new UpdateJobDto { Mappings = [] };
 
             // Act
             var result = await _sut.UpdateJobAsync(jobId, updateDto);
@@ -1163,11 +1153,11 @@ namespace IRasRag.Test.UnitTests.Application
 
             var updateDto = new UpdateJobDto
             {
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = true },
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = false }, // Trùng
-                },
+                Mappings =
+                [
+                    new() { ControlDeviceId = deviceId, TargetState = true },
+                    new() { ControlDeviceId = deviceId, TargetState = false }, // Trùng
+                ],
             };
 
             // Act
@@ -1222,10 +1212,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var updateDto = new UpdateJobDto
             {
-                Mappings = new List<CreateJobMappingItemDto>
-                {
-                    new CreateJobMappingItemDto { ControlDeviceId = deviceId, TargetState = true },
-                },
+                Mappings = [new() { ControlDeviceId = deviceId, TargetState = true }],
             };
 
             // Act
@@ -1275,13 +1262,13 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var relatedMappings = new List<JobControlMapping>
             {
-                new JobControlMapping
+                new()
                 {
                     Id = Guid.NewGuid(),
                     JobId = jobId,
                     ControlDeviceId = Guid.NewGuid(),
                 },
-                new JobControlMapping
+                new()
                 {
                     Id = Guid.NewGuid(),
                     JobId = jobId,

@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class UserSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -27,8 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid OperatorId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000003");
 
         public static List<User> Users =>
-            new()
-            {
+            [
                 // ------------------------------
                 // Admin user
                 // ------------------------------
@@ -68,6 +67,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     LastName = "Lê",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

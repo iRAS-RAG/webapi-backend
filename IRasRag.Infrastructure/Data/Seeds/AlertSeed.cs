@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class AlertSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -22,8 +22,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Alert3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001803");
 
         public static List<Alert> Alerts =>
-            new()
-            {
+            [
                 new Alert
                 {
                     Id = Alert1Id,
@@ -66,6 +65,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Status = AlertStatus.ACKNOWLEDGED,
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

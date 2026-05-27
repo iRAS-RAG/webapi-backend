@@ -130,9 +130,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } }
-                );
+                .ReturnsAsync((IReadOnlyList<UserFarm>)[new() { FarmId = dummyFarmId }]);
 
             _fishTankRepoMock
                 .Setup(r =>
@@ -142,11 +140,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<FishTank>)
-                        new List<FishTank>
-                        {
-                            new() { Id = dummyTankId, FarmId = dummyFarmId },
-                        }
+                    (IReadOnlyList<FishTank>)[new() { Id = dummyTankId, FarmId = dummyFarmId }]
                 );
 
             // batchRepo.FindAllAsync is used to build dashboardBatchIds before querying mortality.
@@ -157,7 +151,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<FarmingBatch>)new List<FarmingBatch>());
+                .ReturnsAsync((IReadOnlyList<FarmingBatch>)[]);
 
             var alertList = new List<AlertStatus>();
             alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
@@ -196,9 +190,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<BatchSurvivalProjection>)(
-                        survivalData?.ToList() ?? new List<BatchSurvivalProjection>()
-                    )
+                    (IReadOnlyList<BatchSurvivalProjection>)(survivalData?.ToList() ?? [])
                 );
 
             _mortalityRepoMock
@@ -208,11 +200,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<MortalityLog>)(
-                        mortalityLogs?.ToList() ?? new List<MortalityLog>()
-                    )
-                );
+                .ReturnsAsync((IReadOnlyList<MortalityLog>)(mortalityLogs?.ToList() ?? []));
         }
 
         /// <summary>
@@ -247,9 +235,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } }
-                );
+                .ReturnsAsync((IReadOnlyList<UserFarm>)[new() { FarmId = dummyFarmId }]);
 
             _fishTankRepoMock
                 .Setup(r =>
@@ -259,11 +245,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<FishTank>)
-                        new List<FishTank>
-                        {
-                            new() { Id = dummyTankId, FarmId = dummyFarmId },
-                        }
+                    (IReadOnlyList<FishTank>)[new() { Id = dummyTankId, FarmId = dummyFarmId }]
                 );
 
             // batchRepo.FindAllAsync is used to build weeklyBatchIds before querying mortality.
@@ -274,7 +256,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<FarmingBatch>)new List<FarmingBatch>());
+                .ReturnsAsync((IReadOnlyList<FarmingBatch>)[]);
 
             var alertList = new List<AlertStatus>();
             alertList.AddRange(Enumerable.Repeat(AlertStatus.OPEN, openAlerts));
@@ -298,9 +280,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r =>
                     r.ListAsync(It.IsAny<ISpecification<Alert, string>>(), It.IsAny<QueryType>())
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<string>)(sensorTypeNames?.ToList() ?? new List<string>())
-                );
+                .ReturnsAsync((IReadOnlyList<string>)(sensorTypeNames?.ToList() ?? []));
 
             _correctiveActionRepoMock
                 .Setup(r =>
@@ -310,9 +290,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<WeeklyCorrectiveActionItem>)(
-                        correctiveActions?.ToList() ?? new List<WeeklyCorrectiveActionItem>()
-                    )
+                    (IReadOnlyList<WeeklyCorrectiveActionItem>)(correctiveActions?.ToList() ?? [])
                 );
 
             _recommendationRepoMock
@@ -323,9 +301,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<WeeklyRecommendationItem>)(
-                        recommendations?.ToList() ?? new List<WeeklyRecommendationItem>()
-                    )
+                    (IReadOnlyList<WeeklyRecommendationItem>)(recommendations?.ToList() ?? [])
                 );
 
             _mortalityRepoMock
@@ -335,11 +311,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<MortalityLog>)(
-                        mortalityLogs?.ToList() ?? new List<MortalityLog>()
-                    )
-                );
+                .ReturnsAsync((IReadOnlyList<MortalityLog>)(mortalityLogs?.ToList() ?? []));
 
             _batchRepoMock
                 .Setup(r =>
@@ -358,9 +330,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<BatchSurvivalProjection>)(
-                        survivalData?.ToList() ?? new List<BatchSurvivalProjection>()
-                    )
+                    (IReadOnlyList<BatchSurvivalProjection>)(survivalData?.ToList() ?? [])
                 );
         }
 
@@ -722,9 +692,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } }
-                );
+                .ReturnsAsync((IReadOnlyList<UserFarm>)[new() { FarmId = dummyFarmId }]);
             _fishTankRepoMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -733,11 +701,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<FishTank>)
-                        new List<FishTank>
-                        {
-                            new() { Id = dummyTankId, FarmId = dummyFarmId },
-                        }
+                    (IReadOnlyList<FishTank>)[new() { Id = dummyTankId, FarmId = dummyFarmId }]
                 );
 
             // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.
@@ -1284,9 +1248,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<UserFarm>)new List<UserFarm> { new() { FarmId = dummyFarmId } }
-                );
+                .ReturnsAsync((IReadOnlyList<UserFarm>)[new() { FarmId = dummyFarmId }]);
             _fishTankRepoMock
                 .Setup(r =>
                     r.FindAllAsync(
@@ -1295,11 +1257,7 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (IReadOnlyList<FishTank>)
-                        new List<FishTank>
-                        {
-                            new() { Id = dummyTankId, FarmId = dummyFarmId },
-                        }
+                    (IReadOnlyList<FishTank>)[new() { Id = dummyTankId, FarmId = dummyFarmId }]
                 );
 
             // The service calls ListAsync(AlertStatusCountSpec), not CountAsync.

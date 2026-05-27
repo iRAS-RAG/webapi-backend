@@ -11,8 +11,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<GrowthStage> GrowthStages =>
-            new()
-            {
+            [
                 new GrowthStage
                 {
                     Id = FryStageId,
@@ -20,6 +19,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Name = "Cá bột",
                     Description =
                         "Giai đoạn từ khi nở đến khi cá phát triển đủ lớn để chuyển sang giai đoạn cá giống.",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new GrowthStage
                 {
@@ -27,7 +27,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesId = SpeciesSeed.TilapiaId,
                     Name = "Cá giống",
                     Description = "Giai đoạn từ cá bột đến khi cá đạt kích thước thương phẩm.",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
-            };
+            ];
     }
 }

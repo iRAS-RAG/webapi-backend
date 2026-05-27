@@ -89,10 +89,7 @@ namespace IRasRag.Test.UnitTests.Application
                 )
                 .ReturnsAsync(
                     (IReadOnlyList<UserFarm>)
-                        new List<UserFarm>
-                        {
-                            new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() },
-                        }
+                        [new() { UserId = Guid.Empty, FarmId = Guid.NewGuid() }]
                 );
 
             // FishTank returns an empty list by default; individual tests override this as needed.
@@ -104,7 +101,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<FishTank>)new List<FishTank>());
+                .ReturnsAsync((IReadOnlyList<FishTank>)[]);
 
             _sut = new AnalyticsService(_unitOfWorkMock.Object, _loggerMock.Object);
         }
@@ -115,9 +112,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             _sensorTypeRepoMock
                 .Setup(r => r.GetAllAsync(It.IsAny<QueryType>()))
-                .ReturnsAsync(
-                    (IReadOnlyList<SensorType>)(types?.ToList() ?? new List<SensorType>())
-                );
+                .ReturnsAsync((IReadOnlyList<SensorType>)(types?.ToList() ?? []));
         }
 
         private void SetupDefaultAlertRepo()
@@ -126,7 +121,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r =>
                     r.FindAllAsync(It.IsAny<Expression<Func<Alert, bool>>>(), It.IsAny<QueryType>())
                 )
-                .ReturnsAsync((IReadOnlyList<Alert>)new List<Alert>());
+                .ReturnsAsync((IReadOnlyList<Alert>)[]);
         }
 
         private void SetupDefaultMasterBoardRepo()
@@ -138,7 +133,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync((IReadOnlyList<MasterBoard>)new List<MasterBoard>());
+                .ReturnsAsync((IReadOnlyList<MasterBoard>)[]);
         }
 
         private FarmingBatch MakeBatch(
@@ -191,7 +186,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task CompareBatchesAsync_ShouldReturnBadRequest_WhenBatchIdsIsEmpty()
         {
-            var request = new BatchCompareRequest { BatchIds = new List<Guid>() };
+            var request = new BatchCompareRequest { BatchIds = [] };
 
             var result = await _sut.CompareBatchesAsync(request);
 
@@ -202,7 +197,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task CompareBatchesAsync_ShouldReturnBadRequest_WhenOnlyOneBatchIdProvided()
         {
-            var request = new BatchCompareRequest { BatchIds = new List<Guid> { Guid.NewGuid() } };
+            var request = new BatchCompareRequest { BatchIds = [Guid.NewGuid()] };
 
             var result = await _sut.CompareBatchesAsync(request);
 
@@ -214,10 +209,7 @@ namespace IRasRag.Test.UnitTests.Application
         public async Task CompareBatchesAsync_ShouldReturnBadRequest_WhenBatchIdsAreAllDuplicates()
         {
             var sameId = Guid.NewGuid();
-            var request = new BatchCompareRequest
-            {
-                BatchIds = new List<Guid> { sameId, sameId, sameId },
-            };
+            var request = new BatchCompareRequest { BatchIds = [sameId, sameId, sameId] };
 
             var result = await _sut.CompareBatchesAsync(request);
 
@@ -246,10 +238,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task CompareBatchesAsync_ShouldReturnNotFound_WhenNoBatchesExistInDatabase()
         {
-            var request = new BatchCompareRequest
-            {
-                BatchIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() },
-            };
+            var request = new BatchCompareRequest { BatchIds = [Guid.NewGuid(), Guid.NewGuid()] };
 
             SetupDefaultSensorTypes();
             _batchRepoMock
@@ -329,8 +318,8 @@ namespace IRasRag.Test.UnitTests.Application
             var id2 = Guid.NewGuid();
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { id1, id2 },
-                Metrics = new List<string> { "survival_rate" },
+                BatchIds = [id1, id2],
+                Metrics = ["survival_rate"],
             };
 
             SetupDefaultSensorTypes();
@@ -375,8 +364,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string>(), // request all metrics
+                BatchIds = [batchId1, batchId2],
+                Metrics = [], // request all metrics
             };
 
             var batches = new List<FarmingBatch>
@@ -445,8 +434,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "survival_rate" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["survival_rate"],
             };
 
             var batches = new List<FarmingBatch>
@@ -491,8 +480,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "survival_rate" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["survival_rate"],
             };
 
             var batches = new List<FarmingBatch>
@@ -538,8 +527,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "mortality" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["mortality"],
             };
 
             var batches = new List<FarmingBatch>
@@ -613,8 +602,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "feeding" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["feeding"],
             };
 
             var batches = new List<FarmingBatch>
@@ -682,8 +671,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "alerts" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["alerts"],
             };
 
             var sensorType = new SensorType
@@ -769,8 +758,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { batchId1, batchId2 },
-                Metrics = new List<string> { "DO" },
+                BatchIds = [batchId1, batchId2],
+                Metrics = ["DO"],
             };
 
             var sensorTypes = new List<SensorType>
@@ -898,8 +887,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             var request = new BatchCompareRequest
             {
-                BatchIds = new List<Guid> { existingBatchId, missingBatchId },
-                Metrics = new List<string> { "survival_rate" },
+                BatchIds = [existingBatchId, missingBatchId],
+                Metrics = ["survival_rate"],
             };
 
             SetupDefaultSensorTypes();
@@ -931,10 +920,7 @@ namespace IRasRag.Test.UnitTests.Application
         [Fact]
         public async Task CompareBatchesAsync_ShouldReturnUnexpected_WhenExceptionIsThrown()
         {
-            var request = new BatchCompareRequest
-            {
-                BatchIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() },
-            };
+            var request = new BatchCompareRequest { BatchIds = [Guid.NewGuid(), Guid.NewGuid()] };
 
             _sensorTypeRepoMock
                 .Setup(r => r.GetAllAsync(It.IsAny<QueryType>()))
@@ -1063,9 +1049,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>()
-                );
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)[]);
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);
@@ -1090,9 +1074,7 @@ namespace IRasRag.Test.UnitTests.Application
                         It.IsAny<QueryType>()
                     )
                 )
-                .ReturnsAsync(
-                    (IReadOnlyList<AlertFrequencyProjection>)new List<AlertFrequencyProjection>()
-                );
+                .ReturnsAsync((IReadOnlyList<AlertFrequencyProjection>)[]);
             SetupDefaultSensorTypes();
 
             var result = await _sut.GetAlertFrequencyAsync(request);

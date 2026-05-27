@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class MortalityLogSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -23,8 +23,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<MortalityLog> MortalityLogs =>
-            new()
-            {
+            [
                 new MortalityLog
                 {
                     Id = MortalityLog1Id,
@@ -45,6 +44,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Date = new DateTime(2024, 03, 10, 0, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

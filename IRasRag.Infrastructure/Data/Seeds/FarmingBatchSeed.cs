@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class FarmingBatchSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -20,8 +20,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Batch2Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001502");
 
         public static List<FarmingBatch> FarmingBatches =>
-            new()
-            {
+            [
                 new FarmingBatch
                 {
                     Id = Batch1Id,
@@ -35,7 +34,11 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     InitialQuantity = 1000,
                     CurrentQuantity = 950,
                     UnitOfMeasure = "con",
+                    // Estimates based on current stage configs
+                    EstimatedHarvestCount = 900,
+                    EstimatedHarvestWeightKg = 90.0, // assume ~0.1kg per fish at harvest
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
                 new FarmingBatch
                 {
@@ -50,8 +53,11 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     InitialQuantity = 800,
                     CurrentQuantity = 0,
                     UnitOfMeasure = "con",
+                    EstimatedHarvestCount = 780,
+                    EstimatedHarvestWeightKg = 78.0,
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

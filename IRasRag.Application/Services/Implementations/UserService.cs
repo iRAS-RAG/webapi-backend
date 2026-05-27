@@ -74,13 +74,10 @@ namespace IRasRag.Application.Services.Implementations
                     PasswordHash = _hasher.HashPassword(createDto.Password),
                     IsDeleted = false,
                     //Temporary assign new operator to the seeded farm
-                    UserFarms = new List<UserFarm>
-                    {
-                        new UserFarm
-                        {
-                            FarmId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001"),
-                        },
-                    },
+                    UserFarms =
+                    [
+                        new() { FarmId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001") },
+                    ],
                 };
 
                 var emailBody = await _emailService.GenerateAccountCreatedEmailBodyAsync(
@@ -151,13 +148,10 @@ namespace IRasRag.Application.Services.Implementations
                 if (systemRole == SystemRole.Operator || systemRole == SystemRole.Supervisor)
                 {
                     // Temporary assign new non admin user to the seeded farm
-                    newUser.UserFarms = new List<UserFarm>
-                    {
-                        new UserFarm
-                        {
-                            FarmId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001"),
-                        },
-                    };
+                    newUser.UserFarms =
+                    [
+                        new() { FarmId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001") },
+                    ];
                 }
 
                 await _unitOfWork.GetRepository<User>().AddAsync(newUser);

@@ -278,19 +278,19 @@ namespace IRasRag.Test.UnitTests.Application
 
             var entities = new List<GrowthStage>
             {
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Juvenile",
                     Description = "Juvenile stage description",
                 },
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Adult",
                     Description = "Adult stage description",
                 },
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Larva",
@@ -370,19 +370,19 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new GrowthStageListRequest { Page = 1, PageSize = 10 };
             var entities = new List<GrowthStage>
             {
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
                     Description = "d1",
                 },
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
                     Description = "d2",
                 },
-                new GrowthStage
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",

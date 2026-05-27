@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class RecommendationSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -21,8 +21,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Rec3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000002103");
 
         public static List<Recommendation> Recommendations =>
-            new()
-            {
+            [
                 new Recommendation
                 {
                     Id = Rec1Id,
@@ -50,6 +49,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                         "Tham khảo hướng dẫn quản lý chất lượng nước: Duy trì nhiệt độ trong khoảng 25-30°C. Kiểm tra các thông số khác như oxy hòa tan, ammonia và nitrite để đảm bảo môi trường nuôi tối ưu.",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

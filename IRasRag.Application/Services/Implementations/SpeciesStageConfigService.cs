@@ -390,7 +390,7 @@ namespace IRasRag.Application.Services.Implementations
                         .GetRepository<SpeciesStageConfig>()
                         .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
 
-                    var existingFeedTypeIds = existingDto?.FeedTypeIds ?? new List<Guid>();
+                    var existingFeedTypeIds = existingDto?.FeedTypeIds ?? [];
 
                     var setsEqual =
                         existingFeedTypeIds.Count == requestedFeedTypeIds.Count

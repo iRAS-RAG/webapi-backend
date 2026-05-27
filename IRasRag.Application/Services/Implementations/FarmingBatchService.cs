@@ -165,8 +165,7 @@ namespace IRasRag.Application.Services.Implementations
                         MaxStockingDensity = ssc?.MaxStockingDensity,
                         ExpectedWeightKgPerFish = ssc?.ExpectedWeightKgPerFish,
                         SurvivalRate = ssc?.SurvivalRate,
-                        FeedTypeNames =
-                            ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? new List<string>(),
+                        FeedTypeNames = ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? [],
                     };
 
                     dtos.Add(dto);
@@ -667,8 +666,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var orderedStages =
-                    batch.BatchStages?.OrderBy(s => s.Sequence).ToList() ?? new List<BatchStage>();
+                var orderedStages = batch.BatchStages?.OrderBy(s => s.Sequence).ToList() ?? [];
                 var plannedEnd = orderedStages.LastOrDefault()?.EstimatedEndDate;
 
                 if (plannedEnd.HasValue && harvestDate < plannedEnd.Value && !force)

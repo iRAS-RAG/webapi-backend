@@ -87,7 +87,7 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // ── 2. Normalise requested metrics ───────────────────────────
-                var requestedMetrics = (request.Metrics ?? new List<string>())
+                var requestedMetrics = (request.Metrics ?? [])
                     .Select(m => m.Trim())
                     .Where(m => !string.IsNullOrWhiteSpace(m))
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);

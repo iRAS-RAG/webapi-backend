@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
     public static class CameraSeed
     {
         // Timestamp nhất quán cho tất cả dữ liệu seed (UTC)
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -32,8 +32,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 
         // Danh sách camera seed
         public static List<Camera> Cameras =>
-            new()
-            {
+            [
                 new Camera
                 {
                     Id = MainEntranceCameraId,
@@ -58,6 +57,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Url = "rtsp://192.168.1.102:554/stream1",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

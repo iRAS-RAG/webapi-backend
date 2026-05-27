@@ -506,7 +506,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var list = new List<SpeciesThreshold>
             {
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -520,7 +520,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -534,7 +534,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
@@ -625,7 +625,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var list = new List<SpeciesThreshold>
             {
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
@@ -639,7 +639,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },

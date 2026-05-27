@@ -301,9 +301,9 @@ namespace IRasRag.Test.UnitTests.Application
 
             var entities = new List<Species>
             {
-                new Species { Id = Guid.NewGuid(), Name = "Cá Rô Phi" },
-                new Species { Id = Guid.NewGuid(), Name = "Cá Chép" },
-                new Species { Id = Guid.NewGuid(), Name = "Tôm Sú" },
+                new() { Id = Guid.NewGuid(), Name = "Cá Rô Phi" },
+                new() { Id = Guid.NewGuid(), Name = "Cá Chép" },
+                new() { Id = Guid.NewGuid(), Name = "Tôm Sú" },
             };
 
             ISpecification<Species, SpeciesDto>? capturedSpec = null;
@@ -374,9 +374,9 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new SpeciesListRequest { Page = 1, PageSize = 10 };
             var entities = new List<Species>
             {
-                new Species { Id = Guid.NewGuid(), Name = "Zulu" },
-                new Species { Id = Guid.NewGuid(), Name = "Alpha" },
-                new Species { Id = Guid.NewGuid(), Name = "Beta" },
+                new() { Id = Guid.NewGuid(), Name = "Zulu" },
+                new() { Id = Guid.NewGuid(), Name = "Alpha" },
+                new() { Id = Guid.NewGuid(), Name = "Beta" },
             };
 
             _repositoryMock

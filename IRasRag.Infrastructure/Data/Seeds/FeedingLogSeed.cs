@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class FeedingLogSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -21,8 +21,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid FeedLog3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001603");
 
         public static List<FeedingLog> FeedingLogs =>
-            new()
-            {
+            [
                 new FeedingLog
                 {
                     Id = FeedLog1Id,
@@ -53,6 +52,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     CreatedDate = new DateTime(2024, 01, 20, 18, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

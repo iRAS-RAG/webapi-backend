@@ -12,7 +12,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
         public void Append(TelemetryPush push)
         {
-            var list = _buffer.GetOrAdd(push.TankId, _ => new List<TelemetryPush>());
+            var list = _buffer.GetOrAdd(push.TankId, _ => []);
             var cutoff = DateTime.UtcNow - WindowDuration;
 
             lock (list)

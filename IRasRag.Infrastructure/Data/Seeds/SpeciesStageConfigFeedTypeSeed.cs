@@ -5,8 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
     public static class SpeciesStageConfigFeedTypeSeed
     {
         public static List<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes =>
-            new()
-            {
+            [
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.FryStageConfigId,
@@ -17,6 +16,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SpeciesStageConfigId = SpeciesStageConfigSeed.JuvenileStageConfigId,
                     FeedTypeId = FeedTypeSeed.GrowerFeedId,
                 },
-            };
+            ];
     }
 }

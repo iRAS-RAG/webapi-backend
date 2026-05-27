@@ -10,8 +10,8 @@ namespace IRasRag.Application.DTOs
         public Guid GrowthStageId { get; set; }
         public string GrowthStageName { get; set; } = string.Empty;
         public int Sequence { get; set; }
-        public List<Guid> FeedTypeIds { get; set; } = new();
-        public List<string> FeedTypeNames { get; set; } = new();
+        public List<Guid> FeedTypeIds { get; set; } = [];
+        public List<string> FeedTypeNames { get; set; } = [];
 
         public double AmountPer100Fish { get; set; }
 
@@ -39,7 +39,7 @@ namespace IRasRag.Application.DTOs
 
         [Required]
         [MinLength(1, ErrorMessage = "Phải chọn ít nhất một kiểu thức ăn.")]
-        public List<Guid> FeedTypeIds { get; set; } = new();
+        public List<Guid> FeedTypeIds { get; set; } = [];
 
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Lượng cho ăn phải lớn hơn 0 kg.")]

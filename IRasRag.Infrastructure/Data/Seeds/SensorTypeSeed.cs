@@ -28,8 +28,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid DoSensorTypeId = TdsSensorTypeId;
 
         public static List<SensorType> SensorTypes =>
-            new()
-            {
+            [
                 new SensorType
                 {
                     Id = TemperatureSensorTypeId,
@@ -37,6 +36,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Nhiệt độ",
                     UnitOfMeasure = "Độ C",
                     Code = "waterTemp",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
                 {
@@ -45,6 +45,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Tính axit",
                     UnitOfMeasure = "pH",
                     Code = "pH",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
                 {
@@ -53,6 +54,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Tổng chất rắn hòa tan",
                     UnitOfMeasure = "ppm",
                     Code = "tds",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
                 {
@@ -61,6 +63,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Lưu lượng",
                     UnitOfMeasure = "L/min",
                     Code = "flowRate",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
                 {
@@ -69,7 +72,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Mức nước",
                     UnitOfMeasure = "0/1",
                     Code = "waterLevel",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
-            };
+            ];
     }
 }

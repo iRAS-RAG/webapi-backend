@@ -598,7 +598,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var entities = new List<FishTank>
             {
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 1",
@@ -614,10 +614,10 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "alpha@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream1",
-                    FarmingBatches = new List<FarmingBatch>(),
-                    Alerts = new List<Alert>(),
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 2",
@@ -633,10 +633,10 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream2",
-                    FarmingBatches = new List<FarmingBatch>(),
-                    Alerts = new List<Alert>(),
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 3",
@@ -652,8 +652,8 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta2@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream3",
-                    FarmingBatches = new List<FarmingBatch>(),
-                    Alerts = new List<Alert>(),
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
             };
 
@@ -732,7 +732,7 @@ namespace IRasRag.Test.UnitTests.Application
             var farmId = Guid.NewGuid();
             var entities = new List<FishTank>
             {
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
@@ -749,7 +749,7 @@ namespace IRasRag.Test.UnitTests.Application
                     },
                     CameraUrl = "http://camera.com/1",
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
@@ -766,7 +766,7 @@ namespace IRasRag.Test.UnitTests.Application
                     },
                     CameraUrl = "http://camera.com/2",
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",
@@ -800,7 +800,7 @@ namespace IRasRag.Test.UnitTests.Application
                         {
                             Items = new List<FishTankDto>
                             {
-                                new FishTankDto
+                                new()
                                 {
                                     Id = entities[1].Id,
                                     Name = entities[1].Name,
@@ -814,7 +814,7 @@ namespace IRasRag.Test.UnitTests.Application
                                     CurrentCount = null,
                                     HasOpenAlert = false,
                                 },
-                                new FishTankDto
+                                new()
                                 {
                                     Id = entities[2].Id,
                                     Name = entities[2].Name,
@@ -828,7 +828,7 @@ namespace IRasRag.Test.UnitTests.Application
                                     CurrentCount = null,
                                     HasOpenAlert = false,
                                 },
-                                new FishTankDto
+                                new()
                                 {
                                     Id = entities[0].Id,
                                     Name = entities[0].Name,
@@ -1482,7 +1482,7 @@ namespace IRasRag.Test.UnitTests.Application
             var tank = new FishTank { Id = tankId, Name = "Bể A" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     SensorName = "Nhiệt độ 1",
@@ -1494,7 +1494,7 @@ namespace IRasRag.Test.UnitTests.Application
                         RecordedAt = DateTime.UtcNow,
                     },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     SensorName = "pH 1",
@@ -1612,17 +1612,17 @@ namespace IRasRag.Test.UnitTests.Application
             var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
@@ -1661,17 +1661,17 @@ namespace IRasRag.Test.UnitTests.Application
             var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
@@ -1708,12 +1708,12 @@ namespace IRasRag.Test.UnitTests.Application
             var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
                     SensorId = Guid.NewGuid(),
                     LatestData = new TankSensorLatestDataValueDto { HasWarning = true },

@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class DocumentSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -22,8 +22,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Doc3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001903");
 
         public static List<Document> Documents =>
-            new()
-            {
+            [
                 new Document
                 {
                     Id = Doc1Id,
@@ -57,6 +56,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     CreatedAt = SeedTimestamp,
                     RagStatus = DocumentRagStatus.Pending,
                 },
-            };
+            ];
     }
 }

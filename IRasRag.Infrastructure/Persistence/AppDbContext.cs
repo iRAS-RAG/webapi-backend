@@ -178,7 +178,7 @@ namespace IRasRag.Infrastructure.Persistence
             }
         }
 
-        private readonly HashSet<object> _hardDeleteEntities = new();
+        private readonly HashSet<object> _hardDeleteEntities = [];
 
         public void MarkHardDelete(object entity)
         {

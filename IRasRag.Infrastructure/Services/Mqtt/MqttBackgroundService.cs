@@ -51,7 +51,7 @@ namespace IRasRag.Infrastructure.Services.Mqtt
             };
         }
 
-        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
             AllowTrailingCommas = true,

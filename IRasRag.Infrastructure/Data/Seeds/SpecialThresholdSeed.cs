@@ -5,8 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
     public static class SpeciesThresholdSeed
     {
         public static List<SpeciesThreshold> SpeciesThresholds =>
-            new()
-            {
+            [
                 // ============================
                 // Cá rô phi – Giai đoạn cá bột
                 // ============================
@@ -51,6 +50,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 6.5,
                     MaxValue = 8.5,
                 },
-            };
+            ];
     }
 }

@@ -7,9 +7,13 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid TilapiaId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000101");
 
         public static List<Species> Species =>
-            new()
-            {
-                new Species { Id = TilapiaId, Name = "Cá rô phi" },
-            };
+            [
+                new Species
+                {
+                    Id = TilapiaId,
+                    Name = "Cá rô phi",
+                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
+                },
+            ];
     }
 }

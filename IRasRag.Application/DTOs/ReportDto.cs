@@ -185,21 +185,21 @@ namespace IRasRag.Application.DTOs
         public int DismissedAlerts { get; set; }
 
         /// <summary>Top loại cảm biến gây cảnh báo nhiều nhất trong tuần (sắp xếp giảm dần).</summary>
-        public List<AlertTypeBreakdownItem> TopIssuesBySensorType { get; set; } = new();
+        public List<AlertTypeBreakdownItem> TopIssuesBySensorType { get; set; } = [];
 
         // ── Corrective Actions ───────────────────────────────────────
         /// <summary>Tổng số hành động khắc phục đã thực hiện trong tuần.</summary>
         public int TotalCorrectiveActions { get; set; }
 
         /// <summary>Danh sách hành động khắc phục trong tuần (tối đa 20 mục).</summary>
-        public List<WeeklyCorrectiveActionItem> CorrectiveActions { get; set; } = new();
+        public List<WeeklyCorrectiveActionItem> CorrectiveActions { get; set; } = [];
 
         // ── Recommendations ──────────────────────────────────────────
         /// <summary>Tổng số khuyến nghị đã được tạo ra trong tuần.</summary>
         public int TotalRecommendations { get; set; }
 
         /// <summary>Danh sách khuyến nghị đã sử dụng trong tuần (tối đa 20 mục).</summary>
-        public List<WeeklyRecommendationItem> Recommendations { get; set; } = new();
+        public List<WeeklyRecommendationItem> Recommendations { get; set; } = [];
 
         // ── Mortality ────────────────────────────────────────────────
         /// <summary>Tổng số lượng chết được ghi nhận trong tuần.</summary>

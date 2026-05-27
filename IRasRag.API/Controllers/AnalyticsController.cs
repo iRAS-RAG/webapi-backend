@@ -104,8 +104,8 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogInformation(
                     "Batch comparison endpoint called. BatchIds: [{Ids}], Metrics: [{Metrics}]",
-                    string.Join(", ", request.BatchIds ?? new List<Guid>()),
-                    string.Join(", ", request.Metrics ?? new List<string>())
+                    string.Join(", ", request.BatchIds ?? []),
+                    string.Join(", ", request.Metrics ?? [])
                 );
 
                 var result = await _analyticsService.CompareBatchesAsync(request);
