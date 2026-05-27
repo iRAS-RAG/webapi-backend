@@ -1,6 +1,4 @@
-﻿using IRasRag.Domain.Enums;
-
-namespace IRasRag.Application.Common.Models.Telemetry
+﻿namespace IRasRag.Application.Common.Models.Telemetry
 {
     public class AlertState
     {

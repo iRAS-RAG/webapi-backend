@@ -5,7 +5,6 @@ using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Application.Specifications.JobSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;

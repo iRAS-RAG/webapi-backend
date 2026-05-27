@@ -2,7 +2,6 @@
 using System.Text;
 using IRasRag.Application.Common.Interfaces.FileValidator;
 using Microsoft.Extensions.Logging;
-using MimeKit;
 
 namespace IRasRag.Infrastructure.Services.FileValidator
 {

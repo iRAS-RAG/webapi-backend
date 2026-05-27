@@ -5,7 +5,6 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Specifications.AlertSpecifications;
 using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
-using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

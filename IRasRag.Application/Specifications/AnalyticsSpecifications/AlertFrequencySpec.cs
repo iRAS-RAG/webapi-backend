@@ -1,7 +1,6 @@
 using Ardalis.Specification;
 using IRasRag.Application.DTOs;
 using IRasRag.Domain.Entities;
-using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Specifications.AnalyticsSpecifications
 {

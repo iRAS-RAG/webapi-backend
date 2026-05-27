@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace IRasRag.Infrastructure.Persistence.DbFunctions
+﻿namespace IRasRag.Infrastructure.Persistence.DbFunctions
 {
     public static class PgFunctions
     {

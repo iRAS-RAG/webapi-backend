@@ -1,4 +1,5 @@
 using AutoMapper;
+using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
@@ -16,64 +17,27 @@ namespace IRasRag.Application.Services.Implementations
     public class FarmingBatchService : IFarmingBatchService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRecommendationCalculator _recommendationCalculator;
         private readonly IMapper _mapper;
         private readonly ILogger<FarmingBatchService> _logger;
         private readonly ITelemetryCacheService _telemetryCache;
 
         public FarmingBatchService(
             IUnitOfWork unitOfWork,
+            IRecommendationCalculator recommendationCalculator,
             IMapper mapper,
             ILogger<FarmingBatchService> logger,
             ITelemetryCacheService telemetryCache
         )
         {
             _unitOfWork = unitOfWork;
+            _recommendationCalculator = recommendationCalculator;
             _mapper = mapper;
             _logger = logger;
             _telemetryCache = telemetryCache;
         }
 
-        // Helper: compute recommended initial stocking based on last stage MaxStockingDensity and tank volume.
-        // Returns null if recommendation cannot be computed.
-        private async Task<int?> GetRecommendedInitialAsync(Guid fishTankId, Guid speciesId)
-        {
-            try
-            {
-                var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
-                if (fishTank == null)
-                    return null;
-
-                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
-                var stageConfigs = await stageConfigRepo.ListAsync(
-                    new IRasRag.Application.Specifications.SpecificationHelpers.SpecBySpeciesOrderedSpec(
-                        speciesId
-                    )
-                );
-                if (stageConfigs == null || !stageConfigs.Any())
-                    return null;
-
-                var tankVolume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
-                if (tankVolume <= 0)
-                    return null;
-
-                var last = stageConfigs.OrderBy(s => s.Sequence).Last();
-                if (!last.MaxStockingDensity.HasValue || last.MaxStockingDensity.Value <= 0)
-                    return null;
-
-                var recommended = (int)Math.Floor(last.MaxStockingDensity.Value * tankVolume);
-                return recommended > 0 ? recommended : null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Không thể tính mức đề nghị cho bể {FishTankId} và loài {SpeciesId}",
-                    fishTankId,
-                    speciesId
-                );
-                return null;
-            }
-        }
+        // Recommendation calculation delegated to IRecommendationCalculator
 
         // Compute estimated yield for a batch and optionally persist
         public async Task<(
@@ -462,10 +426,11 @@ namespace IRasRag.Application.Services.Implementations
                     // Minimum recommended check based on last stage density (50% threshold)
                     try
                     {
-                        var recommended = await GetRecommendedInitialAsync(
-                            fishTank.Id,
-                            createDto.SpeciesId
-                        );
+                        var recommended =
+                            await _recommendationCalculator.GetRecommendedInitialAsync(
+                                fishTank.Id,
+                                createDto.SpeciesId
+                            );
                         if (recommended.HasValue && createDto.InitialQuantity > 0)
                         {
                             var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);
@@ -702,10 +667,11 @@ namespace IRasRag.Application.Services.Implementations
                         var speciesId = currentStageConfig?.SpeciesId ?? Guid.Empty;
                         if (speciesId != Guid.Empty)
                         {
-                            var recommended = await GetRecommendedInitialAsync(
-                                farmingBatch.FishTankId,
-                                speciesId
-                            );
+                            var recommended =
+                                await _recommendationCalculator.GetRecommendedInitialAsync(
+                                    farmingBatch.FishTankId,
+                                    speciesId
+                                );
                             if (recommended.HasValue)
                             {
                                 var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);

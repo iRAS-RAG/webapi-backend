@@ -1,5 +1,4 @@
 using IRasRag.Domain.Entities;
-using IRasRag.Infrastructure.Data.Seeds;
 
 namespace IRasRag.Infrastructure.Data.Seeds
 {

@@ -1,7 +1,6 @@
 using AutoMapper;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.CloudFileStorage;
-using IRasRag.Application.Common.Interfaces.FileExtraction;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
 using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;

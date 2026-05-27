@@ -1,6 +1,5 @@
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
-using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +21,27 @@ namespace IRasRag.API.Controllers
         {
             _fishTankService = fishTankService;
             _logger = logger;
+        }
+
+        [Authorize(Roles = "Supervisor")]
+        [HttpGet("{id}/recommended-initials")]
+        public async Task<IActionResult> GetRecommendedInitials(Guid id)
+        {
+            try
+            {
+                var result = await _fishTankService.GetRecommendedInitialsAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy mức đề nghị cho bể: {TankId}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy mức đề nghị" });
+            }
         }
 
         [Authorize(Roles = "Admin")]

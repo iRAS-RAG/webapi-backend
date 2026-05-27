@@ -16,5 +16,8 @@ namespace IRasRag.Application.Services.Interfaces
         Task<Result> DeleteFishTankAsync(Guid id);
         Task<Result<List<TankSensorLatestDataDto>>> GetTankLatestDataAsync(Guid tankId);
         Task<Result<TankStatusDto>> GetTankStatusAsync(Guid tankId);
+        Task<
+            Result<List<IRasRag.Application.DTOs.RecommendedInitialDto>>
+        > GetRecommendedInitialsAsync(Guid tankId);
     }
 }

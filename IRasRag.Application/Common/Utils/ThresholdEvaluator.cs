@@ -1,5 +1,4 @@
 ﻿using IRasRag.Domain.Entities;
-using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.Common.Utils
 {

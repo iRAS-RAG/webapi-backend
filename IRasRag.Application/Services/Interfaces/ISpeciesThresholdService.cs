@@ -1,7 +1,6 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
-using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Services.Interfaces
 {

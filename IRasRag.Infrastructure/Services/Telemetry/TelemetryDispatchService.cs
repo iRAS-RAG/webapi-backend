@@ -8,7 +8,6 @@ using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Domain.Entities;
-using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Infrastructure.Services.Telemetry

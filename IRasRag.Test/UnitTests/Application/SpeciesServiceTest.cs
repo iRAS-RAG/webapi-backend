@@ -9,7 +9,6 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
-using IRasRag.Application.Specifications;
 using IRasRag.Application.Specifications.SpeciesSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;

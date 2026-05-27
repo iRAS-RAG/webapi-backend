@@ -1,12 +1,10 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Application.Specifications.SpeciesSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;

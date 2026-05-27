@@ -1,5 +1,4 @@
-﻿using System.Text;
-using CloudinaryDotNet;
+﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Hangfire;
 using IRasRag.Application.Common.Interfaces.CloudFileStorage;

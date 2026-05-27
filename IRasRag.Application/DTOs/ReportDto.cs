@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs

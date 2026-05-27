@@ -1,12 +1,13 @@
 using AutoMapper;
+using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Services;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
-using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -16,18 +17,97 @@ namespace IRasRag.Application.Services.Implementations
     public class FishTankService : IFishTankService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRecommendationCalculator _recommendationCalculator;
         private readonly ILogger<FishTankService> _logger;
         private readonly IMapper _mapper;
 
         public FishTankService(
             IUnitOfWork unitOfWork,
             ILogger<FishTankService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IRecommendationCalculator? recommendationCalculator = null
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _recommendationCalculator =
+                recommendationCalculator
+                ?? new RecommendationCalculator(
+                    _unitOfWork,
+                    Microsoft
+                        .Extensions
+                        .Logging
+                        .Abstractions
+                        .NullLogger<IRasRag.Application.Common.Services.RecommendationCalculator>
+                        .Instance
+                );
+        }
+
+        public async Task<Result<List<RecommendedInitialDto>>> GetRecommendedInitialsAsync(
+            Guid tankId
+        )
+        {
+            try
+            {
+                var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(tankId);
+                if (tank == null)
+                {
+                    return Result<List<RecommendedInitialDto>>.Failure(
+                        "Bể cá không tồn tại.",
+                        ResultType.NotFound
+                    );
+                }
+
+                var speciesList = (
+                    await _unitOfWork.GetRepository<Species>().GetAllAsync()
+                ).ToList();
+                var results = new List<RecommendedInitialDto>();
+
+                foreach (var sp in speciesList)
+                {
+                    int? recommended = null;
+                    try
+                    {
+                        recommended = await _recommendationCalculator.GetRecommendedInitialAsync(
+                            tankId,
+                            sp.Id
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Không thể tính mức đề nghị cho bể {TankId} và loài {SpeciesId}",
+                            tankId,
+                            sp.Id
+                        );
+                        recommended = null;
+                    }
+
+                    results.Add(
+                        new RecommendedInitialDto
+                        {
+                            SpeciesId = sp.Id,
+                            SpeciesName = sp.Name,
+                            RecommendedInitial = recommended,
+                        }
+                    );
+                }
+
+                return Result<List<RecommendedInitialDto>>.Success(
+                    results,
+                    "Lấy mức đề nghị thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy mức đề nghị cho bể {TankId}", tankId);
+                return Result<List<IRasRag.Application.DTOs.RecommendedInitialDto>>.Failure(
+                    "Lỗi khi lấy mức đề nghị",
+                    ResultType.Unexpected
+                );
+            }
         }
 
         public async Task<Result<FishTankDto>> CreateFishTankAsync(CreateFishTankDto createDto)
