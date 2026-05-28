@@ -96,6 +96,7 @@ namespace IRasRag.API.Controllers
                 request.Response,
                 request.Helpful,
                 request.Intent,
+                request.Question,
                 ct
             );
 
@@ -115,5 +116,5 @@ namespace IRasRag.API.Controllers
     }
 
     public record AdvisoryChatRequest(Guid TankId, string Message);
-    public record AdvisoryFeedbackRequest(Guid TankId, string Response, bool Helpful, string? Intent);
+    public record AdvisoryFeedbackRequest(Guid TankId, string Response, bool Helpful, string? Intent, string? Question);
 }

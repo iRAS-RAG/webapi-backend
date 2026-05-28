@@ -21,6 +21,7 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
             string response,
             bool helpful,
             string? intent,
+            string? question,
             CancellationToken ct = default
         );
     }

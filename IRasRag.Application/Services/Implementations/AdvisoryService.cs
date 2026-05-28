@@ -179,6 +179,7 @@ namespace IRasRag.Application.Services.Implementations
             string response,
             bool helpful,
             string? intent,
+            string? question,
             CancellationToken ct = default
         )
         {
@@ -186,7 +187,8 @@ namespace IRasRag.Application.Services.Implementations
                 UserId: userId.ToString(),
                 Response: response,
                 Helpful: helpful,
-                Intent: intent
+                Intent: intent,
+                Question: question
             );
 
             return await _ragChatClient.SubmitFeedbackAsync(request, ct);

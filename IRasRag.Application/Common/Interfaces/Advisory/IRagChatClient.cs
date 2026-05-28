@@ -42,7 +42,8 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
         string UserId,
         string Response,
         bool Helpful,
-        string? Intent
+        string? Intent,
+        string? Question
     );
 
     public record RagChatFeedbackResponse(string Status, bool Saved, string Message);

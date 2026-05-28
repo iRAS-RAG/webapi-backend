@@ -103,6 +103,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
                     response = request.Response,
                     helpful = request.Helpful,
                     intent = request.Intent,
+                    question = request.Question,
                 };
 
                 var httpResponse = await _http.PostAsJsonAsync(
