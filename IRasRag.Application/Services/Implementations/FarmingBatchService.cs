@@ -425,16 +425,30 @@ namespace IRasRag.Application.Services.Implementations
                 var orderedStageConfigs = stageConfigs.OrderBy(s => s.Sequence).ToList();
                 try
                 {
-                    var tankVolume = Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
-                    // Minimum recommended check based on last stage density (50% threshold)
-                    try
+                    // First, try to get authoritative recommendation which is computed
+                    // as the maximum initial quantity that won't exceed final-stage capacity
+                    // at harvest (it already accounts for cumulative survival).
+                    var recommended = await _recommendationCalculator.GetRecommendedInitialAsync(
+                        fishTank.Id,
+                        createDto.SpeciesId
+                    );
+
+                    if (recommended.HasValue)
                     {
-                        var recommended =
-                            await _recommendationCalculator.GetRecommendedInitialAsync(
-                                fishTank.Id,
-                                createDto.SpeciesId
+                        // Enforce maximum allowed initial quantity
+                        if (
+                            createDto.InitialQuantity > 0
+                            && createDto.InitialQuantity > recommended.Value
+                        )
+                        {
+                            return Result<FarmingBatchDto>.Failure(
+                                $"Số lượng ban đầu ({createDto.InitialQuantity}) vượt quá mức tối đa cho phép ({recommended.Value}) cho bể này; vui lòng giảm số lượng hoặc chọn bể lớn hơn.",
+                                ResultType.BadRequest
                             );
-                        if (recommended.HasValue && createDto.InitialQuantity > 0)
+                        }
+
+                        // Also keep the minimum recommended (50% of recommendation) check
+                        if (createDto.InitialQuantity > 0)
                         {
                             var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);
                             if (createDto.InitialQuantity < minAllowed)
@@ -446,44 +460,43 @@ namespace IRasRag.Application.Services.Implementations
                             }
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogWarning(
-                            ex,
-                            "Không thể thực hiện kiểm tra mức đề nghị - bỏ qua kiểm tra tối thiểu"
-                        );
-                    }
-                    if (createDto.InitialQuantity > 0)
-                    {
-                        double cumulativeSurvival = 1.0;
-                        foreach (var sc in orderedStageConfigs)
+                        // Fallback: if recommendation is not available, validate per-stage capacities
+                        var tankVolume =
+                            Math.PI * fishTank.Radius * fishTank.Radius * fishTank.Height;
+                        if (createDto.InitialQuantity > 0)
                         {
-                            var sr = sc.SurvivalRate ?? 1.0;
-                            if (sr < 0)
-                                sr = 0;
-                            if (sr > 1)
-                                sr = 1;
-                            cumulativeSurvival *= sr;
-
-                            var expectedAtStage = (int)
-                                Math.Floor(createDto.InitialQuantity * cumulativeSurvival);
-
-                            if (
-                                sc.MaxStockingDensity.HasValue
-                                && sc.MaxStockingDensity.Value > 0
-                                && tankVolume > 0
-                            )
+                            double cumulativeSurvival = 1.0;
+                            foreach (var sc in orderedStageConfigs)
                             {
-                                var maxAllowed = (int)
-                                    Math.Floor(sc.MaxStockingDensity.Value * tankVolume);
-                                if (expectedAtStage > maxAllowed)
+                                var sr = sc.SurvivalRate ?? 1.0;
+                                if (sr < 0)
+                                    sr = 0;
+                                if (sr > 1)
+                                    sr = 1;
+                                cumulativeSurvival *= sr;
+
+                                var expectedAtStage = (int)
+                                    Math.Floor(createDto.InitialQuantity * cumulativeSurvival);
+
+                                if (
+                                    sc.MaxStockingDensity.HasValue
+                                    && sc.MaxStockingDensity.Value > 0
+                                    && tankVolume > 0
+                                )
                                 {
-                                    var stageName =
-                                        sc.GrowthStage?.Name ?? $"Giai đoạn {sc.Sequence}";
-                                    return Result<FarmingBatchDto>.Failure(
-                                        $"Dự kiến số lượng tại {stageName} ({expectedAtStage}) vượt quá sức chứa tối đa của bể ({maxAllowed}). Vui lòng giảm số lượng ban đầu hoặc chọn bể lớn hơn.",
-                                        ResultType.BadRequest
-                                    );
+                                    var maxAllowed = (int)
+                                        Math.Floor(sc.MaxStockingDensity.Value * tankVolume);
+                                    if (expectedAtStage > maxAllowed)
+                                    {
+                                        var stageName =
+                                            sc.GrowthStage?.Name ?? $"Giai đoạn {sc.Sequence}";
+                                        return Result<FarmingBatchDto>.Failure(
+                                            $"Dự kiến số lượng tại {stageName} ({expectedAtStage}) vượt quá sức chứa tối đa của bể ({maxAllowed}). Vui lòng giảm số lượng ban đầu hoặc chọn bể lớn hơn.",
+                                            ResultType.BadRequest
+                                        );
+                                    }
                                 }
                             }
                         }

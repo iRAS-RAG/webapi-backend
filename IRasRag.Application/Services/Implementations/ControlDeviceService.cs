@@ -540,10 +540,7 @@ namespace IRasRag.Application.Services.Implementations
                     action: "TOGGLE_DEVICE",
                     entityType: nameof(ControlDevice),
                     entityId: controlDevice.Id.ToString(),
-                    oldValue: new
-                    {
-                        State = previousState,
-                    },
+                    oldValue: new { State = previousState },
                     newValue: new
                     {
                         State = toggleDto.State,

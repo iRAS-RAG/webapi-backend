@@ -1,6 +1,6 @@
+using System.Globalization;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,7 +32,9 @@ namespace IRasRag.API.Controllers
             {
                 if (request.Page <= 0 || request.PageSize <= 0)
                 {
-                    return BadRequest( new { Message = "Số trang và kích thước trang phải lớn hơn 0." });
+                    return BadRequest(
+                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
+                    );
                 }
 
                 if (request.PageSize > MaxPageSize)
@@ -49,13 +51,15 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
+
         [HttpGet("export")]
         public async Task<IActionResult> ExportAuditLogs([FromQuery] AuditLogQueryRequest request)
         {
             try
             {
                 var csvBytes = await _auditLogService.ExportCsvAsync(request);
-                var fileName = $"audit-logs-{DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)}.csv";
+                var fileName =
+                    $"audit-logs-{DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)}.csv";
                 return File(csvBytes, "text/csv; charset=utf-8", fileName);
             }
             catch (Exception ex)

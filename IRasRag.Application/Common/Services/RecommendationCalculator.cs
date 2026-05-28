@@ -39,11 +39,35 @@ namespace IRasRag.Application.Common.Services
                 if (tankVolume <= 0)
                     return null;
 
-                var last = stageConfigs.OrderBy(s => s.Sequence).Last();
+                // Use the last (final) stage's max stocking density but account for
+                // cumulative survival across all stages so the returned value is the
+                // maximum initial stocking number that will not exceed final-stage capacity.
+                var ordered = stageConfigs.OrderBy(s => s.Sequence).ToList();
+                var last = ordered.Last();
                 if (!last.MaxStockingDensity.HasValue || last.MaxStockingDensity.Value <= 0)
                     return null;
 
-                var recommended = (int)Math.Floor(last.MaxStockingDensity.Value * tankVolume);
+                // Compute cumulative survival from first to last stage, clamping rates to [0,1]
+                double cumulativeSurvival = 1.0;
+                foreach (var sc in ordered)
+                {
+                    var sr = sc.SurvivalRate ?? 1.0;
+                    if (sr < 0)
+                        sr = 0;
+                    if (sr > 1)
+                        sr = 1;
+                    cumulativeSurvival *= sr;
+                }
+
+                if (cumulativeSurvival <= 0)
+                    return null;
+
+                var maxAllowedAtFinal = Math.Floor(last.MaxStockingDensity.Value * tankVolume);
+                if (maxAllowedAtFinal <= 0)
+                    return null;
+
+                // maximum initial = floor(maxAllowedAtFinal / cumulativeSurvival)
+                var recommended = (int)Math.Floor(maxAllowedAtFinal / cumulativeSurvival);
                 return recommended > 0 ? recommended : null;
             }
             catch (Exception ex)

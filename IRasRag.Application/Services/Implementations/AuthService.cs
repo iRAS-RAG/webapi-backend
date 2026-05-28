@@ -346,7 +346,9 @@ namespace IRasRag.Application.Services.Implementations
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
                     oldValue: JsonSerializer.Serialize(new { PreviousTokenRevoked = true }),
-                    newValue: JsonSerializer.Serialize(new { NewRefreshTokenIssued = true, AccessTokenIssued = true })
+                    newValue: JsonSerializer.Serialize(
+                        new { NewRefreshTokenIssued = true, AccessTokenIssued = true }
+                    )
                 );
 
                 await _unitOfWork.SaveChangesAsync();

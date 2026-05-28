@@ -1,17 +1,17 @@
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
+using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
-using AutoMapper;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.Text;
-using System.Text.Json;
 
 namespace IRasRag.Application.Services.Implementations
 {
@@ -65,7 +65,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 var user = await _unitOfWork
                     .GetRepository<User>()
-                    .FirstOrDefaultAsync(u => u.Id == userId.Value, Domain.Enums.QueryType.IncludeDeleted);
+                    .FirstOrDefaultAsync(
+                        u => u.Id == userId.Value,
+                        Domain.Enums.QueryType.IncludeDeleted
+                    );
 
                 if (user == null)
                 {
@@ -200,7 +203,10 @@ namespace IRasRag.Application.Services.Implementations
                                 CsvEscape(item.EntityId),
                                 CsvEscape(item.OldValue),
                                 CsvEscape(item.NewValue),
-                                CsvEscape(item.Timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)),
+                                CsvEscape(
+                                    item.Timestamp.ToUniversalTime()
+                                        .ToString("O", CultureInfo.InvariantCulture)
+                                ),
                             }
                         )
                     );
@@ -220,7 +226,11 @@ namespace IRasRag.Application.Services.Implementations
             if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
-            var needsQuotes = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
+            var needsQuotes =
+                value.Contains(',')
+                || value.Contains('"')
+                || value.Contains('\n')
+                || value.Contains('\r');
             var escaped = value.Replace("\"", "\"\"");
             return needsQuotes ? $"\"{escaped}\"" : escaped;
         }
@@ -233,14 +243,12 @@ namespace IRasRag.Application.Services.Implementations
             return value switch
             {
                 string text => text,
-                DateTime dateTime => dateTime.ToUniversalTime().ToString(
-                    "O",
-                    CultureInfo.InvariantCulture
-                ),
-                DateTimeOffset dateTimeOffset => dateTimeOffset.ToUniversalTime().ToString(
-                    "O",
-                    CultureInfo.InvariantCulture
-                ),
+                DateTime dateTime => dateTime
+                    .ToUniversalTime()
+                    .ToString("O", CultureInfo.InvariantCulture),
+                DateTimeOffset dateTimeOffset => dateTimeOffset
+                    .ToUniversalTime()
+                    .ToString("O", CultureInfo.InvariantCulture),
                 _ => JsonSerializer.Serialize(value),
             };
         }
