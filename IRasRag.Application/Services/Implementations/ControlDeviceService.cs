@@ -19,18 +19,21 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<ControlDeviceService> _logger;
         private readonly IMapper _mapper;
         private readonly IMqttPublishService _mqttPublishService;
+        private readonly IAuditLogService _auditLogService;
 
         public ControlDeviceService(
             IUnitOfWork unitOfWork,
             ILogger<ControlDeviceService> logger,
             IMapper mapper,
-            IMqttPublishService mqttPublishService
+            IMqttPublishService mqttPublishService,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _mqttPublishService = mqttPublishService;
+            _auditLogService = auditLogService;
         }
 
         #region Get Methods
@@ -529,8 +532,27 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _mqttPublishService.PublishCommandAsync(masterBoard.MacAddress, command);
 
+                var previousState = controlDevice.State;
                 controlDevice.State = toggleDto.State;
                 controlDeviceRepository.Update(controlDevice);
+
+                await _auditLogService.WriteSemanticAsync(
+                    action: "TOGGLE_DEVICE",
+                    entityType: nameof(ControlDevice),
+                    entityId: controlDevice.Id.ToString(),
+                    oldValue: new
+                    {
+                        State = previousState,
+                    },
+                    newValue: new
+                    {
+                        State = toggleDto.State,
+                        controlDevice.PinCode,
+                        controlDevice.MasterBoardId,
+                        controlDevice.ControlDeviceTypeId,
+                    }
+                );
+
                 await _unitOfWork.SaveChangesAsync();
 
                 // Truy vấn lại để trả về DTO đầy đủ (bao gồm MasterBoardName, ControlDeviceTypeName)

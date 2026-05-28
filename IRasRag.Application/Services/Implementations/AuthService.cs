@@ -162,6 +162,17 @@ namespace IRasRag.Application.Services.Implementations
                         ResetCodeExpirationMinutes
                     );
 
+                    // Semantic audit: record that a password reset was requested for the user.
+                    // Do NOT log the actual reset code.
+                    await WriteAuditLogAsync(
+                        user,
+                        action: "REQUEST_PASSWORD_RESET",
+                        entityType: "Auth",
+                        entityId: user.Id.ToString(),
+                        oldValue: null,
+                        newValue: JsonSerializer.Serialize(new { ResetCodeIssued = true })
+                    );
+
                     await _unitOfWork.SaveChangesAsync();
 
                     try
@@ -236,6 +247,17 @@ namespace IRasRag.Application.Services.Implementations
 
                 user.PasswordHash = _hasher.HashPassword(request.NewPassword);
                 existingCode.IsConsumed = true;
+
+                // Semantic audit: record that the user reset their password. Never include the password or hashes.
+                await WriteAuditLogAsync(
+                    user,
+                    action: "RESET_PASSWORD",
+                    entityType: "Auth",
+                    entityId: user.Id.ToString(),
+                    oldValue: null,
+                    newValue: JsonSerializer.Serialize(new { PasswordChanged = true })
+                );
+
                 await _unitOfWork.SaveChangesAsync();
                 return Result.Success("Mật khẩu đã được đặt lại thành công.");
             }
@@ -316,6 +338,17 @@ namespace IRasRag.Application.Services.Implementations
                     ExpireDate = newRefreshTokenResult.ExpireDate,
                 };
                 await _unitOfWork.GetRepository<RefreshToken>().AddAsync(newRefreshToken);
+                // Semantic audit: record that a refresh occurred and tokens were rotated.
+                // DO NOT log token values.
+                await WriteAuditLogAsync(
+                    user,
+                    action: "REFRESH_TOKEN",
+                    entityType: "Auth",
+                    entityId: user.Id.ToString(),
+                    oldValue: JsonSerializer.Serialize(new { PreviousTokenRevoked = true }),
+                    newValue: JsonSerializer.Serialize(new { NewRefreshTokenIssued = true, AccessTokenIssued = true })
+                );
+
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result<TokenResponse>.Success(
@@ -345,8 +378,10 @@ namespace IRasRag.Application.Services.Implementations
                 .FirstOrDefaultAsync(rt =>
                     rt.TokenHash == hashedToken && !rt.IsRevoked && rt.ExpireDate > DateTime.UtcNow
                 );
-            _logger.LogInformation("Client's hashed token: {HashedToken}", hashedToken);
-            _logger.LogInformation("Server's existing token: {ExistingToken}", existingToken);
+            _logger.LogInformation(
+                "Logout attempt: refresh token lookup completed. Token exists: {Exists}",
+                existingToken != null
+            );
             if (existingToken != null)
             {
                 var user = await _unitOfWork

@@ -1,5 +1,6 @@
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,6 +46,21 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving audit logs.");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportAuditLogs([FromQuery] AuditLogQueryRequest request)
+        {
+            try
+            {
+                var csvBytes = await _auditLogService.ExportCsvAsync(request);
+                var fileName = $"audit-logs-{DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)}.csv";
+                return File(csvBytes, "text/csv; charset=utf-8", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while exporting audit logs.");
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
