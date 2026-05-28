@@ -28,6 +28,15 @@ namespace IRasRag.Infrastructure.Interceptors
             nameof(BaseEntity.ModifiedAt),
         };
 
+        private static readonly string[] SensitiveProperties =
+        {
+            "PasswordHash",
+            "TokenHash",
+            "CodeHash",
+            "Password",
+            "Secret",
+        };
+
         private readonly ICurrentUserAccessor _currentUserAccessor;
         private readonly ILogger<AuditLogSaveChangesInterceptor> _logger;
 
@@ -92,7 +101,7 @@ namespace IRasRag.Infrastructure.Interceptors
                 .ToList();
 
             if (trackedEntries.Count == 0)
-                return [];
+                return new List<AuditLog>();
 
             var user = await dbContext
                 .Set<User>()
@@ -216,6 +225,8 @@ namespace IRasRag.Infrastructure.Interceptors
                 if (IgnoredProperties.Contains(property.Name))
                     continue;
 
+                // Determine value to record (either comparison or current)
+                object? valueToRecord = null;
                 if (comparisonValues is not null)
                 {
                     var currentValue = values[property];
@@ -223,11 +234,22 @@ namespace IRasRag.Infrastructure.Interceptors
                     if (Equals(currentValue, comparisonValue))
                         continue;
 
-                    payload[property.Name] = oldValues ? comparisonValue : currentValue;
-                    continue;
+                    valueToRecord = oldValues ? comparisonValue : currentValue;
+                }
+                else
+                {
+                    valueToRecord = values[property];
                 }
 
-                payload[property.Name] = values[property];
+                // Redact sensitive properties
+                if (SensitiveProperties.Contains(property.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    payload[property.Name] = "[REDACTED]";
+                }
+                else
+                {
+                    payload[property.Name] = valueToRecord;
+                }
             }
 
             return payload.Count == 0 ? null : JsonSerializer.Serialize(payload);
