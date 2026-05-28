@@ -8,6 +8,15 @@ namespace IRasRag.Application.Services.Interfaces
     {
         Task AddAsync(AuditLog auditLog);
 
+        Task WriteSemanticAsync(
+            string action,
+            string entityType,
+            string entityId,
+            object? oldValue = null,
+            object? newValue = null
+        );
+
         Task<PaginatedResult<AuditLogDto>> GetPagedAsync(AuditLogQueryRequest request);
+        Task<byte[]> ExportCsvAsync(AuditLogQueryRequest request);
     }
 }

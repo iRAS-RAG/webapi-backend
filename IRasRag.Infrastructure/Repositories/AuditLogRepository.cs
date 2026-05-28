@@ -20,8 +20,30 @@ namespace IRasRag.Infrastructure.Repositories
         {
             var page = request.Page < 1 ? 1 : request.Page;
             var pageSize = request.PageSize < 1 ? 10 : request.PageSize;
-            var query = GetQueryable(type).AsNoTracking();
+            var query = ApplyFiltering(GetQueryable(type).AsNoTracking(), request);
+            query = ApplySorting(query, request);
 
+            var totalItems = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedResult<AuditLog> { Items = items, TotalItems = totalItems };
+        }
+
+        public async Task<IReadOnlyList<AuditLog>> GetAllAsync(
+            AuditLogQueryRequest request,
+            QueryType type = QueryType.ActiveOnly
+        )
+        {
+            var query = ApplyFiltering(GetQueryable(type).AsNoTracking(), request);
+            query = ApplySorting(query, request);
+            return await query.ToListAsync();
+        }
+
+        private static IQueryable<AuditLog> ApplyFiltering(
+            IQueryable<AuditLog> query,
+            AuditLogQueryRequest request
+        )
+        {
             if (request.UserId.HasValue)
                 query = query.Where(x => x.UserId == request.UserId.Value);
 
@@ -55,12 +77,7 @@ namespace IRasRag.Infrastructure.Repositories
                 query = query.Where(x => x.Timestamp <= toDate);
             }
 
-            query = ApplySorting(query, request);
-
-            var totalItems = await query.CountAsync();
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-            return new PagedResult<AuditLog> { Items = items, TotalItems = totalItems };
+            return query;
         }
 
         private static IQueryable<AuditLog> ApplySorting(

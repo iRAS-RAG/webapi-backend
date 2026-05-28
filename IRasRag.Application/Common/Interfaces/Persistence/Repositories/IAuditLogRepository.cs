@@ -10,5 +10,9 @@ namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
             AuditLogQueryRequest request,
             Domain.Enums.QueryType type = Domain.Enums.QueryType.ActiveOnly
         );
+        Task<IReadOnlyList<AuditLog>> GetAllAsync(
+            AuditLogQueryRequest request,
+            Domain.Enums.QueryType type = Domain.Enums.QueryType.ActiveOnly
+        );
     }
 }

@@ -21,13 +21,15 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ILogger<FarmingBatchService> _logger;
         private readonly ITelemetryCacheService _telemetryCache;
+        private readonly IAuditLogService _auditLogService;
 
         public FarmingBatchService(
             IUnitOfWork unitOfWork,
             IRecommendationCalculator recommendationCalculator,
             IMapper mapper,
             ILogger<FarmingBatchService> logger,
-            ITelemetryCacheService telemetryCache
+            ITelemetryCacheService telemetryCache,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
@@ -35,6 +37,7 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _logger = logger;
             _telemetryCache = telemetryCache;
+            _auditLogService = auditLogService;
         }
 
         // Recommendation calculation delegated to IRecommendationCalculator
@@ -794,6 +797,26 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 repo.Update(batch);
+
+                await _auditLogService.WriteSemanticAsync(
+                    action: "HARVEST_BATCH",
+                    entityType: nameof(FarmingBatch),
+                    entityId: batch.Id.ToString(),
+                    oldValue: new
+                    {
+                        Status = FarmingBatchStatus.ACTIVE,
+                        batch.CurrentQuantity,
+                        batch.EstimatedHarvestDate,
+                    },
+                    newValue: new
+                    {
+                        Status = FarmingBatchStatus.HARVESTED,
+                        batch.CurrentQuantity,
+                        batch.ActualHarvestDate,
+                        Force = force,
+                    }
+                );
+
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateBatch(batch.FishTankId);
                 return Result.Success("Thu hoạch lô nuôi thành công");
