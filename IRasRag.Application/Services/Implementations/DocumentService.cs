@@ -186,6 +186,23 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
 
+            if (fileExtension == ".pdf")
+            {
+                buffer.Position = 0;
+                var extractedText = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
+                if (string.IsNullOrWhiteSpace(extractedText))
+                {
+                    _logger.LogWarning(
+                        "PDF không có văn bản (ảnh scan): {FileName}",
+                        dto.FileName
+                    );
+                    return Result.Failure(
+                        "PDF không thể đọc văn bản. Tệp có thể là bản scan dạng ảnh, hiện tại không được hỗ trợ.",
+                        ResultType.BadRequest
+                    );
+                }
+            }
+
             // Upload file to cloud storage and get the URL
             var fileUrl = string.Empty;
             try
