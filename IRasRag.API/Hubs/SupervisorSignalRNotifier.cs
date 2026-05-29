@@ -5,9 +5,9 @@ namespace IRasRag.API.Hubs
 {
     public class SupervisorSignalRNotifier : ISupervisorNotifier
     {
-        private readonly IHubContext<TelemetryHub> _hub;
+        private readonly IHubContext<SupervisorMetricsHub> _hub;
 
-        public SupervisorSignalRNotifier(IHubContext<TelemetryHub> hub)
+        public SupervisorSignalRNotifier(IHubContext<SupervisorMetricsHub> hub)
         {
             _hub = hub;
         }

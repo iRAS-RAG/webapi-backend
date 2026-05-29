@@ -80,9 +80,10 @@ namespace IRasRag.API.DI
                             var path = context.HttpContext.Request.Path;
                             if (
                                 !string.IsNullOrEmpty(accessToken)
-                                && path.StartsWithSegments("/hubs/telemetry")
+                                && path.StartsWithSegments("/hubs")
                             )
                             {
+                                // Accept access_token for any SignalR hub endpoint under /hubs
                                 context.Token = accessToken;
                             }
                             return Task.CompletedTask;
