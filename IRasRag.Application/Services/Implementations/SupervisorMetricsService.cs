@@ -3,6 +3,7 @@ using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs.Metrics;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.Metrics;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -44,11 +45,7 @@ namespace IRasRag.Application.Services.Implementations
                 // Use specs for efficient queries
                 var feedingRepo = _unitOfWork.GetRepository<FeedingLog>();
                 var feedingLogs = await feedingRepo.ListAsync(
-                    new IRasRag.Application.Specifications.Metrics.FeedingLogByFarmAndRangeSpec(
-                        farmId,
-                        startDt,
-                        endDt
-                    )
+                    new FeedingLogByFarmAndRangeSpec(farmId, startDt, endDt)
                 );
                 var totalFeed = feedingLogs.Sum(fl => fl.Amount);
                 _logger.LogInformation(
@@ -68,11 +65,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
                 var mortalityLogs = await mortalityRepo.ListAsync(
-                    new IRasRag.Application.Specifications.Metrics.MortalityLogByFarmAndRangeSpec(
-                        farmId,
-                        startDt,
-                        endDt
-                    )
+                    new MortalityLogByFarmAndRangeSpec(farmId, startDt, endDt)
                 );
                 var totalDeaths = mortalityLogs.Sum(ml => ml.Quantity);
                 var totalDeadKg = mortalityLogs.Sum(ml => ml.LostWeightKg);
@@ -268,11 +261,7 @@ namespace IRasRag.Application.Services.Implementations
                     var feedingRepo = _unitOfWork.GetRepository<FeedingLog>();
                     var logs = (
                         await feedingRepo.ListAsync(
-                            new IRasRag.Application.Specifications.Metrics.FeedingLogByFarmAndRangeSpec(
-                                farmId,
-                                startDt,
-                                endDt
-                            )
+                            new FeedingLogByFarmAndRangeSpec(farmId, startDt, endDt)
                         )
                     )
                         .Select(fl => new
@@ -368,11 +357,7 @@ namespace IRasRag.Application.Services.Implementations
                     var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
                     var logs = (
                         await mortalityRepo.ListAsync(
-                            new IRasRag.Application.Specifications.Metrics.MortalityLogByFarmAndRangeSpec(
-                                farmId,
-                                startDt,
-                                endDt
-                            )
+                            new MortalityLogByFarmAndRangeSpec(farmId, startDt, endDt)
                         )
                     )
                         .Select(ml => new
@@ -503,8 +488,13 @@ namespace IRasRag.Application.Services.Implementations
                     return Result<BatchHistoryDto>.Failure("Batch not found", ResultType.NotFound);
                 var startDt = start ?? DateTime.UtcNow.AddDays(-30);
                 var endDt = end ?? DateTime.UtcNow;
+                // normalize interval and create bucket function (day or hour)
+                interval = interval?.ToLower() ?? "day";
+                Func<DateTime, DateTime> bucket = dt => dt.Date;
+                if (interval == "hour")
+                    bucket = dt => new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0);
 
-                // Basic series: sum feed per day
+                // Basic series: sum feed per bucket (day or hour)
                 var feedingRepo = _unitOfWork.GetRepository<FeedingLog>();
                 var feeds = await feedingRepo.FindAllAsync(fl =>
                     fl.FarmingBatchId == batchId
@@ -512,7 +502,7 @@ namespace IRasRag.Application.Services.Implementations
                     && fl.CreatedDate <= endDt
                 );
                 var feedSeries = feeds
-                    .GroupBy(f => f.CreatedDate.Date)
+                    .GroupBy(f => bucket(f.CreatedDate))
                     .Select(g => new TimeSeriesPointDto
                     {
                         Timestamp = g.Key,
@@ -525,13 +515,81 @@ namespace IRasRag.Application.Services.Implementations
                     ml.BatchId == batchId && ml.Date >= startDt && ml.Date <= endDt
                 );
                 var mortSeries = morts
-                    .GroupBy(m => m.Date.Date)
+                    .GroupBy(m => bucket(m.Date))
                     .Select(g => new TimeSeriesPointDto
                     {
                         Timestamp = g.Key,
                         Value = g.Sum(x => x.LostWeightKg),
                     })
                     .ToList();
+                var countSeries = morts
+                    .GroupBy(m => bucket(m.Date))
+                    .Select(g => new TimeSeriesPointDto
+                    {
+                        Timestamp = g.Key,
+                        Value = g.Sum(x => x.Quantity),
+                    })
+                    .ToList();
+
+                var fcrSeries = new List<TimeSeriesPointDto>();
+                var harvestWeight = batch.ActualHarvestWeightKg;
+                if (harvestWeight.HasValue && harvestWeight.Value > 0)
+                {
+                    var interpStart = batch.StartDate.Date;
+                    var interpEnd = (batch.ActualHarvestDate ?? endDt).Date;
+                    if (interpEnd < interpStart)
+                        interpEnd = interpStart;
+
+                    // use same bucket resolution for interpolation (day or hour)
+                    var feedByDate = feedSeries.ToDictionary(p => p.Timestamp, p => p.Value);
+                    var deadWeightByDate = mortSeries.ToDictionary(p => p.Timestamp, p => p.Value);
+
+                    double cumulativeFeed = 0.0;
+                    double cumulativeDeadWeight = 0.0;
+                    var interpStartBucket = bucket(batch.StartDate);
+                    var interpEndBucket = bucket((batch.ActualHarvestDate ?? endDt));
+                    var windowStart =
+                        bucket(startDt) > interpStartBucket ? bucket(startDt) : interpStartBucket;
+                    var windowEnd =
+                        bucket(endDt) < interpEndBucket ? bucket(endDt) : interpEndBucket;
+
+                    for (
+                        var d = windowStart;
+                        d <= windowEnd;
+                        d = interval == "hour" ? d.AddHours(1) : d.AddDays(1)
+                    )
+                    {
+                        if (feedByDate.TryGetValue(d, out var feedValue))
+                            cumulativeFeed += feedValue;
+                        if (deadWeightByDate.TryGetValue(d, out var deadWeightValue))
+                            cumulativeDeadWeight += deadWeightValue;
+                        // compute fraction of harvest date progress relative to total interpolation span
+                        var totalSpanUnits =
+                            interval == "hour"
+                                ? (int)(interpEndBucket - interpStartBucket).TotalHours + 1
+                                : (int)(interpEndBucket - interpStartBucket).TotalDays + 1;
+                        var unitsSinceStart =
+                            interval == "hour"
+                                ? (int)(d - interpStartBucket).TotalHours + 1
+                                : (int)(d - interpStartBucket).TotalDays + 1;
+                        var fraction = Math.Max(
+                            0.0,
+                            Math.Min(1.0, (double)unitsSinceStart / Math.Max(1, totalSpanUnits))
+                        );
+                        var interpolatedHarvestWeight = fraction * harvestWeight.Value;
+                        var biomassGain = interpolatedHarvestWeight - cumulativeDeadWeight;
+                        if (biomassGain <= 0)
+                            continue;
+
+                        fcrSeries.Add(
+                            new TimeSeriesPointDto
+                            {
+                                Timestamp = d,
+                                Value = Math.Round(cumulativeFeed / biomassGain, 3),
+                            }
+                        );
+                    }
+                }
 
                 var dto = new BatchHistoryDto
                 {
@@ -539,6 +597,8 @@ namespace IRasRag.Application.Services.Implementations
                     BatchName = batch.Name,
                     FeedSeries = feedSeries,
                     MortalitySeries = mortSeries,
+                    CountSeries = countSeries,
+                    FcrSeries = fcrSeries,
                 };
 
                 return Result<BatchHistoryDto>.Success(dto, "Ok");
