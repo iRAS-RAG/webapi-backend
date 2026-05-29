@@ -35,6 +35,10 @@ namespace IRasRag.API.DI
             );
             services.AddSignalR();
             services.AddSingleton<ILiveDataNotifier, SignalRLiveDataNotifier>();
+            services.AddSingleton<
+                IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier,
+                SupervisorSignalRNotifier
+            >();
             services.AddHostedService<TelemetryPushWorker>();
         }
 

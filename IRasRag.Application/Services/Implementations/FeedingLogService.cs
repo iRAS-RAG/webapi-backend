@@ -18,12 +18,14 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<FeedingLogService> _logger;
         private readonly IMapper _mapper;
         private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
+        private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
 
         public FeedingLogService(
             IUnitOfWork unitOfWork,
             ILogger<FeedingLogService> logger,
             IMapper mapper,
-            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService
+            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
+            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier
         )
         {
             _unitOfWork = unitOfWork ?? throw new System.ArgumentNullException(nameof(unitOfWork));
@@ -32,6 +34,7 @@ namespace IRasRag.Application.Services.Implementations
             _farmingBatchService =
                 farmingBatchService
                 ?? throw new System.ArgumentNullException(nameof(farmingBatchService));
+            _supervisorNotifier = supervisorNotifier;
         }
 
         #region Get Methods
@@ -264,6 +267,25 @@ namespace IRasRag.Application.Services.Implementations
                     feedingLog.UserId,
                     feedingLog.Amount
                 );
+
+                // Broadcast to supervisors for this farm
+                try
+                {
+                    var farmId = feedingLog.FarmingBatch?.FishTank?.FarmId;
+                    var payload = new
+                    {
+                        feedingLogDto.Id,
+                        feedingLogDto.FarmingBatchId,
+                        feedingLogDto.Amount,
+                        feedingLogDto.CreatedDate,
+                    };
+                    if (farmId != null)
+                        await _supervisorNotifier.NotifyFeedingLogAsync(farmId.Value, payload);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to broadcast feeding log");
+                }
 
                 return Result<FeedingLogDto>.Success(
                     feedingLogDto,

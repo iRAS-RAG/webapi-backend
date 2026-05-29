@@ -17,18 +17,21 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<MortalityLogService> _logger;
         private readonly IMapper _mapper;
         private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
+        private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
 
         public MortalityLogService(
             IUnitOfWork unitOfWork,
             ILogger<MortalityLogService> logger,
             IMapper mapper,
-            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService
+            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
+            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _farmingBatchService = farmingBatchService;
+            _supervisorNotifier = supervisorNotifier;
         }
 
         public async Task<Result<MortalityValidationResultDto>> ValidateMortalityAsync(
@@ -399,6 +402,26 @@ namespace IRasRag.Application.Services.Implementations
                         "Không thể tính FCR sau khi tạo mortality log cho BatchId {BatchId}",
                         mortalityLog.BatchId
                     );
+                }
+
+                // Broadcast to supervisors
+                try
+                {
+                    var farmId = mortalityLog.Batch?.FishTank?.FarmId;
+                    var payload = new
+                    {
+                        mortalityLog.Id,
+                        mortalityLog.BatchId,
+                        mortalityLog.Quantity,
+                        mortalityLog.LostWeightKg,
+                        mortalityLog.Date,
+                    };
+                    if (farmId != null)
+                        await _supervisorNotifier.NotifyMortalityLogAsync(farmId.Value, payload);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to broadcast mortality log");
                 }
 
                 return Result<MortalityLogDto>.Success(

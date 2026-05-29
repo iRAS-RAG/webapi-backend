@@ -10,6 +10,7 @@ using IRasRag.Application.DI;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Filters;
 using IRasRag.Infrastructure.HangFireJobFilters;
+using SupervisorMetricsHubType = IRasRag.API.Hubs.SupervisorMetricsHub;
 
 namespace IRasRag.API
 {
@@ -65,6 +66,7 @@ namespace IRasRag.API
             app.UseAuthorization();
             app.MapControllers();
             app.MapHub<TelemetryHub>("/hubs/telemetry");
+            app.MapHub<SupervisorMetricsHubType>("/hubs/supervisor-metrics");
 
             app.Run();
         }

@@ -37,6 +37,7 @@ namespace IRasRag.Application.DI
             services.AddScoped<IFarmingBatchService, FarmingBatchService>();
             services.AddScoped<IFarmService, FarmService>();
             services.AddScoped<IFeedingLogService, FeedingLogService>();
+            services.AddScoped<ISupervisorMetricsService, SupervisorMetricsService>();
             services.AddScoped<IFeedTypeService, FeedTypeService>();
             services.AddScoped<IFishTankService, FishTankService>();
             services.AddScoped<IGrowthStageService, GrowthStageService>();
