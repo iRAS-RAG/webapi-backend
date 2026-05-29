@@ -407,7 +407,8 @@ namespace IRasRag.Application.Services.Implementations
                 // Broadcast to supervisors
                 try
                 {
-                    var farmId = mortalityLog.Batch?.FishTank?.FarmId;
+                    var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(batch.FishTankId);
+                    var farmId = fishTank?.FarmId;
                     var payload = new
                     {
                         mortalityLog.Id,

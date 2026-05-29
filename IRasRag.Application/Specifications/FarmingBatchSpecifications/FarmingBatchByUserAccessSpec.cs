@@ -9,6 +9,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
         {
             Query
                 .AsNoTracking()
+                .Include(fb => fb.FishTank)
                 .Where(fb =>
                     fb.Id == batchId && fb.FishTank.Farm.UserFarms.Any(uf => uf.UserId == userId)
                 );
