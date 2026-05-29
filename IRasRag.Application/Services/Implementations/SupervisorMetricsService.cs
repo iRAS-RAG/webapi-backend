@@ -624,21 +624,107 @@ namespace IRasRag.Application.Services.Implementations
                 var endDt = end ?? DateTime.UtcNow;
                 var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
                 var batches = await batchRepo.FindAllAsync(b => b.FishTank.FarmId == farmId);
+
+                var feedingRepo = _unitOfWork.GetRepository<FeedingLog>();
+                var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
+
+                var feedByBatch = new Dictionary<Guid, double>();
+                var deathsByBatchCount = new Dictionary<Guid, int>();
+                var deathsByBatchWeight = new Dictionary<Guid, double>();
+
+                foreach (var b in batches)
+                {
+                    var f = await feedingRepo.SumAsync(
+                        fl => fl.Amount,
+                        fl =>
+                            fl.FarmingBatchId == b.Id
+                            && (
+                                (fl.CreatedDate >= startDt && fl.CreatedDate <= endDt)
+                                || (fl.CreatedAt >= startDt && fl.CreatedAt <= endDt)
+                            )
+                    );
+                    if (f > 0)
+                        feedByBatch[b.Id] = f;
+
+                    var count = await mortalityRepo.CountAsync(ml =>
+                        ml.BatchId == b.Id
+                        && (
+                            (ml.Date >= startDt && ml.Date <= endDt)
+                            || (ml.CreatedAt >= startDt && ml.CreatedAt <= endDt)
+                        )
+                    );
+                    if (count > 0)
+                        deathsByBatchCount[b.Id] = count;
+
+                    var weight = await mortalityRepo.SumAsync(
+                        ml => ml.LostWeightKg,
+                        ml =>
+                            ml.BatchId == b.Id
+                            && (
+                                (ml.Date >= startDt && ml.Date <= endDt)
+                                || (ml.CreatedAt >= startDt && ml.CreatedAt <= endDt)
+                            )
+                    );
+                    if (weight > 0)
+                        deathsByBatchWeight[b.Id] = weight;
+                }
+
+                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
+                var fishTanks = await fishTankRepo.FindAllAsync(ft => ft.FarmId == farmId);
+                var tankNameById = fishTanks.ToDictionary(
+                    ft => ft.Id,
+                    ft => ft.Name ?? string.Empty
+                );
+
+                var metricNormalized = (metric ?? "feed").ToLower();
+
                 var list = batches
                     .Select(b => new BatchSummaryDto
                     {
                         BatchId = b.Id,
                         BatchName = b.Name,
                         FishTankId = b.FishTankId,
-                        FishTankName = b.FishTank?.Name ?? string.Empty,
+                        FishTankName = tankNameById.TryGetValue(b.FishTankId, out var tn)
+                            ? tn
+                            : string.Empty,
                         InitialQuantity = b.InitialQuantity,
                         CurrentQuantity = b.CurrentQuantity,
-                        Fcr = b.Fcr,
+                        TotalFeedKg = Math.Round(
+                            feedByBatch.TryGetValue(b.Id, out var tf) ? tf : 0.0,
+                            3
+                        ),
+                        TotalDeaths = deathsByBatchCount.TryGetValue(b.Id, out var dc) ? dc : 0,
+                        TotalDeadWeightKg = Math.Round(
+                            deathsByBatchWeight.TryGetValue(b.Id, out var dw) ? dw : 0.0,
+                            3
+                        ),
+                        Fcr =
+                            b.Fcr
+                            ?? (
+                                (
+                                    feedByBatch.TryGetValue(b.Id, out var fb)
+                                    && (b.ActualHarvestWeightKg ?? 0) > 0
+                                )
+                                    ? Math.Round(fb / (b.ActualHarvestWeightKg ?? 0.0), 3)
+                                    : b.Fcr
+                            ),
                     })
-                    .Take(limit)
                     .ToList();
 
-                return Result<List<BatchSummaryDto>>.Success(list, "Ok");
+                // order by requested metric
+                var ordered = metricNormalized switch
+                {
+                    "mortality" => list.OrderByDescending(x => x.TotalDeaths),
+                    "deadweight" => list.OrderByDescending(x => x.TotalDeadWeightKg),
+                    "totaldeadweight" => list.OrderByDescending(x => x.TotalDeadWeightKg),
+                    "deaths" => list.OrderByDescending(x => x.TotalDeaths),
+                    "fcr" => list.OrderBy(x => x.Fcr ?? double.MaxValue),
+                    _ => list.OrderByDescending(x => x.TotalFeedKg),
+                };
+
+                var resultList = ordered.Take(limit).ToList();
+
+                return Result<List<BatchSummaryDto>>.Success(resultList, "Ok");
             }
             catch (Exception ex)
             {
