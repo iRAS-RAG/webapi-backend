@@ -29,6 +29,7 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public int? EstimatedHarvestCount { get; set; }
         public double? EstimatedHarvestWeightKg { get; set; }
+        public double? Fcr { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
     }
@@ -75,13 +76,10 @@ namespace IRasRag.Application.DTOs
         public Guid GrowthStageId { get; set; }
         public string StageName { get; set; } = string.Empty;
 
-        // Stage duration is intentionally omitted to avoid duplicating species-stage-config data
         public DateTime EstimatedStartDate { get; set; }
         public DateTime EstimatedEndDate { get; set; }
         public DateTime? ActualStartDate { get; set; }
         public DateTime? ActualEndDate { get; set; }
-
-        // Minimal config values kept for stage context
         public int FrequencyPerDay { get; set; }
         public IReadOnlyList<string> FeedTypeNames { get; set; } = new List<string>();
 
@@ -91,7 +89,6 @@ namespace IRasRag.Application.DTOs
         public double EstimatedDailyFeedKg { get; set; }
 
         // Minimal config growth fields
-        public double? ExpectedWeightKgPerFish { get; set; }
     }
 
     // Update DTO

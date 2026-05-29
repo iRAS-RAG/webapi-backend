@@ -17,16 +17,21 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<FeedingLogService> _logger;
         private readonly IMapper _mapper;
+        private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
 
         public FeedingLogService(
             IUnitOfWork unitOfWork,
             ILogger<FeedingLogService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService
         )
         {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _mapper = mapper;
+            _unitOfWork = unitOfWork ?? throw new System.ArgumentNullException(nameof(unitOfWork));
+            _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new System.ArgumentNullException(nameof(mapper));
+            _farmingBatchService =
+                farmingBatchService
+                ?? throw new System.ArgumentNullException(nameof(farmingBatchService));
         }
 
         #region Get Methods
@@ -223,6 +228,19 @@ namespace IRasRag.Application.Services.Implementations
                 await feedingLogRepository.AddAsync(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
 
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể tính FCR sau khi tạo feed log cho FarmingBatchId {BatchId}",
+                        feedingLog.FarmingBatchId
+                    );
+                }
+
                 var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
                     new FeedingLogDtoByIdSpec(feedingLog.Id)
                 );
@@ -339,6 +357,15 @@ namespace IRasRag.Application.Services.Implementations
                 feedingLogRepository.Update(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
 
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Không thể tính FCR sau khi cập nhật feed log {Id}", id);
+                }
+
                 _logger.LogInformation("Cập nhật nhật ký cho ăn thành công: {Id}", id);
                 return Result.Success("Cập nhật nhật ký cho ăn thành công");
             }
@@ -377,6 +404,15 @@ namespace IRasRag.Application.Services.Implementations
 
                 feedingLogRepository.Delete(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Không thể tính FCR sau khi xóa feed log {Id}", id);
+                }
 
                 _logger.LogInformation("Xóa nhật ký cho ăn thành công: {Id}", id);
                 return Result.Success("Xóa nhật ký cho ăn thành công");

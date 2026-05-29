@@ -37,6 +37,8 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     SpeciesId = fb.CurrentStageConfig.SpeciesId,
                     EstimatedHarvestCount = fb.EstimatedHarvestCount,
                     EstimatedHarvestWeightKg = fb.EstimatedHarvestWeightKg,
+                    Fcr = fb.Fcr,
+
                     PlannedStages = fb
                         .BatchStages.Select(bs => new PlannedStageDto
                         {
@@ -53,7 +55,6 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                             FeedTypeNames = bs
                                 .SpeciesStageConfig.FeedTypes.Select(ft => ft.Name)
                                 .ToList(),
-                            ExpectedWeightKgPerFish = bs.SpeciesStageConfig.ExpectedWeightKgPerFish,
                         })
                         .ToList(),
                 });

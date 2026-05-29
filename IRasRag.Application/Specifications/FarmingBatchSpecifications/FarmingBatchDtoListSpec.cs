@@ -50,6 +50,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 CreatedAt = fb.CreatedAt,
                 ModifiedAt = fb.ModifiedAt,
                 PlannedStages = new List<IRasRag.Application.DTOs.PlannedStageDto>(),
+                Fcr = fb.Fcr,
             });
         }
     }

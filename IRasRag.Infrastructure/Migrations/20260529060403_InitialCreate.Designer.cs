@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527105631_InitialCreate")]
+    [Migration("20260529060403_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -796,6 +796,10 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("actual_harvest_date");
 
+                    b.Property<double?>("ActualHarvestWeightKg")
+                        .HasColumnType("double precision")
+                        .HasColumnName("actual_harvest_weight_kg");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -819,6 +823,10 @@ namespace IRasRag.Infrastructure.Migrations
                     b.Property<double?>("EstimatedHarvestWeightKg")
                         .HasColumnType("double precision")
                         .HasColumnName("estimated_harvest_weight_kg");
+
+                    b.Property<double?>("Fcr")
+                        .HasColumnType("double precision")
+                        .HasColumnName("fcr");
 
                     b.Property<Guid>("FishTankId")
                         .HasColumnType("uuid")

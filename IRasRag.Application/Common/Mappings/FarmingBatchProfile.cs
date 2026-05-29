@@ -25,6 +25,7 @@ namespace IRasRag.Application.Common.Mappings
                     opt => opt.MapFrom(src => src.CurrentStageConfig.GrowthStage.Name)
                 )
                 .ForMember(dest => dest.PlannedStages, opt => opt.MapFrom(src => src.BatchStages));
+            // Map persisted FCR (already part of the main mapping — ensure destination member exists)
 
             // Create DTO to Entity
             CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.None)

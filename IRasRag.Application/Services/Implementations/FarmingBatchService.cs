@@ -40,6 +40,178 @@ namespace IRasRag.Application.Services.Implementations
             _auditLogService = auditLogService;
         }
 
+        #region FCR Calculation
+        public async Task<double?> ComputeAndPersistFcrAsync(Guid batchId)
+        {
+            try
+            {
+                var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await batchRepo.FirstOrDefaultAsync(
+                    new IRasRag.Application.Specifications.FarmingBatchSpecifications.FarmingBatchWithStagesByIdSpec(
+                        batchId
+                    )
+                );
+
+                if (batch == null)
+                    return null;
+
+                // Sum all feed amounts (kg) using repository-level aggregation
+                var feedingRepo = _unitOfWork.GetRepository<FeedingLog>();
+                var totalFeed = await feedingRepo.SumAsync(
+                    fl => fl.Amount,
+                    fl => fl.FarmingBatchId == batchId
+                );
+
+                // Sum lost weight from mortalities using repository-level aggregation
+                var mortalityRepo = _unitOfWork.GetRepository<MortalityLog>();
+                var totalLostKg = await mortalityRepo.SumAsync(
+                    ml => ml.LostWeightKg,
+                    ml => ml.BatchId == batchId
+                );
+
+                // Determine final biomass: use ActualHarvestWeightKg if harvested and present, else EstimatedHarvestWeightKg
+                double finalWeightKg = 0.0;
+                if (
+                    batch.Status == FarmingBatchStatus.HARVESTED
+                    && batch.ActualHarvestWeightKg.HasValue
+                )
+                {
+                    finalWeightKg = batch.ActualHarvestWeightKg.Value;
+                }
+                else if (batch.EstimatedHarvestWeightKg.HasValue)
+                {
+                    finalWeightKg = batch.EstimatedHarvestWeightKg.Value;
+                }
+
+                // If estimated harvest weight is missing for an active batch, try to compute it now
+                if (
+                    batch.Status != FarmingBatchStatus.HARVESTED
+                    && (
+                        !batch.EstimatedHarvestWeightKg.HasValue
+                        || batch.EstimatedHarvestWeightKg.Value == 0.0
+                    )
+                )
+                {
+                    try
+                    {
+                        var (estCount, estWeight) = await ComputeEstimatedYieldAsync(
+                            batch,
+                            persist: true
+                        );
+                        // reload batch to ensure we have persisted values
+                        batch = await batchRepo.GetByIdAsync(batchId);
+                        if (batch != null && batch.EstimatedHarvestWeightKg.HasValue)
+                        {
+                            finalWeightKg = batch.EstimatedHarvestWeightKg.Value;
+                        }
+                        else if (estWeight.HasValue)
+                        {
+                            finalWeightKg = estWeight.Value;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Unable to compute estimated harvest weight for FCR calculation for BatchId {BatchId}",
+                            batchId
+                        );
+                    }
+                }
+
+                // Subtract lost weight due to mortality
+                finalWeightKg = Math.Max(0.0, finalWeightKg - totalLostKg);
+
+                _logger.LogDebug(
+                    "FCR calc for Batch {BatchId}: totalFeed={TotalFeed}, totalLostKg={TotalLostKg}, finalWeightKg={FinalWeightKg}",
+                    batchId,
+                    totalFeed,
+                    totalLostKg,
+                    finalWeightKg
+                );
+
+                // Compute initial biomass from species' first stage expected weight.
+                // Prefer reading expected weight from batch.BatchStages' first sequence entry if available.
+                double initialPerFishKg = 0.0;
+                var firstStageEntry = batch
+                    .BatchStages?.OrderBy(bs => bs.Sequence)
+                    .FirstOrDefault();
+                if (
+                    firstStageEntry?.SpeciesStageConfig != null
+                    && firstStageEntry.SpeciesStageConfig.ExpectedWeightKgPerFish.HasValue
+                )
+                {
+                    initialPerFishKg = firstStageEntry
+                        .SpeciesStageConfig
+                        .ExpectedWeightKgPerFish
+                        .Value;
+                }
+                else
+                {
+                    // Fallback: try to query species stage configs for the species if available
+                    try
+                    {
+                        var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                        Guid speciesId = Guid.Empty;
+                        if (firstStageEntry?.SpeciesStageConfig?.SpeciesId != Guid.Empty)
+                            speciesId = firstStageEntry.SpeciesStageConfig.SpeciesId;
+                        else if (batch.CurrentStageConfig != null)
+                            speciesId = batch.CurrentStageConfig.SpeciesId;
+
+                        if (speciesId != Guid.Empty)
+                        {
+                            var ordered = (
+                                await sscRepo.FindAllAsync(s => s.SpeciesId == speciesId)
+                            ).OrderBy(s => s.Sequence);
+                            var fs = ordered.FirstOrDefault();
+                            if (fs != null && fs.ExpectedWeightKgPerFish.HasValue)
+                                initialPerFishKg = fs.ExpectedWeightKgPerFish.Value;
+                        }
+                    }
+                    catch
+                    {
+                        // ignore and use 0
+                    }
+                }
+
+                var initialBiomassKg = initialPerFishKg * batch.InitialQuantity;
+
+                var weightGainKg = finalWeightKg - initialBiomassKg;
+
+                _logger.LogDebug(
+                    "FCR calc for Batch {BatchId}: initialPerFishKg={InitialPerFishKg}, initialBiomassKg={InitialBiomassKg}, weightGainKg={WeightGainKg}",
+                    batchId,
+                    initialPerFishKg,
+                    initialBiomassKg,
+                    weightGainKg
+                );
+
+                double? fcr = null;
+                if (weightGainKg > 0)
+                {
+                    fcr = totalFeed / weightGainKg;
+                    // Round to 3 decimals for persistence
+                    fcr = Math.Round(fcr.Value, 3);
+                }
+
+                _logger.LogInformation("Computed FCR for Batch {BatchId}: FCR={Fcr}", batchId, fcr);
+                var tracked = await batchRepo.GetByIdAsync(batchId);
+                if (tracked != null)
+                {
+                    tracked.Fcr = fcr;
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                return fcr;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi tính FCR cho lô nuôi {BatchId}", batchId);
+                return null;
+            }
+        }
+        #endregion
+
         // Recommendation calculation delegated to IRecommendationCalculator
 
         // Compute estimated yield for a batch and optionally persist
@@ -194,13 +366,11 @@ namespace IRasRag.Application.Services.Implementations
                         SpeciesStageConfigId = bs.SpeciesStageConfigId,
                         GrowthStageId = ssc?.GrowthStage?.Id ?? ssc?.GrowthStageId ?? Guid.Empty,
                         StageName = ssc?.GrowthStage?.Name ?? string.Empty,
-                        // ExpectedDurationDays intentionally not returned here (duplicate of species-stage-config)
                         EstimatedStartDate = bs.EstimatedStartDate,
                         EstimatedEndDate = bs.EstimatedEndDate,
                         ActualStartDate = bs.ActualStartDate,
                         ActualEndDate = bs.ActualEndDate,
                         FrequencyPerDay = ssc?.FrequencyPerDay ?? 0,
-                        ExpectedWeightKgPerFish = ssc?.ExpectedWeightKgPerFish,
                         FeedTypeNames = ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? [],
 
                         // Calculated fields
@@ -759,7 +929,8 @@ namespace IRasRag.Application.Services.Implementations
         public async Task<Result> HarvestBatchAsync(
             Guid id,
             DateTime harvestDate,
-            bool force = false
+            bool force = false,
+            double? actualHarvestWeightKg = null
         )
         {
             try
@@ -826,6 +997,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 batch.Status = FarmingBatchStatus.HARVESTED;
                 batch.ActualHarvestDate = harvestDate;
+                // If the caller provided an actual harvest weight, set it on the batch so FCR uses it.
+                if (actualHarvestWeightKg.HasValue)
+                {
+                    batch.ActualHarvestWeightKg = actualHarvestWeightKg.Value;
+                }
                 if (orderedStages.Any())
                 {
                     batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
@@ -863,6 +1039,21 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 await _unitOfWork.SaveChangesAsync();
+
+                try
+                {
+                    // Recompute and persist FCR after harvest
+                    await ComputeAndPersistFcrAsync(batch.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể tính FCR sau khi thu hoạch cho BatchId {BatchId}",
+                        batch.Id
+                    );
+                }
+
                 _telemetryCache.InvalidateBatch(batch.FishTankId);
                 return Result.Success("Thu hoạch lô nuôi thành công");
             }
@@ -875,6 +1066,7 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Delete Methods
+        // Hard delete with related-data guards.
         public async Task<Result> DeleteFarmingBatchAsync(Guid id)
         {
             try

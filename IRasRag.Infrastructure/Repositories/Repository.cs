@@ -67,6 +67,24 @@ namespace IRasRag.Infrastructure.Repositories
                 : await GetQueryable(type).CountAsync(predicate);
         }
 
+        public async Task<double> SumAsync(
+            Expression<Func<T, double>> selector,
+            Expression<Func<T, bool>>? predicate = null,
+            QueryType type = QueryType.ActiveOnly
+        )
+        {
+            var query = GetQueryable(type);
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            // If there are no rows, SumAsync will throw; use Select then DefaultIfEmpty
+            var projected = query.Select(selector);
+            var any = await projected.AnyAsync();
+            if (!any)
+                return 0.0;
+            return await projected.SumAsync();
+        }
+
         public async Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,

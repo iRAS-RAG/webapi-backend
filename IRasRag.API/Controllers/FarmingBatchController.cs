@@ -199,7 +199,8 @@ namespace IRasRag.API.Controllers
                 var result = await _farmingBatchService.HarvestBatchAsync(
                     id,
                     body.HarvestDate,
-                    body.Force
+                    body.Force,
+                    body.ActualHarvestWeightKg
                 );
 
                 return result.Type switch

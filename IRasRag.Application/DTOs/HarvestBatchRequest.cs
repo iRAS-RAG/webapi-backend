@@ -9,5 +9,8 @@ namespace IRasRag.Application.DTOs
 
         // If true, allow harvesting earlier than planned end date
         public bool Force { get; set; } = false;
+
+        // Optional: total actual harvested weight in kg
+        public double? ActualHarvestWeightKg { get; set; }
     }
 }

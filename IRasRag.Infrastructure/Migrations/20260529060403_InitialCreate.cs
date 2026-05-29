@@ -907,6 +907,11 @@ namespace IRasRag.Infrastructure.Migrations
                         type: "double precision",
                         nullable: true
                     ),
+                    actual_harvest_weight_kg = table.Column<double>(
+                        type: "double precision",
+                        nullable: true
+                    ),
+                    fcr = table.Column<double>(type: "double precision", nullable: true),
                     species_id = table.Column<Guid>(type: "uuid", nullable: true),
                     created_at = table.Column<DateTime>(
                         type: "timestamp with time zone",
@@ -2098,12 +2103,14 @@ namespace IRasRag.Infrastructure.Migrations
                 {
                     "id",
                     "actual_harvest_date",
+                    "actual_harvest_weight_kg",
                     "created_at",
                     "current_quantity",
                     "current_stage_config_id",
                     "estimated_harvest_count",
                     "estimated_harvest_date",
                     "estimated_harvest_weight_kg",
+                    "fcr",
                     "fish_tank_id",
                     "initial_quantity",
                     "modified_at",
@@ -2119,12 +2126,14 @@ namespace IRasRag.Infrastructure.Migrations
                     {
                         new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                         null,
+                        null,
                         new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                         950,
                         new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
                         900,
                         new DateTime(2024, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                         90.0,
+                        null,
                         new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                         1000,
                         new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -2138,12 +2147,14 @@ namespace IRasRag.Infrastructure.Migrations
                     {
                         new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
                         new DateTime(2024, 5, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                        null,
                         new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                         0,
                         new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
                         780,
                         new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                         78.0,
+                        null,
                         new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                         800,
                         new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),

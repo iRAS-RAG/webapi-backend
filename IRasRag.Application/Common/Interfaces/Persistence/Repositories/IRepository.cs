@@ -27,6 +27,13 @@ namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
             Expression<Func<T, bool>>? predicate = null,
             QueryType type = QueryType.ActiveOnly
         );
+
+        // Sum aggregate for a numeric selector. Returns 0 when no matching rows.
+        Task<double> SumAsync(
+            Expression<Func<T, double>> selector,
+            Expression<Func<T, bool>>? predicate = null,
+            QueryType type = QueryType.ActiveOnly
+        );
         Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,

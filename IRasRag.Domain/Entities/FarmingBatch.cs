@@ -44,6 +44,12 @@ namespace IRasRag.Domain.Entities
         public int? EstimatedHarvestCount { get; set; }
         public double? EstimatedHarvestWeightKg { get; set; }
 
+        // Actual harvested total weight (kg) if recorded at harvest
+        public double? ActualHarvestWeightKg { get; set; }
+
+        // Persisted Feed Conversion Ratio for this batch (kg feed / kg weight gain)
+        public double? Fcr { get; set; }
+
         // Navigation properties
         public FishTank FishTank { get; set; }
         public SpeciesStageConfig CurrentStageConfig { get; set; }

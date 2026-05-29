@@ -16,16 +16,19 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<MortalityLogService> _logger;
         private readonly IMapper _mapper;
+        private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
 
         public MortalityLogService(
             IUnitOfWork unitOfWork,
             ILogger<MortalityLogService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _farmingBatchService = farmingBatchService;
         }
 
         public async Task<Result<MortalityValidationResultDto>> ValidateMortalityAsync(
@@ -341,7 +344,7 @@ namespace IRasRag.Application.Services.Implementations
                 await mortalityLogRepository.AddAsync(mortalityLog);
 
                 batch.CurrentQuantity -= createDto.Quantity;
-                // If batch caches estimated harvest weight, decrease cached estimate by lost weight (if present)
+                // Decrease cached estimated harvest weight by lost weight when available
                 if (batch.EstimatedHarvestWeightKg.HasValue)
                 {
                     batch.EstimatedHarvestWeightKg = Math.Max(
@@ -384,6 +387,19 @@ namespace IRasRag.Application.Services.Implementations
                     "Tổng trọng lượng hao hụt (kg): {LostWeightKg}",
                     mortalityLog.LostWeightKg
                 );
+
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(mortalityLog.BatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể tính FCR sau khi tạo mortality log cho BatchId {BatchId}",
+                        mortalityLog.BatchId
+                    );
+                }
 
                 return Result<MortalityLogDto>.Success(
                     mortalityLogDto,
@@ -471,6 +487,18 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Cập nhật nhật ký tử vong thành công: {Id}", id);
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(mortalityLog.BatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể tính FCR sau khi cập nhật mortality log {Id}",
+                        id
+                    );
+                }
                 return Result.Success("Cập nhật nhật ký tử vong thành công");
             }
             catch (Exception ex)
@@ -510,6 +538,14 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Xóa nhật ký tử vong thành công: {Id}", id);
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(mortalityLog.BatchId);
+                }
+                catch
+                {
+                    // ignore
+                }
                 return Result.Success("Xóa nhật ký tử vong thành công");
             }
             catch (Exception ex)
