@@ -30,8 +30,23 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
         string? AnswerBasis,
         bool NeedsWebSearch,
         string? IntentSource,
-        IReadOnlyList<string>? Citations
+        IReadOnlyList<string>? Citations,
+        string? Intent = null,
+        IReadOnlyList<string>? Intents = null,
+        double? Confidence = null,
+        IReadOnlyList<string>? Sources = null,
+        string? AnswerEngine = null
     );
+
+    public record RagChatFeedbackRequest(
+        string UserId,
+        string Response,
+        bool Helpful,
+        string? Intent,
+        string? Question
+    );
+
+    public record RagChatFeedbackResponse(string Status, bool Saved, string Message);
 
     public record RagIngestUrlResponse(
         string Status,
@@ -44,6 +59,7 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
     public interface IRagChatClient
     {
         Task<RagChatResponse?> ChatAsync(RagChatRequest request, CancellationToken ct = default);
+        Task<RagChatFeedbackResponse?> SubmitFeedbackAsync(RagChatFeedbackRequest request, CancellationToken ct = default);
         Task<RagIngestUrlResponse?> IngestDocumentByUrlAsync(
             string url,
             string title,

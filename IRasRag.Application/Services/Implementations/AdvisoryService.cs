@@ -154,11 +154,12 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
 
-            var isOffTopic = response.IntentSource == "off_topic";
+            var intent = response.Intent ?? response.IntentSource;
+            var isOffTopic = intent == "off_topic";
 
             _logger.LogInformation(
                 "Advisory chat: intent={Intent} basis={Basis} for user {UserId}, tank {TankId}",
-                response.IntentSource,
+                intent,
                 response.AnswerBasis,
                 userId,
                 tankId
@@ -167,8 +168,29 @@ namespace IRasRag.Application.Services.Implementations
             return new AdvisoryChatResult(
                 response.Answer.Trim(),
                 IsOffTopic: isOffTopic,
-                Citations: response.Citations
+                Citations: response.Citations,
+                Intent: intent
             );
+        }
+
+        public async Task<RagChatFeedbackResponse?> SubmitFeedbackAsync(
+            Guid userId,
+            string response,
+            bool helpful,
+            string? intent,
+            string? question,
+            CancellationToken ct = default
+        )
+        {
+            var request = new RagChatFeedbackRequest(
+                UserId: userId.ToString(),
+                Response: response,
+                Helpful: helpful,
+                Intent: intent,
+                Question: question
+            );
+
+            return await _ragChatClient.SubmitFeedbackAsync(request, ct);
         }
 
         private static string BuildRecommendationMessage(AlertContext context)
