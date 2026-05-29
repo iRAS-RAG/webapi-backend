@@ -271,7 +271,7 @@ namespace IRasRag.Application.Services.Implementations
                 // Broadcast to supervisors for this farm
                 try
                 {
-                    var farmId = feedingLog.FarmingBatch?.FishTank?.FarmId;
+                    var farmId = farmingBatch.FishTank?.FarmId;
                     var payload = new
                     {
                         feedingLogDto.Id,
