@@ -59,7 +59,10 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
     public interface IRagChatClient
     {
         Task<RagChatResponse?> ChatAsync(RagChatRequest request, CancellationToken ct = default);
-        Task<RagChatFeedbackResponse?> SubmitFeedbackAsync(RagChatFeedbackRequest request, CancellationToken ct = default);
+        Task<RagChatFeedbackResponse?> SubmitFeedbackAsync(
+            RagChatFeedbackRequest request,
+            CancellationToken ct = default
+        );
         Task<RagIngestUrlResponse?> IngestDocumentByUrlAsync(
             string url,
             string title,

@@ -101,14 +101,17 @@ namespace IRasRag.API.Controllers
             );
 
             if (result == null)
-                return StatusCode(502, new { Message = "Không thể ghi nhận phản hồi. Vui lòng thử lại." });
+                return StatusCode(
+                    502,
+                    new { Message = "Không thể ghi nhận phản hồi. Vui lòng thử lại." }
+                );
 
             var message = (result.Status, result.Saved, request.Helpful) switch
             {
-                ("ok", true, _)      => "Đã đánh dấu câu trả lời là hữu ích.",
-                ("ok", false, _)     => "Đã bỏ đánh dấu hữu ích.",
-                (_, _, true)         => "Câu trả lời này đã được đánh dấu là hữu ích trước đó.",
-                (_, _, false)        => "Câu trả lời này chưa được đánh dấu là hữu ích.",
+                ("ok", true, _) => "Đã đánh dấu câu trả lời là hữu ích.",
+                ("ok", false, _) => "Đã bỏ đánh dấu hữu ích.",
+                (_, _, true) => "Câu trả lời này đã được đánh dấu là hữu ích trước đó.",
+                (_, _, false) => "Câu trả lời này chưa được đánh dấu là hữu ích.",
             };
 
             return Ok(new { Message = message });
@@ -116,5 +119,12 @@ namespace IRasRag.API.Controllers
     }
 
     public record AdvisoryChatRequest(Guid TankId, string Message);
-    public record AdvisoryFeedbackRequest(Guid TankId, string Response, bool Helpful, string? Intent, string? Question);
+
+    public record AdvisoryFeedbackRequest(
+        Guid TankId,
+        string Response,
+        bool Helpful,
+        string? Intent,
+        string? Question
+    );
 }

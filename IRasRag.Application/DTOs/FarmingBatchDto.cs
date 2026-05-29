@@ -74,17 +74,24 @@ namespace IRasRag.Application.DTOs
         public Guid SpeciesStageConfigId { get; set; }
         public Guid GrowthStageId { get; set; }
         public string StageName { get; set; } = string.Empty;
-        public int ExpectedDurationDays { get; set; }
+
+        // Stage duration is intentionally omitted to avoid duplicating species-stage-config data
         public DateTime EstimatedStartDate { get; set; }
         public DateTime EstimatedEndDate { get; set; }
         public DateTime? ActualStartDate { get; set; }
         public DateTime? ActualEndDate { get; set; }
-        public double AmountPer100Fish { get; set; }
+
+        // Minimal config values kept for stage context
         public int FrequencyPerDay { get; set; }
-        public double? MaxStockingDensity { get; set; }
         public IReadOnlyList<string> FeedTypeNames { get; set; } = new List<string>();
+
+        // Calculated fields specific to this batch and stage
+        public int ExpectedCount { get; set; }
+        public double ExpectedTotalWeightKg { get; set; }
+        public double EstimatedDailyFeedKg { get; set; }
+
+        // Minimal config growth fields
         public double? ExpectedWeightKgPerFish { get; set; }
-        public double? SurvivalRate { get; set; }
     }
 
     // Update DTO

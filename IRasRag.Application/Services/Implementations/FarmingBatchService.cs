@@ -138,6 +138,8 @@ namespace IRasRag.Application.Services.Implementations
                 var ordered = batch.BatchStages.OrderBy(bs => bs.Sequence).ToList();
                 var dtos = new List<PlannedStageDto>();
                 var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                double cumulativeSurvival = 1.0;
+                var baseQuantity = batch.CurrentQuantity;
                 foreach (var bs in ordered)
                 {
                     var ssc = bs.SpeciesStageConfig;
@@ -157,6 +159,34 @@ namespace IRasRag.Application.Services.Implementations
                     }
 
                     // Build DTO explicitly to avoid relying on mapping when navigation is partially loaded
+                    // Update cumulative survival using clamped survival rate for this stage
+                    var srRaw = ssc?.SurvivalRate ?? 1.0;
+                    var sr = srRaw;
+                    if (sr < 0)
+                        sr = 0;
+                    if (sr > 1)
+                        sr = 1;
+                    cumulativeSurvival *= sr;
+
+                    // Expected count is floor of baseQuantity * cumulativeSurvival
+                    var expectedCount = 0;
+                    if (baseQuantity > 0 && cumulativeSurvival > 0)
+                    {
+                        expectedCount = (int)Math.Floor(baseQuantity * cumulativeSurvival);
+                    }
+
+                    // Expected total weight (use stage's expected weight per fish if provided)
+                    var expectedWeightPerFish = ssc?.ExpectedWeightKgPerFish ?? 0.0;
+                    var expectedTotalWeight = Math.Round(expectedCount * expectedWeightPerFish, 3);
+
+                    // Estimated daily feed in kg: (AmountPer100Fish / 100) * expectedCount * FrequencyPerDay
+                    var amountPer100 = ssc?.AmountPer100Fish ?? 0.0;
+                    var freq = ssc?.FrequencyPerDay ?? 0;
+                    var estimatedDailyFeed = Math.Round(
+                        (amountPer100 / 100.0) * expectedCount * freq,
+                        3
+                    );
+
                     var dto = new PlannedStageDto
                     {
                         Id = bs.Id,
@@ -164,17 +194,19 @@ namespace IRasRag.Application.Services.Implementations
                         SpeciesStageConfigId = bs.SpeciesStageConfigId,
                         GrowthStageId = ssc?.GrowthStage?.Id ?? ssc?.GrowthStageId ?? Guid.Empty,
                         StageName = ssc?.GrowthStage?.Name ?? string.Empty,
-                        ExpectedDurationDays = bs.ExpectedDurationDays,
+                        // ExpectedDurationDays intentionally not returned here (duplicate of species-stage-config)
                         EstimatedStartDate = bs.EstimatedStartDate,
                         EstimatedEndDate = bs.EstimatedEndDate,
                         ActualStartDate = bs.ActualStartDate,
                         ActualEndDate = bs.ActualEndDate,
-                        AmountPer100Fish = ssc?.AmountPer100Fish ?? 0,
                         FrequencyPerDay = ssc?.FrequencyPerDay ?? 0,
-                        MaxStockingDensity = ssc?.MaxStockingDensity,
                         ExpectedWeightKgPerFish = ssc?.ExpectedWeightKgPerFish,
-                        SurvivalRate = ssc?.SurvivalRate,
                         FeedTypeNames = ssc?.FeedTypes?.Select(ft => ft.Name).ToList() ?? [],
+
+                        // Calculated fields
+                        ExpectedCount = expectedCount,
+                        ExpectedTotalWeightKg = expectedTotalWeight,
+                        EstimatedDailyFeedKg = estimatedDailyFeed,
                     };
 
                     dtos.Add(dto);

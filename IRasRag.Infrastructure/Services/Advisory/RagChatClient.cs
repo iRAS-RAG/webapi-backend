@@ -123,7 +123,9 @@ namespace IRasRag.Infrastructure.Services.Advisory
                     return null;
                 }
 
-                var dto = await httpResponse.Content.ReadFromJsonAsync<RagChatFeedbackResponseDto>(ct);
+                var dto = await httpResponse.Content.ReadFromJsonAsync<RagChatFeedbackResponseDto>(
+                    ct
+                );
                 if (dto == null)
                     return null;
 
@@ -135,7 +137,11 @@ namespace IRasRag.Infrastructure.Services.Advisory
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "RAG /chat/feedback call failed for userId={UserId}", request.UserId);
+                _logger.LogError(
+                    ex,
+                    "RAG /chat/feedback call failed for userId={UserId}",
+                    request.UserId
+                );
                 return null;
             }
         }

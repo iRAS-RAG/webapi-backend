@@ -70,10 +70,7 @@ namespace IRasRag.Application.Common.Mappings
                                 : string.Empty
                         )
                 )
-                .ForMember(
-                    dest => dest.ExpectedDurationDays,
-                    opt => opt.MapFrom(src => src.ExpectedDurationDays)
-                )
+                // ExpectedDurationDays omitted from mapping to avoid duplicating species-stage-config data
                 .ForMember(
                     dest => dest.EstimatedStartDate,
                     opt => opt.MapFrom(src => src.EstimatedStartDate)
@@ -88,18 +85,12 @@ namespace IRasRag.Application.Common.Mappings
                     opt => opt.MapFrom(src => src.ActualStartDate)
                 )
                 .ForMember(dest => dest.ActualEndDate, opt => opt.MapFrom(src => src.ActualEndDate))
-                .ForMember(
-                    dest => dest.AmountPer100Fish,
-                    opt => opt.MapFrom(src => src.SpeciesStageConfig.AmountPer100Fish)
-                )
+                // AmountPer100Fish omitted from mapping to reduce duplication
                 .ForMember(
                     dest => dest.FrequencyPerDay,
                     opt => opt.MapFrom(src => src.SpeciesStageConfig.FrequencyPerDay)
                 )
-                .ForMember(
-                    dest => dest.MaxStockingDensity,
-                    opt => opt.MapFrom(src => src.SpeciesStageConfig.MaxStockingDensity)
-                )
+                // MaxStockingDensity omitted from mapping to reduce duplication
                 .ForMember(
                     dest => dest.FeedTypeNames,
                     opt =>
