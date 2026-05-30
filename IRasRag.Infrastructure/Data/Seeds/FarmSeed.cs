@@ -23,7 +23,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new Farm
                 {
                     Id = DefaultFarmId,
-                    Name = "Trang trại RAS mẫu",
+                    Name = "Trang trại RAS HCM",
                     Address = "Đường 123, Tp.HCM",
                     PhoneNumber = "+84-123-456-789",
                     Email = "contact@aquabluefarm.vn",

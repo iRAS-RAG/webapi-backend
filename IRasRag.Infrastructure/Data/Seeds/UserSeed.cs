@@ -35,7 +35,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = AdminId,
                     RoleId = RoleSeed.AdminRoleId,
-                    Email = "admin@example.com",
+                    Email = "admin@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
                     FirstName = "Văn A",
                     LastName = "Nguyễn",
@@ -48,7 +48,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = SupervisorId,
                     RoleId = RoleSeed.SupervisorRoleId,
-                    Email = "supervisor@example.com",
+                    Email = "supervisor@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
                     FirstName = "Thị B",
                     LastName = "Trần",
@@ -61,7 +61,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = OperatorId,
                     RoleId = RoleSeed.OperatorRoleId,
-                    Email = "operator@example.com",
+                    Email = "operator@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
                     FirstName = "Văn C",
                     LastName = "Lê",

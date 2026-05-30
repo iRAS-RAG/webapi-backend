@@ -32,7 +32,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     UploadedByUserId = UserSeed.AdminId,
                     UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
-                    RagStatus = DocumentRagStatus.Pending,
+                    RagStatus = DocumentRagStatus.Indexed,
                 },
                 new Document
                 {
@@ -43,7 +43,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     UploadedByUserId = UserSeed.SupervisorId,
                     UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
-                    RagStatus = DocumentRagStatus.Pending,
+                    RagStatus = DocumentRagStatus.Indexed,
                 },
                 new Document
                 {
@@ -54,7 +54,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     UploadedByUserId = UserSeed.AdminId,
                     UploadedAt = new DateTime(2024, 01, 10, 9, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
-                    RagStatus = DocumentRagStatus.Pending,
+                    RagStatus = DocumentRagStatus.Indexed,
                 },
             ];
     }
