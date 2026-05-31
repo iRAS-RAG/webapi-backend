@@ -11,8 +11,8 @@ namespace IRasRag.Application.Common.Interfaces.Telemetry
             Guid? batchId,
             SpeciesThreshold violatedThreshold,
             double value,
-            string sensorName,
-            string? batchName
+            string tankName,
+            string? sensorTypeName
         );
     }
 }

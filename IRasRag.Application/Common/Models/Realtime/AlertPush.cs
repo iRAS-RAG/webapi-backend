@@ -3,11 +3,10 @@ namespace IRasRag.Application.Common.Models.Realtime
     public record AlertPush(
         Guid AlertId,
         Guid TankId,
-        string SensorName,
-        string? BatchName,
+        string TankName,
+        string? SensorTypeName,
         double TriggerValue,
         double MinValue,
-        double MaxValue,
-        DateTime RaisedAt
+        double MaxValue
     );
 }

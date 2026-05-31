@@ -50,8 +50,8 @@ namespace IRasRag.Application.Common.Utils
             Guid? batchId,
             SpeciesThreshold threshold,
             double value,
-            string sensorName,
-            string? batchName
+            string tankName,
+            string? sensorTypeName
         )
         {
             ArgumentNullException.ThrowIfNull(threshold);
@@ -88,8 +88,8 @@ namespace IRasRag.Application.Common.Utils
                     value,
                     state,
                     isBreach,
-                    sensorName,
-                    batchName
+                    tankName,
+                    sensorTypeName
                 );
             }
             catch (Exception ex)
@@ -195,8 +195,8 @@ namespace IRasRag.Application.Common.Utils
             double value,
             AlertState state,
             bool isBreach,
-            string sensorName,
-            string? batchName
+            string tankName,
+            string? sensorTypeName
         )
         {
             if (!isBreach)
@@ -267,12 +267,11 @@ namespace IRasRag.Application.Common.Utils
                 new AlertPush(
                     AlertId: newAlert.Id,
                     TankId: tankId,
-                    SensorName: sensorName,
-                    BatchName: batchName,
+                    TankName: tankName,
+                    SensorTypeName: sensorTypeName,
                     TriggerValue: value,
                     MinValue: threshold.MinValue,
-                    MaxValue: threshold.MaxValue,
-                    RaisedAt: newAlert.RaisedAt
+                    MaxValue: threshold.MaxValue
                 )
             );
         }
