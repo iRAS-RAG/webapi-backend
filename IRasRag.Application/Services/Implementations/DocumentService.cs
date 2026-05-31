@@ -23,10 +23,10 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IFileContentValidator _fileContentValidator;
         private readonly ICloudFileStorageService _cloudFileStorageService;
-
-        //private readonly IFileTextExtractor _pdfTextExtractor;
         private readonly IFileTextExtractorResolver _fileTextExtractorResolver;
         private readonly IBackgroundJobService _backgroundJobService;
+        private const int MIN_EXTRACTED_TEXT_LENGTH = 500; // Minimum length of extracted text to consider it valid
+
 
         public DocumentService(
             IUnitOfWork unitOfWork,
@@ -184,6 +184,25 @@ namespace IRasRag.Application.Services.Implementations
                     "Định dạng tệp không hợp lệ, hiện tại chỉ hỗ trợ PDF và Docx",
                     ResultType.BadRequest
                 );
+            }
+
+            if (fileExtension == ".pdf")
+            {
+                buffer.Position = 0;
+                var extractedText = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
+                var trimmedLength = extractedText?.Replace(" ", "").Replace("\n", "").Replace("\r", "").Length ?? 0;
+                if (trimmedLength < MIN_EXTRACTED_TEXT_LENGTH)
+                {
+                    _logger.LogWarning(
+                        "PDF không có văn bản hoặc văn bản quá ít (ảnh scan): {FileName}, ký tự trích xuất: {Length}",
+                        dto.FileName,
+                        trimmedLength
+                    );
+                    return Result.Failure(
+                        "PDF không thể đọc văn bản. Tệp có thể là bản scan dạng ảnh, hiện tại không được hỗ trợ.",
+                        ResultType.BadRequest
+                    );
+                }
             }
 
             // Upload file to cloud storage and get the URL
