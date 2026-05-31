@@ -77,7 +77,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     thresholds: null,
                     batch: null,
                     species: null,
-                    stage: null
+                    stage: null,
+                    tankName: masterboard.FishTank.Name
                 );
                 return;
             }
@@ -100,7 +101,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     thresholds: null,
                     batch: null,
                     species: null,
-                    stage: null
+                    stage: null,
+                    tankName: masterboard.FishTank.Name
                 );
                 return;
             }
@@ -120,7 +122,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 thresholds,
                 batch,
                 species: stageConfig.Species.Name,
-                stage: stageConfig.GrowthStage.Name
+                stage: stageConfig.GrowthStage.Name,
+                tankName: masterboard.FishTank.Name
             );
         }
 
@@ -133,7 +136,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             Dictionary<Guid, SpeciesThreshold>? thresholds,
             FarmingBatch? batch,
             string? species,
-            string? stage
+            string? stage,
+            string tankName
         )
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
@@ -186,8 +190,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                             batch.Id,
                             threshold,
                             reading.Val,
-                            sensor.Name,
-                            batch.Name
+                            tankName,
+                            sensor.SensorType?.Name
                         );
                     }
                 }
