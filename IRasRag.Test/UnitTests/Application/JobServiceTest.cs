@@ -4,11 +4,13 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.JobSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -29,6 +31,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<Sensor>> _sensorRepoMock;
         private readonly Mock<IRepository<JobControlMapping>> _mappingRepoMock;
         private readonly Mock<IRepository<ControlDevice>> _controlDeviceRepoMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
 
         private readonly JobService _sut;
 
@@ -48,6 +52,8 @@ namespace IRasRag.Test.UnitTests.Application
             _sensorRepoMock = new Mock<IRepository<Sensor>>();
             _mappingRepoMock = new Mock<IRepository<JobControlMapping>>();
             _controlDeviceRepoMock = new Mock<IRepository<ControlDevice>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
 
             _unitOfWorkMock.Setup(x => x.GetRepository<Job>()).Returns(_jobRepoMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<JobType>()).Returns(_jobTypeRepoMock.Object);
@@ -62,7 +68,13 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
 
-            _sut = new JobService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _sut = new JobService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         // Helper tạo JobDto mẫu dùng chung trong các test

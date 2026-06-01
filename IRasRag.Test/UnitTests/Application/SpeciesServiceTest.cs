@@ -4,11 +4,13 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -24,6 +26,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<ILogger<SpeciesService>> _loggerMock;
         private readonly IMapper _mapper;
         private readonly Mock<IRepository<Species>> _repositoryMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
         private readonly SpeciesService _sut;
 
         public SpeciesServiceTest()
@@ -32,9 +36,17 @@ namespace IRasRag.Test.UnitTests.Application
             _loggerMock = new Mock<ILogger<SpeciesService>>();
             _mapper = AutoMapperTestHelper.GetMapper(new SpeciesProfile());
             _repositoryMock = new Mock<IRepository<Species>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
             _unitOfWorkMock.Setup(x => x.GetRepository<Species>()).Returns(_repositoryMock.Object);
 
-            _sut = new SpeciesService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _sut = new SpeciesService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         #region CreateSpeciesAsync Tests
