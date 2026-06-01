@@ -1,3 +1,4 @@
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
@@ -5,6 +6,7 @@ using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Settings;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,7 @@ namespace IRasRag.Application.Common.Utils
         private readonly ILogger<AlertStateEvaluator> _logger;
         private readonly ILiveDataNotifier _liveDataNotifier;
         private readonly IBackgroundJobService _backgroundJobs;
+        private readonly IAuditLogService _auditLogService;
 
         public AlertStateEvaluator(
             IAlertStateCacheService alertStateCache,
@@ -27,7 +30,8 @@ namespace IRasRag.Application.Common.Utils
             IUnitOfWork unitOfWork,
             ILogger<AlertStateEvaluator> logger,
             ILiveDataNotifier liveDataNotifier,
-            IBackgroundJobService backgroundJobs
+            IBackgroundJobService backgroundJobs,
+            IAuditLogService auditLogService
         )
         {
             _alertStateCache =
@@ -39,6 +43,8 @@ namespace IRasRag.Application.Common.Utils
                 liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
             _backgroundJobs =
                 backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
+            _auditLogService =
+                auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
 
             ValidateSettings(_settings);
         }
@@ -177,10 +183,18 @@ namespace IRasRag.Application.Common.Utils
                 && (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
             )
             {
+                var oldStatus = alert.Status;
                 alert.ResolvedAt = DateTime.UtcNow;
                 alert.Status = AlertStatus.RESOLVED;
                 _unitOfWork.GetRepository<Alert>().Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = AlertStatus.RESOLVED.ToVietnamese() }
+                );
             }
 
             _alertStateCache.Invalidate(tankId, sensorTypeId, batchId);
@@ -274,30 +288,41 @@ namespace IRasRag.Application.Common.Utils
                     MaxValue: threshold.MaxValue
                 )
             );
+
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                newAlert.Id.ToString(),
+                oldValue: null,
+                newValue: new { Status = AlertStatus.OPEN.ToVietnamese() }
+            );
         }
 
-        private bool IsInRecoveryZone(double value, SpeciesThreshold threshold)
+        private async Task WriteAuditLogAsync(string action, string entityId, object? oldValue, object? newValue)
         {
-            var span = threshold.MaxValue - threshold.MinValue;
-            var hysteresisAmount = span * _settings.HysteresisPercentage;
-
-            var lowerBound = threshold.MinValue + hysteresisAmount;
-            var upperBound = threshold.MaxValue - hysteresisAmount;
-
-            // Binary/discrete sensors (e.g. water level: 0=not reached, 1=reached) must be
-            // configured with MinValue == MaxValue (e.g. min=1, max=1). This collapses span to 0,
-            // so hysteresisAmount is 0 and the recovery zone is exactly {1}.
-            // Any other range (e.g. min=0.5, max=1) causes upperBound to shrink below 1,
-            // making the normal reading appear "near the threshold edge" and the alert never resolves.
-            if (lowerBound > upperBound)
+            try
             {
-                var midpoint = (threshold.MinValue + threshold.MaxValue) / 2.0;
-                lowerBound = midpoint;
-                upperBound = midpoint;
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Alert,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+                await _unitOfWork.SaveChangesAsync();
             }
-
-            return value >= lowerBound && value <= upperBound;
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Action} audit entry for Alert {EntityId}",
+                    action,
+                    entityId
+                );
+            }
         }
+
+        private static bool IsInRecoveryZone(double value, SpeciesThreshold threshold) =>
+            value >= threshold.MinValue && value <= threshold.MaxValue;
 
         private static void ValidateSettings(AlertSettings settings)
         {
@@ -317,13 +342,6 @@ namespace IRasRag.Application.Common.Utils
                 );
             }
 
-            if (settings.HysteresisPercentage < 0 || settings.HysteresisPercentage >= 0.5)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(settings.HysteresisPercentage),
-                    "HysteresisPercentage must be in range [0, 0.5)."
-                );
-            }
         }
     }
 }

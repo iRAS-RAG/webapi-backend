@@ -33,7 +33,8 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 ]
             );
 
-            ApplyFilter(request.Status, a => a.Status == request.Status);
+            if (request.Statuses is { Count: > 0 })
+                Query.Where(a => request.Statuses.Contains(a.Status));
             ApplyFilter(request.TankId, a => a.FishTankId == request.TankId);
             ApplyFilter(request.SensorId, a => a.SensorId == request.SensorId);
             ApplyFilter(request.BatchId, a => a.FarmingBatchId == request.BatchId);
@@ -57,6 +58,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 UnitOfMeasure = a.SensorType.UnitOfMeasure,
                 MinThreshold = a.SpeciesThreshold.MinValue,
                 MaxThreshold = a.SpeciesThreshold.MaxValue,
+                HasCorrectiveAction = a.CorrectiveActions.Any(),
             });
         }
     }

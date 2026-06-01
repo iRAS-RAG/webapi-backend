@@ -102,6 +102,31 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpPatch("{id}/status")]
+        [Authorize(Roles = "Supervisor, Operator")]
+        public async Task<IActionResult> UpdateAlertStatus(Guid id, [FromBody] UpdateAlertStatusDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _alertService.UpdateAlertStatusAsync(id, dto.Status);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật trạng thái cảnh báo với Id: {AlertId}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi cập nhật trạng thái cảnh báo" });
+            }
+        }
+
         [HttpPut("{id}")]
         [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateAlert(Guid id, [FromBody] UpdateAlertDto updateDto)

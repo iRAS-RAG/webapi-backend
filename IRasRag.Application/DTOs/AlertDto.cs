@@ -22,6 +22,7 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public double MinThreshold { get; set; }
         public double MaxThreshold { get; set; }
+        public bool HasCorrectiveAction { get; set; }
     }
 
     // Create DTO
@@ -70,11 +71,26 @@ namespace IRasRag.Application.DTOs
         public AlertStatus? Status { get; set; }
     }
 
+    public class AlertStatusCounts
+    {
+        public int Open { get; set; }
+        public int Acknowledged { get; set; }
+        public int Resolved { get; set; }
+        public int Dismissed { get; set; }
+        public int Total => Open + Acknowledged + Resolved + Dismissed;
+    }
+
+    public class UpdateAlertStatusDto
+    {
+        [Required]
+        public AlertStatus Status { get; set; }
+    }
+
     public class AlertListRequest : BasePaginatedListRequest
     {
         public Guid? TankId { get; set; }
         public Guid? SensorId { get; set; }
         public Guid? BatchId { get; set; }
-        public AlertStatus? Status { get; set; }
+        public List<AlertStatus>? Statuses { get; set; }
     }
 }

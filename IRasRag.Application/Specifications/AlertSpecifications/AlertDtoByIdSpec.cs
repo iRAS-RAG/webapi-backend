@@ -28,6 +28,7 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                     UnitOfMeasure = a.SensorType.UnitOfMeasure,
                     MinThreshold = a.SpeciesThreshold.MinValue,
                     MaxThreshold = a.SpeciesThreshold.MaxValue,
+                    HasCorrectiveAction = a.CorrectiveActions.Any(),
                 });
         }
     }

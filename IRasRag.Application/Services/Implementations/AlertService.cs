@@ -38,47 +38,56 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(AlertListRequest request)
+        public async Task<AlertPaginatedResult> GetAllAlertsAsync(AlertListRequest request)
         {
             try
             {
-                var spec = new AlertDtoListSpec(request);
-                var pagedResult = await _unitOfWork
-                    .GetRepository<Alert>()
-                    .GetPagedAsync(spec, request.Page, request.PageSize);
+                var alertRepo = _unitOfWork.GetRepository<Alert>();
 
-                var meta = PaginationBuilder.BuildPaginationMetadata(
+                var pagedResult = await alertRepo.GetPagedAsync(
+                    new AlertDtoListSpec(request),
                     request.Page,
-                    request.PageSize,
-                    pagedResult.TotalItems
+                    request.PageSize
                 );
 
-                var links = PaginationBuilder.BuildPaginationLinks(
-                    request.Page,
-                    request.PageSize,
-                    pagedResult.TotalItems
-                );
-
-                return new PaginatedResult<AlertDto>
+                var statuses = await alertRepo.ListAsync(new AlertStatusGlobalSummarySpec());
+                var statusCounts = new AlertStatusCounts
                 {
-                    Message =
-                        pagedResult.TotalItems > 0
-                            ? "Lấy danh sách cảnh báo thành công"
-                            : "Không có dữ liệu",
+                    Open = statuses.Count(s => s == AlertStatus.OPEN),
+                    Acknowledged = statuses.Count(s => s == AlertStatus.ACKNOWLEDGED),
+                    Resolved = statuses.Count(s => s == AlertStatus.RESOLVED),
+                    Dismissed = statuses.Count(s => s == AlertStatus.DISMISSED),
+                };
+
+                return new AlertPaginatedResult
+                {
+                    Message = pagedResult.TotalItems > 0
+                        ? "Lấy danh sách cảnh báo thành công"
+                        : "Không có dữ liệu",
                     Data = pagedResult.Items,
-                    Meta = meta,
-                    Links = links,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                    StatusCounts = statusCounts,
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách cảnh báo");
-                return new PaginatedResult<AlertDto>
+                return new AlertPaginatedResult
                 {
                     Message = "Đã xảy ra lỗi khi lấy danh sách cảnh báo",
                     Data = new List<AlertDto>(),
                     Meta = new PaginationMeta(),
                     Links = new PaginationLinks(),
+                    StatusCounts = new AlertStatusCounts(),
                 };
             }
         }
@@ -87,50 +96,13 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var alertRepo = _unitOfWork.GetRepository<Alert>();
-                var alert = await alertRepo.FirstOrDefaultAsync(
-                    a => a.Id == id,
-                    QueryType.ActiveOnly
-                );
+                var alertDto = await _unitOfWork
+                    .GetRepository<Alert>()
+                    .FirstOrDefaultAsync(new AlertDtoByIdSpec(id));
 
-                if (alert == null)
-                {
+                if (alertDto == null)
                     return Result<AlertDto>.Failure("Không tìm thấy cảnh báo", ResultType.NotFound);
-                }
 
-                // Load navigation properties
-                var alertWithIncludes = await alertRepo.FirstOrDefaultAsync(
-                    a => a.Id == id,
-                    QueryType.ActiveOnly
-                );
-
-                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var fishTank = await fishTankRepo.GetByIdAsync(alert.FishTankId);
-                if (fishTank != null)
-                {
-                    alert.FishTank = fishTank;
-                }
-
-                var sensorTypeRepo = _unitOfWork.GetRepository<SensorType>();
-                var sensorType = await sensorTypeRepo.GetByIdAsync(alert.SensorTypeId);
-                if (sensorType != null)
-                {
-                    alert.SensorType = sensorType;
-                }
-
-                if (alert.FarmingBatchId.HasValue)
-                {
-                    var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
-                    var farmingBatch = await farmingBatchRepo.GetByIdAsync(
-                        alert.FarmingBatchId.Value
-                    );
-                    if (farmingBatch != null)
-                    {
-                        alert.FarmingBatch = farmingBatch;
-                    }
-                }
-
-                var alertDto = _mapper.Map<AlertDto>(alert);
                 return Result<AlertDto>.Success(alertDto, "Lấy thông tin cảnh báo thành công");
             }
             catch (Exception ex)
@@ -328,6 +300,53 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        public async Task<Result> UpdateAlertStatusAsync(Guid id, AlertStatus newStatus)
+        {
+            try
+            {
+                var alert = await _unitOfWork.GetRepository<Alert>().GetByIdAsync(id);
+                if (alert == null)
+                    return Result.Failure("Không tìm thấy cảnh báo", ResultType.NotFound);
+
+                var allowed = (alert.Status, newStatus) switch
+                {
+                    (AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED) => true,
+                    (AlertStatus.OPEN, AlertStatus.DISMISSED) => true,
+                    (AlertStatus.ACKNOWLEDGED, AlertStatus.DISMISSED) => true,
+                    _ => false,
+                };
+
+                if (!allowed)
+                    return Result.Failure(
+                        $"Không thể chuyển trạng thái từ {alert.Status} sang {newStatus}",
+                        ResultType.BadRequest
+                    );
+
+                var oldStatus = alert.Status;
+                alert.Status = newStatus;
+                _unitOfWork.GetRepository<Alert>().Update(alert);
+                await _unitOfWork.SaveChangesAsync();
+
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = newStatus.ToVietnamese() },
+                    "update-alert-status"
+                );
+
+                return Result.Success("Cập nhật trạng thái cảnh báo thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật trạng thái cảnh báo với Id: {AlertId}", id);
+                return Result.Failure(
+                    "Đã xảy ra lỗi khi cập nhật trạng thái cảnh báo",
+                    ResultType.Unexpected
+                );
+            }
+        }
 
         #region Delete Methods
         public async Task<Result> DeleteAlertAsync(Guid id)
