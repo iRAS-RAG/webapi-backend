@@ -14,7 +14,6 @@ using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Infrastructure.Interceptors;
 using IRasRag.Infrastructure.Persistence;
 using IRasRag.Infrastructure.Repositories;
 using IRasRag.Infrastructure.Services.Advisory;
@@ -109,7 +108,6 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
-            services.AddScoped<AuditLogSaveChangesInterceptor>();
             services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
             services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
             services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
@@ -162,12 +160,9 @@ namespace IRasRag.Infrastructure.DI
         {
             var connectionString = ConnectionStringResolver.Resolve(config, env);
             services.AddDbContext<AppDbContext>(
-                (sp, options) =>
+                (_, options) =>
                 {
-                    options
-                        .UseNpgsql(connectionString)
-                        .UseSnakeCaseNamingConvention()
-                        .AddInterceptors(sp.GetRequiredService<AuditLogSaveChangesInterceptor>());
+                    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
                 }
             );
         }

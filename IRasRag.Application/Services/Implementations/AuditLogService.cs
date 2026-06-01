@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using AutoMapper;
+using ClosedXML.Excel;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
@@ -80,19 +81,14 @@ namespace IRasRag.Application.Services.Implementations
                     return;
                 }
 
-                var auditLog = new AuditLog
-                {
-                    UserId = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    Action = action,
-                    EntityType = entityType,
-                    EntityId = entityId,
-                    OldValue = SerializeAuditPayload(oldValue),
-                    NewValue = SerializeAuditPayload(newValue),
-                    Timestamp = DateTime.UtcNow,
-                };
+                var auditLog = AuditLogHelper.Create(
+                    user,
+                    action,
+                    entityType,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
 
                 await _auditLogRepository.AddAsync(auditLog);
             }
@@ -159,98 +155,144 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<byte[]> ExportCsvAsync(AuditLogQueryRequest request)
+        public async Task<byte[]> ExportExcelAsync(AuditLogQueryRequest request)
         {
-            try
+            var items = await _auditLogRepository.GetAllAsync(request, QueryType.ActiveOnly);
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.AddWorksheet("Audit Logs");
+
+            var headers = new[]
             {
-                var items = await _auditLogRepository.GetAllAsync(request, QueryType.ActiveOnly);
+                "Thời gian UTC",
+                "Người dùng",
+                "Email",
+                "Hành động",
+                "Đối tượng",
+                "Entity ID",
+                "Giá trị cũ",
+                "Giá trị mới",
+            };
 
-                var builder = new StringBuilder();
-                builder.AppendLine(
-                    string.Join(
-                        ',',
-                        new[]
-                        {
-                            "Id",
-                            "UserId",
-                            "FirstName",
-                            "LastName",
-                            "Email",
-                            "Action",
-                            "EntityType",
-                            "EntityId",
-                            "OldValue",
-                            "NewValue",
-                            "Timestamp",
-                        }
-                    )
-                );
-
-                foreach (var item in items)
-                {
-                    builder.AppendLine(
-                        string.Join(
-                            ',',
-                            new[]
-                            {
-                                CsvEscape(item.Id.ToString()),
-                                CsvEscape(item.UserId.ToString()),
-                                CsvEscape(item.FirstName),
-                                CsvEscape(item.LastName),
-                                CsvEscape(item.Email),
-                                CsvEscape(item.Action),
-                                CsvEscape(item.EntityType),
-                                CsvEscape(item.EntityId),
-                                CsvEscape(item.OldValue),
-                                CsvEscape(item.NewValue),
-                                CsvEscape(
-                                    item.Timestamp.ToUniversalTime()
-                                        .ToString("O", CultureInfo.InvariantCulture)
-                                ),
-                            }
-                        )
-                    );
-                }
-
-                return Encoding.UTF8.GetBytes(builder.ToString());
-            }
-            catch (Exception ex)
+            for (var i = 0; i < headers.Length; i++)
             {
-                _logger.LogError(ex, "Error while exporting audit logs to CSV");
-                return Array.Empty<byte>();
+                worksheet.Cell(1, i + 1).Value = headers[i];
             }
+
+            var rowIndex = 2;
+            foreach (var item in items)
+            {
+                var actorName = string.Join(
+                    " ",
+                    new[] { item.FirstName, item.LastName }.Where(v => !string.IsNullOrWhiteSpace(v))
+                ).Trim();
+                var userDisplay = string.IsNullOrWhiteSpace(actorName) ? item.Email : actorName;
+
+                worksheet.Cell(rowIndex, 1).Value = item.Timestamp.ToUniversalTime();
+                worksheet.Cell(rowIndex, 1).Style.DateFormat.Format = "yyyy-MM-dd HH:mm:ss";
+                worksheet.Cell(rowIndex, 2).Value = userDisplay;
+                worksheet.Cell(rowIndex, 3).Value = item.Email;
+                worksheet.Cell(rowIndex, 4).Value = item.Action;
+                worksheet.Cell(rowIndex, 5).Value = item.EntityType;
+                worksheet.Cell(rowIndex, 6).Value = item.EntityId;
+                worksheet.Cell(rowIndex, 7).Value = FormatAuditValue(item.OldValue);
+                worksheet.Cell(rowIndex, 8).Value = FormatAuditValue(item.NewValue);
+                worksheet.Row(rowIndex).Style.Alignment.WrapText = true;
+                worksheet.Row(rowIndex).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                rowIndex++;
+            }
+
+            var headerRange = worksheet.Range(1, 1, 1, headers.Length);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Font.FontColor = XLColor.Black;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E2E8F0");
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            var usedRange = worksheet.Range(1, 1, Math.Max(1, rowIndex - 1), headers.Length);
+            usedRange.SetAutoFilter();
+
+            worksheet.SheetView.FreezeRows(1);
+            worksheet.Columns().AdjustToContents();
+            worksheet.Rows().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
         }
 
-        private static string? CsvEscape(string? value)
+        private static string FormatAuditValue(string? value)
         {
-            if (string.IsNullOrEmpty(value))
+            if (string.IsNullOrWhiteSpace(value))
                 return string.Empty;
 
-            var needsQuotes =
-                value.Contains(',')
-                || value.Contains('"')
-                || value.Contains('\n')
-                || value.Contains('\r');
-            var escaped = value.Replace("\"", "\"\"");
-            return needsQuotes ? $"\"{escaped}\"" : escaped;
+            var text = CollapseWhitespace(value.Trim());
+            if (!LooksLikeJson(text))
+                return Truncate(text, 220);
+
+            try
+            {
+                using var doc = JsonDocument.Parse(text);
+                return Truncate(FormatJsonElement(doc.RootElement), 320);
+            }
+            catch
+            {
+                return Truncate(text, 220);
+            }
         }
 
-        private static string? SerializeAuditPayload(object? value)
+        private static string FormatJsonElement(JsonElement element)
         {
-            if (value == null)
-                return null;
-
-            return value switch
+            return element.ValueKind switch
             {
-                string text => text,
-                DateTime dateTime => dateTime
-                    .ToUniversalTime()
-                    .ToString("O", CultureInfo.InvariantCulture),
-                DateTimeOffset dateTimeOffset => dateTimeOffset
-                    .ToUniversalTime()
-                    .ToString("O", CultureInfo.InvariantCulture),
-                _ => JsonSerializer.Serialize(value),
+                JsonValueKind.Object => string.Join(
+                    "; ",
+                    element.EnumerateObject().Select(prop =>
+                        $"{prop.Name}={FormatJsonElementValue(prop.Value)}"
+                    )
+                ),
+                JsonValueKind.Array => string.Join(
+                    ", ",
+                    element.EnumerateArray().Select(FormatJsonElementValue)
+                ),
+                _ => FormatJsonElementValue(element),
             };
+        }
+
+        private static string FormatJsonElementValue(JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.String => element.GetString() ?? string.Empty,
+                JsonValueKind.Number => element.ToString(),
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                JsonValueKind.Null or JsonValueKind.Undefined => string.Empty,
+                JsonValueKind.Object => "{...}",
+                JsonValueKind.Array => "[...]",
+                _ => element.ToString(),
+            };
+        }
+
+        private static bool LooksLikeJson(string value)
+        {
+            return value.StartsWith('{') || value.StartsWith('[');
+        }
+
+        private static string CollapseWhitespace(string value)
+        {
+            return string.Join(
+                " ",
+                value.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            );
+        }
+
+        private static string Truncate(string value, int maxLength)
+        {
+            if (value.Length <= maxLength)
+                return value;
+
+            return value[..Math.Max(0, maxLength - 1)] + "…";
         }
     }
 }
