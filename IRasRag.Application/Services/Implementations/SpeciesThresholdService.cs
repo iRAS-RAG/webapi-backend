@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
@@ -10,6 +12,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -21,13 +24,17 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
         private readonly IBackgroundJobService _backgroundJobs;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public SpeciesThresholdService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesThresholdService> logger,
             IMapper mapper,
             ITelemetryCacheService telemetryCache,
-            IBackgroundJobService backgroundJobs
+            IBackgroundJobService backgroundJobs,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
@@ -35,6 +42,8 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _telemetryCache = telemetryCache;
             _backgroundJobs = backgroundJobs;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(
@@ -103,6 +112,9 @@ namespace IRasRag.Application.Services.Implementations
                     .GetRepository<SpeciesThreshold>()
                     .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(newThreshold.Id));
 
+                if (thresholdDto != null)
+                    await WriteCreateAuditLogAsync(thresholdDto);
+
                 var userIdStr = userId?.ToString();
                 _backgroundJobs.Enqueue<IThresholdSyncJob>(j =>
                     j.SyncCreateAsync(newThreshold.Id, userIdStr)
@@ -133,10 +145,17 @@ namespace IRasRag.Application.Services.Implementations
                 if (threshold == null)
                     return Result.Failure("Ngưỡng sinh trưởng không tồn tại.", ResultType.NotFound);
 
+                var oldDto = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(id));
+
                 var advisoryId = threshold.AdvisoryThresholdId;
                 _unitOfWork.GetRepository<SpeciesThreshold>().Delete(threshold);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
+
+                if (oldDto != null)
+                    await WriteDeleteAuditLogAsync(oldDto);
 
                 if (advisoryId != null)
                     _backgroundJobs.Enqueue<IThresholdSyncJob>(j => j.SyncDeleteAsync(advisoryId));
@@ -280,9 +299,20 @@ namespace IRasRag.Application.Services.Implementations
                 if (threshold == null)
                     return Result.Failure("Ngưỡng sinh trưởng không tồn tại.", ResultType.NotFound);
 
+                var oldDto = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(id));
+
                 _mapper.Map(dto, threshold);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateThresholds(threshold.SpeciesId, threshold.GrowthStageId);
+
+                var updatedDto = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FirstOrDefaultAsync(new SpeciesThresholdDtoByIdSpec(id));
+
+                if (oldDto != null && updatedDto != null)
+                    await WriteUpdateAuditLogAsync(oldDto, updatedDto);
 
                 if (threshold.AdvisoryThresholdId != null)
                 {
@@ -303,5 +333,120 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
+        #region Audit Log Helpers
+        private static object ToAuditSnapshot(SpeciesThresholdDto dto)
+        {
+            return new
+            {
+                dto.SpeciesName,
+                dto.GrowthStageName,
+                dto.SensorTypeName,
+                dto.MinValue,
+                dto.MaxValue,
+                dto.UnitOfMeasure,
+            };
+        }
+
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        nameof(SpeciesThreshold),
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(SpeciesThreshold),
+                    entityId
+                );
+            }
+        }
+
+        private Task WriteCreateAuditLogAsync(SpeciesThresholdDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                null,
+                ToAuditSnapshot(dto),
+                "create-species-threshold"
+            );
+        }
+
+        private Task WriteUpdateAuditLogAsync(SpeciesThresholdDto oldDto, SpeciesThresholdDto newDto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newDto.Id.ToString(),
+                ToAuditSnapshot(oldDto),
+                ToAuditSnapshot(newDto),
+                "update-species-threshold"
+            );
+        }
+
+        private Task WriteDeleteAuditLogAsync(SpeciesThresholdDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                dto.Id.ToString(),
+                ToAuditSnapshot(dto),
+                new { Deleted = "Đã được xóa" },
+                "delete-species-threshold"
+            );
+        }
+        #endregion
     }
 }

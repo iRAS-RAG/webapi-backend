@@ -1,4 +1,6 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
@@ -14,11 +16,20 @@ namespace IRasRag.Application.Services.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ReportService> _logger;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger)
+        public ReportService(
+            IUnitOfWork unitOfWork,
+            ILogger<ReportService> logger,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Dashboard Summary
@@ -141,6 +152,32 @@ namespace IRasRag.Application.Services.Implementations
                     totalAlerts,
                     activeBatchCount,
                     averageSurvivalRate
+                );
+
+                await WriteReportAuditLogAsync(
+                    action: "VIEW_DASHBOARD_REPORT",
+                    reportType: nameof(DashboardSummaryDto),
+                    entityId: request.UserId.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        request.Period,
+                        PeriodLabel = periodLabel,
+                        request.UserId,
+                        TotalAlerts = totalAlerts,
+                        OpenAlerts = openAlerts,
+                        AcknowledgedAlerts = acknowledgedAlerts,
+                        ResolvedAlerts = resolvedAlerts,
+                        DismissedAlerts = dismissedAlerts,
+                        ActiveBatches = activeBatchCount,
+                        HarvestedBatches = harvestedBatches,
+                        TotalBatches = batchesInPeriod,
+                        AverageSurvivalRate = averageSurvivalRate,
+                        TotalInitialQuantity = totalInitialQuantity,
+                        TotalCurrentQuantity = totalCurrentQuantity,
+                        TotalMortality = totalMortality,
+                    },
+                    operation: "view-dashboard-report"
                 );
 
                 return Result<DashboardSummaryDto>.Success(
@@ -299,6 +336,34 @@ namespace IRasRag.Application.Services.Implementations
                     recommendations.Count
                 );
 
+                await WriteReportAuditLogAsync(
+                    action: "VIEW_WEEKLY_REPORT",
+                    reportType: nameof(WeeklyReportDto),
+                    entityId: request.UserId.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        request.Period,
+                        PeriodLabel = weekLabel,
+                        request.UserId,
+                        request.FarmId,
+                        request.BatchId,
+                        TotalAlerts = totalAlerts,
+                        OpenAlerts = openAlerts,
+                        AcknowledgedAlerts = acknowledgedAlerts,
+                        ResolvedAlerts = resolvedAlerts,
+                        DismissedAlerts = dismissedAlerts,
+                        TopIssuesBySensorType = topIssues,
+                        TotalCorrectiveActions = correctiveActions.Count,
+                        TotalRecommendations = recommendations.Count,
+                        TotalMortality = totalMortality,
+                        MortalityIncidents = mortalityList.Count,
+                        ActiveBatches = activeBatches,
+                        AverageSurvivalRate = avgSurvivalRate,
+                    },
+                    operation: "view-weekly-report"
+                );
+
                 return Result<WeeklyReportDto>.Success(report, "Lấy báo cáo tuần thành công.");
             }
             catch (Exception ex)
@@ -411,6 +476,55 @@ namespace IRasRag.Application.Services.Implementations
             var label = $"Tuần {weekNumber}/{monday.Year} ({monday:dd/MM} – {sunday:dd/MM})";
 
             return (from, to, label);
+        }
+        #endregion
+        #region Audit Logging
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteReportAuditLogAsync(
+            string action,
+            string reportType,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            var actor = await GetAuditActorAsync(operation);
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(actor, action, reportType, entityId, oldValue, newValue)
+            );
+
+            await _unitOfWork.SaveChangesAsync();
         }
         #endregion
     }

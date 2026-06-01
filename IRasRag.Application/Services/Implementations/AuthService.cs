@@ -1,12 +1,13 @@
 ﻿using System.Security.Cryptography;
-using System.Text.Json;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -100,13 +101,11 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.GetRepository<RefreshToken>().AddAsync(refreshToken);
                 await WriteAuditLogAsync(
                     user,
-                    action: "LOGIN",
+                    action: AuditLogActions.Login,
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
                     oldValue: null,
-                    newValue: JsonSerializer.Serialize(
-                        new { AccessTokenIssued = true, RefreshTokenIssued = true }
-                    )
+                    newValue: null
                 );
                 await _unitOfWork.SaveChangesAsync();
 
@@ -166,11 +165,11 @@ namespace IRasRag.Application.Services.Implementations
                     // Do NOT log the actual reset code.
                     await WriteAuditLogAsync(
                         user,
-                        action: "REQUEST_PASSWORD_RESET",
+                        action: AuditLogActions.RequestPasswordReset,
                         entityType: "Auth",
                         entityId: user.Id.ToString(),
                         oldValue: null,
-                        newValue: JsonSerializer.Serialize(new { ResetCodeIssued = true })
+                        newValue: new { ResetCodeIssued = true }
                     );
 
                     await _unitOfWork.SaveChangesAsync();
@@ -251,11 +250,11 @@ namespace IRasRag.Application.Services.Implementations
                 // Semantic audit: record that the user reset their password. Never include the password or hashes.
                 await WriteAuditLogAsync(
                     user,
-                    action: "RESET_PASSWORD",
+                    action: AuditLogActions.ResetPassword,
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
                     oldValue: null,
-                    newValue: JsonSerializer.Serialize(new { PasswordChanged = true })
+                    newValue: new { PasswordChanged = "Thay đổi mật khẩu" }
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -342,13 +341,11 @@ namespace IRasRag.Application.Services.Implementations
                 // DO NOT log token values.
                 await WriteAuditLogAsync(
                     user,
-                    action: "REFRESH_TOKEN",
+                    action: AuditLogActions.RefreshToken,
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
-                    oldValue: JsonSerializer.Serialize(new { PreviousTokenRevoked = true }),
-                    newValue: JsonSerializer.Serialize(
-                        new { NewRefreshTokenIssued = true, AccessTokenIssued = true }
-                    )
+                    oldValue: new { PreviousTokenRevoked = true },
+                    newValue: new { NewRefreshTokenIssued = true, AccessTokenIssued = true }
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -397,11 +394,11 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     await WriteAuditLogAsync(
                         user,
-                        action: "LOGOUT",
+                        action: AuditLogActions.Logout,
                         entityType: "Auth",
                         entityId: user.Id.ToString(),
-                        oldValue: JsonSerializer.Serialize(new { IsRevoked = false }),
-                        newValue: JsonSerializer.Serialize(new { IsRevoked = true })
+                        oldValue: null,
+                        newValue: null
                     );
                 }
 
@@ -415,25 +412,13 @@ namespace IRasRag.Application.Services.Implementations
             string action,
             string entityType,
             string entityId,
-            string? oldValue,
-            string? newValue
+            object? oldValue,
+            object? newValue
         )
         {
-            var auditLog = new AuditLog
-            {
-                UserId = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Action = action,
-                EntityType = entityType,
-                EntityId = entityId,
-                OldValue = oldValue,
-                NewValue = newValue,
-                Timestamp = DateTime.UtcNow,
-            };
-
-            await _auditLogService.AddAsync(auditLog);
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(user, action, entityType, entityId, oldValue, newValue)
+            );
         }
 
         private async Task ConsumeUserVerificationCodesAsync(Guid userId, VerificationType type)

@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.UserFarmSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<UserFarmService> _logger;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public UserFarmService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<UserFarmService> logger
+            ILogger<UserFarmService> logger,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -170,6 +179,11 @@ namespace IRasRag.Application.Services.Implementations
                     new UserFarmDtoByIdSpec(userFarm.Id)
                 );
 
+                if (userFarmDto != null)
+                {
+                    await WriteCreateAuditLogAsync(userFarmDto);
+                }
+
                 return Result<UserFarmDto>.Success(
                     userFarmDto!,
                     "Tạo phân quyền người dùng-trang trại thành công"
@@ -202,6 +216,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = await BuildAuditSnapshotAsync(userFarm);
+
                 // For junction tables, typically no fields to update
                 // This method is included for CRUD completeness
                 // If needed in the future, you can add logic here
@@ -209,6 +225,8 @@ namespace IRasRag.Application.Services.Implementations
                 _mapper.Map(updateDto, userFarm);
                 userFarmRepo.Update(userFarm);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(userFarm, oldSnapshot, await BuildAuditSnapshotAsync(userFarm));
 
                 return Result.Success("Cập nhật phân quyền người dùng-trang trại thành công");
             }
@@ -243,8 +261,12 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = await BuildAuditSnapshotAsync(userFarm);
+
                 userFarmRepo.Delete(userFarm);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(userFarm, oldSnapshot);
 
                 return Result.Success("Xóa phân quyền người dùng-trang trại thành công");
             }
@@ -260,6 +282,117 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Private Helper Methods for Audit Logging
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            var actor = await GetAuditActorAsync(operation);
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    action,
+                    nameof(UserFarm),
+                    entityId,
+                    oldValue,
+                    newValue
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task<object> BuildAuditSnapshotAsync(UserFarm userFarm)
+        {
+            var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userFarm.UserId);
+            var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(userFarm.FarmId);
+
+            return new
+            {
+                UserEmail = user?.Email ?? "Unknown",
+                UserFullName = user == null ? "Unknown" : $"{user.FirstName} {user.LastName}".Trim(),
+                FarmName = farm?.Name ?? "Unknown",
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(UserFarmDto dto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                oldValue: null,
+                newValue: new
+                {
+                    dto.UserEmail,
+                    dto.UserFullName,
+                    dto.FarmName,
+                },
+                "create-user-farm"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(
+            UserFarm userFarm,
+            object oldSnapshot,
+            object newSnapshot
+        )
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                userFarm.Id.ToString(),
+                oldSnapshot,
+                newSnapshot,
+                "update-user-farm"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(UserFarm userFarm, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                userFarm.Id.ToString(),
+                oldSnapshot,
+                new { Deleted = "Đã được xóa" },
+                "delete-user-farm"
+            );
         }
         #endregion
     }

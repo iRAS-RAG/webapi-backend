@@ -1,4 +1,5 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -1020,7 +1021,7 @@ namespace IRasRag.Application.Services.Implementations
                 repo.Update(batch);
 
                 await _auditLogService.WriteSemanticAsync(
-                    action: "HARVEST_BATCH",
+                    action: AuditLogActions.HarvestBatch,
                     entityType: nameof(FarmingBatch),
                     entityId: batch.Id.ToString(),
                     oldValue: new

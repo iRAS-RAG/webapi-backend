@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.MortalityLogSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -18,13 +21,17 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
         private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public MortalityLogService(
             IUnitOfWork unitOfWork,
             ILogger<MortalityLogService> logger,
             IMapper mapper,
             IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
-            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier
+            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
@@ -32,6 +39,8 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _farmingBatchService = farmingBatchService;
             _supervisorNotifier = supervisorNotifier;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<MortalityValidationResultDto>> ValidateMortalityAsync(
@@ -378,6 +387,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _unitOfWork.CommitTransactionAsync();
 
+                if (mortalityLogDto != null)
+                    await WriteCreateAuditLogAsync(mortalityLogDto);
+
                 _logger.LogInformation(
                     "Tạo nhật ký tử vong thành công: {Id} - BatchId: {BatchId}, UserId: {UserId}, Quantity: {Quantity}",
                     mortalityLog.Id,
@@ -482,6 +494,10 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy nhật ký tử vong", ResultType.NotFound);
                 }
 
+                var oldDto = await _unitOfWork
+                    .GetRepository<MortalityLog>()
+                    .FirstOrDefaultAsync(new MortalityLogDtoByIdSpec(id));
+
                 // Validate quantity if being updated
                 if (updateDto.Quantity.HasValue && updateDto.Quantity.Value <= 0)
                 {
@@ -511,6 +527,13 @@ namespace IRasRag.Application.Services.Implementations
 
                 mortalityLogRepository.Update(mortalityLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                var updatedDto = await mortalityLogRepository.FirstOrDefaultAsync(
+                    new MortalityLogDtoByIdSpec(id)
+                );
+
+                if (oldDto != null && updatedDto != null)
+                    await WriteUpdateAuditLogAsync(oldDto, updatedDto);
 
                 _logger.LogInformation("Cập nhật nhật ký tử vong thành công: {Id}", id);
                 try
@@ -560,8 +583,15 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy nhật ký tử vong", ResultType.NotFound);
                 }
 
+                var oldDto = await _unitOfWork
+                    .GetRepository<MortalityLog>()
+                    .FirstOrDefaultAsync(new MortalityLogDtoByIdSpec(id));
+
                 mortalityLogRepository.Delete(mortalityLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                if (oldDto != null)
+                    await WriteDeleteAuditLogAsync(oldDto);
 
                 _logger.LogInformation("Xóa nhật ký tử vong thành công: {Id}", id);
                 try
@@ -582,6 +612,120 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private static object ToAuditSnapshot(MortalityLogDto dto)
+        {
+            return new
+            {
+                dto.BatchName,
+                dto.UserEmail,
+                dto.Quantity,
+                dto.LostWeightKg,
+                dto.Date,
+            };
+        }
+
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        nameof(MortalityLog),
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(MortalityLog),
+                    entityId
+                );
+            }
+        }
+
+        private Task WriteCreateAuditLogAsync(MortalityLogDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                null,
+                ToAuditSnapshot(dto),
+                "create-mortality-log"
+            );
+        }
+
+        private Task WriteUpdateAuditLogAsync(MortalityLogDto oldDto, MortalityLogDto newDto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newDto.Id.ToString(),
+                ToAuditSnapshot(oldDto),
+                ToAuditSnapshot(newDto),
+                "update-mortality-log"
+            );
+        }
+
+        private Task WriteDeleteAuditLogAsync(MortalityLogDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                dto.Id.ToString(),
+                ToAuditSnapshot(dto),
+                new { Deleted = "Đã được xóa" },
+                "delete-mortality-log"
+            );
         }
         #endregion
     }

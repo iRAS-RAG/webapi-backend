@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,12 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<FarmService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public FarmService(IUnitOfWork unitOfWork, ILogger<FarmService> logger, IMapper mapper)
+        public FarmService(
+            IUnitOfWork unitOfWork,
+            ILogger<FarmService> logger,
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<FarmDto>> CreateFarmAsync(CreateFarmDto createDto)
@@ -76,6 +89,8 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.GetRepository<Farm>().AddAsync(newFarm);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(newFarm);
+
                 return Result<FarmDto>.Success(
                     _mapper.Map<FarmDto>(newFarm),
                     "Tạo trang trại thành công."
@@ -99,8 +114,18 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Trang trại không tồn tại.", ResultType.NotFound);
                 }
 
+                var oldSnapshot = new
+                {
+                    farm.Name,
+                    farm.Address,
+                    farm.PhoneNumber,
+                    farm.Email,
+                };
+
                 _unitOfWork.GetRepository<Farm>().Delete(farm);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(farm.Id, oldSnapshot);
 
                 return Result.Success("Xóa trang trại thành công.");
             }
@@ -197,6 +222,14 @@ namespace IRasRag.Application.Services.Implementations
                 if (farm == null)
                     return Result.Failure("Trang trại không tồn tại.", ResultType.NotFound);
 
+                var oldSnapshot = new
+                {
+                    farm.Name,
+                    farm.Address,
+                    farm.PhoneNumber,
+                    farm.Email,
+                };
+
                 if (!string.IsNullOrWhiteSpace(dto.Name))
                 {
                     farm.Name = dto.Name.Trim();
@@ -235,6 +268,8 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<Farm>().Update(farm);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteUpdateAuditLogAsync(farm, oldSnapshot);
+
                 return Result.Success("Cập nhật trang trại thành công.");
             }
             catch (Exception ex)
@@ -243,5 +278,109 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure("Lỗi khi cập nhật trang trại.", ResultType.Unexpected);
             }
         }
+
+        #region Audit Log Helpers
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteCreateAuditLogAsync(Farm farm)
+        {
+            var actor = await GetAuditActorAsync("create-farm");
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Create,
+                    nameof(Farm),
+                    farm.Id.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        Created = "Đã được tạo",
+                        farm.Name,
+                        farm.Address,
+                        farm.PhoneNumber,
+                        farm.Email,
+                    }
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task WriteUpdateAuditLogAsync(Farm farm, object oldSnapshot)
+        {
+            var actor = await GetAuditActorAsync("update-farm");
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Update,
+                    nameof(Farm),
+                    farm.Id.ToString(),
+                    oldValue: oldSnapshot,
+                    newValue: new
+                    {
+                        Updated = "Đã được cập nhật",
+                        farm.Name,
+                        farm.Address,
+                        farm.PhoneNumber,
+                        farm.Email,
+                    }
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid farmId, object oldSnapshot)
+        {
+            var actor = await GetAuditActorAsync("delete-farm");
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Delete,
+                    nameof(Farm),
+                    farmId.ToString(),
+                    oldValue: oldSnapshot,
+                    newValue: new { Deleted = "Đã được xóa" }
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
+    #endregion
 }

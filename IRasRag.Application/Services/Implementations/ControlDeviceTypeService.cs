@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.ControlDeviceTypeSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ControlDeviceTypeService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public ControlDeviceTypeService(
             IUnitOfWork unitOfWork,
             ILogger<ControlDeviceTypeService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -184,6 +193,8 @@ namespace IRasRag.Application.Services.Implementations
                 await controlDeviceTypeRepository.AddAsync(controlDeviceType);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(controlDeviceType);
+
                 var controlDeviceTypeDto = _mapper.Map<ControlDeviceTypeDto>(controlDeviceType);
                 _logger.LogInformation(
                     "Tạo loại thiết bị điều khiển thành công: {Id} - {Name}",
@@ -242,6 +253,12 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = new
+                {
+                    controlDeviceType.Name,
+                    controlDeviceType.Description,
+                };
+
                 // Check duplicate name if name is being updated
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
                 {
@@ -274,6 +291,8 @@ namespace IRasRag.Application.Services.Implementations
 
                 controlDeviceTypeRepository.Update(controlDeviceType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(controlDeviceType, oldSnapshot);
 
                 _logger.LogInformation("Cập nhật loại thiết bị điều khiển thành công: {Id}", id);
                 return Result.Success("Cập nhật loại thiết bị điều khiển thành công");
@@ -317,8 +336,16 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = new
+                {
+                    controlDeviceType.Name,
+                    controlDeviceType.Description,
+                };
+
                 controlDeviceTypeRepository.Delete(controlDeviceType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(controlDeviceType.Id, oldSnapshot);
 
                 _logger.LogInformation("Xóa loại thiết bị điều khiển thành công: {Id}", id);
                 return Result.Success("Xóa loại thiết bị điều khiển thành công");
@@ -331,6 +358,118 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        nameof(ControlDeviceType),
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(ControlDeviceType),
+                    entityId
+                );
+            }
+        }
+
+        private Task WriteCreateAuditLogAsync(ControlDeviceType controlDeviceType)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Create,
+                controlDeviceType.Id.ToString(),
+                null,
+                new
+                {
+                    Created = "Đã được tạo",
+                    controlDeviceType.Name,
+                    controlDeviceType.Description,
+                },
+                "create-control-device-type"
+            );
+        }
+
+        private Task WriteUpdateAuditLogAsync(ControlDeviceType controlDeviceType, object oldSnapshot)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Update,
+                controlDeviceType.Id.ToString(),
+                oldSnapshot,
+                new
+                {
+                    Updated = "Đã được cập nhật",
+                    controlDeviceType.Name,
+                    controlDeviceType.Description,
+                },
+                "update-control-device-type"
+            );
+        }
+
+        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                new { Deleted = "Đã được xóa" },
+                "delete-control-device-type"
+            );
         }
         #endregion
     }

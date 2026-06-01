@@ -1,4 +1,5 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
@@ -23,6 +24,8 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IHashingService _hasher;
         private readonly IBackgroundJobService _backgroundJobService;
         private readonly IEmailService _emailService;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public UserService(
             IUnitOfWork unitOfWork,
@@ -30,7 +33,9 @@ namespace IRasRag.Application.Services.Implementations
             IMapper mapper,
             IHashingService hasher,
             IBackgroundJobService backgroundJobService,
-            IEmailService emailService
+            IEmailService emailService,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
@@ -39,6 +44,8 @@ namespace IRasRag.Application.Services.Implementations
             _hasher = hasher;
             _backgroundJobService = backgroundJobService;
             _emailService = emailService;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<UserDto>> CreateOperatorAsync(CreateOperatorUserDto createDto)
@@ -92,6 +99,8 @@ namespace IRasRag.Application.Services.Implementations
                 _backgroundJobService.Enqueue<IEmailService>(service =>
                     service.SendEmailAsync(newUser.Email, "Tài khoản IRAS-RAG mới", emailBody)
                 );
+
+                await WriteCreateAuditLogAsync(newUser, roleName);
 
                 return Result<UserDto>.Success(
                     _mapper.Map<UserDto>(newUser),
@@ -167,6 +176,8 @@ namespace IRasRag.Application.Services.Implementations
                     service.SendEmailAsync(newUser.Email, "Tài khoản IRAS-RAG mới", emailBody)
                 );
 
+                await WriteCreateAuditLogAsync(newUser, systemRole.ToRoleName());
+
                 return Result<UserDto>.Success(
                     _mapper.Map<UserDto>(newUser),
                     "Tạo người dùng thành công."
@@ -177,6 +188,129 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi tạo người dùng");
                 return Result<UserDto>.Failure("Lỗi khi tạo người dùng.", ResultType.Unexpected);
             }
+        }
+
+        private async Task WriteCreateAuditLogAsync(User createdUser, string roleName)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping create-user audit entry because no authenticated user was found."
+                );
+                return;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(
+                    u => u.Id == currentUserId.Value,
+                    QueryType.IncludeDeleted
+                );
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping create-user audit entry because the current user {UserId} could not be resolved.",
+                    currentUserId.Value
+                );
+                return;
+            }
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Create,
+                    nameof(User),
+                    createdUser.Id.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        createdUser.RoleId,
+                        RoleName = roleName,
+                        createdUser.Email,
+                        createdUser.FirstName,
+                        createdUser.LastName,
+                        createdUser.IsDeleted,
+                    }
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteUpdateAuditLogAsync(
+            User user,
+            object oldSnapshot,
+            object newSnapshot
+        )
+        {
+            var actor = await GetAuditActorAsync("update-user");
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Update,
+                    nameof(User),
+                    user.Id.ToString(),
+                    oldSnapshot,
+                    newSnapshot
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task WriteDeleteAuditLogAsync(User user, object oldSnapshot, bool hardDelete)
+        {
+            var actor = await GetAuditActorAsync(hardDelete ? "hard-delete-user" : "delete-user");
+            if (actor == null)
+                return;
+
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(
+                    actor,
+                    AuditLogActions.Delete,
+                    nameof(User),
+                    user.Id.ToString(),
+                    oldSnapshot,
+                    hardDelete
+                        ? new { Deleted = "Đã được xóa vĩnh viễn" }
+                        : new { Deleted = "Đã được xóa" }
+                )
+            );
+
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<Result> DeleteUserAsync(Guid id)
@@ -193,8 +327,22 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
+                var oldSnapshot = new
+                {
+                    user.RoleId,
+                    RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                    user.IsDeleted,
+                    user.DeletedAt,
+                };
+
                 _unitOfWork.GetRepository<User>().Delete(user);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(user, oldSnapshot, hardDelete: false);
 
                 return Result.Success("Xóa người dùng thành công.");
             }
@@ -218,8 +366,22 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Người dùng không tồn tại.", ResultType.NotFound);
                 }
 
+                var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
+                var oldSnapshot = new
+                {
+                    user.RoleId,
+                    RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                    user.IsDeleted,
+                    user.DeletedAt,
+                };
+
                 _unitOfWork.GetRepository<User>().HardDelete(user);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(user, oldSnapshot, hardDelete: true);
 
                 return Result.Success("Xóa vĩnh viễn người dùng thành công.");
             }
@@ -376,6 +538,18 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
 
+                var originalRole = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
+                var oldSnapshot = new
+                {
+                    user.RoleId,
+                    RoleName = originalRole?.ToSystemRole().ToRoleName() ?? "Không xác định",
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                    user.IsDeleted,
+                    user.DeletedAt,
+                };
+
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
                     var emailToUpdate = dto.Email.Trim().ToLower();
@@ -448,6 +622,22 @@ namespace IRasRag.Application.Services.Implementations
 
                 updatedRole ??= await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
 
+                await WriteUpdateAuditLogAsync(
+                    user,
+                    oldSnapshot,
+                    new
+                    {
+                        user.RoleId,
+                        RoleName = updatedRole?.Name ?? string.Empty,
+                        user.Email,
+                        user.FirstName,
+                        user.LastName,
+                        user.IsDeleted,
+                        user.DeletedAt,
+                        Updated = "Đã được cập nhật",
+                    }
+                );
+
                 return Result<UserDto>.Success(
                     new UserDto
                     {
@@ -490,9 +680,17 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
+                var oldSnapshot = new { PasswordChanged = "Mật khẩu hiện tại" };
+
                 user.PasswordHash = _hasher.HashPassword(dto.NewPassword);
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(
+                    user,
+                    oldSnapshot,
+                    new { PasswordChanged = "Đã được cập nhật" }
+                );
                 return Result.Success("Cập nhật mật khẩu người dùng thành công.");
             }
             catch (Exception ex)
@@ -516,6 +714,13 @@ namespace IRasRag.Application.Services.Implementations
                         "Người dùng không tồn tại.",
                         ResultType.NotFound
                     );
+
+                var oldSnapshot = new
+                {
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                };
 
                 if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
@@ -546,6 +751,18 @@ namespace IRasRag.Application.Services.Implementations
 
                 _unitOfWork.GetRepository<User>().Update(user);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(
+                    user,
+                    oldSnapshot,
+                    new
+                    {
+                        user.Email,
+                        user.FirstName,
+                        user.LastName,
+                        Updated = "Đã được cập nhật",
+                    }
+                );
 
                 return Result<UserDto>.Success(
                     _mapper.Map<UserDto>(user),

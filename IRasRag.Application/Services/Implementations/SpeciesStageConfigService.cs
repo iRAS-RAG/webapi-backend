@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
@@ -8,6 +10,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -19,13 +22,17 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
         private readonly IFarmingBatchService _farmingBatchService;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public SpeciesStageConfigService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesStageConfigService> logger,
             IMapper mapper,
             ITelemetryCacheService telemetryCache,
-            IFarmingBatchService farmingBatchService
+            IFarmingBatchService farmingBatchService,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
@@ -33,6 +40,8 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _telemetryCache = telemetryCache;
             _farmingBatchService = farmingBatchService;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<SpeciesStageConfigDto>> CreateSpeciesStageConfig(
@@ -138,6 +147,13 @@ namespace IRasRag.Application.Services.Implementations
                 await repo.AddAsync(newConfig);
                 await _unitOfWork.SaveChangesAsync();
 
+                var createdDto = await repo.FirstOrDefaultAsync(
+                    new SpeciesStageConfigByIdSpec(newConfig.Id)
+                );
+
+                if (createdDto != null)
+                    await WriteCreateAuditLogAsync(createdDto);
+
                 // Recompute estimates for batches of this species
                 await _farmingBatchService.RecomputeEstimatedYieldBySpeciesAsync(
                     newConfig.SpeciesId
@@ -168,6 +184,10 @@ namespace IRasRag.Application.Services.Implementations
                         "Cấu hình giai đoạn sinh trưởng của cá không tồn tại.",
                         ResultType.NotFound
                     );
+
+                var oldDto = await _unitOfWork
+                    .GetRepository<SpeciesStageConfig>()
+                    .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
 
                 // Capture species and sequence before deleting so we can re-sequence remaining items
                 var speciesId = config.SpeciesId;
@@ -206,6 +226,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 // Invalidate cache for the deleted config id as well
                 _telemetryCache.InvalidateStageConfig(id);
+
+                if (oldDto != null)
+                    await WriteDeleteAuditLogAsync(oldDto);
 
                 return Result.Success("Xóa cấu hình giai đoạn sinh trưởng của cá thành công.");
             }
@@ -365,6 +388,10 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
 
+                var oldDto = await _unitOfWork
+                    .GetRepository<SpeciesStageConfig>()
+                    .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
+
                 if (dto.FeedTypeIds != null)
                 {
                     if (dto.FeedTypeIds.Count == 0)
@@ -386,11 +413,7 @@ namespace IRasRag.Application.Services.Implementations
 
                     // Avoid reassigning the same feed types which can cause EF to try inserting
                     // duplicate join rows. Fetch existing feed type ids via spec and compare.
-                    var existingDto = await _unitOfWork
-                        .GetRepository<SpeciesStageConfig>()
-                        .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
-
-                    var existingFeedTypeIds = existingDto?.FeedTypeIds ?? [];
+                    var existingFeedTypeIds = oldDto?.FeedTypeIds ?? [];
 
                     var setsEqual =
                         existingFeedTypeIds.Count == requestedFeedTypeIds.Count
@@ -472,6 +495,14 @@ namespace IRasRag.Application.Services.Implementations
                         config.FrequencyPerDay = dto.FrequencyPerDay.Value;
                 }
                 await _unitOfWork.SaveChangesAsync();
+
+                var updatedDto = await _unitOfWork
+                    .GetRepository<SpeciesStageConfig>()
+                    .FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
+
+                if (oldDto != null && updatedDto != null)
+                    await WriteUpdateAuditLogAsync(oldDto, updatedDto);
+
                 _telemetryCache.InvalidateStageConfig(id);
 
                 // Recompute for species after change
@@ -488,5 +519,124 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
+        #region Audit Log Helpers
+        private static object ToAuditSnapshot(SpeciesStageConfigDto dto)
+        {
+            return new
+            {
+                dto.SpeciesName,
+                dto.GrowthStageName,
+                dto.Sequence,
+                dto.FeedTypeNames,
+                dto.AmountPer100Fish,
+                dto.FrequencyPerDay,
+                dto.MaxStockingDensity,
+                dto.ExpectedDurationDays,
+                dto.ExpectedWeightKgPerFish,
+                dto.SurvivalRate,
+            };
+        }
+
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        nameof(SpeciesStageConfig),
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(SpeciesStageConfig),
+                    entityId
+                );
+            }
+        }
+
+        private Task WriteCreateAuditLogAsync(SpeciesStageConfigDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                null,
+                ToAuditSnapshot(dto),
+                "create-species-stage-config"
+            );
+        }
+
+        private Task WriteUpdateAuditLogAsync(SpeciesStageConfigDto oldDto, SpeciesStageConfigDto newDto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newDto.Id.ToString(),
+                ToAuditSnapshot(oldDto),
+                ToAuditSnapshot(newDto),
+                "update-species-stage-config"
+            );
+        }
+
+        private Task WriteDeleteAuditLogAsync(SpeciesStageConfigDto dto)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                dto.Id.ToString(),
+                ToAuditSnapshot(dto),
+                new { Deleted = "Đã được xóa" },
+                "delete-species-stage-config"
+            );
+        }
+        #endregion
     }
 }

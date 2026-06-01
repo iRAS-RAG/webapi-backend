@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SpeciesService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public SpeciesService(
             IUnitOfWork unitOfWork,
             ILogger<SpeciesService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task<Result<SpeciesDto>> CreateSpeciesAsync(CreateSpeciesDto createDto)
@@ -54,6 +63,8 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.GetRepository<Species>().AddAsync(newSpecies);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(newSpecies);
+
                 return Result<SpeciesDto>.Success(
                     _mapper.Map<SpeciesDto>(newSpecies),
                     "Tạo loài thành công."
@@ -77,8 +88,15 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Loài không tồn tại.", ResultType.NotFound);
                 }
 
+                var oldSnapshot = new
+                {
+                    species.Name,
+                };
+
                 _unitOfWork.GetRepository<Species>().Delete(species);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(species.Id, oldSnapshot);
 
                 return Result.Success("Xóa loài thành công.");
             }
@@ -158,6 +176,11 @@ namespace IRasRag.Application.Services.Implementations
                 if (species == null)
                     return Result<SpeciesDto>.Failure("Loài không tồn tại.", ResultType.NotFound);
 
+                var oldSnapshot = new
+                {
+                    species.Name,
+                };
+
                 var dto = new SpeciesDto { Id = species.Id, Name = species.Name };
 
                 return Result<SpeciesDto>.Success(dto, "Lấy thông tin loài thành công.");
@@ -181,6 +204,11 @@ namespace IRasRag.Application.Services.Implementations
                 if (species == null)
                     return Result.Failure("Loài không tồn tại.", ResultType.NotFound);
 
+                var oldSnapshot = new
+                {
+                    species.Name,
+                };
+
                 if (!string.IsNullOrWhiteSpace(dto.Name))
                 {
                     var nameToUpdate = dto.Name.Trim();
@@ -201,6 +229,8 @@ namespace IRasRag.Application.Services.Implementations
                 _unitOfWork.GetRepository<Species>().Update(species);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteUpdateAuditLogAsync(species, oldSnapshot);
+
                 return Result.Success("Cập nhật loài thành công.");
             }
             catch (Exception ex)
@@ -209,5 +239,115 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure("Lỗi khi cập nhật loài.", ResultType.Unexpected);
             }
         }
+
+        #region Audit Log Helpers
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        nameof(Species),
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(Species),
+                    entityId
+                );
+            }
+        }
+
+        private Task WriteCreateAuditLogAsync(Species species)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Create,
+                species.Id.ToString(),
+                null,
+                new
+                {
+                    Created = "Đã được tạo",
+                    species.Name,
+                },
+                "create-species"
+            );
+        }
+
+        private Task WriteUpdateAuditLogAsync(Species species, object oldSnapshot)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Update,
+                species.Id.ToString(),
+                oldSnapshot,
+                new
+                {
+                    Updated = "Đã được cập nhật",
+                    species.Name,
+                },
+                "update-species"
+            );
+        }
+
+        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            return WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                new { Deleted = "Đã được xóa" },
+                "delete-species"
+            );
+        }
+        #endregion
     }
 }
