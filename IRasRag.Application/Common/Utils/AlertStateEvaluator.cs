@@ -192,8 +192,8 @@ namespace IRasRag.Application.Common.Utils
                 await WriteAuditLogAsync(
                     AuditLogActions.Update,
                     alert.Id.ToString(),
-                    oldValue: new { Status = oldStatus },
-                    newValue: new { Status = AlertStatus.RESOLVED, alert.ResolvedAt }
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = AlertStatus.RESOLVED.ToVietnamese() }
                 );
             }
 
@@ -293,15 +293,7 @@ namespace IRasRag.Application.Common.Utils
                 AuditLogActions.Create,
                 newAlert.Id.ToString(),
                 oldValue: null,
-                newValue: new
-                {
-                    FishTankName = tankName,
-                    SensorTypeName = sensorTypeName,
-                    newAlert.TriggerValue,
-                    newAlert.Status,
-                    newAlert.RaisedAt,
-                    ThresholdRange = $"{threshold.MinValue} - {threshold.MaxValue}",
-                }
+                newValue: new { Status = AlertStatus.OPEN.ToVietnamese() }
             );
         }
 

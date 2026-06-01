@@ -5,6 +5,7 @@ using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
+using IRasRag.Domain.Enums;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.CorrectiveActionSpecifications;
@@ -198,6 +199,7 @@ namespace IRasRag.Application.Services.Implementations
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
                 await correctiveActionRepository.AddAsync(correctiveAction);
 
+                var oldAlertStatus = alert.Status;
                 if (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
                 {
                     alert.Status = AlertStatus.RESOLVED;
@@ -219,7 +221,7 @@ namespace IRasRag.Application.Services.Implementations
                         "Cảnh báo {AlertId} được đánh dấu đã giải quyết do hành động khắc phục",
                         alert.Id
                     );
-                    await WriteAlertResolvedAuditLogAsync(alert, correctiveAction.Id);
+                    await WriteAlertResolvedAuditLogAsync(alert, oldAlertStatus);
                 }
 
                 var correctiveActionDto = _mapper.Map<CorrectiveActionDto>(correctiveAction);
@@ -335,7 +337,7 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Private Helpers
-        private async Task WriteAlertResolvedAuditLogAsync(Alert alert, Guid correctiveActionId)
+        private async Task WriteAlertResolvedAuditLogAsync(Alert alert, AlertStatus oldStatus)
         {
             try
             {
@@ -343,8 +345,8 @@ namespace IRasRag.Application.Services.Implementations
                     AuditLogActions.Update,
                     AuditLogEntityType.Alert,
                     alert.Id.ToString(),
-                    oldValue: new { Status = AlertStatus.OPEN },
-                    newValue: new { Status = AlertStatus.RESOLVED, alert.ResolvedAt, ResolvedByCorrectiveActionId = correctiveActionId }
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = AlertStatus.RESOLVED.ToVietnamese() }
                 );
                 await _unitOfWork.SaveChangesAsync();
             }
@@ -352,9 +354,8 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogError(
                     ex,
-                    "Failed to write audit log for alert {AlertId} resolved by corrective action {CorrectiveActionId}",
-                    alert.Id,
-                    correctiveActionId
+                    "Failed to write audit log for alert {AlertId} auto-resolved by corrective action",
+                    alert.Id
                 );
             }
         }
