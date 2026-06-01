@@ -448,49 +448,47 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(SensorType sensorType)
+        private async Task WriteCreateAuditLogAsync(SensorType sensorType)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 sensorType.Id.ToString(),
                 null,
-                new
-                {
-                    Created = "Đã được tạo",
-                    sensorType.Name,
-                    sensorType.MeasureType,
-                    sensorType.UnitOfMeasure,
-                    sensorType.Code,
-                },
+                    new
+                    {
+                        sensorType.Name,
+                        sensorType.MeasureType,
+                        sensorType.UnitOfMeasure,
+                        sensorType.Code,
+                    },
                 "create-sensor-type"
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(SensorType sensorType, object oldSnapshot)
+        private async Task WriteUpdateAuditLogAsync(SensorType sensorType, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 sensorType.Id.ToString(),
                 oldSnapshot,
-                new
-                {
-                    Updated = "Đã được cập nhật",
-                    sensorType.Name,
-                    sensorType.MeasureType,
-                    sensorType.UnitOfMeasure,
-                    sensorType.Code,
-                },
+                    new
+                    {
+                        sensorType.Name,
+                        sensorType.MeasureType,
+                        sensorType.UnitOfMeasure,
+                        sensorType.Code,
+                    },
                 "update-sensor-type"
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 id.ToString(),
                 oldSnapshot,
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-sensor-type"
             );
         }

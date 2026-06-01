@@ -280,56 +280,20 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         #region Audit Log Helpers
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteCreateAuditLogAsync(Farm farm)
         {
-            var actor = await GetAuditActorAsync("create-farm");
-            if (actor == null)
-                return;
-
-            await _auditLogService.AddAsync(
-                AuditLogHelper.Create(
-                    actor,
+            await _auditLogService.WriteSemanticAsync(
                     AuditLogActions.Create,
                     nameof(Farm),
                     farm.Id.ToString(),
                     oldValue: null,
-                    newValue: new
-                    {
-                        Created = "Đã được tạo",
-                        farm.Name,
-                        farm.Address,
-                        farm.PhoneNumber,
-                        farm.Email,
-                    }
-                )
+                newValue: new
+                {
+                    farm.Name,
+                    farm.Address,
+                    farm.PhoneNumber,
+                    farm.Email,
+                }
             );
 
             await _unitOfWork.SaveChangesAsync();
@@ -337,26 +301,18 @@ namespace IRasRag.Application.Services.Implementations
 
         private async Task WriteUpdateAuditLogAsync(Farm farm, object oldSnapshot)
         {
-            var actor = await GetAuditActorAsync("update-farm");
-            if (actor == null)
-                return;
-
-            await _auditLogService.AddAsync(
-                AuditLogHelper.Create(
-                    actor,
+            await _auditLogService.WriteSemanticAsync(
                     AuditLogActions.Update,
                     nameof(Farm),
                     farm.Id.ToString(),
                     oldValue: oldSnapshot,
-                    newValue: new
-                    {
-                        Updated = "Đã được cập nhật",
-                        farm.Name,
-                        farm.Address,
-                        farm.PhoneNumber,
-                        farm.Email,
-                    }
-                )
+                newValue: new
+                {
+                    farm.Name,
+                    farm.Address,
+                    farm.PhoneNumber,
+                    farm.Email,
+                }
             );
 
             await _unitOfWork.SaveChangesAsync();
@@ -364,19 +320,12 @@ namespace IRasRag.Application.Services.Implementations
 
         private async Task WriteDeleteAuditLogAsync(Guid farmId, object oldSnapshot)
         {
-            var actor = await GetAuditActorAsync("delete-farm");
-            if (actor == null)
-                return;
-
-            await _auditLogService.AddAsync(
-                AuditLogHelper.Create(
-                    actor,
-                    AuditLogActions.Delete,
-                    nameof(Farm),
-                    farmId.ToString(),
-                    oldValue: oldSnapshot,
-                    newValue: new { Deleted = "Đã được xóa" }
-                )
+            await _auditLogService.WriteSemanticAsync(
+                AuditLogActions.Delete,
+                nameof(Farm),
+                farmId.ToString(),
+                oldValue: oldSnapshot,
+                newValue: null
             );
 
             await _unitOfWork.SaveChangesAsync();

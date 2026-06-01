@@ -415,9 +415,9 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(SpeciesThresholdDto dto)
+        private async Task WriteCreateAuditLogAsync(SpeciesThresholdDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 dto.Id.ToString(),
                 null,
@@ -426,9 +426,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(SpeciesThresholdDto oldDto, SpeciesThresholdDto newDto)
+        private async Task WriteUpdateAuditLogAsync(SpeciesThresholdDto oldDto, SpeciesThresholdDto newDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 newDto.Id.ToString(),
                 ToAuditSnapshot(oldDto),
@@ -437,13 +437,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(SpeciesThresholdDto dto)
+        private async Task WriteDeleteAuditLogAsync(SpeciesThresholdDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 dto.Id.ToString(),
                 ToAuditSnapshot(dto),
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-species-threshold"
             );
         }

@@ -484,34 +484,6 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Private Helper Methods for Audit Logging
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -520,22 +492,28 @@ namespace IRasRag.Application.Services.Implementations
             string operation
         )
         {
-            var actor = await GetAuditActorAsync(operation);
-            if (actor == null)
-                return;
-
-            await _auditLogService.AddAsync(
-                AuditLogHelper.Create(
-                    actor,
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
                     action,
                     nameof(FeedingLog),
                     entityId,
                     oldValue,
                     newValue
-                )
-            );
+                );
 
-            await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(FeedingLog),
+                    entityId
+                );
+            }
         }
 
         private static object ToAuditSnapshot(FeedingLogDto dto)
@@ -552,9 +530,9 @@ namespace IRasRag.Application.Services.Implementations
             };
         }
 
-        private Task WriteCreateAuditLogAsync(FeedingLogDto dto)
+        private async Task WriteCreateAuditLogAsync(FeedingLogDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 dto.Id.ToString(),
                 oldValue: null,
@@ -563,9 +541,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(FeedingLogDto oldDto, FeedingLogDto newDto)
+        private async Task WriteUpdateAuditLogAsync(FeedingLogDto oldDto, FeedingLogDto newDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 newDto.Id.ToString(),
                 oldValue: ToAuditSnapshot(oldDto),
@@ -574,13 +552,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(FeedingLogDto oldDto)
+        private async Task WriteDeleteAuditLogAsync(FeedingLogDto oldDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 oldDto.Id.ToString(),
                 oldValue: ToAuditSnapshot(oldDto),
-                newValue: new { Deleted = "Đã được xóa" },
+                newValue: null,
                 "delete-feeding-log"
             );
         }

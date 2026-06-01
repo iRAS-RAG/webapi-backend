@@ -628,34 +628,6 @@ namespace IRasRag.Application.Services.Implementations
             };
         }
 
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -666,19 +638,12 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var actor = await GetAuditActorAsync(operation);
-                if (actor == null)
-                    return;
-
-                await _auditLogService.AddAsync(
-                    AuditLogHelper.Create(
-                        actor,
-                        action,
-                        nameof(MortalityLog),
-                        entityId,
-                        oldValue,
-                        newValue
-                    )
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    nameof(MortalityLog),
+                    entityId,
+                    oldValue,
+                    newValue
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -695,9 +660,9 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(MortalityLogDto dto)
+        private async Task WriteCreateAuditLogAsync(MortalityLogDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 dto.Id.ToString(),
                 null,
@@ -706,9 +671,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(MortalityLogDto oldDto, MortalityLogDto newDto)
+        private async Task WriteUpdateAuditLogAsync(MortalityLogDto oldDto, MortalityLogDto newDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 newDto.Id.ToString(),
                 ToAuditSnapshot(oldDto),
@@ -717,13 +682,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(MortalityLogDto dto)
+        private async Task WriteDeleteAuditLogAsync(MortalityLogDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 dto.Id.ToString(),
                 ToAuditSnapshot(dto),
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-mortality-log"
             );
         }

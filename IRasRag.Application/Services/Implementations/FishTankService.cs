@@ -160,7 +160,7 @@ namespace IRasRag.Application.Services.Implementations
                     Height = createDto.Height,
                     Radius = createDto.Radius,
                     FarmId = createDto.FarmId,
-                    TopicCode = createDto.TopicCode?.Trim(),
+                    TopicCode = createDto.TopicCode?.Trim() ?? string.Empty,
                     CameraUrl = createDto.CameraUrl.Trim(),
                 };
 
@@ -180,6 +180,8 @@ namespace IRasRag.Application.Services.Implementations
                 await WriteAuditLogAsync(AuditLogActions.Create, newFishTank.Id.ToString(), null, newSnapshot, "create-fish-tank");
                 
 
+                var farmName = farm?.Name ?? "Unknown";
+
                 var resultDto = new FishTankDto
                 {
                     Id = newFishTank.Id,
@@ -187,8 +189,8 @@ namespace IRasRag.Application.Services.Implementations
                     Height = newFishTank.Height,
                     Radius = newFishTank.Radius,
                     FarmId = newFishTank.FarmId,
-                    FarmName = farm.Name,
-                    TopicCode = newFishTank.TopicCode,
+                    FarmName = farmName,
+                    TopicCode = newFishTank.TopicCode ?? string.Empty,
                     CameraUrl = newFishTank.CameraUrl,
                 };
 
@@ -535,34 +537,6 @@ namespace IRasRag.Application.Services.Implementations
         }
         #endregion
         #region Audit Log Helpers
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -573,15 +547,7 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var actor = await GetAuditActorAsync(operation);
-                if (actor == null)
-                {
-                    // GetAuditActorAsync already logged the reason; nothing more to do.
-                    return;
-                }
-
-                var auditLog = AuditLogHelper.Create(
-                    actor,
+                await _auditLogService.WriteSemanticAsync(
                     action,
                     nameof(FishTank),
                     entityId,
@@ -589,12 +555,17 @@ namespace IRasRag.Application.Services.Implementations
                     newValue
                 );
 
-                await _auditLogService.AddAsync(auditLog);
                 await _unitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to write {Operation} audit entry for {EntityType} {EntityId}", operation, nameof(FishTank), entityId);
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(FishTank),
+                    entityId
+                );
             }
         }
         #endregion

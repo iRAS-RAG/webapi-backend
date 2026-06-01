@@ -226,7 +226,6 @@ namespace IRasRag.Application.Services.Implementations
                     oldValue: null,
                     newValue: new
                     {
-                        createdUser.RoleId,
                         RoleName = roleName,
                         createdUser.Email,
                         createdUser.FirstName,
@@ -304,9 +303,7 @@ namespace IRasRag.Application.Services.Implementations
                     nameof(User),
                     user.Id.ToString(),
                     oldSnapshot,
-                    hardDelete
-                        ? new { Deleted = "Đã được xóa vĩnh viễn" }
-                        : new { Deleted = "Đã được xóa" }
+                    null
                 )
             );
 
@@ -330,7 +327,6 @@ namespace IRasRag.Application.Services.Implementations
                 var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
                 var oldSnapshot = new
                 {
-                    user.RoleId,
                     RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
                     user.Email,
                     user.FirstName,
@@ -369,7 +365,6 @@ namespace IRasRag.Application.Services.Implementations
                 var role = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
                 var oldSnapshot = new
                 {
-                    user.RoleId,
                     RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
                     user.Email,
                     user.FirstName,
@@ -541,7 +536,6 @@ namespace IRasRag.Application.Services.Implementations
                 var originalRole = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
                 var oldSnapshot = new
                 {
-                    user.RoleId,
                     RoleName = originalRole?.ToSystemRole().ToRoleName() ?? "Không xác định",
                     user.Email,
                     user.FirstName,
@@ -627,14 +621,12 @@ namespace IRasRag.Application.Services.Implementations
                     oldSnapshot,
                     new
                     {
-                        user.RoleId,
                         RoleName = updatedRole?.Name ?? string.Empty,
                         user.Email,
                         user.FirstName,
                         user.LastName,
                         user.IsDeleted,
                         user.DeletedAt,
-                        Updated = "Đã được cập nhật",
                     }
                 );
 
@@ -689,7 +681,7 @@ namespace IRasRag.Application.Services.Implementations
                 await WriteUpdateAuditLogAsync(
                     user,
                     oldSnapshot,
-                    new { PasswordChanged = "Đã được cập nhật" }
+                    new { PasswordChanged = true }
                 );
                 return Result.Success("Cập nhật mật khẩu người dùng thành công.");
             }
@@ -760,7 +752,6 @@ namespace IRasRag.Application.Services.Implementations
                         user.Email,
                         user.FirstName,
                         user.LastName,
-                        Updated = "Đã được cập nhật",
                     }
                 );
 

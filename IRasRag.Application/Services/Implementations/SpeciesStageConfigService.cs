@@ -605,9 +605,9 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(SpeciesStageConfigDto dto)
+        private async Task WriteCreateAuditLogAsync(SpeciesStageConfigDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 dto.Id.ToString(),
                 null,
@@ -616,9 +616,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(SpeciesStageConfigDto oldDto, SpeciesStageConfigDto newDto)
+        private async Task WriteUpdateAuditLogAsync(SpeciesStageConfigDto oldDto, SpeciesStageConfigDto newDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 newDto.Id.ToString(),
                 ToAuditSnapshot(oldDto),
@@ -627,13 +627,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(SpeciesStageConfigDto dto)
+        private async Task WriteDeleteAuditLogAsync(SpeciesStageConfigDto dto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 dto.Id.ToString(),
                 ToAuditSnapshot(dto),
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-species-stage-config"
             );
         }

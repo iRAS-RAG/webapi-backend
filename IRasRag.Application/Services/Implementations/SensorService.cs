@@ -646,34 +646,6 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Audit Log Helpers
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -684,19 +656,12 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var actor = await GetAuditActorAsync(operation);
-                if (actor == null)
-                    return;
-
-                await _auditLogService.AddAsync(
-                    AuditLogHelper.Create(
-                        actor,
-                        action,
-                        nameof(Sensor),
-                        entityId,
-                        oldValue,
-                        newValue
-                    )
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    nameof(Sensor),
+                    entityId,
+                    oldValue,
+                    newValue
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -713,15 +678,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(SensorDto sensorDto)
+        private async Task WriteCreateAuditLogAsync(SensorDto sensorDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 sensorDto.Id.ToString(),
                 null,
                 new
                 {
-                    Created = "Đã được tạo",
                     sensorDto.Name,
                     sensorDto.PinCode,
                     sensorDto.SensorTypeName,
@@ -731,9 +695,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(SensorDto oldSensorDto, SensorDto newSensorDto)
+        private async Task WriteUpdateAuditLogAsync(SensorDto oldSensorDto, SensorDto newSensorDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 newSensorDto.Id.ToString(),
                 new
@@ -745,7 +709,6 @@ namespace IRasRag.Application.Services.Implementations
                 },
                 new
                 {
-                    Updated = "Đã được cập nhật",
                     newSensorDto.Name,
                     newSensorDto.PinCode,
                     newSensorDto.SensorTypeName,
@@ -755,9 +718,9 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(SensorDto sensorDto)
+        private async Task WriteDeleteAuditLogAsync(SensorDto sensorDto)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 sensorDto.Id.ToString(),
                 new
@@ -767,7 +730,7 @@ namespace IRasRag.Application.Services.Implementations
                     sensorDto.SensorTypeName,
                     sensorDto.MasterBoardName,
                 },
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-sensor"
             );
         }

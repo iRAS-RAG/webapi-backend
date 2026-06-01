@@ -325,34 +325,6 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Audit Log Helpers
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -363,19 +335,12 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var actor = await GetAuditActorAsync(operation);
-                if (actor == null)
-                    return;
-
-                await _auditLogService.AddAsync(
-                    AuditLogHelper.Create(
-                        actor,
-                        action,
-                        nameof(JobType),
-                        entityId,
-                        oldValue,
-                        newValue
-                    )
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    nameof(JobType),
+                    entityId,
+                    oldValue,
+                    newValue
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -392,45 +357,35 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(JobType jobType)
+        private async Task WriteCreateAuditLogAsync(JobType jobType)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 jobType.Id.ToString(),
                 null,
-                new
-                {
-                    Created = "Đã được tạo",
-                    jobType.Name,
-                    jobType.Description,
-                },
+                new { jobType.Name, jobType.Description },
                 "create-job-type"
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(JobType jobType, object oldSnapshot)
+        private async Task WriteUpdateAuditLogAsync(JobType jobType, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 jobType.Id.ToString(),
                 oldSnapshot,
-                new
-                {
-                    Updated = "Đã được cập nhật",
-                    jobType.Name,
-                    jobType.Description,
-                },
+                new { jobType.Name, jobType.Description },
                 "update-job-type"
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 id.ToString(),
                 oldSnapshot,
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-job-type"
             );
         }

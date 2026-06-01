@@ -456,15 +456,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(MasterBoard masterBoard, string fishTankName)
+        private async Task WriteCreateAuditLogAsync(MasterBoard masterBoard, string fishTankName)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 masterBoard.Id.ToString(),
                 null,
                 new
                 {
-                    Created = "Đã được tạo",
                     masterBoard.Name,
                     masterBoard.MacAddress,
                     FishTankName = fishTankName,
@@ -473,19 +472,18 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(
+        private async Task WriteUpdateAuditLogAsync(
             MasterBoard masterBoard,
             object oldSnapshot,
             string fishTankName
         )
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 masterBoard.Id.ToString(),
                 oldSnapshot,
                 new
                 {
-                    Updated = "Đã được cập nhật",
                     masterBoard.Name,
                     masterBoard.MacAddress,
                     FishTankName = fishTankName,
@@ -494,13 +492,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 id.ToString(),
                 oldSnapshot,
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-master-board"
             );
         }

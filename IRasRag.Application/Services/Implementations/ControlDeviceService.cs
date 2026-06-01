@@ -455,7 +455,6 @@ namespace IRasRag.Application.Services.Implementations
                     oldSnapshot,
                     new
                     {
-                        Updated = "Đã được cập nhật",
                         controlDevice.Name,
                         controlDevice.PinCode,
                         controlDevice.State,
@@ -668,34 +667,6 @@ namespace IRasRag.Application.Services.Implementations
         }
         #endregion
         #region Private Helper Methods for Audit Logging
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -704,37 +675,42 @@ namespace IRasRag.Application.Services.Implementations
             string operation
         )
         {
-            var actor = await GetAuditActorAsync(operation);
-            if (actor == null)
-                return;
-
-            await _auditLogService.AddAsync(
-                AuditLogHelper.Create(
-                    actor,
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
                     action,
                     nameof(ControlDevice),
                     entityId,
                     oldValue,
                     newValue
-                )
-            );
+                );
 
-            await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    nameof(ControlDevice),
+                    entityId
+                );
+            }
         }
 
-        private Task WriteCreateAuditLogAsync(
+        private async Task WriteCreateAuditLogAsync(
             ControlDevice controlDevice,
             string masterBoardName,
             string controlDeviceTypeName
         )
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 controlDevice.Id.ToString(),
                 oldValue: null,
                 newValue: new
                 {
-                    Created = "Đã được tạo",
                     controlDevice.Name,
                     controlDevice.PinCode,
                     controlDevice.State,
@@ -745,13 +721,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(
+        private async Task WriteUpdateAuditLogAsync(
             ControlDevice controlDevice,
             object oldSnapshot,
             object newSnapshot
         )
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 controlDevice.Id.ToString(),
                 oldSnapshot,
@@ -760,13 +736,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(ControlDevice controlDevice, object oldSnapshot)
+        private async Task WriteDeleteAuditLogAsync(ControlDevice controlDevice, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 controlDevice.Id.ToString(),
                 oldSnapshot,
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-control-device"
             );
         }

@@ -362,34 +362,6 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Audit Log Helpers
-        private async Task<User?> GetAuditActorAsync(string operation)
-        {
-            var currentUserId = _currentUserAccessor.GetUserId();
-            if (currentUserId is null)
-            {
-                _logger.LogDebug(
-                    "Skipping {Operation} audit entry because no authenticated user was found.",
-                    operation
-                );
-                return null;
-            }
-
-            var actor = await _unitOfWork
-                .GetRepository<User>()
-                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
-
-            if (actor == null)
-            {
-                _logger.LogWarning(
-                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
-                    operation,
-                    currentUserId.Value
-                );
-            }
-
-            return actor;
-        }
-
         private async Task WriteAuditLogAsync(
             string action,
             string entityId,
@@ -400,19 +372,12 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var actor = await GetAuditActorAsync(operation);
-                if (actor == null)
-                    return;
-
-                await _auditLogService.AddAsync(
-                    AuditLogHelper.Create(
-                        actor,
-                        action,
-                        nameof(ControlDeviceType),
-                        entityId,
-                        oldValue,
-                        newValue
-                    )
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    nameof(ControlDeviceType),
+                    entityId,
+                    oldValue,
+                    newValue
                 );
 
                 await _unitOfWork.SaveChangesAsync();
@@ -429,15 +394,14 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        private Task WriteCreateAuditLogAsync(ControlDeviceType controlDeviceType)
+        private async Task WriteCreateAuditLogAsync(ControlDeviceType controlDeviceType)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Create,
                 controlDeviceType.Id.ToString(),
                 null,
                 new
                 {
-                    Created = "Đã được tạo",
                     controlDeviceType.Name,
                     controlDeviceType.Description,
                 },
@@ -445,15 +409,14 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteUpdateAuditLogAsync(ControlDeviceType controlDeviceType, object oldSnapshot)
+        private async Task WriteUpdateAuditLogAsync(ControlDeviceType controlDeviceType, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 controlDeviceType.Id.ToString(),
                 oldSnapshot,
                 new
                 {
-                    Updated = "Đã được cập nhật",
                     controlDeviceType.Name,
                     controlDeviceType.Description,
                 },
@@ -461,13 +424,13 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
         {
-            return WriteAuditLogAsync(
+            await WriteAuditLogAsync(
                 AuditLogActions.Delete,
                 id.ToString(),
                 oldSnapshot,
-                new { Deleted = "Đã được xóa" },
+                null,
                 "delete-control-device-type"
             );
         }
