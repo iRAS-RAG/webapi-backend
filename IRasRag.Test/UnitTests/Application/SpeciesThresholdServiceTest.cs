@@ -3,6 +3,7 @@ using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -11,6 +12,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -30,6 +32,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<ILogger<SpeciesThresholdService>> _loggerMock;
         private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
         private readonly Mock<IBackgroundJobService> _backgroundJobsMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
         private readonly IMapper _mapper;
         private readonly SpeciesThresholdService _sut;
 
@@ -58,6 +62,8 @@ namespace IRasRag.Test.UnitTests.Application
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
             _backgroundJobsMock = new Mock<IBackgroundJobService>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
             _backgroundJobsMock
                 .Setup(b =>
                     b.Enqueue(It.IsAny<System.Linq.Expressions.Expression<Func<object, Task>>>())
@@ -69,7 +75,9 @@ namespace IRasRag.Test.UnitTests.Application
                 _loggerMock.Object,
                 _mapper,
                 _telemetryCacheMock.Object,
-                _backgroundJobsMock.Object
+                _backgroundJobsMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
             );
         }
 

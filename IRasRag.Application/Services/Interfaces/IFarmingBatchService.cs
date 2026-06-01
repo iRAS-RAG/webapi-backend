@@ -9,9 +9,9 @@ namespace IRasRag.Application.Services.Interfaces
         Task<PaginatedResult<FarmingBatchDto>> GetAllFarmingBatchesAsync(
             FarmingBatchListRequest request
         );
-        Task<
-            Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>
-        > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId);
+        Task<Result<ActiveFarmingBatchResponseDto>> GetActiveFarmingBatchByFishTankIdAsync(
+            Guid fishTankId
+        );
         Task<Result<FarmingBatchDto>> GetFarmingBatchByIdAsync(Guid id);
         Task<Result<FarmingBatchDto>> CreateFarmingBatchAsync(CreateFarmingBatchDto createDto);
         Task<(int EstimatedCount, double? EstimatedWeightKg)> ComputeEstimatedYieldAsync(

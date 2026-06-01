@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -8,6 +10,7 @@ using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmingBatchSpecifications;
 using IRasRag.Application.Specifications.FeedingLogSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -19,13 +22,17 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
         private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public FeedingLogService(
             IUnitOfWork unitOfWork,
             ILogger<FeedingLogService> logger,
             IMapper mapper,
             IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
-            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier
+            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork ?? throw new System.ArgumentNullException(nameof(unitOfWork));
@@ -35,6 +42,8 @@ namespace IRasRag.Application.Services.Implementations
                 farmingBatchService
                 ?? throw new System.ArgumentNullException(nameof(farmingBatchService));
             _supervisorNotifier = supervisorNotifier;
+            _auditLogService = auditLogService ?? throw new System.ArgumentNullException(nameof(auditLogService));
+            _currentUserAccessor = currentUserAccessor ?? throw new System.ArgumentNullException(nameof(currentUserAccessor));
         }
 
         #region Get Methods
@@ -260,6 +269,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                await WriteCreateAuditLogAsync(feedingLogDto);
+
                 _logger.LogInformation(
                     "Tạo nhật ký cho ăn thành công: {Id} - FarmingBatchId: {FarmingBatchId}, UserId: {UserId}, Amount: {Amount}",
                     feedingLog.Id,
@@ -374,10 +385,18 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                var oldSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
+
                 _mapper.Map(updateDto, feedingLog);
 
                 feedingLogRepository.Update(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                var updatedSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
 
                 try
                 {
@@ -386,6 +405,11 @@ namespace IRasRag.Application.Services.Implementations
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Không thể tính FCR sau khi cập nhật feed log {Id}", id);
+                }
+
+                if (oldSnapshotDto != null && updatedSnapshotDto != null)
+                {
+                    await WriteUpdateAuditLogAsync(oldSnapshotDto, updatedSnapshotDto);
                 }
 
                 _logger.LogInformation("Cập nhật nhật ký cho ăn thành công: {Id}", id);
@@ -424,8 +448,17 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy nhật ký cho ăn", ResultType.NotFound);
                 }
 
+                var oldSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
+
                 feedingLogRepository.Delete(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                if (oldSnapshotDto != null)
+                {
+                    await WriteDeleteAuditLogAsync(oldSnapshotDto);
+                }
 
                 try
                 {
@@ -447,6 +480,85 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.FeedingLog,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.FeedingLog,
+                    entityId
+                );
+            }
+        }
+
+        private static object ToAuditSnapshot(FeedingLogDto dto)
+        {
+            return new
+            {
+                dto.FarmingBatchName,
+                dto.FeedTypeName,
+                dto.UserEmail,
+                dto.Amount,
+                dto.CreatedDate,
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(FeedingLogDto dto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                oldValue: null,
+                newValue: ToAuditSnapshot(dto),
+                "create-feeding-log"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(FeedingLogDto oldDto, FeedingLogDto newDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newDto.Id.ToString(),
+                oldValue: ToAuditSnapshot(oldDto),
+                newValue: ToAuditSnapshot(newDto),
+                "update-feeding-log"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(FeedingLogDto oldDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                oldDto.Id.ToString(),
+                oldValue: ToAuditSnapshot(oldDto),
+                newValue: null,
+                "delete-feeding-log"
+            );
         }
         #endregion
     }

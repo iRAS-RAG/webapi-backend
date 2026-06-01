@@ -4,6 +4,7 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
@@ -32,6 +33,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly IMapper _mapper;
         private readonly SpeciesStageConfigService _sut;
         private readonly Mock<IFarmingBatchService> _farmingBatchServiceMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
 
         public SpeciesStageConfigServiceTest()
         {
@@ -57,13 +60,17 @@ namespace IRasRag.Test.UnitTests.Application
 
             _telemetryCacheMock = new Mock<ITelemetryCacheService>();
             _farmingBatchServiceMock = new Mock<IFarmingBatchService>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
 
             _sut = new SpeciesStageConfigService(
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
                 _mapper,
                 _telemetryCacheMock.Object,
-                _farmingBatchServiceMock.Object
+                _farmingBatchServiceMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
             );
         }
 

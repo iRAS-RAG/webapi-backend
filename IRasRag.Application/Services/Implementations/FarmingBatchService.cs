@@ -1,4 +1,5 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -133,9 +134,7 @@ namespace IRasRag.Application.Services.Implementations
                 // Compute initial biomass from species' first stage expected weight.
                 // Prefer reading expected weight from batch.BatchStages' first sequence entry if available.
                 double initialPerFishKg = 0.0;
-                var firstStageEntry = batch
-                    .BatchStages?.OrderBy(bs => bs.Sequence)
-                    .FirstOrDefault();
+                var firstStageEntry = batch!.BatchStages?.OrderBy(bs => bs.Sequence).FirstOrDefault();
                 if (
                     firstStageEntry?.SpeciesStageConfig != null
                     && firstStageEntry.SpeciesStageConfig.ExpectedWeightKgPerFish.HasValue
@@ -153,7 +152,7 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
                         Guid speciesId = Guid.Empty;
-                        if (firstStageEntry?.SpeciesStageConfig?.SpeciesId != Guid.Empty)
+                        if (firstStageEntry?.SpeciesStageConfig != null)
                             speciesId = firstStageEntry.SpeciesStageConfig.SpeciesId;
                         else if (batch.CurrentStageConfig != null)
                             speciesId = batch.CurrentStageConfig.SpeciesId;
@@ -447,7 +446,7 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<
-            Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>
+            Result<ActiveFarmingBatchResponseDto>
         > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
         {
             try
@@ -455,18 +454,52 @@ namespace IRasRag.Application.Services.Implementations
                 var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
                 if (tank == null)
                 {
-                    return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                    return Result<ActiveFarmingBatchResponseDto>.Failure(
                         "Bể cá không tồn tại",
                         ResultType.NotFound
                     );
                 }
 
-                var list = await _unitOfWork
+                var activeBatch = await _unitOfWork
                     .GetRepository<FarmingBatch>()
-                    .ListAsync(new ActiveFarmingBatchDtoListSpec(fishTankId));
-                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Success(
-                    list,
-                    "Lấy danh sách lô nuôi đang hoạt động thành công"
+                    .FirstOrDefaultAsync(new ActiveFarmingBatchByFishTankIdSpec(fishTankId));
+
+                if (activeBatch == null)
+                {
+                    return Result<ActiveFarmingBatchResponseDto>.Failure(
+                        "Không tìm thấy lô nuôi đang hoạt động.",
+                        ResultType.NotFound
+                    );
+                }
+
+                var stage = activeBatch.CurrentStageConfig;
+                IReadOnlyList<ActiveFarmingBatchSafeThresholdDto> thresholds =
+                    new List<ActiveFarmingBatchSafeThresholdDto>();
+
+                if (stage != null)
+                {
+                    var thresholdRepo = _unitOfWork.GetRepository<SpeciesThreshold>();
+                    thresholds = await thresholdRepo.ListAsync(
+                        new ActiveFarmingBatchSafeThresholdsSpec(
+                            stage.SpeciesId,
+                            stage.GrowthStageId
+                        )
+                    );
+                }
+
+                var response = new ActiveFarmingBatchResponseDto
+                {
+                    FarmingBatchName = activeBatch.Name,
+                    FishTankName = activeBatch.FishTank?.Name ?? tank.Name,
+                    SpeciesName = stage?.Species?.Name ?? string.Empty,
+                    CurrentQuantity = activeBatch.CurrentQuantity,
+                    TankVolume = Math.Round(Math.PI * tank.Radius * tank.Radius * tank.Height, 2),
+                    SafeThresholds = thresholds,
+                };
+
+                return Result<ActiveFarmingBatchResponseDto>.Success(
+                    response,
+                    "Lấy lô nuôi đang hoạt động thành công"
                 );
             }
             catch (Exception ex)
@@ -476,7 +509,7 @@ namespace IRasRag.Application.Services.Implementations
                     "Lỗi khi lấy danh sách lô nuôi đang hoạt động cho bể cá với ID {FishTankId}",
                     fishTankId
                 );
-                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                return Result<ActiveFarmingBatchResponseDto>.Failure(
                     "Lỗi khi lấy danh sách lô nuôi đang hoạt động",
                     ResultType.Unexpected
                 );
@@ -801,6 +834,8 @@ namespace IRasRag.Application.Services.Implementations
                     .GetRepository<FarmingBatch>()
                     .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(farmingBatch.Id));
 
+                await WriteCreateAuditLogAsync(farmingBatch, createDto.SpeciesId);
+                await _unitOfWork.SaveChangesAsync();
                 return Result<FarmingBatchDto>.Success(farmingBatchDto!, "Tạo lô nuôi thành công");
             }
             catch (Exception ex)
@@ -912,10 +947,57 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                var oldName = farmingBatch.Name;
+                var oldCurrentQuantity = farmingBatch.CurrentQuantity;
+                var oldUnitOfMeasure = farmingBatch.UnitOfMeasure;
+
                 // Map and update
                 _mapper.Map(updateDto, farmingBatch);
                 farmingBatchRepo.Update(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
+
+                var oldValues = new Dictionary<string, object?>();
+                var newValues = new Dictionary<string, object?>();
+
+                if (
+                    updateDto.Name != null
+                    && !string.Equals(oldName, farmingBatch.Name, StringComparison.Ordinal)
+                )
+                {
+                    oldValues[nameof(FarmingBatch.Name)] = oldName;
+                    newValues[nameof(FarmingBatch.Name)] = farmingBatch.Name;
+                }
+
+                if (
+                    updateDto.CurrentQuantity.HasValue
+                    && oldCurrentQuantity != farmingBatch.CurrentQuantity
+                )
+                {
+                    oldValues[nameof(FarmingBatch.CurrentQuantity)] = oldCurrentQuantity;
+                    newValues[nameof(FarmingBatch.CurrentQuantity)] = farmingBatch.CurrentQuantity;
+                }
+
+                if (
+                    updateDto.UnitOfMeasure != null
+                    && !string.Equals(oldUnitOfMeasure, farmingBatch.UnitOfMeasure, StringComparison.Ordinal)
+                )
+                {
+                    oldValues[nameof(FarmingBatch.UnitOfMeasure)] = oldUnitOfMeasure;
+                    newValues[nameof(FarmingBatch.UnitOfMeasure)] = farmingBatch.UnitOfMeasure;
+                }
+
+                if (oldValues.Count > 0 || newValues.Count > 0)
+                {
+                    await _auditLogService.WriteSemanticAsync(
+                        action: AuditLogActions.Update,
+                        entityType: AuditLogEntityType.FarmingBatch,
+                        entityId: farmingBatch.Id.ToString(),
+                        oldValue: oldValues,
+                        newValue: newValues
+                    );
+
+                    await _unitOfWork.SaveChangesAsync();
+                }
 
                 return Result.Success("Cập nhật lô nuôi thành công");
             }
@@ -946,13 +1028,10 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy lô nuôi", ResultType.NotFound);
                 }
 
-                if (
-                    batch.Status == FarmingBatchStatus.HARVESTED
-                    || batch.Status == FarmingBatchStatus.TERMINATED
-                )
+                if (batch.Status != FarmingBatchStatus.ACTIVE)
                 {
                     return Result.Failure(
-                        "Không thể thu hoạch lô nuôi đã thu hoạch/hủy bỏ",
+                        "Chỉ có thể thu hoạch lô nuôi đang hoạt động",
                         ResultType.BadRequest
                     );
                 }
@@ -995,6 +1074,11 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                var oldStatus = batch.Status;
+                var oldEstimatedHarvestDate = batch.EstimatedHarvestDate;
+                var oldActualHarvestDate = batch.ActualHarvestDate;
+                var oldActualHarvestWeightKg = batch.ActualHarvestWeightKg;
+
                 batch.Status = FarmingBatchStatus.HARVESTED;
                 batch.ActualHarvestDate = harvestDate;
                 // If the caller provided an actual harvest weight, set it on the batch so FCR uses it.
@@ -1013,28 +1097,32 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     foreach (var bs in batch.BatchStages)
                     {
-                        bs.SpeciesStageConfig = null;
+                        bs.SpeciesStageConfig = null!;
                     }
                 }
 
                 repo.Update(batch);
+                await _unitOfWork.SaveChangesAsync();
 
                 await _auditLogService.WriteSemanticAsync(
-                    action: "HARVEST_BATCH",
-                    entityType: nameof(FarmingBatch),
+                    action: AuditLogActions.HarvestBatch,
+                    entityType: AuditLogEntityType.FarmingBatch,
                     entityId: batch.Id.ToString(),
-                    oldValue: new
+                    oldValue: new Dictionary<string, object?>
                     {
-                        Status = FarmingBatchStatus.ACTIVE,
-                        batch.CurrentQuantity,
-                        batch.EstimatedHarvestDate,
+                        [nameof(FarmingBatch.Name)] = batch.Name,
+                        [nameof(FarmingBatch.Status)] = oldStatus,
+                        [nameof(FarmingBatch.EstimatedHarvestDate)] = oldEstimatedHarvestDate,
+                        [nameof(FarmingBatch.ActualHarvestDate)] = oldActualHarvestDate,
+                        [nameof(FarmingBatch.ActualHarvestWeightKg)] = oldActualHarvestWeightKg,
                     },
-                    newValue: new
+                    newValue: new Dictionary<string, object?>
                     {
-                        Status = FarmingBatchStatus.HARVESTED,
-                        batch.CurrentQuantity,
-                        batch.ActualHarvestDate,
-                        Force = force,
+                        [nameof(FarmingBatch.Name)] = batch.Name,
+                        [nameof(FarmingBatch.Status)] = FarmingBatchStatus.HARVESTED,
+                        [nameof(FarmingBatch.ActualHarvestDate)] = harvestDate,
+                        ["Force"] = force,
+                        [nameof(FarmingBatch.ActualHarvestWeightKg)] = actualHarvestWeightKg,
                     }
                 );
 
@@ -1112,6 +1200,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                await WriteDeleteAuditLogAsync(farmingBatch);
                 farmingBatchRepo.Delete(farmingBatch);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
@@ -1123,6 +1212,47 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi xóa lô nuôi với ID {Id}", id);
                 return Result.Failure("Lỗi khi xóa lô nuôi", ResultType.Unexpected);
             }
+        }
+        #endregion
+        #region Private Helper Methods for Audit Logging
+
+        private async Task WriteCreateAuditLogAsync(FarmingBatch batch, Guid speciesId)
+        {
+            await _auditLogService.WriteSemanticAsync(
+                action: AuditLogActions.Create,
+                entityType: AuditLogEntityType.FarmingBatch,
+                entityId: batch.Id.ToString(),
+                newValue: new Dictionary<string, object?>
+                {
+                    [nameof(FarmingBatch.Name)] = batch.Name,
+                    [nameof(FarmingBatch.FishTankId)] = batch.FishTankId,
+                    ["SpeciesId"] = speciesId,
+                    [nameof(FarmingBatch.StartDate)] = batch.StartDate,
+                    [nameof(FarmingBatch.InitialQuantity)] = batch.InitialQuantity,
+                    [nameof(FarmingBatch.UnitOfMeasure)] = batch.UnitOfMeasure,
+                }
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(FarmingBatch batch)
+        {
+            await _auditLogService.WriteSemanticAsync(
+                action: AuditLogActions.Delete,
+                entityType: AuditLogEntityType.FarmingBatch,
+                entityId: batch.Id.ToString(),
+                oldValue: new Dictionary<string, object?>
+                {
+                    [nameof(FarmingBatch.Name)] = batch.Name,
+                    [nameof(FarmingBatch.FishTankId)] = batch.FishTankId,
+                    [nameof(FarmingBatch.Status)] = batch.Status,
+                    [nameof(FarmingBatch.StartDate)] = batch.StartDate,
+                    [nameof(FarmingBatch.InitialQuantity)] = batch.InitialQuantity,
+                    [nameof(FarmingBatch.CurrentQuantity)] = batch.CurrentQuantity,
+                    [nameof(FarmingBatch.UnitOfMeasure)] = batch.UnitOfMeasure,
+                    [nameof(FarmingBatch.EstimatedHarvestDate)] = batch.EstimatedHarvestDate,
+                },
+                newValue: null
+            );
         }
         #endregion
     }

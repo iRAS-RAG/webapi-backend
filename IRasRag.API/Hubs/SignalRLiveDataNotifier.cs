@@ -39,7 +39,10 @@ namespace IRasRag.API.Hubs
             var clients = _hub.Clients.Group(group);
 
             await clients.SendAsync("ReceiveAlert", push);
-            await clients.SendAsync("AlertCreated", new AlertCreatedNotification(push.AlertId, push.TankId));
+            await clients.SendAsync(
+                "AlertCreated",
+                new AlertCreatedNotification(push.AlertId, push.TankId)
+            );
         }
     }
 }

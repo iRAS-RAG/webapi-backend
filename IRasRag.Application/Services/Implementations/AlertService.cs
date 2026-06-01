@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -17,12 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AlertService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public AlertService(IUnitOfWork unitOfWork, ILogger<AlertService> logger, IMapper mapper)
+        public AlertService(
+            IUnitOfWork unitOfWork,
+            ILogger<AlertService> logger,
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -170,6 +182,8 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.GetRepository<Alert>().AddAsync(alert);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(alert);
+
                 var alertDto = await _unitOfWork
                     .GetRepository<Alert>()
                     .FirstOrDefaultAsync(new AlertDtoByIdSpec(alert.Id));
@@ -267,9 +281,15 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                var oldAlertSnapshot = await BuildAlertAuditSnapshotAsync(alert);
+
                 _mapper.Map(updateDto, alert);
                 alertRepo.Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                var newAlertSnapshot = await BuildAlertAuditSnapshotAsync(alert);
+
+                await WriteUpdateAuditLogAsync(alert, oldAlertSnapshot, newAlertSnapshot);
 
                 return Result.Success("Cập nhật cảnh báo thành công");
             }
@@ -359,6 +379,8 @@ namespace IRasRag.Application.Services.Implementations
                 alertRepo.Delete(alert);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteDeleteAuditLogAsync(alert);
+
                 return Result.Success("Xóa cảnh báo thành công");
             }
             catch (Exception ex)
@@ -366,6 +388,108 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi xóa cảnh báo với Id: {AlertId}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa cảnh báo", ResultType.Unexpected);
             }
+        }
+        #endregion
+
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Alert,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.Alert,
+                    entityId
+                );
+            }
+        }
+
+        private async Task<object> BuildAlertAuditSnapshotAsync(Alert alert)
+        {
+            var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(alert.SensorId);
+            var speciesThreshold = await _unitOfWork
+                .GetRepository<SpeciesThreshold>()
+                .GetByIdAsync(alert.SpeciesThresholdId);
+            var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(alert.FishTankId);
+            var sensorType = await _unitOfWork.GetRepository<SensorType>().GetByIdAsync(alert.SensorTypeId);
+            FarmingBatch? farmingBatch = null;
+
+            if (alert.FarmingBatchId.HasValue)
+            {
+                farmingBatch = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .GetByIdAsync(alert.FarmingBatchId.Value);
+            }
+
+            return new
+            {
+                SensorName = sensor?.Name ?? "Không xác định",
+                FishTankName = fishTank?.Name ?? "Không xác định",
+                FarmingBatchName = farmingBatch?.Name,
+                SensorTypeName = sensorType?.Name ?? "Không xác định",
+                alert.TriggerValue,
+                alert.Status,
+                alert.RaisedAt,
+                alert.ResolvedAt,
+                ThresholdRange = speciesThreshold == null
+                    ? null
+                    : $"{speciesThreshold.MinValue} - {speciesThreshold.MaxValue} {sensorType?.UnitOfMeasure}".Trim(),
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(Alert alert)
+        {
+            var snapshot = await BuildAlertAuditSnapshotAsync(alert);
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                alert.Id.ToString(),
+                oldValue: null,
+                newValue: snapshot,
+                "create-alert"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(Alert alert, object oldAlertSnapshot, object newAlertSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                alert.Id.ToString(),
+                oldAlertSnapshot,
+                newAlertSnapshot,
+                "update-alert"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Alert alert)
+        {
+            var snapshot = await BuildAlertAuditSnapshotAsync(alert);
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                alert.Id.ToString(),
+                oldValue: snapshot,
+                newValue: null,
+                "delete-alert"
+            );
         }
         #endregion
     }

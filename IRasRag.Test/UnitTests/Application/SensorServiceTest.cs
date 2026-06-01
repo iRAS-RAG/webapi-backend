@@ -4,12 +4,14 @@ using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SensorSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -30,6 +32,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<MasterBoard>> _masterBoardRepoMock;
         private readonly Mock<IRepository<SensorLog>> _logRepoMock;
         private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
 
         private readonly SensorService _sut;
 
@@ -43,6 +47,8 @@ namespace IRasRag.Test.UnitTests.Application
             _sensorTypeRepoMock = new Mock<IRepository<SensorType>>();
             _masterBoardRepoMock = new Mock<IRepository<MasterBoard>>();
             _logRepoMock = new Mock<IRepository<SensorLog>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
 
             _unitOfWorkMock.Setup(x => x.GetRepository<Sensor>()).Returns(_sensorRepoMock.Object);
             _unitOfWorkMock
@@ -59,7 +65,9 @@ namespace IRasRag.Test.UnitTests.Application
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
                 _mapper,
-                _telemetryCacheMock.Object
+                _telemetryCacheMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
             );
         }
 

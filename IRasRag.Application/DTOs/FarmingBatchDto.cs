@@ -41,6 +41,16 @@ namespace IRasRag.Application.DTOs
         public string SpeciesName { get; set; } = string.Empty;
         public int CurrentQuantity { get; set; }
         public double TankVolume { get; set; }
+        public IReadOnlyList<ActiveFarmingBatchSafeThresholdDto> SafeThresholds { get; set; } = [];
+    }
+
+    public class ActiveFarmingBatchSafeThresholdDto
+    {
+        public Guid SensorTypeId { get; set; }
+        public string SensorTypeName { get; set; } = string.Empty;
+        public string UnitOfMeasure { get; set; } = string.Empty;
+        public double MinValue { get; set; }
+        public double MaxValue { get; set; }
     }
 
     // Create DTO
