@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
@@ -8,6 +10,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SensorSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -18,18 +21,24 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<SensorService> _logger;
         private readonly IMapper _mapper;
         private readonly ITelemetryCacheService _telemetryCache;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public SensorService(
             IUnitOfWork unitOfWork,
             ILogger<SensorService> logger,
             IMapper mapper,
-            ITelemetryCacheService telemetryCache
+            ITelemetryCacheService telemetryCache,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _telemetryCache = telemetryCache;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -226,6 +235,8 @@ namespace IRasRag.Application.Services.Implementations
                 var sensorDto = await sensorRepository.FirstOrDefaultAsync(
                     new SensorDtoByIdSpec(sensor.Id)
                 );
+                if (sensorDto != null)
+                    await WriteCreateAuditLogAsync(sensorDto);
                 _logger.LogInformation("Tạo cảm biến thành công: {Id}", sensor.Id);
 
                 return Result<SensorDto>.Success(sensorDto!, "Tạo cảm biến thành công");
@@ -261,6 +272,10 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSensorDto = await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .FirstOrDefaultAsync(new SensorDtoByIdSpec(id));
+
                 sensor.Name = string.IsNullOrWhiteSpace(updateDto.Name)
                     ? sensor.Name
                     : updateDto.Name.Trim();
@@ -293,11 +308,11 @@ namespace IRasRag.Application.Services.Implementations
                 if (updateDto.SensorTypeId.HasValue)
                 {
                     var sensorTypeRepository = _unitOfWork.GetRepository<SensorType>();
-                    var sensorType = await sensorTypeRepository.AnyAsync(st =>
-                        st.Id == updateDto.SensorTypeId.Value
+                    var sensorType = await sensorTypeRepository.GetByIdAsync(
+                        updateDto.SensorTypeId.Value
                     );
 
-                    if (!sensorType)
+                    if (sensorType == null)
                     {
                         _logger.LogWarning(
                             "Không tìm thấy loại cảm biến với Id: {SensorTypeId}",
@@ -343,6 +358,13 @@ namespace IRasRag.Application.Services.Implementations
                 )
                     _telemetryCache.InvalidateSensors(updateDto.MasterBoardId.Value);
 
+                var updatedSensorDto = await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .FirstOrDefaultAsync(new SensorDtoByIdSpec(id));
+
+                if (oldSensorDto != null && updatedSensorDto != null)
+                    await WriteUpdateAuditLogAsync(oldSensorDto, updatedSensorDto);
+
                 _logger.LogInformation("Cập nhật cảm biến thành công: {Id}", id);
 
                 return Result.Success("Cập nhật cảm biến thành công");
@@ -373,6 +395,10 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
                 }
+
+                var oldSensorDto = await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .FirstOrDefaultAsync(new SensorDtoByIdSpec(id));
 
                 // Check if Sensor has related SensorLogs
                 var hasSensorLogs = await sensorRepository.AnyAsync(s =>
@@ -409,6 +435,9 @@ namespace IRasRag.Application.Services.Implementations
                 sensorRepository.Delete(sensor);
                 await _unitOfWork.SaveChangesAsync();
                 _telemetryCache.InvalidateSensors(sensor.MasterBoardId);
+
+                if (oldSensorDto != null)
+                    await WriteDeleteAuditLogAsync(oldSensorDto);
 
                 _logger.LogInformation("Xóa cảm biến thành công: {Id}", id);
                 return Result.Success("Xóa cảm biến thành công");
@@ -614,6 +643,97 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Sensor,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.Sensor,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(SensorDto sensorDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                sensorDto.Id.ToString(),
+                null,
+                new
+                {
+                    sensorDto.Name,
+                    sensorDto.PinCode,
+                    sensorDto.SensorTypeName,
+                    sensorDto.MasterBoardName,
+                },
+                "create-sensor"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(SensorDto oldSensorDto, SensorDto newSensorDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newSensorDto.Id.ToString(),
+                new
+                {
+                    oldSensorDto.Name,
+                    oldSensorDto.PinCode,
+                    oldSensorDto.SensorTypeName,
+                    oldSensorDto.MasterBoardName,
+                },
+                new
+                {
+                    newSensorDto.Name,
+                    newSensorDto.PinCode,
+                    newSensorDto.SensorTypeName,
+                    newSensorDto.MasterBoardName,
+                },
+                "update-sensor"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(SensorDto sensorDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                sensorDto.Id.ToString(),
+                new
+                {
+                    sensorDto.Name,
+                    sensorDto.PinCode,
+                    sensorDto.SensorTypeName,
+                    sensorDto.MasterBoardName,
+                },
+                null,
+                "delete-sensor"
+            );
+        }
         #endregion
     }
 }

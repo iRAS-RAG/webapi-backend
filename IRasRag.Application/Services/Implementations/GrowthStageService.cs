@@ -1,8 +1,10 @@
-﻿using AutoMapper;
+using AutoMapper;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.GrowthStageSpecifications;
@@ -16,17 +18,25 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<GrowthStageService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService? _auditLogService;
+        private readonly ICurrentUserAccessor? _currentUserAccessor;
 
         public GrowthStageService(
             IUnitOfWork unitOfWork,
             ILogger<GrowthStageService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IAuditLogService? auditLogService = null,
+            ICurrentUserAccessor? currentUserAccessor = null
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
+
+
 
         public async Task<PaginatedResult<GrowthStageDto>> GetGrowthStagesBySpeciesIdAsync(
             Guid speciesId,
@@ -137,6 +147,9 @@ namespace IRasRag.Application.Services.Implementations
                 await _unitOfWork.SaveChangesAsync();
 
                 var dto = _mapper.Map<GrowthStageDto>(newGrowthStage);
+                // Audit: creation
+                await WriteCreateAuditLogAsync(newGrowthStage);
+
                 return Result<GrowthStageDto>.Success(dto, "Tạo giai đoạn sinh trưởng thành công.");
             }
             catch (Exception ex)
@@ -164,7 +177,13 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 _unitOfWork.GetRepository<GrowthStage>().Delete(growthStage);
+                // capture old value for audit
+                var oldValue = await BuildAuditSnapshotAsync(growthStage);
+
                 await _unitOfWork.SaveChangesAsync();
+
+                // Audit: delete
+                await WriteDeleteAuditLogAsync(growthStage.Id, oldValue);
 
                 return Result.Success("Xóa giai đoạn sinh trưởng thành công.");
             }
@@ -248,7 +267,7 @@ namespace IRasRag.Application.Services.Implementations
                 var species = await _unitOfWork
                     .GetRepository<Species>()
                     .GetByIdAsync(growthStage.SpeciesId);
-                dto.SpeciesName = species?.Name;
+                dto.SpeciesName = species?.Name ?? string.Empty;
 
                 return Result<GrowthStageDto>.Success(dto, "Lấy giai đoạn sinh trưởng thành công.");
             }
@@ -279,6 +298,9 @@ namespace IRasRag.Application.Services.Implementations
                         "Giai đoạn sinh trưởng không tồn tại.",
                         ResultType.NotFound
                     );
+
+                // snapshot old value for audit
+                var oldValue = await BuildAuditSnapshotAsync(growthStage);
 
                 if (!string.IsNullOrWhiteSpace(nameToUpdate))
                 {
@@ -320,6 +342,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
 
+                // Audit: update
+                await WriteUpdateAuditLogAsync(growthStage, oldValue);
+
                 return Result.Success("Cập nhật giai đoạn sinh trưởng thành công.");
             }
             catch (Exception ex)
@@ -331,5 +356,94 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                if (_auditLogService == null)
+                {
+                    _logger.LogDebug(
+                        "AuditLogService not configured, skipping audit write for {Operation}",
+                        operation
+                    );
+                    return;
+                }
+
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.GrowthStage,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.GrowthStage,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(GrowthStage growthStage)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                growthStage.Id.ToString(),
+                oldValue: null,
+                newValue: await BuildAuditSnapshotAsync(growthStage),
+                "create-growth-stage"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(GrowthStage growthStage, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                growthStage.Id.ToString(),
+                oldSnapshot,
+                newValue: await BuildAuditSnapshotAsync(growthStage),
+                "update-growth-stage"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-growth-stage"
+            );
+        }
+
+        private async Task<object> BuildAuditSnapshotAsync(GrowthStage growthStage)
+        {
+            var species = await _unitOfWork
+                .GetRepository<Species>()
+                .GetByIdAsync(growthStage.SpeciesId);
+
+            return new
+            {
+                growthStage.Name,
+                growthStage.Description,
+                SpeciesName = species?.Name ?? "Unknown",
+            };
+        }
+        #endregion
     }
 }

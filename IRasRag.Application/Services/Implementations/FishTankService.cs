@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
@@ -20,17 +22,23 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IRecommendationCalculator _recommendationCalculator;
         private readonly ILogger<FishTankService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public FishTankService(
             IUnitOfWork unitOfWork,
             ILogger<FishTankService> logger,
             IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor,
             IRecommendationCalculator? recommendationCalculator = null
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
             _recommendationCalculator =
                 recommendationCalculator
                 ?? new RecommendationCalculator(
@@ -152,12 +160,27 @@ namespace IRasRag.Application.Services.Implementations
                     Height = createDto.Height,
                     Radius = createDto.Radius,
                     FarmId = createDto.FarmId,
-                    TopicCode = createDto.TopicCode?.Trim(),
+                    TopicCode = createDto.TopicCode?.Trim() ?? string.Empty,
                     CameraUrl = createDto.CameraUrl.Trim(),
                 };
 
                 await _unitOfWork.GetRepository<FishTank>().AddAsync(newFishTank);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Tạo snapshot mới cho audit log
+                var newSnapshot = new
+                {
+                    newFishTank.Name,
+                    newFishTank.Height,
+                    newFishTank.Radius,
+                    FarmName = farm?.Name,
+                    newFishTank.CameraUrl,
+                    newFishTank.TopicCode,
+                };
+                await WriteAuditLogAsync(AuditLogActions.Create, newFishTank.Id.ToString(), null, newSnapshot, "create-fish-tank");
+                
+
+                var farmName = farm?.Name ?? "Unknown";
 
                 var resultDto = new FishTankDto
                 {
@@ -166,8 +189,8 @@ namespace IRasRag.Application.Services.Implementations
                     Height = newFishTank.Height,
                     Radius = newFishTank.Radius,
                     FarmId = newFishTank.FarmId,
-                    FarmName = farm.Name,
-                    TopicCode = newFishTank.TopicCode,
+                    FarmName = farmName,
+                    TopicCode = newFishTank.TopicCode ?? string.Empty,
                     CameraUrl = newFishTank.CameraUrl,
                 };
 
@@ -179,7 +202,6 @@ namespace IRasRag.Application.Services.Implementations
                 return Result<FishTankDto>.Failure("Lỗi khi tạo bể cá.", ResultType.Unexpected);
             }
         }
-
         public async Task<Result> DeleteFishTankAsync(Guid id)
         {
             try
@@ -193,6 +215,19 @@ namespace IRasRag.Application.Services.Implementations
 
                 _unitOfWork.GetRepository<FishTank>().Delete(fishTank);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Tạo snapshot cho audit log
+                var farm = await _unitOfWork.GetRepository<Farm>().GetByIdAsync(fishTank.FarmId);
+                var oldSnapshot = new
+                {
+                    fishTank.Name,
+                    fishTank.Height,
+                    fishTank.Radius,
+                    FarmName = farm?.Name ?? "Unknown",
+                    fishTank.TopicCode,
+                    fishTank.CameraUrl,
+                };
+                await WriteAuditLogAsync(AuditLogActions.Delete, fishTank.Id.ToString(), oldSnapshot, null, "delete-fish-tank");
 
                 return Result.Success("Xóa bể cá thành công.");
             }
@@ -293,10 +328,22 @@ namespace IRasRag.Application.Services.Implementations
             try
             {
                 var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(id);
-
                 if (fishTank == null)
                     return Result<FishTankDto>.Failure("Bể cá không tồn tại.", ResultType.NotFound);
 
+                // tao snapshot cũ cho audit log
+                var originalFarm = await _unitOfWork
+                    .GetRepository<Farm>()
+                    .GetByIdAsync(fishTank.FarmId);
+                var oldSnapshot = new
+                {
+                    fishTank.Name,
+                    fishTank.Height,
+                    fishTank.Radius,
+                    FarmName = originalFarm?.Name ?? "Unknown",
+                    fishTank.TopicCode,
+                    fishTank.CameraUrl,
+                };                
                 if (!string.IsNullOrWhiteSpace(dto.Name))
                     fishTank.Name = dto.Name.Trim();
 
@@ -319,7 +366,6 @@ namespace IRasRag.Application.Services.Implementations
                         );
                     fishTank.Radius = dto.Radius.Value;
                 }
-
                 string? farmName = null;
                 if (dto.FarmId.HasValue)
                 {
@@ -351,6 +397,18 @@ namespace IRasRag.Application.Services.Implementations
                         .GetByIdAsync(fishTank.FarmId);
                     farmName = farm?.Name ?? "Unknown";
                 }
+                // Tạo snapshot cho audit log
+                var newSnapshot = new
+                {
+                    FarmName = farmName,
+                    fishTank.Name,
+                    fishTank.Height,
+                    fishTank.Radius,
+                    fishTank.CameraUrl,
+                    fishTank.TopicCode,
+                };
+
+                await WriteAuditLogAsync(AuditLogActions.Update, fishTank.Id.ToString(), oldSnapshot, newSnapshot, "update-fish-tank");
 
                 var resultDto = new FishTankDto
                 {
@@ -375,7 +433,6 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
-
         #region Tank Status & Latest Data
         public async Task<Result<List<TankSensorLatestDataDto>>> GetTankLatestDataAsync(Guid tankId)
         {
@@ -475,6 +532,39 @@ namespace IRasRag.Application.Services.Implementations
                 return Result<TankStatusDto>.Failure(
                     "Đã xảy ra lỗi khi lấy trạng thái bể",
                     ResultType.Unexpected
+                );
+            }
+        }
+        #endregion
+        #region Audit Log Helpers
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.FishTank,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.FishTank,
+                    entityId
                 );
             }
         }

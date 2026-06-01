@@ -57,10 +57,14 @@ namespace IRasRag.API.Controllers
         {
             try
             {
-                var csvBytes = await _auditLogService.ExportCsvAsync(request);
+                var xlsxBytes = await _auditLogService.ExportExcelAsync(request);
                 var fileName =
-                    $"audit-logs-{DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)}.csv";
-                return File(csvBytes, "text/csv; charset=utf-8", fileName);
+                    $"audit-logs-{DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)}.xlsx";
+                return File(
+                    xlsxBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName
+                );
             }
             catch (Exception ex)
             {

@@ -17,6 +17,6 @@ namespace IRasRag.Application.Services.Interfaces
         );
 
         Task<PaginatedResult<AuditLogDto>> GetPagedAsync(AuditLogQueryRequest request);
-        Task<byte[]> ExportCsvAsync(AuditLogQueryRequest request);
+        Task<byte[]> ExportExcelAsync(AuditLogQueryRequest request);
     }
 }

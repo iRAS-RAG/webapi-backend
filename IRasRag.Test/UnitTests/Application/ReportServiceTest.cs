@@ -1,11 +1,13 @@
 using System.Linq.Expressions;
 using Ardalis.Specification;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -17,6 +19,8 @@ namespace IRasRag.Test.UnitTests.Application
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
         private readonly Mock<ILogger<ReportService>> _loggerMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
 
         // Repositories
         private readonly Mock<IRepository<Alert>> _alertRepoMock;
@@ -26,6 +30,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<Recommendation>> _recommendationRepoMock;
         private readonly Mock<IRepository<UserFarm>> _userFarmRepoMock;
         private readonly Mock<IRepository<FishTank>> _fishTankRepoMock;
+        private readonly Mock<IRepository<User>> _userRepoMock;
 
         private readonly ReportService _sut;
 
@@ -33,6 +38,8 @@ namespace IRasRag.Test.UnitTests.Application
         {
             _unitOfWorkMock = new Mock<IUnitOfWork>();
             _loggerMock = new Mock<ILogger<ReportService>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
 
             _alertRepoMock = new Mock<IRepository<Alert>>();
             _batchRepoMock = new Mock<IRepository<FarmingBatch>>();
@@ -41,6 +48,7 @@ namespace IRasRag.Test.UnitTests.Application
             _recommendationRepoMock = new Mock<IRepository<Recommendation>>();
             _userFarmRepoMock = new Mock<IRepository<UserFarm>>();
             _fishTankRepoMock = new Mock<IRepository<FishTank>>();
+            _userRepoMock = new Mock<IRepository<User>>();
 
             _unitOfWorkMock.Setup(u => u.GetRepository<Alert>()).Returns(_alertRepoMock.Object);
             _unitOfWorkMock
@@ -61,8 +69,24 @@ namespace IRasRag.Test.UnitTests.Application
             _unitOfWorkMock
                 .Setup(u => u.GetRepository<FishTank>())
                 .Returns(_fishTankRepoMock.Object);
+            _unitOfWorkMock.Setup(u => u.GetRepository<User>()).Returns(_userRepoMock.Object);
 
-            _sut = new ReportService(_unitOfWorkMock.Object, _loggerMock.Object);
+            _currentUserAccessorMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+            _userRepoMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<Expression<Func<User, bool>>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(new User { Id = Guid.NewGuid(), Email = "report@test.com" });
+
+            _sut = new ReportService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         // ─── Factory helpers ────────────────────────────────────────────────────

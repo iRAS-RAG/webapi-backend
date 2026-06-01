@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
@@ -9,6 +11,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.ControlDeviceSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -20,13 +23,15 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IMqttPublishService _mqttPublishService;
         private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public ControlDeviceService(
             IUnitOfWork unitOfWork,
             ILogger<ControlDeviceService> logger,
             IMapper mapper,
             IMqttPublishService mqttPublishService,
-            IAuditLogService auditLogService
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
@@ -34,6 +39,7 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _mqttPublishService = mqttPublishService;
             _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -249,6 +255,12 @@ namespace IRasRag.Application.Services.Implementations
                 await controlDeviceRepository.AddAsync(controlDevice);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(
+                    controlDevice,
+                    masterBoard.Name,
+                    controlDeviceType.Name
+                );
+
                 var controlDeviceDto = _mapper.Map<ControlDeviceDto>(controlDevice);
                 controlDeviceDto.MasterBoardName = masterBoard.Name;
                 controlDeviceDto.ControlDeviceTypeName = controlDeviceType.Name;
@@ -296,6 +308,25 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
                 }
+
+                var originalMasterBoard = await _unitOfWork
+                    .GetRepository<MasterBoard>()
+                    .GetByIdAsync(controlDevice.MasterBoardId);
+                var originalControlDeviceType = await _unitOfWork
+                    .GetRepository<ControlDeviceType>()
+                    .GetByIdAsync(controlDevice.ControlDeviceTypeId);
+
+                var oldSnapshot = new
+                {
+                    controlDevice.Name,
+                    controlDevice.PinCode,
+                    State = controlDevice.State ? "Bật" : "Tắt",
+                    MasterBoardName = originalMasterBoard?.Name ?? "Không xác định",
+                    ControlDeviceTypeName = originalControlDeviceType?.Name ?? "Không xác định",
+                };
+
+                var updatedMasterBoardName = originalMasterBoard?.Name ?? "Không xác định";
+                var updatedControlDeviceTypeName = originalControlDeviceType?.Name ?? "Không xác định";
 
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -388,6 +419,7 @@ namespace IRasRag.Application.Services.Implementations
                     }
 
                     controlDevice.MasterBoardId = updateDto.MasterBoardId.Value;
+                    updatedMasterBoardName = masterBoard.Name;
                 }
 
                 // Validate and update ControlDeviceTypeId if provided
@@ -412,10 +444,24 @@ namespace IRasRag.Application.Services.Implementations
                     }
 
                     controlDevice.ControlDeviceTypeId = updateDto.ControlDeviceTypeId.Value;
+                    updatedControlDeviceTypeName = controlDeviceType.Name;
                 }
 
                 controlDeviceRepository.Update(controlDevice);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(
+                    controlDevice,
+                    oldSnapshot,
+                    new
+                    {
+                        controlDevice.Name,
+                        controlDevice.PinCode,
+                        State = controlDevice.State ? "Bật" : "Tắt",
+                        MasterBoardName = updatedMasterBoardName,
+                        ControlDeviceTypeName = updatedControlDeviceTypeName,
+                    }
+                );
 
                 _logger.LogInformation("Cập nhật thiết bị điều khiển thành công: {Id}", id);
 
@@ -451,6 +497,22 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var masterBoard = await _unitOfWork
+                    .GetRepository<MasterBoard>()
+                    .GetByIdAsync(controlDevice.MasterBoardId);
+                var controlDeviceType = await _unitOfWork
+                    .GetRepository<ControlDeviceType>()
+                    .GetByIdAsync(controlDevice.ControlDeviceTypeId);
+
+                var oldSnapshot = new
+                {
+                    controlDevice.Name,
+                    controlDevice.PinCode,
+                    State = controlDevice.State ? "Bật" : "Tắt",
+                    MasterBoardName = masterBoard?.Name ?? "Không xác định",
+                    ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
+                };
+
                 // Check if ControlDevice has related JobControlMappings
                 var hasJobControlMappings = await controlDeviceRepository.AnyAsync(cd =>
                     cd.Id == id && cd.JobControlMappings.Any()
@@ -471,6 +533,8 @@ namespace IRasRag.Application.Services.Implementations
                 controlDeviceRepository.Delete(controlDevice);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteDeleteAuditLogAsync(controlDevice, oldSnapshot);
+
                 _logger.LogInformation("Xóa thiết bị điều khiển thành công: {Id}", id);
                 return Result.Success("Xóa thiết bị điều khiển thành công");
             }
@@ -484,6 +548,8 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        
 
         #region Toggle Method
         public async Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(
@@ -524,6 +590,10 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var controlDeviceType = await _unitOfWork
+                    .GetRepository<ControlDeviceType>()
+                    .GetByIdAsync(controlDevice.ControlDeviceTypeId);
+
                 var command = new DeviceCommand
                 {
                     Pin = controlDevice.PinCode,
@@ -537,16 +607,24 @@ namespace IRasRag.Application.Services.Implementations
                 controlDeviceRepository.Update(controlDevice);
 
                 await _auditLogService.WriteSemanticAsync(
-                    action: "TOGGLE_DEVICE",
-                    entityType: nameof(ControlDevice),
+                    action: AuditLogActions.ToggleDevice,
+                    entityType: AuditLogEntityType.ControlDevice,
                     entityId: controlDevice.Id.ToString(),
-                    oldValue: new { State = previousState },
+                    oldValue: new
+                    {
+                        State = previousState ? "Bật" : "Tắt",
+                        controlDevice.Name,
+                        controlDevice.PinCode,
+                        MasterBoardName = masterBoard.Name,
+                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
+                    },
                     newValue: new
                     {
-                        State = toggleDto.State,
+                        State = toggleDto.State ? "Bật" : "Tắt",
+                        controlDevice.Name,
                         controlDevice.PinCode,
-                        controlDevice.MasterBoardId,
-                        controlDevice.ControlDeviceTypeId,
+                        MasterBoardName = masterBoard.Name,
+                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
                     }
                 );
 
@@ -586,6 +664,87 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.ControlDevice,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.ControlDevice,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(
+            ControlDevice controlDevice,
+            string masterBoardName,
+            string controlDeviceTypeName
+        )
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                controlDevice.Id.ToString(),
+                oldValue: null,
+                newValue: new
+                {
+                    controlDevice.Name,
+                    controlDevice.PinCode,
+                    State = controlDevice.State ? "Bật" : "Tắt",
+                    MasterBoardName = masterBoardName,
+                    ControlDeviceTypeName = controlDeviceTypeName,
+                },
+                "create-control-device"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(
+            ControlDevice controlDevice,
+            object oldSnapshot,
+            object newSnapshot
+        )
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                controlDevice.Id.ToString(),
+                oldSnapshot,
+                newSnapshot,
+                "update-control-device"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(ControlDevice controlDevice, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                controlDevice.Id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-control-device"
+            );
         }
         #endregion
     }

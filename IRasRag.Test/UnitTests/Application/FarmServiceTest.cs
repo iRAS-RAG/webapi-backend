@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
@@ -9,6 +10,7 @@ using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -24,6 +26,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<ILogger<FarmService>> _loggerMock;
         private readonly IMapper _mapper;
         private readonly Mock<IRepository<Farm>> _repositoryMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
         private readonly FarmService _sut;
 
         public FarmServiceTest()
@@ -32,9 +36,18 @@ namespace IRasRag.Test.UnitTests.Application
             _loggerMock = new Mock<ILogger<FarmService>>();
             _mapper = AutoMapperTestHelper.GetMapper(new FarmProfile());
             _repositoryMock = new Mock<IRepository<Farm>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
+            _currentUserAccessorMock.Setup(x => x.GetUserId()).Returns((Guid?)null);
             _unitOfWorkMock.Setup(x => x.GetRepository<Farm>()).Returns(_repositoryMock.Object);
 
-            _sut = new FarmService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _sut = new FarmService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         #region CreateFarmAsync Tests

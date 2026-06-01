@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.JobSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,12 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<JobService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public JobService(IUnitOfWork unitOfWork, ILogger<JobService> logger, IMapper mapper)
+        public JobService(
+            IUnitOfWork unitOfWork,
+            ILogger<JobService> logger,
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -274,6 +287,8 @@ namespace IRasRag.Application.Services.Implementations
                 // 10. Commit transaction - lưu Job + Mappings trong một lần duy nhất
                 await _unitOfWork.CommitTransactionAsync();
 
+                await WriteCreateAuditLogAsync(job);
+
                 // 11. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
                 var jobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(job.Id));
 
@@ -311,6 +326,8 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
                 }
+
+                var oldSnapshot = await BuildJobAuditSnapshotAsync(job);
 
                 // 2. Áp dụng các giá trị cập nhật vào đối tượng in-memory để validate
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -495,6 +512,8 @@ namespace IRasRag.Application.Services.Implementations
                 // 12. Commit transaction - lưu Job + Mappings trong một lần duy nhất
                 await _unitOfWork.CommitTransactionAsync();
 
+                await WriteUpdateAuditLogAsync(job, oldSnapshot);
+
                 // 13. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
                 var updatedJobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(id));
 
@@ -532,6 +551,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = await BuildJobAuditSnapshotAsync(job);
+
                 // Xóa tất cả JobControlMappings liên quan trước khi xóa job.
                 var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
                 var relatedMappings = (
@@ -546,6 +567,8 @@ namespace IRasRag.Application.Services.Implementations
                 jobRepository.Delete(job);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteDeleteAuditLogAsync(id, oldSnapshot);
+
                 _logger.LogInformation(
                     "Successfully deleted job: {Id} (with {Count} mapping(s))",
                     id,
@@ -558,6 +581,125 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Error deleting job with Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa công việc", ResultType.Unexpected);
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Job,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.Job,
+                    entityId
+                );
+            }
+        }
+
+        private async Task<object> BuildJobAuditSnapshotAsync(Job job)
+        {
+            var jobType = await _unitOfWork.GetRepository<JobType>().GetByIdAsync(job.JobTypeId);
+
+            string? sensorName = null;
+            if (job.SensorId.HasValue)
+            {
+                var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(job.SensorId.Value);
+                sensorName = sensor?.Name;
+            }
+
+            var mappings = (await _unitOfWork
+                .GetRepository<JobControlMapping>()
+                .FindAllAsync(m => m.JobId == job.Id)).ToList();
+
+            var mappingSnapshots = new List<object>();
+            foreach (var mapping in mappings)
+            {
+                var controlDevice = await _unitOfWork
+                    .GetRepository<ControlDevice>()
+                    .GetByIdAsync(mapping.ControlDeviceId);
+
+                mappingSnapshots.Add(
+                    new
+                    {
+                        ControlDeviceName = controlDevice?.Name ?? "Unknown",
+                        mapping.TargetState,
+                        mapping.TriggerCondition,
+                    }
+                );
+            }
+
+            return new
+            {
+                job.Name,
+                job.Description,
+                JobTypeName = jobType?.Name ?? "Unknown",
+                SensorName = sensorName,
+                job.MinValue,
+                job.MaxValue,
+                job.DefaultState,
+                job.IsActive,
+                job.StartTime,
+                job.EndTime,
+                job.RepeatIntervalMinutes,
+                job.ExecutionDays,
+                Mappings = mappingSnapshots,
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(Job job)
+        {
+            var newSnapshot = await BuildJobAuditSnapshotAsync(job);
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                job.Id.ToString(),
+                null,
+                newSnapshot,
+                "create-job"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(Job job, object oldSnapshot)
+        {
+            var newSnapshot = await BuildJobAuditSnapshotAsync(job);
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                job.Id.ToString(),
+                oldSnapshot,
+                newSnapshot,
+                "update-job"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-job"
+            );
         }
         #endregion
     }

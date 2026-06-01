@@ -1,4 +1,6 @@
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
@@ -14,11 +16,20 @@ namespace IRasRag.Application.Services.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ReportService> _logger;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger)
+        public ReportService(
+            IUnitOfWork unitOfWork,
+            ILogger<ReportService> logger,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Dashboard Summary
@@ -141,6 +152,32 @@ namespace IRasRag.Application.Services.Implementations
                     totalAlerts,
                     activeBatchCount,
                     averageSurvivalRate
+                );
+
+                await WriteReportAuditLogAsync(
+                    action: AuditLogActions.ViewDashboardReport,
+                    reportType: nameof(DashboardSummaryDto),
+                    entityId: request.UserId.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        ReportType = "Báo cáo tổng quan",
+                        request.Period,
+                        PeriodLabel = periodLabel,
+                        TotalAlerts = totalAlerts,
+                        OpenAlerts = openAlerts,
+                        AcknowledgedAlerts = acknowledgedAlerts,
+                        ResolvedAlerts = resolvedAlerts,
+                        DismissedAlerts = dismissedAlerts,
+                        ActiveBatches = activeBatchCount,
+                        HarvestedBatches = harvestedBatches,
+                        TotalBatches = batchesInPeriod,
+                        AverageSurvivalRate = averageSurvivalRate,
+                        TotalInitialQuantity = totalInitialQuantity,
+                        TotalCurrentQuantity = totalCurrentQuantity,
+                        TotalMortality = totalMortality,
+                    },
+                    operation: "view-dashboard-report"
                 );
 
                 return Result<DashboardSummaryDto>.Success(
@@ -299,6 +336,32 @@ namespace IRasRag.Application.Services.Implementations
                     recommendations.Count
                 );
 
+                await WriteReportAuditLogAsync(
+                    action: AuditLogActions.ViewWeeklyReport,
+                    reportType: nameof(WeeklyReportDto),
+                    entityId: request.UserId.ToString(),
+                    oldValue: null,
+                    newValue: new
+                    {
+                        ReportType = "Báo cáo tuần",
+                        request.Period,
+                        PeriodLabel = weekLabel,
+                        TotalAlerts = totalAlerts,
+                        OpenAlerts = openAlerts,
+                        AcknowledgedAlerts = acknowledgedAlerts,
+                        ResolvedAlerts = resolvedAlerts,
+                        DismissedAlerts = dismissedAlerts,
+                        TopIssuesBySensorType = topIssues,
+                        TotalCorrectiveActions = correctiveActions.Count,
+                        TotalRecommendations = recommendations.Count,
+                        TotalMortality = totalMortality,
+                        MortalityIncidents = mortalityList.Count,
+                        ActiveBatches = activeBatches,
+                        AverageSurvivalRate = avgSurvivalRate,
+                    },
+                    operation: "view-weekly-report"
+                );
+
                 return Result<WeeklyReportDto>.Success(report, "Lấy báo cáo tuần thành công.");
             }
             catch (Exception ex)
@@ -411,6 +474,40 @@ namespace IRasRag.Application.Services.Implementations
             var label = $"Tuần {weekNumber}/{monday.Year} ({monday:dd/MM} – {sunday:dd/MM})";
 
             return (from, to, label);
+        }
+        #endregion
+        #region Audit Logging
+        private async Task WriteReportAuditLogAsync(
+            string action,
+            string reportType,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Report,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    reportType,
+                    entityId
+                );
+            }
         }
         #endregion
     }
