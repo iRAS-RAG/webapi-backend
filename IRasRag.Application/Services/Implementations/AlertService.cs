@@ -323,9 +323,18 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
+                var oldStatus = alert.Status;
                 alert.Status = newStatus;
                 _unitOfWork.GetRepository<Alert>().Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = newStatus.ToVietnamese() },
+                    "update-alert-status"
+                );
 
                 return Result.Success("Cập nhật trạng thái cảnh báo thành công");
             }
