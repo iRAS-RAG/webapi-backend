@@ -300,13 +300,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
 
                 // snapshot old value for audit
-                var oldValue = new
-                {
-                    growthStage.Id,
-                    growthStage.Name,
-                    growthStage.Description,
-                    growthStage.SpeciesId,
-                };
+                var oldValue = await BuildAuditSnapshotAsync(growthStage);
 
                 if (!string.IsNullOrWhiteSpace(nameToUpdate))
                 {
@@ -384,7 +378,7 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _auditLogService.WriteSemanticAsync(
                     action,
-                    nameof(GrowthStage),
+                    AuditLogEntityType.GrowthStage,
                     entityId,
                     oldValue,
                     newValue
@@ -398,7 +392,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(GrowthStage),
+                    AuditLogEntityType.GrowthStage,
                     entityId
                 );
             }

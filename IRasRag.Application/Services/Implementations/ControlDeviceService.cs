@@ -320,13 +320,13 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     controlDevice.Name,
                     controlDevice.PinCode,
-                    controlDevice.State,
-                    MasterBoardName = originalMasterBoard?.Name ?? "Unknown",
-                    ControlDeviceTypeName = originalControlDeviceType?.Name ?? "Unknown",
+                    State = controlDevice.State ? "Bật" : "Tắt",
+                    MasterBoardName = originalMasterBoard?.Name ?? "Không xác định",
+                    ControlDeviceTypeName = originalControlDeviceType?.Name ?? "Không xác định",
                 };
 
-                var updatedMasterBoardName = originalMasterBoard?.Name ?? "Unknown";
-                var updatedControlDeviceTypeName = originalControlDeviceType?.Name ?? "Unknown";
+                var updatedMasterBoardName = originalMasterBoard?.Name ?? "Không xác định";
+                var updatedControlDeviceTypeName = originalControlDeviceType?.Name ?? "Không xác định";
 
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -457,7 +457,7 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         controlDevice.Name,
                         controlDevice.PinCode,
-                        controlDevice.State,
+                        State = controlDevice.State ? "Bật" : "Tắt",
                         MasterBoardName = updatedMasterBoardName,
                         ControlDeviceTypeName = updatedControlDeviceTypeName,
                     }
@@ -508,9 +508,9 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     controlDevice.Name,
                     controlDevice.PinCode,
-                    controlDevice.State,
-                    MasterBoardName = masterBoard?.Name ?? "Unknown",
-                    ControlDeviceTypeName = controlDeviceType?.Name ?? "Unknown",
+                    State = controlDevice.State ? "Bật" : "Tắt",
+                    MasterBoardName = masterBoard?.Name ?? "Không xác định",
+                    ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
                 };
 
                 // Check if ControlDevice has related JobControlMappings
@@ -608,23 +608,23 @@ namespace IRasRag.Application.Services.Implementations
 
                 await _auditLogService.WriteSemanticAsync(
                     action: AuditLogActions.ToggleDevice,
-                    entityType: nameof(ControlDevice),
+                    entityType: AuditLogEntityType.ControlDevice,
                     entityId: controlDevice.Id.ToString(),
                     oldValue: new
                     {
-                        State = previousState,
+                        State = previousState ? "Bật" : "Tắt",
                         controlDevice.Name,
                         controlDevice.PinCode,
                         MasterBoardName = masterBoard.Name,
-                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Unknown",
+                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
                     },
                     newValue: new
                     {
-                        State = toggleDto.State,
+                        State = toggleDto.State ? "Bật" : "Tắt",
                         controlDevice.Name,
                         controlDevice.PinCode,
                         MasterBoardName = masterBoard.Name,
-                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Unknown",
+                        ControlDeviceTypeName = controlDeviceType?.Name ?? "Không xác định",
                     }
                 );
 
@@ -679,7 +679,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _auditLogService.WriteSemanticAsync(
                     action,
-                    nameof(ControlDevice),
+                    AuditLogEntityType.ControlDevice,
                     entityId,
                     oldValue,
                     newValue
@@ -693,7 +693,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(ControlDevice),
+                    AuditLogEntityType.ControlDevice,
                     entityId
                 );
             }
@@ -713,7 +713,7 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     controlDevice.Name,
                     controlDevice.PinCode,
-                    controlDevice.State,
+                    State = controlDevice.State ? "Bật" : "Tắt",
                     MasterBoardName = masterBoardName,
                     ControlDeviceTypeName = controlDeviceTypeName,
                 },

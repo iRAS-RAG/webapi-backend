@@ -102,7 +102,7 @@ namespace IRasRag.Application.Services.Implementations
                 await WriteAuditLogAsync(
                     user,
                     action: AuditLogActions.Login,
-                    entityType: "Auth",
+                    entityType: AuditLogEntityType.Auth,
                     entityId: user.Id.ToString(),
                     oldValue: null,
                     newValue: null
@@ -166,7 +166,7 @@ namespace IRasRag.Application.Services.Implementations
                     await WriteAuditLogAsync(
                         user,
                         action: AuditLogActions.RequestPasswordReset,
-                        entityType: "Auth",
+                        entityType: AuditLogEntityType.Auth,
                         entityId: user.Id.ToString(),
                         oldValue: null,
                         newValue: null
@@ -251,7 +251,7 @@ namespace IRasRag.Application.Services.Implementations
                 await WriteAuditLogAsync(
                     user,
                     action: AuditLogActions.ResetPassword,
-                    entityType: "Auth",
+                    entityType: AuditLogEntityType.Auth,
                     entityId: user.Id.ToString(),
                     oldValue: null,
                     newValue: new { PasswordChanged = "Thay đổi mật khẩu" }
@@ -342,7 +342,7 @@ namespace IRasRag.Application.Services.Implementations
                 await WriteAuditLogAsync(
                     user,
                     action: AuditLogActions.RefreshToken,
-                    entityType: "Auth",
+                    entityType: AuditLogEntityType.Auth,
                     entityId: user.Id.ToString(),
                     oldValue: null,
                     newValue: null
@@ -395,7 +395,7 @@ namespace IRasRag.Application.Services.Implementations
                     await WriteAuditLogAsync(
                         user,
                         action: AuditLogActions.Logout,
-                        entityType: "Auth",
+                        entityType: AuditLogEntityType.Auth,
                         entityId: user.Id.ToString(),
                         oldValue: null,
                         newValue: null

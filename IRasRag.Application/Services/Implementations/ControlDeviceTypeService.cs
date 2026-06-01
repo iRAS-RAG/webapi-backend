@@ -374,7 +374,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _auditLogService.WriteSemanticAsync(
                     action,
-                    nameof(ControlDeviceType),
+                    AuditLogEntityType.ControlDeviceType,
                     entityId,
                     oldValue,
                     newValue
@@ -388,7 +388,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(ControlDeviceType),
+                    AuditLogEntityType.ControlDeviceType,
                     entityId
                 );
             }

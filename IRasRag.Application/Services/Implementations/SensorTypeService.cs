@@ -427,7 +427,7 @@ namespace IRasRag.Application.Services.Implementations
                     AuditLogHelper.Create(
                         actor,
                         action,
-                        nameof(SensorType),
+                        AuditLogEntityType.SensorType,
                         entityId,
                         oldValue,
                         newValue
@@ -442,7 +442,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(SensorType),
+                    AuditLogEntityType.SensorType,
                     entityId
                 );
             }

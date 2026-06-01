@@ -394,7 +394,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _auditLogService.WriteSemanticAsync(
                     action,
-                    nameof(Alert),
+                    AuditLogEntityType.Alert,
                     entityId,
                     oldValue,
                     newValue
@@ -408,7 +408,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(Alert),
+                    AuditLogEntityType.Alert,
                     entityId
                 );
             }
@@ -431,37 +431,19 @@ namespace IRasRag.Application.Services.Implementations
                     .GetByIdAsync(alert.FarmingBatchId.Value);
             }
 
-            Species? species = null;
-            GrowthStage? growthStage = null;
-            SensorType? thresholdSensorType = null;
-
-            if (speciesThreshold != null)
-            {
-                species = await _unitOfWork.GetRepository<Species>().GetByIdAsync(speciesThreshold.SpeciesId);
-                growthStage = await _unitOfWork
-                    .GetRepository<GrowthStage>()
-                    .GetByIdAsync(speciesThreshold.GrowthStageId);
-                thresholdSensorType = await _unitOfWork
-                    .GetRepository<SensorType>()
-                    .GetByIdAsync(speciesThreshold.SensorTypeId);
-            }
-
             return new
             {
-                SensorName = sensor?.Name ?? "Unknown",
-                SpeciesName = species?.Name ?? "Unknown",
-                GrowthStageName = growthStage?.Name ?? "Unknown",
-                ThresholdSensorTypeName = thresholdSensorType?.Name ?? "Unknown",
+                SensorName = sensor?.Name ?? "Không xác định",
+                FishTankName = fishTank?.Name ?? "Không xác định",
                 FarmingBatchName = farmingBatch?.Name,
-                FishTankName = fishTank?.Name ?? "Unknown",
-                SensorTypeName = sensorType?.Name ?? "Unknown",
+                SensorTypeName = sensorType?.Name ?? "Không xác định",
                 alert.TriggerValue,
+                alert.Status,
                 alert.RaisedAt,
                 alert.ResolvedAt,
-                alert.Status,
-                UnitOfMeasure = sensorType?.UnitOfMeasure ?? string.Empty,
-                MinThreshold = speciesThreshold?.MinValue ?? 0,
-                MaxThreshold = speciesThreshold?.MaxValue ?? 0,
+                ThresholdRange = speciesThreshold == null
+                    ? null
+                    : $"{speciesThreshold.MinValue} - {speciesThreshold.MaxValue} {sensorType?.UnitOfMeasure}".Trim(),
             };
         }
 

@@ -155,15 +155,15 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 await WriteReportAuditLogAsync(
-                    action: "VIEW_DASHBOARD_REPORT",
+                    action: AuditLogActions.ViewDashboardReport,
                     reportType: nameof(DashboardSummaryDto),
                     entityId: request.UserId.ToString(),
                     oldValue: null,
                     newValue: new
                     {
+                        ReportType = "Báo cáo tổng quan",
                         request.Period,
                         PeriodLabel = periodLabel,
-                        request.UserId,
                         TotalAlerts = totalAlerts,
                         OpenAlerts = openAlerts,
                         AcknowledgedAlerts = acknowledgedAlerts,
@@ -337,17 +337,15 @@ namespace IRasRag.Application.Services.Implementations
                 );
 
                 await WriteReportAuditLogAsync(
-                    action: "VIEW_WEEKLY_REPORT",
+                    action: AuditLogActions.ViewWeeklyReport,
                     reportType: nameof(WeeklyReportDto),
                     entityId: request.UserId.ToString(),
                     oldValue: null,
                     newValue: new
                     {
+                        ReportType = "Báo cáo tuần",
                         request.Period,
                         PeriodLabel = weekLabel,
-                        request.UserId,
-                        request.FarmId,
-                        request.BatchId,
                         TotalAlerts = totalAlerts,
                         OpenAlerts = openAlerts,
                         AcknowledgedAlerts = acknowledgedAlerts,
@@ -492,7 +490,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _auditLogService.WriteSemanticAsync(
                     action,
-                    reportType,
+                    AuditLogEntityType.Report,
                     entityId,
                     oldValue,
                     newValue

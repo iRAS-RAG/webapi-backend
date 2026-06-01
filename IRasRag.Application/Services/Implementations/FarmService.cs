@@ -284,7 +284,7 @@ namespace IRasRag.Application.Services.Implementations
         {
             await _auditLogService.WriteSemanticAsync(
                     AuditLogActions.Create,
-                    nameof(Farm),
+                    AuditLogEntityType.Farm,
                     farm.Id.ToString(),
                     oldValue: null,
                 newValue: new
@@ -303,7 +303,7 @@ namespace IRasRag.Application.Services.Implementations
         {
             await _auditLogService.WriteSemanticAsync(
                     AuditLogActions.Update,
-                    nameof(Farm),
+                    AuditLogEntityType.Farm,
                     farm.Id.ToString(),
                     oldValue: oldSnapshot,
                 newValue: new
@@ -322,7 +322,7 @@ namespace IRasRag.Application.Services.Implementations
         {
             await _auditLogService.WriteSemanticAsync(
                 AuditLogActions.Delete,
-                nameof(Farm),
+                AuditLogEntityType.Farm,
                 farmId.ToString(),
                 oldValue: oldSnapshot,
                 newValue: null

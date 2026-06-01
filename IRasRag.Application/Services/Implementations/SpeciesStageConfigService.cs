@@ -584,7 +584,7 @@ namespace IRasRag.Application.Services.Implementations
                     AuditLogHelper.Create(
                         actor,
                         action,
-                        nameof(SpeciesStageConfig),
+                        AuditLogEntityType.SpeciesStageConfig,
                         entityId,
                         oldValue,
                         newValue
@@ -599,7 +599,7 @@ namespace IRasRag.Application.Services.Implementations
                     ex,
                     "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
                     operation,
-                    nameof(SpeciesStageConfig),
+                    AuditLogEntityType.SpeciesStageConfig,
                     entityId
                 );
             }
