@@ -169,7 +169,7 @@ namespace IRasRag.Application.Services.Implementations
                         entityType: "Auth",
                         entityId: user.Id.ToString(),
                         oldValue: null,
-                        newValue: new { ResetCodeIssued = true }
+                        newValue: null
                     );
 
                     await _unitOfWork.SaveChangesAsync();
@@ -344,8 +344,8 @@ namespace IRasRag.Application.Services.Implementations
                     action: AuditLogActions.RefreshToken,
                     entityType: "Auth",
                     entityId: user.Id.ToString(),
-                    oldValue: new { PreviousTokenRevoked = true },
-                    newValue: new { NewRefreshTokenIssued = true, AccessTokenIssued = true }
+                    oldValue: null,
+                    newValue: null
                 );
 
                 await _unitOfWork.SaveChangesAsync();
