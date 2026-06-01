@@ -276,28 +276,8 @@ namespace IRasRag.Application.Common.Utils
             );
         }
 
-        private bool IsInRecoveryZone(double value, SpeciesThreshold threshold)
-        {
-            var span = threshold.MaxValue - threshold.MinValue;
-            var hysteresisAmount = span * _settings.HysteresisPercentage;
-
-            var lowerBound = threshold.MinValue + hysteresisAmount;
-            var upperBound = threshold.MaxValue - hysteresisAmount;
-
-            // Binary/discrete sensors (e.g. water level: 0=not reached, 1=reached) must be
-            // configured with MinValue == MaxValue (e.g. min=1, max=1). This collapses span to 0,
-            // so hysteresisAmount is 0 and the recovery zone is exactly {1}.
-            // Any other range (e.g. min=0.5, max=1) causes upperBound to shrink below 1,
-            // making the normal reading appear "near the threshold edge" and the alert never resolves.
-            if (lowerBound > upperBound)
-            {
-                var midpoint = (threshold.MinValue + threshold.MaxValue) / 2.0;
-                lowerBound = midpoint;
-                upperBound = midpoint;
-            }
-
-            return value >= lowerBound && value <= upperBound;
-        }
+        private static bool IsInRecoveryZone(double value, SpeciesThreshold threshold) =>
+            value >= threshold.MinValue && value <= threshold.MaxValue;
 
         private static void ValidateSettings(AlertSettings settings)
         {
@@ -317,13 +297,6 @@ namespace IRasRag.Application.Common.Utils
                 );
             }
 
-            if (settings.HysteresisPercentage < 0 || settings.HysteresisPercentage >= 0.5)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(settings.HysteresisPercentage),
-                    "HysteresisPercentage must be in range [0, 0.5)."
-                );
-            }
         }
     }
 }
