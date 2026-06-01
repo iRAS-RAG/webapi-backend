@@ -189,18 +189,24 @@ namespace IRasRag.Application.Services.Implementations
                     correctiveAction.Notes = correctiveAction.Notes.Trim();
                 }
 
+                await _unitOfWork.BeginTransactionAsync();
+
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
                 await correctiveActionRepository.AddAsync(correctiveAction);
-                await _unitOfWork.SaveChangesAsync();
 
                 if (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
                 {
                     alert.Status = AlertStatus.RESOLVED;
                     alert.ResolvedAt = DateTime.UtcNow;
                     alertRepository.Update(alert);
-                    await _unitOfWork.SaveChangesAsync();
-                    _alertStateCache.Invalidate(alert.FishTankId, alert.SensorTypeId, alert.FarmingBatchId);
+                }
 
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                if (alert.Status == AlertStatus.RESOLVED)
+                {
+                    _alertStateCache.Invalidate(alert.FishTankId, alert.SensorTypeId, alert.FarmingBatchId);
                     _logger.LogInformation(
                         "Cảnh báo {AlertId} được đánh dấu đã giải quyết do hành động khắc phục",
                         alert.Id
@@ -220,6 +226,7 @@ namespace IRasRag.Application.Services.Implementations
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Lỗi khi tạo hành động khắc phục");
                 return Result<CorrectiveActionDto>.Failure(
                     "Đã xảy ra lỗi khi tạo hành động khắc phục",
