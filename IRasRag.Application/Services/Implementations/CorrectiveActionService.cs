@@ -1,4 +1,5 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
@@ -19,18 +20,21 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ILogger<CorrectiveActionService> _logger;
         private readonly IMapper _mapper;
         private readonly IAlertStateCacheService _alertStateCache;
+        private readonly IAuditLogService _auditLogService;
 
         public CorrectiveActionService(
             IUnitOfWork unitOfWork,
             ILogger<CorrectiveActionService> logger,
             IMapper mapper,
-            IAlertStateCacheService alertStateCache
+            IAlertStateCacheService alertStateCache,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _alertStateCache = alertStateCache;
+            _auditLogService = auditLogService;
         }
 
         #region Get Methods
@@ -215,6 +219,7 @@ namespace IRasRag.Application.Services.Implementations
                         "Cảnh báo {AlertId} được đánh dấu đã giải quyết do hành động khắc phục",
                         alert.Id
                     );
+                    await WriteAlertResolvedAuditLogAsync(alert, correctiveAction.Id);
                 }
 
                 var correctiveActionDto = _mapper.Map<CorrectiveActionDto>(correctiveAction);
@@ -324,6 +329,32 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure(
                     "Đã xảy ra lỗi khi cập nhật hành động khắc phục",
                     ResultType.Unexpected
+                );
+            }
+        }
+        #endregion
+
+        #region Private Helpers
+        private async Task WriteAlertResolvedAuditLogAsync(Alert alert, Guid correctiveActionId)
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    AuditLogActions.Update,
+                    AuditLogEntityType.Alert,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = AlertStatus.OPEN },
+                    newValue: new { Status = AlertStatus.RESOLVED, alert.ResolvedAt, ResolvedByCorrectiveActionId = correctiveActionId }
+                );
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write audit log for alert {AlertId} resolved by corrective action {CorrectiveActionId}",
+                    alert.Id,
+                    correctiveActionId
                 );
             }
         }

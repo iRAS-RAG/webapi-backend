@@ -1,3 +1,4 @@
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
@@ -5,6 +6,7 @@ using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Models.Telemetry;
 using IRasRag.Application.Common.Settings;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,7 @@ namespace IRasRag.Application.Common.Utils
         private readonly ILogger<AlertStateEvaluator> _logger;
         private readonly ILiveDataNotifier _liveDataNotifier;
         private readonly IBackgroundJobService _backgroundJobs;
+        private readonly IAuditLogService _auditLogService;
 
         public AlertStateEvaluator(
             IAlertStateCacheService alertStateCache,
@@ -27,7 +30,8 @@ namespace IRasRag.Application.Common.Utils
             IUnitOfWork unitOfWork,
             ILogger<AlertStateEvaluator> logger,
             ILiveDataNotifier liveDataNotifier,
-            IBackgroundJobService backgroundJobs
+            IBackgroundJobService backgroundJobs,
+            IAuditLogService auditLogService
         )
         {
             _alertStateCache =
@@ -39,6 +43,8 @@ namespace IRasRag.Application.Common.Utils
                 liveDataNotifier ?? throw new ArgumentNullException(nameof(liveDataNotifier));
             _backgroundJobs =
                 backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
+            _auditLogService =
+                auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
 
             ValidateSettings(_settings);
         }
@@ -177,10 +183,18 @@ namespace IRasRag.Application.Common.Utils
                 && (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
             )
             {
+                var oldStatus = alert.Status;
                 alert.ResolvedAt = DateTime.UtcNow;
                 alert.Status = AlertStatus.RESOLVED;
                 _unitOfWork.GetRepository<Alert>().Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus },
+                    newValue: new { Status = AlertStatus.RESOLVED, alert.ResolvedAt }
+                );
             }
 
             _alertStateCache.Invalidate(tankId, sensorTypeId, batchId);
@@ -274,6 +288,45 @@ namespace IRasRag.Application.Common.Utils
                     MaxValue: threshold.MaxValue
                 )
             );
+
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                newAlert.Id.ToString(),
+                oldValue: null,
+                newValue: new
+                {
+                    FishTankName = tankName,
+                    SensorTypeName = sensorTypeName,
+                    newAlert.TriggerValue,
+                    newAlert.Status,
+                    newAlert.RaisedAt,
+                    ThresholdRange = $"{threshold.MinValue} - {threshold.MaxValue}",
+                }
+            );
+        }
+
+        private async Task WriteAuditLogAsync(string action, string entityId, object? oldValue, object? newValue)
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Alert,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Action} audit entry for Alert {EntityId}",
+                    action,
+                    entityId
+                );
+            }
         }
 
         private static bool IsInRecoveryZone(double value, SpeciesThreshold threshold) =>
