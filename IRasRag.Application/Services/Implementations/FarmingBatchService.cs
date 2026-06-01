@@ -447,7 +447,7 @@ namespace IRasRag.Application.Services.Implementations
         }
 
         public async Task<
-            Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>
+            Result<ActiveFarmingBatchResponseDto>
         > GetActiveFarmingBatchByFishTankIdAsync(Guid fishTankId)
         {
             try
@@ -455,18 +455,52 @@ namespace IRasRag.Application.Services.Implementations
                 var tank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(fishTankId);
                 if (tank == null)
                 {
-                    return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                    return Result<ActiveFarmingBatchResponseDto>.Failure(
                         "Bể cá không tồn tại",
                         ResultType.NotFound
                     );
                 }
 
-                var list = await _unitOfWork
+                var activeBatch = await _unitOfWork
                     .GetRepository<FarmingBatch>()
-                    .ListAsync(new ActiveFarmingBatchDtoListSpec(fishTankId));
-                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Success(
-                    list,
-                    "Lấy danh sách lô nuôi đang hoạt động thành công"
+                    .FirstOrDefaultAsync(new ActiveFarmingBatchByFishTankIdSpec(fishTankId));
+
+                if (activeBatch == null)
+                {
+                    return Result<ActiveFarmingBatchResponseDto>.Failure(
+                        "Không tìm thấy lô nuôi đang hoạt động.",
+                        ResultType.NotFound
+                    );
+                }
+
+                var stage = activeBatch.CurrentStageConfig;
+                IReadOnlyList<ActiveFarmingBatchSafeThresholdDto> thresholds =
+                    new List<ActiveFarmingBatchSafeThresholdDto>();
+
+                if (stage != null)
+                {
+                    var thresholdRepo = _unitOfWork.GetRepository<SpeciesThreshold>();
+                    thresholds = await thresholdRepo.ListAsync(
+                        new ActiveFarmingBatchSafeThresholdsSpec(
+                            stage.SpeciesId,
+                            stage.GrowthStageId
+                        )
+                    );
+                }
+
+                var response = new ActiveFarmingBatchResponseDto
+                {
+                    FarmingBatchName = activeBatch.Name,
+                    FishTankName = activeBatch.FishTank?.Name ?? tank.Name,
+                    SpeciesName = stage?.Species?.Name ?? string.Empty,
+                    CurrentQuantity = activeBatch.CurrentQuantity,
+                    TankVolume = Math.Round(Math.PI * tank.Radius * tank.Radius * tank.Height, 2),
+                    SafeThresholds = thresholds,
+                };
+
+                return Result<ActiveFarmingBatchResponseDto>.Success(
+                    response,
+                    "Lấy lô nuôi đang hoạt động thành công"
                 );
             }
             catch (Exception ex)
@@ -476,7 +510,7 @@ namespace IRasRag.Application.Services.Implementations
                     "Lỗi khi lấy danh sách lô nuôi đang hoạt động cho bể cá với ID {FishTankId}",
                     fishTankId
                 );
-                return Result<IReadOnlyList<ActiveFarmingBatchResponseDto>>.Failure(
+                return Result<ActiveFarmingBatchResponseDto>.Failure(
                     "Lỗi khi lấy danh sách lô nuôi đang hoạt động",
                     ResultType.Unexpected
                 );

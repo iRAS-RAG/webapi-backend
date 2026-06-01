@@ -199,7 +199,11 @@ namespace IRasRag.Application.Services.Implementations
                     alert.ResolvedAt = DateTime.UtcNow;
                     alertRepository.Update(alert);
                     await _unitOfWork.SaveChangesAsync();
-                    _alertStateCache.Invalidate(alert.FishTankId, alert.SensorTypeId, alert.FarmingBatchId);
+                    _alertStateCache.Invalidate(
+                        alert.FishTankId,
+                        alert.SensorTypeId,
+                        alert.FarmingBatchId
+                    );
 
                     _logger.LogInformation(
                         "Cảnh báo {AlertId} được đánh dấu đã giải quyết do hành động khắc phục",

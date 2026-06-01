@@ -27,7 +27,6 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IBackgroundJobService _backgroundJobService;
         private const int MIN_EXTRACTED_TEXT_LENGTH = 500; // Minimum length of extracted text to consider it valid
 
-
         public DocumentService(
             IUnitOfWork unitOfWork,
             ILogger<DocumentService> logger,
@@ -190,7 +189,8 @@ namespace IRasRag.Application.Services.Implementations
             {
                 buffer.Position = 0;
                 var extractedText = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
-                var trimmedLength = extractedText?.Replace(" ", "").Replace("\n", "").Replace("\r", "").Length ?? 0;
+                var trimmedLength =
+                    extractedText?.Replace(" ", "").Replace("\n", "").Replace("\r", "").Length ?? 0;
                 if (trimmedLength < MIN_EXTRACTED_TEXT_LENGTH)
                 {
                     _logger.LogWarning(

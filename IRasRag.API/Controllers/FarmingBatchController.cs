@@ -67,7 +67,12 @@ namespace IRasRag.API.Controllers
                 var result = await _farmingBatchService.GetActiveFarmingBatchByFishTankIdAsync(
                     fishTankId
                 );
-                return Ok(result);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
             }
             catch (Exception ex)
             {
