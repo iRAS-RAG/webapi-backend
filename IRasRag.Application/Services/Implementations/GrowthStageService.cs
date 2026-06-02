@@ -106,12 +106,6 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
-                if (string.IsNullOrWhiteSpace(createDto.Description))
-                    return Result<GrowthStageDto>.Failure(
-                        "Mô tả giai đoạn sinh trưởng không được để trống.",
-                        ResultType.BadRequest
-                    );
-
                 // ensure species exists
                 var speciesExists = await _unitOfWork
                     .GetRepository<Species>()
