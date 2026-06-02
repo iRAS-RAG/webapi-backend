@@ -534,6 +534,79 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                // Load the batch entity with stages to compute expected values
+                var batch = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchWithStagesByIdSpec(id));
+
+                if (batch != null && batch.BatchStages.Count != 0)
+                {
+                    var orderedStages = batch.BatchStages.OrderBy(bs => bs.Sequence).ToList();
+                    var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                    double cumulativeSurvival = 1.0;
+                    var baseQuantity = batch.CurrentQuantity;
+
+                    // Build a lookup from existing DTO stages by sequence for fast matching
+                    var dtoLookup = farmingBatchDto.PlannedStages.ToDictionary(s => s.Sequence);
+
+                    foreach (var bs in orderedStages)
+                    {
+                        var ssc = bs.SpeciesStageConfig;
+                        if (
+                            ssc == null
+                            || ssc.GrowthStage == null
+                            || ssc.GrowthStageId == Guid.Empty
+                        )
+                        {
+                            var reloaded = await sscRepo.FirstOrDefaultAsync(
+                                new IRasRag.Application.Specifications.SpeciesStageConfigSpecifications.SpeciesStageConfigWithIncludesByIdSpec(
+                                    bs.SpeciesStageConfigId
+                                )
+                            );
+                            if (reloaded != null)
+                            {
+                                bs.SpeciesStageConfig = reloaded;
+                                ssc = reloaded;
+                            }
+                        }
+
+                        var srRaw = ssc?.SurvivalRate ?? 1.0;
+                        var sr = srRaw;
+                        if (sr < 0)
+                            sr = 0;
+                        if (sr > 1)
+                            sr = 1;
+                        cumulativeSurvival *= sr;
+
+                        var expectedCount = 0;
+                        if (baseQuantity > 0 && cumulativeSurvival > 0)
+                        {
+                            expectedCount = (int)Math.Floor(baseQuantity * cumulativeSurvival);
+                        }
+
+                        var expectedWeightPerFish = ssc?.ExpectedWeightKgPerFish ?? 0.0;
+                        var expectedTotalWeight = Math.Round(
+                            expectedCount * expectedWeightPerFish,
+                            3
+                        );
+
+                        var amountPer100 = ssc?.AmountPer100Fish ?? 0.0;
+                        var freq = ssc?.FrequencyPerDay ?? 0;
+                        var estimatedDailyFeed = Math.Round(
+                            (amountPer100 / 100.0) * expectedCount * freq,
+                            3
+                        );
+
+                        // Update the matching PlannedStageDto in the DTO
+                        if (dtoLookup.TryGetValue(bs.Sequence, out var stageDto))
+                        {
+                            stageDto.ExpectedCount = expectedCount;
+                            stageDto.ExpectedTotalWeightKg = expectedTotalWeight;
+                            stageDto.EstimatedDailyFeedKg = estimatedDailyFeed;
+                        }
+                    }
+                }
+
                 return Result<FarmingBatchDto>.Success(
                     farmingBatchDto,
                     "Lấy thông tin lô nuôi thành công"
