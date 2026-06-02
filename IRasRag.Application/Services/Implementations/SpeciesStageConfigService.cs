@@ -120,8 +120,14 @@ namespace IRasRag.Application.Services.Implementations
                 var maxSeq =
                     existingForSpecies.Count == 0 ? 0 : existingForSpecies.Max(s => s.Sequence);
 
+                // If no sequence provided, auto-assign to end
+                if (!dto.Sequence.HasValue)
+                {
+                    dto.Sequence = maxSeq + 1;
+                }
+
                 // normalize requested sequence to be at least 1 and at most maxSeq+1
-                var requestedSeq = dto.Sequence < 1 ? 1 : dto.Sequence;
+                var requestedSeq = dto.Sequence.Value < 1 ? 1 : dto.Sequence.Value;
                 if (requestedSeq > maxSeq + 1)
                     requestedSeq = maxSeq + 1;
 
@@ -169,6 +175,83 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Error creating SpeciesStageConfig");
                 return Result<SpeciesStageConfigDto>.Failure(
                     "Lỗi khi tạo cấu hình giai đoạn sinh trưởng của cá.",
+                    ResultType.Unexpected
+                );
+            }
+        }
+
+        public async Task<Result<IReadOnlyList<SpeciesStageConfigDto>>> ReorderSpeciesStageConfigs(
+            ReorderSpeciesStageConfigsDto dto
+        )
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var allForSpecies = await repo.FindAllAsync(s => s.SpeciesId == dto.SpeciesId);
+
+                // Validate all provided IDs exist for this species
+                var idSet = allForSpecies.Select(s => s.Id).ToHashSet();
+                var invalidIds = dto.OrderedIds.Where(id => !idSet.Contains(id)).ToList();
+                if (invalidIds.Count != 0)
+                {
+                    return Result<IReadOnlyList<SpeciesStageConfigDto>>.Failure(
+                        "Một hoặc nhiều ID cấu hình giai đoạn không hợp lệ.",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Ensure all existing configs are included in the order
+                var missingIds = idSet.Where(id => !dto.OrderedIds.Contains(id)).ToList();
+                if (missingIds.Count != 0)
+                {
+                    return Result<IReadOnlyList<SpeciesStageConfigDto>>.Failure(
+                        "Phải bao gồm tất cả cấu hình giai đoạn hiện có trong danh sách sắp xếp.",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Use two-phase approach to assign new sequences
+                const int OFFSET = 1000000;
+                var byId = allForSpecies.ToDictionary(s => s.Id);
+
+                // Phase 1: set all to temporary large values
+                foreach (var s in allForSpecies)
+                    s.Sequence = s.Sequence + OFFSET;
+                await _unitOfWork.SaveChangesAsync();
+
+                // Phase 2: assign new contiguous sequence based on position in orderedIds
+                for (int i = 0; i < dto.OrderedIds.Count; i++)
+                {
+                    byId[dto.OrderedIds[i]].Sequence = i + 1;
+                }
+                await _unitOfWork.SaveChangesAsync();
+
+                // Invalidate cache for all changed configs
+                foreach (var s in allForSpecies)
+                    _telemetryCache.InvalidateStageConfig(s.Id);
+
+                // Recompute estimated yields for all batches of this species
+                await _farmingBatchService.RecomputeEstimatedYieldBySpeciesAsync(dto.SpeciesId);
+
+                // Return the updated ordered list
+                var dtos = new List<SpeciesStageConfigDto>();
+                foreach (var id in dto.OrderedIds)
+                {
+                    var dto_ = await repo.FirstOrDefaultAsync(new SpeciesStageConfigByIdSpec(id));
+                    if (dto_ != null)
+                        dtos.Add(dto_);
+                }
+
+                return Result<IReadOnlyList<SpeciesStageConfigDto>>.Success(
+                    dtos,
+                    "Sắp xếp cấu hình giai đoạn thành công."
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reordering SpeciesStageConfigs");
+                return Result<IReadOnlyList<SpeciesStageConfigDto>>.Failure(
+                    "Lỗi khi sắp xếp cấu hình giai đoạn.",
                     ResultType.Unexpected
                 );
             }

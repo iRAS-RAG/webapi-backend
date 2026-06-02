@@ -34,8 +34,7 @@ namespace IRasRag.Application.DTOs
         [Required]
         public Guid GrowthStageId { get; set; }
 
-        [Required]
-        public int Sequence { get; set; }
+        public int? Sequence { get; set; }
 
         [Required]
         [MinLength(1, ErrorMessage = "Phải chọn ít nhất một kiểu thức ăn.")]
@@ -100,6 +99,16 @@ namespace IRasRag.Application.DTOs
 
         [Range(0.0, 1.0, ErrorMessage = "SurvivalRate must be between 0 and 1.")]
         public double? SurvivalRate { get; set; }
+    }
+
+    public class ReorderSpeciesStageConfigsDto
+    {
+        [Required]
+        public Guid SpeciesId { get; set; }
+
+        [Required]
+        [MinLength(1, ErrorMessage = "Phải có ít nhất một cấu hình giai đoạn.")]
+        public List<Guid> OrderedIds { get; set; } = [];
     }
 
     // List Request DTO

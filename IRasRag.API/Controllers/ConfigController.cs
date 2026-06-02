@@ -505,6 +505,32 @@ namespace IRasRag.API.Controllers
         }
 
         [Authorize(Roles = "Supervisor")]
+        [HttpPut("species-stage-configs/reorder")]
+        public async Task<IActionResult> ReorderSpeciesStageConfigs(
+            [FromBody] ReorderSpeciesStageConfigsDto dto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _speciesStageConfigService.ReorderSpeciesStageConfigs(dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while reordering species stage configs");
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [Authorize(Roles = "Supervisor")]
         [HttpDelete("species-stage-configs/{id}")]
         public async Task<IActionResult> DeleteSpeciesStageConfig(Guid id)
         {

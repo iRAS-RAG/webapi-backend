@@ -18,6 +18,9 @@ namespace IRasRag.Application.Services.Interfaces
             CreateSpeciesStageConfigDto dto
         );
         public Task<Result> UpdateSpeciesStageConfig(Guid id, UpdateSpeciesStageConfigDto dto);
+        public Task<Result<IReadOnlyList<SpeciesStageConfigDto>>> ReorderSpeciesStageConfigs(
+            ReorderSpeciesStageConfigsDto dto
+        );
         public Task<Result> DeleteSpeciesStageConfig(Guid id);
     }
 }
