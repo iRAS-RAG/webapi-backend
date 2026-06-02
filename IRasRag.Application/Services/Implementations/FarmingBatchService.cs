@@ -666,35 +666,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Guard: no ACTIVE batch in the same tank
-                var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
-                var hasActiveBatch = await farmingBatchRepo.AnyAsync(fb =>
-                    fb.FishTankId == createDto.FishTankId && fb.Status == FarmingBatchStatus.ACTIVE
-                );
-                if (hasActiveBatch)
-                {
-                    return Result<FarmingBatchDto>.Failure(
-                        "Bể cá đang có lô nuôi hoạt động, không thể tạo lô nuôi mới",
-                        ResultType.Conflict
-                    );
-                }
-
-                // Guard: no PAUSED batch in the same tank that blocks a new batch
-                var pausedBatch = await farmingBatchRepo.FirstOrDefaultAsync(fb =>
-                    fb.FishTankId == createDto.FishTankId && fb.Status == FarmingBatchStatus.PAUSED
-                );
-                if (pausedBatch != null)
-                {
-                    var pausedReason = pausedBatch.PausedReason;
-                    if (!pausedReason.HasValue || !pausedReason.Value.AllowsAddNewBatch())
-                    {
-                        return Result<FarmingBatchDto>.Failure(
-                            "Bể cá đang chứa cá từ lô nuôi đang tạm dừng, không thể tạo lô nuôi mới",
-                            ResultType.Conflict
-                        );
-                    }
-                }
-
                 // Validate Species exists
                 var speciesRepo = _unitOfWork.GetRepository<Species>();
                 var speciesExists = await speciesRepo.AnyAsync(s => s.Id == createDto.SpeciesId);
@@ -733,6 +704,50 @@ namespace IRasRag.Application.Services.Implementations
                 // Check tank capacity vs expected counts per stage using MaxStockingDensity
                 // Compute tank volume (assuming units are consistent, e.g., meters -> cubic meters)
                 var orderedStageConfigs = stageConfigs.OrderBy(s => s.Sequence).ToList();
+
+                // Guard: date-range overlap with existing ACTIVE/PAUSED batches in the same tank
+                var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
+                var newBatchStart = createDto.StartDate;
+                var newBatchEnd = createDto.StartDate;
+                foreach (var sc in orderedStageConfigs)
+                {
+                    newBatchEnd = newBatchEnd.AddDays(sc.ExpectedDurationDays!.Value);
+                }
+
+                var existingBatches = await farmingBatchRepo.FindAllAsync(fb =>
+                    fb.FishTankId == createDto.FishTankId
+                    && (
+                        fb.Status == FarmingBatchStatus.ACTIVE
+                        || fb.Status == FarmingBatchStatus.PAUSED
+                    )
+                );
+
+                foreach (var existing in existingBatches)
+                {
+                    // For ACTIVE batches without an estimated end, treat as ongoing
+                    var existingEnd =
+                        existing.EstimatedHarvestDate
+                        ?? (
+                            existing.Status == FarmingBatchStatus.ACTIVE
+                                ? DateTime.MaxValue
+                                : existing.StartDate
+                        );
+
+                    // Overlap: newStart <= existingEnd AND existing.StartDate <= newEnd
+                    if (newBatchStart <= existingEnd && existing.StartDate <= newBatchEnd)
+                    {
+                        var statusLabel =
+                            existing.Status == FarmingBatchStatus.ACTIVE
+                                ? "đang hoạt động"
+                                : "chưa bắt đầu";
+                        return Result<FarmingBatchDto>.Failure(
+                            $"Bể cá có lô nuôi {statusLabel} \"{existing.Name}\" ({existing.StartDate:dd/MM/yyyy} - {existingEnd:dd/MM/yyyy}) "
+                                + "trùng lịch với lô nuôi mới; vui lòng chọn khoảng thời gian khác.",
+                            ResultType.BadRequest
+                        );
+                    }
+                }
+
                 try
                 {
                     // First, try to get authoritative recommendation which is computed
@@ -842,6 +857,12 @@ namespace IRasRag.Application.Services.Implementations
                     .OrderBy(s => s.Sequence)
                     .First()
                     .Id;
+
+                // If start date is in the future, batch should be PAUSED instead of ACTIVE
+                if (createDto.StartDate > DateTime.UtcNow)
+                {
+                    farmingBatch.Status = FarmingBatchStatus.PAUSED;
+                }
 
                 // Build BatchStage entries from stageConfigs
                 var orderedStages = stageConfigs.OrderBy(s => s.Sequence).ToList();
@@ -1215,6 +1236,116 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogError(ex, "Lỗi khi thu hoạch lô nuôi với ID {Id}", id);
                 return Result.Failure("Lỗi khi thu hoạch lô nuôi", ResultType.Unexpected);
+            }
+        }
+        #endregion
+
+        #region Start Methods
+        public async Task<Result<FarmingBatchDto>> StartPausedBatchAsync(Guid id)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await repo.FirstOrDefaultAsync(new FarmingBatchWithStagesByIdSpec(id));
+
+                if (batch == null)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+                }
+
+                if (batch.Status != FarmingBatchStatus.PAUSED)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Chỉ có thể bắt đầu lô nuôi đang tạm dừng",
+                        ResultType.BadRequest
+                    );
+                }
+
+                var now = DateTime.UtcNow;
+                var originalStart = batch.StartDate;
+                var offset = now - originalStart;
+
+                // Update batch dates and status
+                batch.Status = FarmingBatchStatus.ACTIVE;
+                batch.PausedReason = null;
+                batch.StartDate = now;
+
+                if (batch.EstimatedHarvestDate.HasValue)
+                {
+                    batch.EstimatedHarvestDate = batch.EstimatedHarvestDate.Value.Add(offset);
+                }
+
+                // Shift stage dates by the offset and set first stage actual start
+                var orderedStages = batch.BatchStages?.OrderBy(s => s.Sequence).ToList() ?? [];
+                for (var i = 0; i < orderedStages.Count; i++)
+                {
+                    var stage = orderedStages[i];
+                    stage.EstimatedStartDate = stage.EstimatedStartDate.Add(offset);
+                    stage.EstimatedEndDate = stage.EstimatedEndDate.Add(offset);
+
+                    if (i == 0)
+                    {
+                        stage.ActualStartDate = now;
+                    }
+                }
+
+                // Detach navigation properties to avoid EF tracking conflicts
+                if (batch.BatchStages != null)
+                {
+                    foreach (var bs in batch.BatchStages)
+                    {
+                        bs.SpeciesStageConfig = null!;
+                        bs.FarmingBatch = null!;
+                    }
+                }
+
+                repo.Update(batch);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Recompute estimated yield with updated dates
+                await ComputeEstimatedYieldAsync(batch, persist: true);
+
+                await _auditLogService.WriteSemanticAsync(
+                    action: AuditLogActions.StartBatch,
+                    entityType: AuditLogEntityType.FarmingBatch,
+                    entityId: batch.Id.ToString(),
+                    oldValue: new Dictionary<string, object?>
+                    {
+                        [nameof(FarmingBatch.Status)] = FarmingBatchStatus.PAUSED,
+                        [nameof(FarmingBatch.StartDate)] = originalStart,
+                        [nameof(FarmingBatch.PausedReason)] = batch.PausedReason,
+                    },
+                    newValue: new Dictionary<string, object?>
+                    {
+                        [nameof(FarmingBatch.Status)] = FarmingBatchStatus.ACTIVE,
+                        [nameof(FarmingBatch.StartDate)] = now,
+                        ["DateOffsetDays"] = Math.Round(offset.TotalDays, 1),
+                    }
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+
+                _telemetryCache.InvalidateBatch(batch.FishTankId);
+
+                var farmingBatchDto = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(id));
+
+                return Result<FarmingBatchDto>.Success(
+                    farmingBatchDto!,
+                    "Bắt đầu lô nuôi thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bắt đầu lô nuôi với ID {Id}", id);
+                return Result<FarmingBatchDto>.Failure(
+                    "Lỗi khi bắt đầu lô nuôi",
+                    ResultType.Unexpected
+                );
             }
         }
         #endregion

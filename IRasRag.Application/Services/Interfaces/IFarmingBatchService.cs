@@ -28,6 +28,7 @@ namespace IRasRag.Application.Services.Interfaces
             double? actualHarvestWeightKg = null
         );
         Task<Result<IReadOnlyList<PlannedStageDto>>> GetPlannedStagesByBatchIdAsync(Guid batchId);
+        Task<Result<FarmingBatchDto>> StartPausedBatchAsync(Guid id);
         Task<Result> DeleteFarmingBatchAsync(Guid id);
     }
 }

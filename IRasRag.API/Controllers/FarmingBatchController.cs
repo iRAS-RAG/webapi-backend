@@ -223,6 +223,29 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpPost("{id}/start")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> StartPausedBatch(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.StartPausedBatchAsync(id);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bắt đầu lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi bắt đầu lô nuôi" });
+            }
+        }
+
         [HttpPost("{id}/mortality")]
         [Authorize(Roles = "Operator")]
         public async Task<IActionResult> LogMortality(Guid id, [FromBody] LogMortalityRequest body)
