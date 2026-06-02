@@ -31,8 +31,8 @@ namespace IRasRag.Application.DI
             services.AddScoped<ICorrectiveActionService, CorrectiveActionService>();
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<
-                IRasRag.Application.Common.Interfaces.IRecommendationCalculator,
-                IRasRag.Application.Common.Services.RecommendationCalculator
+                Common.Interfaces.IRecommendationCalculator,
+                Common.Services.RecommendationCalculator
             >();
             services.AddScoped<IFarmingBatchService, FarmingBatchService>();
             services.AddScoped<IFarmService, FarmService>();

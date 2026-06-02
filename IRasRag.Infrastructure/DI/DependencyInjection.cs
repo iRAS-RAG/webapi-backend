@@ -49,7 +49,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddConnectionString(config, env);
             services.AddSettings(config);
             services.AddAdvisoryHttpClients(config);
-            services.AddSingleton<IMqttClient>(_ => new MqttClientFactory().CreateMqttClient());
+            services.AddSingleton(_ => new MqttClientFactory().CreateMqttClient());
             services.AddSingleton<IMqttPublishService, MqttPublishService>();
             services.AddHostedService<MqttBackgroundService>();
         }

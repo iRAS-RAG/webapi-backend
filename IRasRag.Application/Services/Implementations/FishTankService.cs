@@ -47,7 +47,7 @@ namespace IRasRag.Application.Services.Implementations
                         .Extensions
                         .Logging
                         .Abstractions
-                        .NullLogger<IRasRag.Application.Common.Services.RecommendationCalculator>
+                        .NullLogger<RecommendationCalculator>
                         .Instance
                 );
         }
@@ -111,7 +111,7 @@ namespace IRasRag.Application.Services.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy mức đề nghị cho bể {TankId}", tankId);
-                return Result<List<IRasRag.Application.DTOs.RecommendedInitialDto>>.Failure(
+                return Result<List<RecommendedInitialDto>>.Failure(
                     "Lỗi khi lấy mức đề nghị",
                     ResultType.Unexpected
                 );

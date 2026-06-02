@@ -20,8 +20,8 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<FeedingLogService> _logger;
         private readonly IMapper _mapper;
-        private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
-        private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
+        private readonly IFarmingBatchService _farmingBatchService;
+        private readonly Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
         private readonly IAuditLogService _auditLogService;
         private readonly ICurrentUserAccessor _currentUserAccessor;
 
@@ -29,24 +29,22 @@ namespace IRasRag.Application.Services.Implementations
             IUnitOfWork unitOfWork,
             ILogger<FeedingLogService> logger,
             IMapper mapper,
-            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
-            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
+            IFarmingBatchService farmingBatchService,
+            Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
             IAuditLogService auditLogService,
             ICurrentUserAccessor currentUserAccessor
         )
         {
-            _unitOfWork = unitOfWork ?? throw new System.ArgumentNullException(nameof(unitOfWork));
-            _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new System.ArgumentNullException(nameof(mapper));
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _farmingBatchService =
-                farmingBatchService
-                ?? throw new System.ArgumentNullException(nameof(farmingBatchService));
+                farmingBatchService ?? throw new ArgumentNullException(nameof(farmingBatchService));
             _supervisorNotifier = supervisorNotifier;
             _auditLogService =
-                auditLogService ?? throw new System.ArgumentNullException(nameof(auditLogService));
+                auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
             _currentUserAccessor =
-                currentUserAccessor
-                ?? throw new System.ArgumentNullException(nameof(currentUserAccessor));
+                currentUserAccessor ?? throw new ArgumentNullException(nameof(currentUserAccessor));
         }
 
         #region Get Methods

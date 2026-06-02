@@ -246,6 +246,37 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpPut("{id}/schedule")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdatePausedBatchSchedule(
+            Guid id,
+            [FromBody] UpdatePausedBatchScheduleDto dto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _farmingBatchService.UpdatePausedBatchScheduleAsync(id, dto);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật lịch lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi cập nhật lịch lô nuôi" });
+            }
+        }
+
         [HttpPost("{id}/terminate")]
         [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> TerminateBatch(Guid id)

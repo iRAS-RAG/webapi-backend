@@ -52,7 +52,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 ActualHarvestWeightKg = fb.ActualHarvestWeightKg,
                 CreatedAt = fb.CreatedAt,
                 ModifiedAt = fb.ModifiedAt,
-                PlannedStages = new List<IRasRag.Application.DTOs.PlannedStageDto>(),
+                PlannedStages = new List<PlannedStageDto>(),
                 Fcr = fb.Fcr,
             });
         }

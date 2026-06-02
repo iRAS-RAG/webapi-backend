@@ -19,8 +19,8 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<MortalityLogService> _logger;
         private readonly IMapper _mapper;
-        private readonly IRasRag.Application.Services.Interfaces.IFarmingBatchService _farmingBatchService;
-        private readonly IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
+        private readonly IFarmingBatchService _farmingBatchService;
+        private readonly Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
         private readonly IAuditLogService _auditLogService;
         private readonly ICurrentUserAccessor _currentUserAccessor;
 
@@ -28,8 +28,8 @@ namespace IRasRag.Application.Services.Implementations
             IUnitOfWork unitOfWork,
             ILogger<MortalityLogService> logger,
             IMapper mapper,
-            IRasRag.Application.Services.Interfaces.IFarmingBatchService farmingBatchService,
-            IRasRag.Application.Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
+            IFarmingBatchService farmingBatchService,
+            Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
             IAuditLogService auditLogService,
             ICurrentUserAccessor currentUserAccessor
         )

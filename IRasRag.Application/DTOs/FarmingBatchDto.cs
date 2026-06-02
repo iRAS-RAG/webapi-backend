@@ -108,23 +108,21 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên lô nuôi không được vượt quá 255 ký tự")]
         public string? Name { get; set; }
 
-        public FarmingBatchStatus? Status { get; set; }
-
-        public BatchPausedReason? PausedReason { get; set; }
-
-        public Guid? SpeciesStageConfigId { get; set; }
-
-        public DateTime? StartDate { get; set; }
-
-        public DateTime? EstimatedHarvestDate { get; set; }
-
-        public DateTime? ActualHarvestDate { get; set; }
-
         [Range(0, int.MaxValue, ErrorMessage = "Số lượng hiện tại phải lớn hơn hoặc bằng 0")]
         public int? CurrentQuantity { get; set; }
 
         [MaxLength(20, ErrorMessage = "Đơn vị đo không được vượt quá 20 ký tự")]
         public string? UnitOfMeasure { get; set; }
+    }
+
+    public class UpdatePausedBatchScheduleDto
+    {
+        public DateTime? StartDate { get; set; }
+
+        public Guid? SpeciesId { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng ban đầu phải lớn hơn hoặc bằng 0")]
+        public int? InitialQuantity { get; set; }
     }
 
     // List Request DTO

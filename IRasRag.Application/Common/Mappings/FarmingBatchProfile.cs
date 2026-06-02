@@ -41,10 +41,10 @@ namespace IRasRag.Application.Common.Mappings
 
             // Update DTO to Entity
             CreateMap<UpdateFarmingBatchDto, FarmingBatch>(MemberList.Source)
-                .ForMember(
-                    dest => dest.CurrentStageConfigId,
-                    opt => opt.MapFrom(src => src.SpeciesStageConfigId)
-                )
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Schedule (PAUSED batch) DTO to Entity
+            CreateMap<UpdatePausedBatchScheduleDto, FarmingBatch>(MemberList.Source)
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<BatchStage, PlannedStageDto>()

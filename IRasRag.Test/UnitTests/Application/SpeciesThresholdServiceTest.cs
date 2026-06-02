@@ -65,9 +65,7 @@ namespace IRasRag.Test.UnitTests.Application
             _auditLogServiceMock = new Mock<IAuditLogService>();
             _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
             _backgroundJobsMock
-                .Setup(b =>
-                    b.Enqueue(It.IsAny<System.Linq.Expressions.Expression<Func<object, Task>>>())
-                )
+                .Setup(b => b.Enqueue(It.IsAny<Expression<Func<object, Task>>>()))
                 .Returns("job-id");
 
             _sut = new SpeciesThresholdService(
@@ -561,7 +559,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -612,7 +610,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s is SpeciesThresholdListSpec
                         ),
@@ -664,7 +662,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -695,7 +693,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s is SpeciesThresholdListSpec
                         ),
@@ -715,7 +713,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -739,7 +737,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s != null
                         ),
@@ -759,7 +757,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -791,7 +789,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s != null
                         ),

@@ -9,6 +9,8 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmingBatchSpecifications;
+using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
+using IRasRag.Application.Specifications.SpecificationHelpers;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -48,9 +50,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 var batchRepo = _unitOfWork.GetRepository<FarmingBatch>();
                 var batch = await batchRepo.FirstOrDefaultAsync(
-                    new IRasRag.Application.Specifications.FarmingBatchSpecifications.FarmingBatchWithStagesByIdSpec(
-                        batchId
-                    )
+                    new FarmingBatchWithStagesByIdSpec(batchId)
                 );
 
                 if (batch == null)
@@ -320,9 +320,7 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         // try to reload species stage config with includes
                         var reloaded = await sscRepo.FirstOrDefaultAsync(
-                            new IRasRag.Application.Specifications.SpeciesStageConfigSpecifications.SpeciesStageConfigWithIncludesByIdSpec(
-                                bs.SpeciesStageConfigId
-                            )
+                            new SpeciesStageConfigWithIncludesByIdSpec(bs.SpeciesStageConfigId)
                         );
                         if (reloaded != null)
                         {
@@ -559,9 +557,7 @@ namespace IRasRag.Application.Services.Implementations
                         )
                         {
                             var reloaded = await sscRepo.FirstOrDefaultAsync(
-                                new IRasRag.Application.Specifications.SpeciesStageConfigSpecifications.SpeciesStageConfigWithIncludesByIdSpec(
-                                    bs.SpeciesStageConfigId
-                                )
+                                new SpeciesStageConfigWithIncludesByIdSpec(bs.SpeciesStageConfigId)
                             );
                             if (reloaded != null)
                             {
@@ -680,9 +676,7 @@ namespace IRasRag.Application.Services.Implementations
                 // Load all stage configs for species ordered by sequence
                 var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
                 var stageConfigs = await stageConfigRepo.ListAsync(
-                    new IRasRag.Application.Specifications.SpecificationHelpers.SpecBySpeciesOrderedSpec(
-                        createDto.SpeciesId
-                    )
+                    new SpecBySpeciesOrderedSpec(createDto.SpeciesId)
                 );
                 if (stageConfigs == null || !stageConfigs.Any())
                 {
@@ -1086,12 +1080,238 @@ namespace IRasRag.Application.Services.Implementations
                     await _unitOfWork.SaveChangesAsync();
                 }
 
+                // Recompute estimated yield when CurrentQuantity changes
+                if (
+                    updateDto.CurrentQuantity.HasValue
+                    && oldCurrentQuantity != farmingBatch.CurrentQuantity
+                )
+                {
+                    await ComputeEstimatedYieldAsync(farmingBatch, persist: true);
+                    _telemetryCache.InvalidateBatch(farmingBatch.FishTankId);
+                }
+
                 return Result.Success("Cập nhật lô nuôi thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật lô nuôi với ID {Id}", id);
                 return Result.Failure("Lỗi khi cập nhật lô nuôi", ResultType.Unexpected);
+            }
+        }
+
+        public async Task<Result<FarmingBatchDto>> UpdatePausedBatchScheduleAsync(
+            Guid id,
+            UpdatePausedBatchScheduleDto dto
+        )
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await repo.FirstOrDefaultAsync(new FarmingBatchWithStagesByIdSpec(id));
+
+                if (batch == null)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+                }
+
+                if (batch.Status != FarmingBatchStatus.PAUSED)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Chỉ có thể chỉnh lịch cho lô nuôi đang tạm dừng",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Determine effective start date and species
+                var newStartDate = dto.StartDate ?? batch.StartDate;
+
+                var stageConfigRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var speciesRepo = _unitOfWork.GetRepository<Species>();
+
+                Guid speciesId;
+                List<SpeciesStageConfig> orderedStageConfigs;
+
+                if (dto.SpeciesId.HasValue)
+                {
+                    // User wants to raise a different species
+                    var speciesExists = await speciesRepo.AnyAsync(s =>
+                        s.Id == dto.SpeciesId.Value
+                    );
+                    if (!speciesExists)
+                    {
+                        return Result<FarmingBatchDto>.Failure(
+                            "Loài cá không tồn tại",
+                            ResultType.BadRequest
+                        );
+                    }
+                    speciesId = dto.SpeciesId.Value;
+
+                    // Load all stage configs for the new species
+                    var allConfigs = await stageConfigRepo.ListAsync(
+                        new SpecBySpeciesOrderedSpec(speciesId)
+                    );
+                    orderedStageConfigs = allConfigs.OrderBy(s => s.Sequence).ToList();
+                }
+                else
+                {
+                    // Keep existing species — derive from batch's current config
+                    var currentConfig = batch.CurrentStageConfig;
+                    if (currentConfig == null)
+                    {
+                        currentConfig = await stageConfigRepo.GetByIdAsync(
+                            batch.CurrentStageConfigId
+                        );
+                        if (currentConfig == null)
+                        {
+                            return Result<FarmingBatchDto>.Failure(
+                                "Không tìm thấy cấu hình giai đoạn hiện tại",
+                                ResultType.BadRequest
+                            );
+                        }
+                    }
+                    speciesId = currentConfig.SpeciesId;
+
+                    var allConfigs = await stageConfigRepo.ListAsync(
+                        new SpecBySpeciesOrderedSpec(speciesId)
+                    );
+                    orderedStageConfigs = allConfigs.OrderBy(s => s.Sequence).ToList();
+                }
+
+                if (orderedStageConfigs.Count == 0)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy cấu hình giai đoạn cho loài này",
+                        ResultType.BadRequest
+                    );
+                }
+
+                if (orderedStageConfigs.Any(sc => !sc.ExpectedDurationDays.HasValue))
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Một hoặc nhiều cấu hình giai đoạn thiếu ExpectedDurationDays",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Build new stage entries — modify existing tracked instances to avoid EF conflicts
+                var oldStages = batch.BatchStages?.ToList() ?? [];
+                var stageRepo = _unitOfWork.GetRepository<BatchStage>();
+                var oldBySequence = oldStages.ToDictionary(s => s.Sequence);
+                var stageStart = newStartDate;
+
+                foreach (var sc in orderedStageConfigs)
+                {
+                    var duration = sc.ExpectedDurationDays!.Value;
+                    var stageEnd = stageStart.AddDays(duration);
+
+                    if (oldBySequence.TryGetValue(sc.Sequence, out var existingStage))
+                    {
+                        // Update tracked instance in-place
+                        existingStage.SpeciesStageConfigId = sc.Id;
+                        existingStage.EstimatedStartDate = stageStart;
+                        existingStage.EstimatedEndDate = stageEnd;
+                        existingStage.ExpectedDurationDays = duration;
+                        existingStage.SpeciesStageConfig = null!;
+                        if (
+                            batch.Status == FarmingBatchStatus.PAUSED
+                            && sc.Sequence == orderedStageConfigs.First().Sequence
+                        )
+                        {
+                            existingStage.ActualStartDate = null;
+                        }
+                    }
+                    else
+                    {
+                        // New stage — add as new tracked entity
+                        var bs = new BatchStage
+                        {
+                            Id = Guid.NewGuid(),
+                            FarmingBatchId = batch.Id,
+                            SpeciesStageConfigId = sc.Id,
+                            Sequence = sc.Sequence,
+                            EstimatedStartDate = stageStart,
+                            EstimatedEndDate = stageEnd,
+                            ExpectedDurationDays = duration,
+                        };
+                        await stageRepo.AddAsync(bs);
+                    }
+
+                    stageStart = stageEnd;
+                }
+
+                // Delete old stages that are no longer in the plan
+                var newSequences = orderedStageConfigs.Select(s => s.Sequence).ToHashSet();
+                foreach (var stage in oldStages)
+                {
+                    if (!newSequences.Contains(stage.Sequence))
+                    {
+                        stageRepo.Delete(stage);
+                    }
+                }
+
+                // Update batch fields
+                var oldStartDate = batch.StartDate;
+                var oldStageConfigId = batch.CurrentStageConfigId;
+                batch.StartDate = newStartDate;
+                batch.CurrentStageConfigId = orderedStageConfigs.First().Id;
+                batch.EstimatedHarvestDate = stageStart;
+
+                if (dto.InitialQuantity.HasValue)
+                {
+                    batch.InitialQuantity = dto.InitialQuantity.Value;
+                    batch.CurrentQuantity = dto.InitialQuantity.Value;
+                }
+
+                // Detach batch navigation to avoid EF conflicts
+                batch.CurrentStageConfig = null!;
+                batch.FishTank = null!;
+
+                repo.Update(batch);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Recompute estimated yield with new data
+                await ComputeEstimatedYieldAsync(batch, persist: true);
+
+                await _auditLogService.WriteSemanticAsync(
+                    action: AuditLogActions.Update,
+                    entityType: AuditLogEntityType.FarmingBatch,
+                    entityId: batch.Id.ToString(),
+                    oldValue: new Dictionary<string, object?>
+                    {
+                        ["OldStartDate"] = oldStartDate,
+                        ["OldSpeciesStageConfigId"] = oldStageConfigId,
+                    },
+                    newValue: new Dictionary<string, object?>
+                    {
+                        ["NewStartDate"] = newStartDate,
+                        ["NewSpeciesStageConfigId"] = orderedStageConfigs.First().Id,
+                        ["NewEstimatedHarvestDate"] = stageStart,
+                    }
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+
+                _telemetryCache.InvalidateBatch(batch.FishTankId);
+
+                var farmingBatchDto = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(id));
+
+                return Result<FarmingBatchDto>.Success(
+                    farmingBatchDto!,
+                    "Cập nhật lịch lô nuôi thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật lịch lô nuôi với ID {Id}", id);
+                return Result<FarmingBatchDto>.Failure(
+                    "Lỗi khi cập nhật lịch lô nuôi",
+                    ResultType.Unexpected
+                );
             }
         }
 
