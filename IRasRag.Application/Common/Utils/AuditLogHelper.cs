@@ -1,6 +1,6 @@
 using System.Globalization;
-using System.Text.Json;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Common.Utils
@@ -39,13 +39,18 @@ namespace IRasRag.Application.Common.Utils
             return value switch
             {
                 string text => text,
-                DateTime dateTime => dateTime.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
+                DateTime dateTime => dateTime
+                    .ToUniversalTime()
+                    .ToString("O", CultureInfo.InvariantCulture),
                 DateTimeOffset dateTimeOffset => dateTimeOffset
                     .ToUniversalTime()
                     .ToString("O", CultureInfo.InvariantCulture),
                 _ => JsonSerializer.Serialize(
                     value,
-                    new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }
+                    new JsonSerializerOptions
+                    {
+                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    }
                 ),
             };
         }

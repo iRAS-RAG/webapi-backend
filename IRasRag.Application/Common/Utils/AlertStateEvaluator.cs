@@ -297,7 +297,12 @@ namespace IRasRag.Application.Common.Utils
             );
         }
 
-        private async Task WriteAuditLogAsync(string action, string entityId, object? oldValue, object? newValue)
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue
+        )
         {
             try
             {
@@ -341,7 +346,6 @@ namespace IRasRag.Application.Common.Utils
                     "ResolveCount must be >= 1."
                 );
             }
-
         }
     }
 }

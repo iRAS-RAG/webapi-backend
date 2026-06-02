@@ -42,8 +42,11 @@ namespace IRasRag.Application.Services.Implementations
                 farmingBatchService
                 ?? throw new System.ArgumentNullException(nameof(farmingBatchService));
             _supervisorNotifier = supervisorNotifier;
-            _auditLogService = auditLogService ?? throw new System.ArgumentNullException(nameof(auditLogService));
-            _currentUserAccessor = currentUserAccessor ?? throw new System.ArgumentNullException(nameof(currentUserAccessor));
+            _auditLogService =
+                auditLogService ?? throw new System.ArgumentNullException(nameof(auditLogService));
+            _currentUserAccessor =
+                currentUserAccessor
+                ?? throw new System.ArgumentNullException(nameof(currentUserAccessor));
         }
 
         #region Get Methods

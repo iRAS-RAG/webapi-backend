@@ -253,11 +253,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var oldSnapshot = new
-                {
-                    controlDeviceType.Name,
-                    controlDeviceType.Description,
-                };
+                var oldSnapshot = new { controlDeviceType.Name, controlDeviceType.Description };
 
                 // Check duplicate name if name is being updated
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -336,11 +332,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var oldSnapshot = new
-                {
-                    controlDeviceType.Name,
-                    controlDeviceType.Description,
-                };
+                var oldSnapshot = new { controlDeviceType.Name, controlDeviceType.Description };
 
                 controlDeviceTypeRepository.Delete(controlDeviceType);
                 await _unitOfWork.SaveChangesAsync();
@@ -400,26 +392,21 @@ namespace IRasRag.Application.Services.Implementations
                 AuditLogActions.Create,
                 controlDeviceType.Id.ToString(),
                 null,
-                new
-                {
-                    controlDeviceType.Name,
-                    controlDeviceType.Description,
-                },
+                new { controlDeviceType.Name, controlDeviceType.Description },
                 "create-control-device-type"
             );
         }
 
-        private async Task WriteUpdateAuditLogAsync(ControlDeviceType controlDeviceType, object oldSnapshot)
+        private async Task WriteUpdateAuditLogAsync(
+            ControlDeviceType controlDeviceType,
+            object oldSnapshot
+        )
         {
             await WriteAuditLogAsync(
                 AuditLogActions.Update,
                 controlDeviceType.Id.ToString(),
                 oldSnapshot,
-                new
-                {
-                    controlDeviceType.Name,
-                    controlDeviceType.Description,
-                },
+                new { controlDeviceType.Name, controlDeviceType.Description },
                 "update-control-device-type"
             );
         }

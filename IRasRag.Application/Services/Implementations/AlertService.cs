@@ -61,9 +61,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 return new AlertPaginatedResult
                 {
-                    Message = pagedResult.TotalItems > 0
-                        ? "Lấy danh sách cảnh báo thành công"
-                        : "Không có dữ liệu",
+                    Message =
+                        pagedResult.TotalItems > 0
+                            ? "Lấy danh sách cảnh báo thành công"
+                            : "Không có dữ liệu",
                     Data = pagedResult.Items,
                     Meta = PaginationBuilder.BuildPaginationMetadata(
                         request.Page,
@@ -439,8 +440,12 @@ namespace IRasRag.Application.Services.Implementations
             var speciesThreshold = await _unitOfWork
                 .GetRepository<SpeciesThreshold>()
                 .GetByIdAsync(alert.SpeciesThresholdId);
-            var fishTank = await _unitOfWork.GetRepository<FishTank>().GetByIdAsync(alert.FishTankId);
-            var sensorType = await _unitOfWork.GetRepository<SensorType>().GetByIdAsync(alert.SensorTypeId);
+            var fishTank = await _unitOfWork
+                .GetRepository<FishTank>()
+                .GetByIdAsync(alert.FishTankId);
+            var sensorType = await _unitOfWork
+                .GetRepository<SensorType>()
+                .GetByIdAsync(alert.SensorTypeId);
             FarmingBatch? farmingBatch = null;
 
             if (alert.FarmingBatchId.HasValue)
@@ -478,7 +483,11 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private async Task WriteUpdateAuditLogAsync(Alert alert, object oldAlertSnapshot, object newAlertSnapshot)
+        private async Task WriteUpdateAuditLogAsync(
+            Alert alert,
+            object oldAlertSnapshot,
+            object newAlertSnapshot
+        )
         {
             await WriteAuditLogAsync(
                 AuditLogActions.Update,

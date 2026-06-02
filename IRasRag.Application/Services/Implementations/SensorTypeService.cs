@@ -1,7 +1,7 @@
 using AutoMapper;
 using IRasRag.Application.Common.Constants;
-using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
@@ -454,13 +454,13 @@ namespace IRasRag.Application.Services.Implementations
                 AuditLogActions.Create,
                 sensorType.Id.ToString(),
                 null,
-                    new
-                    {
-                        sensorType.Name,
-                        sensorType.MeasureType,
-                        sensorType.UnitOfMeasure,
-                        sensorType.Code,
-                    },
+                new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                },
                 "create-sensor-type"
             );
         }
@@ -471,13 +471,13 @@ namespace IRasRag.Application.Services.Implementations
                 AuditLogActions.Update,
                 sensorType.Id.ToString(),
                 oldSnapshot,
-                    new
-                    {
-                        sensorType.Name,
-                        sensorType.MeasureType,
-                        sensorType.UnitOfMeasure,
-                        sensorType.Code,
-                    },
+                new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                },
                 "update-sensor-type"
             );
         }

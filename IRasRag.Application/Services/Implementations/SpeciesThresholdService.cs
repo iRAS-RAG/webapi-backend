@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using IRasRag.Application.Common.Constants;
-using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Telemetry;
@@ -426,7 +426,10 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private async Task WriteUpdateAuditLogAsync(SpeciesThresholdDto oldDto, SpeciesThresholdDto newDto)
+        private async Task WriteUpdateAuditLogAsync(
+            SpeciesThresholdDto oldDto,
+            SpeciesThresholdDto newDto
+        )
         {
             await WriteAuditLogAsync(
                 AuditLogActions.Update,

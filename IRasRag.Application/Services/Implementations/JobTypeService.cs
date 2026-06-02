@@ -210,11 +210,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var oldSnapshot = new
-                {
-                    jobType.Name,
-                    jobType.Description,
-                };
+                var oldSnapshot = new { jobType.Name, jobType.Description };
 
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -284,11 +280,7 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var oldSnapshot = new
-                {
-                    jobType.Name,
-                    jobType.Description,
-                };
+                var oldSnapshot = new { jobType.Name, jobType.Description };
 
                 // Check if JobType is being used by any Jobs
                 var hasJobs = await jobTypeRepository.AnyAsync(jt => jt.Id == id && jt.Jobs.Any());

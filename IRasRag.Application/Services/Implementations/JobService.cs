@@ -624,13 +624,17 @@ namespace IRasRag.Application.Services.Implementations
             string? sensorName = null;
             if (job.SensorId.HasValue)
             {
-                var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(job.SensorId.Value);
+                var sensor = await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .GetByIdAsync(job.SensorId.Value);
                 sensorName = sensor?.Name;
             }
 
-            var mappings = (await _unitOfWork
-                .GetRepository<JobControlMapping>()
-                .FindAllAsync(m => m.JobId == job.Id)).ToList();
+            var mappings = (
+                await _unitOfWork
+                    .GetRepository<JobControlMapping>()
+                    .FindAllAsync(m => m.JobId == job.Id)
+            ).ToList();
 
             var mappingSnapshots = new List<object>();
             foreach (var mapping in mappings)

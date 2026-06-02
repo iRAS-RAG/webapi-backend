@@ -226,7 +226,11 @@ namespace IRasRag.Application.Services.Implementations
                 userFarmRepo.Update(userFarm);
                 await _unitOfWork.SaveChangesAsync();
 
-                await WriteUpdateAuditLogAsync(userFarm, oldSnapshot, await BuildAuditSnapshotAsync(userFarm));
+                await WriteUpdateAuditLogAsync(
+                    userFarm,
+                    oldSnapshot,
+                    await BuildAuditSnapshotAsync(userFarm)
+                );
 
                 return Result.Success("Cập nhật phân quyền người dùng-trang trại thành công");
             }
@@ -326,7 +330,9 @@ namespace IRasRag.Application.Services.Implementations
             return new
             {
                 UserEmail = user?.Email ?? "Unknown",
-                UserFullName = user == null ? "Unknown" : $"{user.FirstName} {user.LastName}".Trim(),
+                UserFullName = user == null
+                    ? "Unknown"
+                    : $"{user.FirstName} {user.LastName}".Trim(),
                 FarmName = farm?.Name ?? "Unknown",
             };
         }

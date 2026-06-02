@@ -1,10 +1,10 @@
 using AutoMapper;
-using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
-using IRasRag.Application.Common.Constants;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.GrowthStageSpecifications;
@@ -35,8 +35,6 @@ namespace IRasRag.Application.Services.Implementations
             _auditLogService = auditLogService;
             _currentUserAccessor = currentUserAccessor;
         }
-
-
 
         public async Task<PaginatedResult<GrowthStageDto>> GetGrowthStagesBySpeciesIdAsync(
             Guid speciesId,
@@ -356,6 +354,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
         #region Private Helper Methods for Audit Logging
         private async Task WriteAuditLogAsync(
             string action,
