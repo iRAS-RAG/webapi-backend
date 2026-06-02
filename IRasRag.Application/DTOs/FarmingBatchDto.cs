@@ -29,6 +29,7 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public int? EstimatedHarvestCount { get; set; }
         public double? EstimatedHarvestWeightKg { get; set; }
+        public double? ActualHarvestWeightKg { get; set; }
         public double? Fcr { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }

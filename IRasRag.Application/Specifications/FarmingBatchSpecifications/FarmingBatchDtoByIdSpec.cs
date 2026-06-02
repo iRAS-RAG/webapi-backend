@@ -32,6 +32,7 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     InitialQuantity = fb.InitialQuantity,
                     CurrentQuantity = fb.CurrentQuantity,
                     UnitOfMeasure = fb.UnitOfMeasure,
+                    ActualHarvestWeightKg = fb.ActualHarvestWeightKg,
                     CreatedAt = fb.CreatedAt,
                     ModifiedAt = fb.ModifiedAt,
                     SpeciesId = fb.CurrentStageConfig.SpeciesId,
