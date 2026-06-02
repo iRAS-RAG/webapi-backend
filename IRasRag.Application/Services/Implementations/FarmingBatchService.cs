@@ -756,19 +756,6 @@ namespace IRasRag.Application.Services.Implementations
                                 ResultType.BadRequest
                             );
                         }
-
-                        // Also keep the minimum recommended (50% of recommendation) check
-                        if (createDto.InitialQuantity > 0)
-                        {
-                            var minAllowed = (int)Math.Ceiling(recommended.Value * 0.5);
-                            if (createDto.InitialQuantity < minAllowed)
-                            {
-                                return Result<FarmingBatchDto>.Failure(
-                                    $"Số lượng ban đầu ({createDto.InitialQuantity}) thấp hơn 50% mức đề nghị ({minAllowed}) cho bể này; vui lòng tăng số lượng để tận dụng bể.",
-                                    ResultType.BadRequest
-                                );
-                            }
-                        }
                     }
                     else
                     {
