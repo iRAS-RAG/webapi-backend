@@ -1350,6 +1350,129 @@ namespace IRasRag.Application.Services.Implementations
         }
         #endregion
 
+        #region Terminate Methods
+        public async Task<Result<FarmingBatchDto>> TerminateBatchAsync(Guid id)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<FarmingBatch>();
+                var batch = await repo.FirstOrDefaultAsync(
+                    new FarmingBatchWithStagesByIdSpec(id),
+                    QueryType.IncludeDeleted
+                );
+
+                if (batch == null)
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không tìm thấy lô nuôi",
+                        ResultType.NotFound
+                    );
+                }
+
+                if (
+                    batch.Status == FarmingBatchStatus.HARVESTED
+                    || batch.Status == FarmingBatchStatus.TERMINATED
+                )
+                {
+                    return Result<FarmingBatchDto>.Failure(
+                        "Không thể kết thúc lô nuôi đã thu hoạch/hủy bỏ",
+                        ResultType.BadRequest
+                    );
+                }
+
+                var now = DateTime.UtcNow;
+                var orderedStages = batch.BatchStages?.OrderBy(s => s.Sequence).ToList() ?? [];
+
+                // Close out stages
+                foreach (var stage in orderedStages)
+                {
+                    if (!stage.ActualStartDate.HasValue)
+                    {
+                        stage.ActualStartDate = stage.EstimatedStartDate;
+                    }
+
+                    if (stage.EstimatedEndDate <= now)
+                    {
+                        // Stage already passed its estimated end
+                        stage.ActualEndDate ??= stage.EstimatedEndDate;
+                    }
+                    else if (
+                        stage.ActualStartDate <= now
+                        && (!stage.ActualEndDate.HasValue || stage.ActualEndDate > now)
+                    )
+                    {
+                        // This is the current/active stage at termination time
+                        stage.ActualEndDate = now;
+                    }
+                    // Future stages remain with null ActualEndDate
+                }
+
+                var oldStatus = batch.Status;
+                var oldEstimatedHarvestDate = batch.EstimatedHarvestDate;
+
+                batch.Status = FarmingBatchStatus.TERMINATED;
+                batch.ActualHarvestDate = now;
+
+                if (orderedStages.Any())
+                {
+                    batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
+                }
+
+                // Detach navigation to avoid EF tracking conflicts
+                if (batch.BatchStages != null)
+                {
+                    foreach (var bs in batch.BatchStages)
+                    {
+                        bs.SpeciesStageConfig = null!;
+                        bs.FarmingBatch = null!;
+                    }
+                }
+
+                repo.Update(batch);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _auditLogService.WriteSemanticAsync(
+                    action: AuditLogActions.TerminateBatch,
+                    entityType: AuditLogEntityType.FarmingBatch,
+                    entityId: batch.Id.ToString(),
+                    oldValue: new Dictionary<string, object?>
+                    {
+                        [nameof(FarmingBatch.Name)] = batch.Name,
+                        [nameof(FarmingBatch.Status)] = oldStatus,
+                        [nameof(FarmingBatch.EstimatedHarvestDate)] = oldEstimatedHarvestDate,
+                    },
+                    newValue: new Dictionary<string, object?>
+                    {
+                        [nameof(FarmingBatch.Name)] = batch.Name,
+                        [nameof(FarmingBatch.Status)] = FarmingBatchStatus.TERMINATED,
+                        [nameof(FarmingBatch.ActualHarvestDate)] = now,
+                    }
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+
+                _telemetryCache.InvalidateBatch(batch.FishTankId);
+
+                var farmingBatchDto = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .FirstOrDefaultAsync(new FarmingBatchDtoByIdSpec(id));
+
+                return Result<FarmingBatchDto>.Success(
+                    farmingBatchDto!,
+                    "Kết thúc lô nuôi thành công"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi kết thúc lô nuôi với ID {Id}", id);
+                return Result<FarmingBatchDto>.Failure(
+                    "Lỗi khi kết thúc lô nuôi",
+                    ResultType.Unexpected
+                );
+            }
+        }
+        #endregion
+
         #region Delete Methods
         // Hard delete with related-data guards.
         public async Task<Result> DeleteFarmingBatchAsync(Guid id)

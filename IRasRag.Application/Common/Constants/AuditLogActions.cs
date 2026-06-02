@@ -12,6 +12,7 @@ namespace IRasRag.Application.Common.Constants
         public const string RefreshToken = "Làm mới token";
         public const string HarvestBatch = "Thu hoạch lô";
         public const string StartBatch = "Bắt đầu lô nuôi";
+        public const string TerminateBatch = "Kết thúc lô nuôi";
         public const string ToggleDevice = "Bật/tắt thiết bị";
         public const string ViewDashboardReport = "Xem báo cáo tổng quan";
         public const string ViewWeeklyReport = "Xem báo cáo tuần";

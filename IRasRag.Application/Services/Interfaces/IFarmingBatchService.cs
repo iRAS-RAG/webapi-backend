@@ -29,6 +29,7 @@ namespace IRasRag.Application.Services.Interfaces
         );
         Task<Result<IReadOnlyList<PlannedStageDto>>> GetPlannedStagesByBatchIdAsync(Guid batchId);
         Task<Result<FarmingBatchDto>> StartPausedBatchAsync(Guid id);
+        Task<Result<FarmingBatchDto>> TerminateBatchAsync(Guid id);
         Task<Result> DeleteFarmingBatchAsync(Guid id);
     }
 }
