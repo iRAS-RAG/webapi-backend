@@ -326,7 +326,8 @@ namespace IRasRag.Application.Services.Implementations
                 };
 
                 var updatedMasterBoardName = originalMasterBoard?.Name ?? "Không xác định";
-                var updatedControlDeviceTypeName = originalControlDeviceType?.Name ?? "Không xác định";
+                var updatedControlDeviceTypeName =
+                    originalControlDeviceType?.Name ?? "Không xác định";
 
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -549,7 +550,6 @@ namespace IRasRag.Application.Services.Implementations
         }
         #endregion
 
-        
 
         #region Toggle Method
         public async Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(

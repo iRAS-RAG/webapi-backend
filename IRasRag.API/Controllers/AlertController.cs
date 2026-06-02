@@ -104,7 +104,10 @@ namespace IRasRag.API.Controllers
 
         [HttpPatch("{id}/status")]
         [Authorize(Roles = "Supervisor, Operator")]
-        public async Task<IActionResult> UpdateAlertStatus(Guid id, [FromBody] UpdateAlertStatusDto dto)
+        public async Task<IActionResult> UpdateAlertStatus(
+            Guid id,
+            [FromBody] UpdateAlertStatusDto dto
+        )
         {
             try
             {
@@ -123,7 +126,10 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật trạng thái cảnh báo với Id: {AlertId}", id);
-                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi cập nhật trạng thái cảnh báo" });
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi cập nhật trạng thái cảnh báo" }
+                );
             }
         }
 

@@ -283,10 +283,10 @@ namespace IRasRag.Application.Services.Implementations
         private async Task WriteCreateAuditLogAsync(Farm farm)
         {
             await _auditLogService.WriteSemanticAsync(
-                    AuditLogActions.Create,
-                    AuditLogEntityType.Farm,
-                    farm.Id.ToString(),
-                    oldValue: null,
+                AuditLogActions.Create,
+                AuditLogEntityType.Farm,
+                farm.Id.ToString(),
+                oldValue: null,
                 newValue: new
                 {
                     farm.Name,
@@ -302,10 +302,10 @@ namespace IRasRag.Application.Services.Implementations
         private async Task WriteUpdateAuditLogAsync(Farm farm, object oldSnapshot)
         {
             await _auditLogService.WriteSemanticAsync(
-                    AuditLogActions.Update,
-                    AuditLogEntityType.Farm,
-                    farm.Id.ToString(),
-                    oldValue: oldSnapshot,
+                AuditLogActions.Update,
+                AuditLogEntityType.Farm,
+                farm.Id.ToString(),
+                oldValue: oldSnapshot,
                 newValue: new
                 {
                     farm.Name,
@@ -331,5 +331,5 @@ namespace IRasRag.Application.Services.Implementations
             await _unitOfWork.SaveChangesAsync();
         }
     }
-    #endregion
+        #endregion
 }

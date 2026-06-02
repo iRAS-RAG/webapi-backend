@@ -88,10 +88,7 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Loài không tồn tại.", ResultType.NotFound);
                 }
 
-                var oldSnapshot = new
-                {
-                    species.Name,
-                };
+                var oldSnapshot = new { species.Name };
 
                 _unitOfWork.GetRepository<Species>().Delete(species);
                 await _unitOfWork.SaveChangesAsync();
@@ -176,10 +173,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (species == null)
                     return Result<SpeciesDto>.Failure("Loài không tồn tại.", ResultType.NotFound);
 
-                var oldSnapshot = new
-                {
-                    species.Name,
-                };
+                var oldSnapshot = new { species.Name };
 
                 var dto = new SpeciesDto { Id = species.Id, Name = species.Name };
 
@@ -204,10 +198,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (species == null)
                     return Result.Failure("Loài không tồn tại.", ResultType.NotFound);
 
-                var oldSnapshot = new
-                {
-                    species.Name,
-                };
+                var oldSnapshot = new { species.Name };
 
                 if (!string.IsNullOrWhiteSpace(dto.Name))
                 {

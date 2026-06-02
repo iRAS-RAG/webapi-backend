@@ -18,5 +18,8 @@ namespace IRasRag.Application.DTOs
         public DateTime? FromDate { get; set; }
 
         public DateTime? ToDate { get; set; }
+
+        [MaxLength(100)]
+        public string? SearchQuery { get; set; }
     }
 }

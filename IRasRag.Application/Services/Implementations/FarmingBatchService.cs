@@ -134,7 +134,9 @@ namespace IRasRag.Application.Services.Implementations
                 // Compute initial biomass from species' first stage expected weight.
                 // Prefer reading expected weight from batch.BatchStages' first sequence entry if available.
                 double initialPerFishKg = 0.0;
-                var firstStageEntry = batch!.BatchStages?.OrderBy(bs => bs.Sequence).FirstOrDefault();
+                var firstStageEntry = batch!
+                    .BatchStages?.OrderBy(bs => bs.Sequence)
+                    .FirstOrDefault();
                 if (
                     firstStageEntry?.SpeciesStageConfig != null
                     && firstStageEntry.SpeciesStageConfig.ExpectedWeightKgPerFish.HasValue
@@ -979,7 +981,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (
                     updateDto.UnitOfMeasure != null
-                    && !string.Equals(oldUnitOfMeasure, farmingBatch.UnitOfMeasure, StringComparison.Ordinal)
+                    && !string.Equals(
+                        oldUnitOfMeasure,
+                        farmingBatch.UnitOfMeasure,
+                        StringComparison.Ordinal
+                    )
                 )
                 {
                     oldValues[nameof(FarmingBatch.UnitOfMeasure)] = oldUnitOfMeasure;

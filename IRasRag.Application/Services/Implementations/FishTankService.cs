@@ -1,7 +1,7 @@
 using AutoMapper;
 using IRasRag.Application.Common.Constants;
-using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -177,8 +177,13 @@ namespace IRasRag.Application.Services.Implementations
                     newFishTank.CameraUrl,
                     newFishTank.TopicCode,
                 };
-                await WriteAuditLogAsync(AuditLogActions.Create, newFishTank.Id.ToString(), null, newSnapshot, "create-fish-tank");
-                
+                await WriteAuditLogAsync(
+                    AuditLogActions.Create,
+                    newFishTank.Id.ToString(),
+                    null,
+                    newSnapshot,
+                    "create-fish-tank"
+                );
 
                 var farmName = farm?.Name ?? "Unknown";
 
@@ -202,6 +207,7 @@ namespace IRasRag.Application.Services.Implementations
                 return Result<FishTankDto>.Failure("Lỗi khi tạo bể cá.", ResultType.Unexpected);
             }
         }
+
         public async Task<Result> DeleteFishTankAsync(Guid id)
         {
             try
@@ -227,7 +233,13 @@ namespace IRasRag.Application.Services.Implementations
                     fishTank.TopicCode,
                     fishTank.CameraUrl,
                 };
-                await WriteAuditLogAsync(AuditLogActions.Delete, fishTank.Id.ToString(), oldSnapshot, null, "delete-fish-tank");
+                await WriteAuditLogAsync(
+                    AuditLogActions.Delete,
+                    fishTank.Id.ToString(),
+                    oldSnapshot,
+                    null,
+                    "delete-fish-tank"
+                );
 
                 return Result.Success("Xóa bể cá thành công.");
             }
@@ -343,7 +355,7 @@ namespace IRasRag.Application.Services.Implementations
                     FarmName = originalFarm?.Name ?? "Unknown",
                     fishTank.TopicCode,
                     fishTank.CameraUrl,
-                };                
+                };
                 if (!string.IsNullOrWhiteSpace(dto.Name))
                     fishTank.Name = dto.Name.Trim();
 
@@ -408,7 +420,13 @@ namespace IRasRag.Application.Services.Implementations
                     fishTank.TopicCode,
                 };
 
-                await WriteAuditLogAsync(AuditLogActions.Update, fishTank.Id.ToString(), oldSnapshot, newSnapshot, "update-fish-tank");
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    fishTank.Id.ToString(),
+                    oldSnapshot,
+                    newSnapshot,
+                    "update-fish-tank"
+                );
 
                 var resultDto = new FishTankDto
                 {
@@ -433,6 +451,7 @@ namespace IRasRag.Application.Services.Implementations
                 );
             }
         }
+
         #region Tank Status & Latest Data
         public async Task<Result<List<TankSensorLatestDataDto>>> GetTankLatestDataAsync(Guid tankId)
         {

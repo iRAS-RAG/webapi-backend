@@ -117,6 +117,57 @@ namespace IRasRag.Application.Services.Implementations
                 var result = await _auditLogRepository.GetPagedAsync(request, QueryType.ActiveOnly);
                 var auditLogDtos = _mapper.Map<List<AuditLogDto>>(result.Items);
 
+                // Load role hiện tại cho từng user (tối đa pageSize user/page)
+                var userIds = result
+                    .Items.Select(x => x.UserId)
+                    .Where(id => id != Guid.Empty)
+                    .Distinct()
+                    .ToList();
+
+                var roleByUserId = new Dictionary<Guid, string>();
+                foreach (var userId in userIds)
+                {
+                    try
+                    {
+                        var user =
+                            await _unitOfWork.GetRepository<User>().GetByIdAsync(userId)
+                            ?? await _unitOfWork
+                                .GetRepository<User>()
+                                .FirstOrDefaultAsync(
+                                    u => u.Id == userId,
+                                    Domain.Enums.QueryType.IncludeDeleted
+                                );
+
+                        if (user == null)
+                            continue;
+
+                        var role = await _unitOfWork
+                            .GetRepository<Role>()
+                            .GetByIdAsync(user.RoleId);
+                        if (role == null)
+                            continue;
+
+                        try
+                        {
+                            roleByUserId[userId] = role.ToSystemRole().ToRoleName();
+                        }
+                        catch
+                        {
+                            roleByUserId[userId] = role.Name;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load role for userId={UserId}.", userId);
+                    }
+                }
+
+                foreach (var dto in auditLogDtos)
+                {
+                    if (Guid.TryParse(dto.UserId, out var uid))
+                        dto.Role = roleByUserId.GetValueOrDefault(uid, string.Empty);
+                }
+
                 _logger.LogInformation(
                     "Successfully retrieved audit logs: {Count} records",
                     auditLogDtos.Count
@@ -183,9 +234,12 @@ namespace IRasRag.Application.Services.Implementations
             foreach (var item in items)
             {
                 var actorName = string.Join(
-                    " ",
-                    new[] { item.FirstName, item.LastName }.Where(v => !string.IsNullOrWhiteSpace(v))
-                ).Trim();
+                        " ",
+                        new[] { item.FirstName, item.LastName }.Where(v =>
+                            !string.IsNullOrWhiteSpace(v)
+                        )
+                    )
+                    .Trim();
                 var userDisplay = string.IsNullOrWhiteSpace(actorName) ? item.Email : actorName;
 
                 worksheet.Cell(rowIndex, 1).Value = item.Timestamp.ToUniversalTime();
@@ -247,9 +301,9 @@ namespace IRasRag.Application.Services.Implementations
             {
                 JsonValueKind.Object => string.Join(
                     "; ",
-                    element.EnumerateObject().Select(prop =>
-                        $"{prop.Name}={FormatJsonElementValue(prop.Value)}"
-                    )
+                    element
+                        .EnumerateObject()
+                        .Select(prop => $"{prop.Name}={FormatJsonElementValue(prop.Value)}")
                 ),
                 JsonValueKind.Array => string.Join(
                     ", ",

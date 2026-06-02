@@ -2,8 +2,8 @@
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
-using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Interfaces.Telemetry;

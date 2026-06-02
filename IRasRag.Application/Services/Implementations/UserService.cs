@@ -203,10 +203,7 @@ namespace IRasRag.Application.Services.Implementations
 
             var actor = await _unitOfWork
                 .GetRepository<User>()
-                .FirstOrDefaultAsync(
-                    u => u.Id == currentUserId.Value,
-                    QueryType.IncludeDeleted
-                );
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
 
             if (actor == null)
             {
@@ -229,7 +226,7 @@ namespace IRasRag.Application.Services.Implementations
                         RoleName = roleName,
                         createdUser.Email,
                         createdUser.FirstName,
-                        createdUser.LastName
+                        createdUser.LastName,
                     }
                 )
             );
@@ -352,7 +349,7 @@ namespace IRasRag.Application.Services.Implementations
                     RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
                     user.Email,
                     user.FirstName,
-                    user.LastName
+                    user.LastName,
                 };
 
                 _unitOfWork.GetRepository<User>().Delete(user);
@@ -388,7 +385,7 @@ namespace IRasRag.Application.Services.Implementations
                     RoleName = role?.ToSystemRole().ToRoleName() ?? "Không xác định",
                     user.Email,
                     user.FirstName,
-                    user.LastName
+                    user.LastName,
                 };
 
                 _unitOfWork.GetRepository<User>().HardDelete(user);
@@ -551,8 +548,11 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
 
-                var originalRole = await _unitOfWork.GetRepository<Role>().GetByIdAsync(user.RoleId);
-                var originalRoleName = originalRole?.ToSystemRole().ToRoleName() ?? "Không xác định";
+                var originalRole = await _unitOfWork
+                    .GetRepository<Role>()
+                    .GetByIdAsync(user.RoleId);
+                var originalRoleName =
+                    originalRole?.ToSystemRole().ToRoleName() ?? "Không xác định";
                 var originalEmail = user.Email;
                 var originalFirstName = user.FirstName;
                 var originalLastName = user.LastName;
@@ -636,10 +636,28 @@ namespace IRasRag.Application.Services.Implementations
                 var oldAuditValues = new Dictionary<string, object?>();
                 var newAuditValues = new Dictionary<string, object?>();
 
-                AddAuditChange(oldAuditValues, newAuditValues, "RoleName", originalRoleName, updatedRoleName);
+                AddAuditChange(
+                    oldAuditValues,
+                    newAuditValues,
+                    "RoleName",
+                    originalRoleName,
+                    updatedRoleName
+                );
                 AddAuditChange(oldAuditValues, newAuditValues, "Email", originalEmail, user.Email);
-                AddAuditChange(oldAuditValues, newAuditValues, "FirstName", originalFirstName, user.FirstName);
-                AddAuditChange(oldAuditValues, newAuditValues, "LastName", originalLastName, user.LastName);
+                AddAuditChange(
+                    oldAuditValues,
+                    newAuditValues,
+                    "FirstName",
+                    originalFirstName,
+                    user.FirstName
+                );
+                AddAuditChange(
+                    oldAuditValues,
+                    newAuditValues,
+                    "LastName",
+                    originalLastName,
+                    user.LastName
+                );
 
                 if (passwordChanged)
                 {
@@ -660,11 +678,7 @@ namespace IRasRag.Application.Services.Implementations
                     GetUserStatusLabel(user.IsDeleted)
                 );
 
-                await WriteUpdateAuditLogAsync(
-                    user,
-                    oldAuditValues,
-                    newAuditValues
-                );
+                await WriteUpdateAuditLogAsync(user, oldAuditValues, newAuditValues);
 
                 return Result<UserDto>.Success(
                     new UserDto
@@ -674,7 +688,7 @@ namespace IRasRag.Application.Services.Implementations
                         RoleName = updatedRoleName,
                         Email = user.Email,
                         FirstName = user.FirstName,
-                        LastName = user.LastName
+                        LastName = user.LastName,
                     },
                     "Cập nhật người dùng thành công."
                 );
@@ -780,14 +794,22 @@ namespace IRasRag.Application.Services.Implementations
                 var newAuditValues = new Dictionary<string, object?>();
 
                 AddAuditChange(oldAuditValues, newAuditValues, "Email", originalEmail, user.Email);
-                AddAuditChange(oldAuditValues, newAuditValues, "FirstName", originalFirstName, user.FirstName);
-                AddAuditChange(oldAuditValues, newAuditValues, "LastName", originalLastName, user.LastName);
-
-                await WriteUpdateAuditLogAsync(
-                    user,
+                AddAuditChange(
                     oldAuditValues,
-                    newAuditValues
+                    newAuditValues,
+                    "FirstName",
+                    originalFirstName,
+                    user.FirstName
                 );
+                AddAuditChange(
+                    oldAuditValues,
+                    newAuditValues,
+                    "LastName",
+                    originalLastName,
+                    user.LastName
+                );
+
+                await WriteUpdateAuditLogAsync(user, oldAuditValues, newAuditValues);
 
                 return Result<UserDto>.Success(
                     _mapper.Map<UserDto>(user),

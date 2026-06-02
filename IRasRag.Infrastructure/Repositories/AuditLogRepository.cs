@@ -77,6 +77,30 @@ namespace IRasRag.Infrastructure.Repositories
                 query = query.Where(x => x.Timestamp <= toDate);
             }
 
+            if (!string.IsNullOrWhiteSpace(request.SearchQuery))
+            {
+                var q = request.SearchQuery.Trim().ToLower();
+                query = query.Where(x =>
+                    x.Email.ToLower().Contains(q)
+                    || (x.FirstName != null && x.FirstName.ToLower().Contains(q))
+                    || (x.LastName != null && x.LastName.ToLower().Contains(q))
+                    ||
+                    // Tìm full name "LastName FirstName" — VD: "Nguyễn Văn A"
+                    (
+                        x.LastName != null
+                        && x.FirstName != null
+                        && (x.LastName + " " + x.FirstName).ToLower().Contains(q)
+                    )
+                    ||
+                    // Tìm full name "FirstName LastName" — VD: "Văn A Nguyễn"
+                    (
+                        x.LastName != null
+                        && x.FirstName != null
+                        && (x.FirstName + " " + x.LastName).ToLower().Contains(q)
+                    )
+                );
+            }
+
             return query;
         }
 

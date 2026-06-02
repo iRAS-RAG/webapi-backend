@@ -616,7 +616,10 @@ namespace IRasRag.Application.Services.Implementations
             );
         }
 
-        private async Task WriteUpdateAuditLogAsync(SpeciesStageConfigDto oldDto, SpeciesStageConfigDto newDto)
+        private async Task WriteUpdateAuditLogAsync(
+            SpeciesStageConfigDto oldDto,
+            SpeciesStageConfigDto newDto
+        )
         {
             await WriteAuditLogAsync(
                 AuditLogActions.Update,
