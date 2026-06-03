@@ -10,10 +10,14 @@ namespace IRasRag.Infrastructure.Services.Advisory
     public class IoTIngestBatchWriter : BackgroundService, IIoTIngestBatchWriter
     {
         private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan MaxBackoff = TimeSpan.FromMinutes(2);
 
         private readonly Channel<IoTIngestPayload> _channel;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<IoTIngestBatchWriter> _logger;
+
+        private TimeSpan _backoff = TimeSpan.Zero;
+        private DateTime _nextFlush = DateTime.MinValue;
 
         public IoTIngestBatchWriter(
             IServiceScopeFactory scopeFactory,
@@ -41,6 +45,10 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await Task.Delay(FlushInterval, stoppingToken);
+
+                    if (DateTime.UtcNow < _nextFlush)
+                        continue;
+
                     await FlushAsync(stoppingToken);
                 }
             }
@@ -65,13 +73,27 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 using var scope = _scopeFactory.CreateScope();
                 var client = scope.ServiceProvider.GetRequiredService<IIoTIngestClient>();
                 await client.IngestBatchAsync(new IoTBatchIngestPayload { Events = events }, ct);
+
+                // Success — reset backoff
+                _backoff = TimeSpan.Zero;
             }
             catch (Exception ex)
             {
+                if (_backoff == TimeSpan.Zero)
+                    _backoff = TimeSpan.FromSeconds(2);
+                else if (_backoff < MaxBackoff)
+                    _backoff = _backoff * 2;
+
+                if (_backoff > MaxBackoff)
+                    _backoff = MaxBackoff;
+
+                _nextFlush = DateTime.UtcNow + _backoff;
+
                 _logger.LogWarning(
                     ex,
-                    "Advisory IoT batch ingest failed for {Count} events — discarding",
-                    events.Count
+                    "Advisory IoT batch ingest failed for {Count} events — discarding. Backing off for {Backoff}",
+                    events.Count,
+                    _backoff
                 );
             }
         }

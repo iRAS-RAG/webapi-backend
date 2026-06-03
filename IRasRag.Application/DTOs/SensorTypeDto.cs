@@ -26,6 +26,9 @@ namespace IRasRag.Application.DTOs
         [Required(ErrorMessage = "Đơn vị đo là bắt buộc")]
         [MaxLength(50, ErrorMessage = "Đơn vị đo không được vượt quá 50 ký tự")]
         public string UnitOfMeasure { get; set; }
+
+        [MaxLength(50, ErrorMessage = "Mã định danh không được vượt quá 50 ký tự")]
+        public string? Code { get; set; }
     }
 
     // Update DTO
@@ -39,6 +42,9 @@ namespace IRasRag.Application.DTOs
 
         [MaxLength(50, ErrorMessage = "Đơn vị đo không được vượt quá 50 ký tự")]
         public string? UnitOfMeasure { get; set; }
+
+        [MaxLength(50, ErrorMessage = "Mã định danh không được vượt quá 50 ký tự")]
+        public string? Code { get; set; }
     }
 
     // List Request DTO

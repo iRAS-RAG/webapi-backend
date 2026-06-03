@@ -203,6 +203,9 @@ namespace IRasRag.Application.Services.Implementations
                 sensorType.Name = createDto.Name.Trim();
                 sensorType.MeasureType = createDto.MeasureType.Trim();
                 sensorType.UnitOfMeasure = createDto.UnitOfMeasure.Trim();
+                sensorType.Code = string.IsNullOrWhiteSpace(createDto.Code)
+                    ? null
+                    : createDto.Code.Trim();
 
                 await sensorTypeRepository.AddAsync(sensorType);
                 await _unitOfWork.SaveChangesAsync();
@@ -300,6 +303,11 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (!string.IsNullOrWhiteSpace(updateDto.UnitOfMeasure))
                     sensorType.UnitOfMeasure = updateDto.UnitOfMeasure.Trim();
+
+                if (updateDto.Code != null)
+                    sensorType.Code = string.IsNullOrWhiteSpace(updateDto.Code)
+                        ? null
+                        : updateDto.Code.Trim();
 
                 sensorTypeRepository.Update(sensorType);
                 await _unitOfWork.SaveChangesAsync();
