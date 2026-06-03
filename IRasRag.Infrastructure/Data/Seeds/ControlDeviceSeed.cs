@@ -16,48 +16,18 @@ namespace IRasRag.Infrastructure.Data.Seeds
 
         public static readonly Guid Pump1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000801");
 
-        public static readonly Guid Aerator1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000802");
-
-        public static readonly Guid Feeder1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000803");
-
         public static List<ControlDevice> ControlDevices =>
             [
                 new ControlDevice
                 {
                     Id = Pump1Id,
-                    Name = "Máy bơm chính 1",
-                    PinCode = 5,
+                    Name = "Máy bơm nước",
+                    PinCode = 9,
                     State = false,
                     CommandOn = "PUMP1_ON",
                     CommandOff = "PUMP1_OFF",
                     MasterBoardId = MasterBoardSeed.MasterBoardId,
                     ControlDeviceTypeId = ControlDeviceTypeSeed.PumpTypeId,
-                    CreatedAt = SeedTimestamp,
-                    ModifiedAt = SeedTimestamp,
-                },
-                new ControlDevice
-                {
-                    Id = Aerator1Id,
-                    Name = "Máy sục khí 1",
-                    PinCode = 6,
-                    State = false,
-                    CommandOn = "AERATOR1_ON",
-                    CommandOff = "AERATOR1_OFF",
-                    MasterBoardId = MasterBoardSeed.MasterBoardId,
-                    ControlDeviceTypeId = ControlDeviceTypeSeed.AeratorTypeId,
-                    CreatedAt = SeedTimestamp,
-                    ModifiedAt = SeedTimestamp,
-                },
-                new ControlDevice
-                {
-                    Id = Feeder1Id,
-                    Name = "Máy cho ăn tự động 1",
-                    PinCode = 7,
-                    State = false,
-                    CommandOn = "FEEDER1_ON",
-                    CommandOff = "FEEDER1_OFF",
-                    MasterBoardId = MasterBoardSeed.MasterBoardId,
-                    ControlDeviceTypeId = ControlDeviceTypeSeed.FeederTypeId,
                     CreatedAt = SeedTimestamp,
                     ModifiedAt = SeedTimestamp,
                 },

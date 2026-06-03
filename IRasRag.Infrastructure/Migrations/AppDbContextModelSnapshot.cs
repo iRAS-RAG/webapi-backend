@@ -112,8 +112,8 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            RaisedAt = new DateTime(2024, 1, 15, 14, 30, 0, 0, DateTimeKind.Utc),
-                            ResolvedAt = new DateTime(2024, 1, 15, 18, 0, 0, 0, DateTimeKind.Utc),
+                            RaisedAt = new DateTime(2025, 8, 10, 14, 30, 0, 0, DateTimeKind.Utc),
+                            ResolvedAt = new DateTime(2025, 8, 10, 18, 0, 0, 0, DateTimeKind.Utc),
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
@@ -126,13 +126,13 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            RaisedAt = new DateTime(2024, 1, 16, 8, 0, 0, 0, DateTimeKind.Utc),
-                            ResolvedAt = new DateTime(2024, 1, 16, 10, 30, 0, 0, DateTimeKind.Utc),
+                            RaisedAt = new DateTime(2025, 8, 14, 8, 0, 0, 0, DateTimeKind.Utc),
+                            ResolvedAt = new DateTime(2025, 8, 14, 10, 30, 0, 0, DateTimeKind.Utc),
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
                             Status = "RESOLVED",
-                            TriggerValue = 7.2000000000000002
+                            TriggerValue = 8.4000000000000004
                         },
                         new
                         {
@@ -140,12 +140,12 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            RaisedAt = new DateTime(2024, 1, 17, 12, 0, 0, 0, DateTimeKind.Utc),
+                            RaisedAt = new DateTime(2025, 9, 5, 12, 0, 0, 0, DateTimeKind.Utc),
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
-                            SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
+                            SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000509"),
                             Status = "ACKNOWLEDGED",
-                            TriggerValue = 28.5
+                            TriggerValue = 30.199999999999999
                         });
                 });
 
@@ -295,11 +295,12 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002101"),
-                            ActualStartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualEndDate = new DateTime(2025, 8, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedEndDate = new DateTime(2024, 2, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedStartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ExpectedDurationDays = 30,
+                            EstimatedEndDate = new DateTime(2025, 8, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 21,
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Sequence = 1,
@@ -308,28 +309,86 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002102"),
+                            ActualEndDate = new DateTime(2025, 9, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2025, 8, 22, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedEndDate = new DateTime(2024, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedStartDate = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ExpectedDurationDays = 90,
+                            EstimatedEndDate = new DateTime(2025, 9, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2025, 8, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 30,
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Sequence = 2,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000603")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002103"),
+                            ActualEndDate = new DateTime(2025, 11, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2025, 9, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2025, 9, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 60,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 3,
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602")
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002201"),
-                            ActualEndDate = new DateTime(2026, 4, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ActualStartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002104"),
+                            ActualEndDate = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2025, 11, 22, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedEndDate = new DateTime(2026, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedStartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ExpectedDurationDays = 30,
+                            EstimatedEndDate = new DateTime(2026, 2, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2025, 11, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 90,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 4,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000604")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002201"),
+                            ActualEndDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 21,
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Sequence = 1,
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002202"),
+                            ActualEndDate = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 30,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 2,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000603")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000002203"),
+                            ActualEndDate = new DateTime(2026, 5, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2026, 6, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpectedDurationDays = 60,
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sequence = 3,
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602")
                         });
                 });
 
@@ -473,34 +532,8 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Máy bơm chính 1",
-                            PinCode = 5,
-                            State = false
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000802"),
-                            CommandOff = "AERATOR1_OFF",
-                            CommandOn = "AERATOR1_ON",
-                            ControlDeviceTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000702"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Máy sục khí 1",
-                            PinCode = 6,
-                            State = false
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000803"),
-                            CommandOff = "FEEDER1_OFF",
-                            CommandOn = "FEEDER1_ON",
-                            ControlDeviceTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000703"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Máy cho ăn tự động 1",
-                            PinCode = 7,
+                            Name = "Máy bơm nước",
+                            PinCode = 9,
                             State = false
                         });
                 });
@@ -886,35 +919,40 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            ActualHarvestDate = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualHarvestWeightKg = 412.5,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrentQuantity = 950,
-                            CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
-                            EstimatedHarvestCount = 900,
-                            EstimatedHarvestDate = new DateTime(2026, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedHarvestWeightKg = 90.0,
+                            CurrentQuantity = 825,
+                            CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000604"),
+                            EstimatedHarvestCount = 830,
+                            EstimatedHarvestDate = new DateTime(2026, 2, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedHarvestWeightKg = 415.0,
+                            Fcr = 1.55,
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             InitialQuantity = 1000,
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Vụ nuôi cá rô phi 2026-05",
-                            StartDate = new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "ACTIVE",
+                            Name = "Vụ nuôi cá rô phi 2025-08",
+                            StartDate = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "HARVESTED",
                             UnitOfMeasure = "con"
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
-                            ActualHarvestDate = new DateTime(2026, 4, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualHarvestDate = new DateTime(2026, 5, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualHarvestWeightKg = 73.5,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrentQuantity = 790,
+                            CurrentQuantity = 700,
                             CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
-                            EstimatedHarvestCount = 780,
-                            EstimatedHarvestDate = new DateTime(2026, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedHarvestWeightKg = 78.0,
+                            EstimatedHarvestCount = 680,
+                            EstimatedHarvestDate = new DateTime(2026, 6, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedHarvestWeightKg = 70.0,
+                            Fcr = 1.3,
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             InitialQuantity = 800,
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Vụ nuôi cá rô phi 2026-01",
-                            StartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Vụ nuôi cá rô phi 2026-03",
+                            StartDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "HARVESTED",
                             UnitOfMeasure = "con"
                         });
@@ -967,8 +1005,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn có hàm lượng protein cao, phù hợp cho giai đoạn đầu phát triển của cá.",
-                            Manufacturer = "AquaFeed Solutions",
+                            Description = "Thức ăn dạng bột mịn, hàm lượng protein cao (≥40%), phù hợp cho giai đoạn cá bột.",
+                            Manufacturer = "Grobest Vietnam",
                             Name = "Giàu protein",
                             ProteinPercentage = 45.0
                         },
@@ -976,10 +1014,55 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn tiêu chuẩn, phù hợp cho giai đoạn phát triển tiếp theo của cá.",
-                            Manufacturer = "AquaFeed Solutions",
+                            Description = "Thức ăn viên nhỏ, hàm lượng protein trung bình (35–40%), phù hợp cho giai đoạn cá hương và cá giống.",
+                            Manufacturer = "Cargill Vietnam",
                             Name = "Tiêu chuẩn",
                             ProteinPercentage = 38.0
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thức ăn viên lớn, hàm lượng protein vừa phải (28–32%), phù hợp cho giai đoạn cá thương phẩm đến khi thu hoạch.",
+                            Manufacturer = "Uni-President Vietnam",
+                            Name = "Thương phẩm",
+                            ProteinPercentage = 30.0
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000204"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thức ăn dạng bột/cám mịn cho cua con, hàm lượng protein rất cao (≥48%), bổ sung khoáng chất cho quá trình lột xác của cua bột và cua giống.",
+                            Manufacturer = "CP Vietnam",
+                            Name = "Cua giàu đạm",
+                            ProteinPercentage = 48.0
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000205"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thức ăn viên vừa cho cua thịt, hàm lượng protein cao (38–42%), phù hợp cho giai đoạn nuôi thương phẩm đến khi thu hoạch.",
+                            Manufacturer = "Tomboy Aquafeed",
+                            Name = "Cua thương phẩm",
+                            ProteinPercentage = 40.0
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000206"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thức ăn dạng bột siêu mịn, hàm lượng protein rất cao (≥50%), giàu DHA và astaxanthin, mô phỏng dinh dưỡng từ Artemia/mysid. Dành cho giai đoạn mực ấu trùng và mực non mới chuyển đổi thức ăn.",
+                            Manufacturer = "Skretting Vietnam",
+                            Name = "Mực ấu trùng",
+                            ProteinPercentage = 50.0
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000207"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Thức ăn viên vừa, hàm lượng protein cao (42–46%), phù hợp cho giai đoạn mực non đến mực thương phẩm.",
+                            Manufacturer = "Cargill Vietnam",
+                            Name = "Mực thương phẩm",
+                            ProteinPercentage = 44.0
                         });
                 });
 
@@ -1036,9 +1119,9 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001601"),
-                            Amount = 5.5,
+                            Amount = 3.0,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedDate = new DateTime(2024, 1, 20, 6, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 10, 6, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
@@ -1046,9 +1129,9 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001602"),
-                            Amount = 5.7999999999999998,
+                            Amount = 2.7999999999999998,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedDate = new DateTime(2024, 1, 20, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 14, 12, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
@@ -1056,9 +1139,9 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001603"),
-                            Amount = 6.0,
+                            Amount = 9.0,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedDate = new DateTime(2024, 1, 20, 18, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 9, 5, 18, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
@@ -1178,17 +1261,81 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Giai đoạn từ khi nở đến khi cá phát triển đủ lớn để chuyển sang giai đoạn cá giống.",
+                            Description = "Giai đoạn từ khi nở đến 21 ngày tuổi. Cá có kích thước nhỏ (0.5–2 g), cần thức ăn giàu đạm (≥40%) dạng bột mịn, cho ăn 6–8 lần/ngày.",
                             Name = "Cá bột",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 22 đến 50 ngày tuổi. Cá đạt 2–20 g, chuyển sang thức ăn viên nhỏ (35–40% đạm), cho ăn 4–6 lần/ngày.",
+                            Name = "Cá hương",
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Giai đoạn từ cá bột đến khi cá đạt kích thước thương phẩm.",
+                            Description = "Giai đoạn từ 51 đến 110 ngày tuổi. Cá đạt 20–150 g, thức ăn viên vừa (30–35% đạm), cho ăn 3–4 lần/ngày.",
                             Name = "Cá giống",
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 111 ngày tuổi đến khi thu hoạch (~200 ngày). Cá đạt 150–500+ g, thức ăn viên lớn (28–32% đạm), cho ăn 2–3 lần/ngày.",
+                            Name = "Cá thương phẩm",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ khi ấu trùng megalopa bám vào giá thể đến 20 ngày tuổi. Cua đạt 0.02–0.5 g, cần thức ăn giàu đạm (≥48%) dạng bột mịn, cho ăn 5–6 lần/ngày. Tỷ lệ sống thấp do tập tính ăn thịt lẫn nhau.",
+                            Name = "Cua bột",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 21 đến 60 ngày tuổi. Cua đạt 0.5–50 g, thức ăn viên nhỏ (40–45% đạm), cho ăn 3–4 lần/ngày. Cần giá thể (lưới, ống nhựa) để giảm tỷ lệ ăn thịt đồng loại.",
+                            Name = "Cua giống",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 61 ngày tuổi đến khi thu hoạch (~150 ngày). Cua đạt 50–350+ g, thức ăn viên vừa (38–42% đạm) kết hợp cá tạp tươi, cho ăn 2–3 lần/ngày. Nuôi trong lồng riêng hoặc ao có giá thể để tránh đánh nhau.",
+                            Name = "Cua thịt",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ khi nở đến 30 ngày tuổi. Mực đạt 0.001–0.5 g, sống trôi nổi (planktonic), cần thức ăn sống (Artemia, mysid) 6–8 lần/ngày. Rất nhạy cảm với ánh sáng và chất lượng nước. Bể nuôi phải dạng tròn, không góc cạnh để tránh mực va đập.",
+                            Name = "Mực ấu trùng",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 31 đến 90 ngày tuổi. Mực đạt 0.5–50 g, bắt đầu bám đáy, chuyển dần từ thức ăn sống sang thức ăn chết (tôm/cá băm nhỏ), cho ăn 4–5 lần/ngày. Tỷ lệ sống phụ thuộc vào chất lượng thức ăn chuyển đổi.",
+                            Name = "Mực non",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Giai đoạn từ 91 ngày tuổi đến khi thu hoạch (~180 ngày). Mực đạt 50–400 g, ăn cá/tôm cắt miếng, cho ăn 2–3 lần/ngày. Mực trưởng thành có tập tính săn mồi mạnh, cần cho ăn đầy đủ để tránh ăn thịt lẫn nhau.",
+                            Name = "Mực thương phẩm",
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
                         });
                 });
 
@@ -1363,29 +1510,11 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001101"),
-                            ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000803"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001001"),
-                            TargetState = true,
-                            TriggerCondition = "ALWAYS"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001102"),
                             ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000801"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001002"),
                             TargetState = true,
                             TriggerCondition = "ABOVE_MAX"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001103"),
-                            ControlDeviceId = new Guid("aaaaaaaa-0000-0000-0000-000000000802"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobId = new Guid("aaaaaaaa-0000-0000-0000-000000001003"),
-                            TargetState = true,
-                            TriggerCondition = "ALWAYS"
                         });
                 });
 
@@ -1556,8 +1685,8 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001701"),
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Date = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LostWeightKg = 4.5,
+                            Date = new DateTime(2025, 9, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.45000000000000001,
                             Quantity = 30,
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
                         },
@@ -1566,8 +1695,8 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001702"),
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Date = new DateTime(2024, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            LostWeightKg = 3.0,
+                            Date = new DateTime(2025, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 2.0,
                             Quantity = 20,
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
                         });
@@ -2215,6 +2344,18 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Cá rô phi"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000102"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Cua biển"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000103"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Mực lá"
                         });
                 });
 
@@ -2289,28 +2430,132 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
-                            AmountPer100Fish = 0.5,
-                            ExpectedDurationDays = 30,
-                            ExpectedWeightKgPerFish = 0.01,
-                            FrequencyPerDay = 6,
+                            AmountPer100Fish = 0.29999999999999999,
+                            ExpectedDurationDays = 21,
+                            ExpectedWeightKgPerFish = 0.002,
+                            FrequencyPerDay = 7,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxStockingDensity = 50.0,
+                            MaxStockingDensity = 300.0,
                             Sequence = 1,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
+                            SurvivalRate = 0.92000000000000004
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000603"),
+                            AmountPer100Fish = 1.0,
+                            ExpectedDurationDays = 30,
+                            ExpectedWeightKgPerFish = 0.02,
+                            FrequencyPerDay = 5,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxStockingDensity = 120.0,
+                            Sequence = 2,
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
                             SurvivalRate = 0.94999999999999996
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
-                            AmountPer100Fish = 3.0,
-                            ExpectedDurationDays = 90,
-                            ExpectedWeightKgPerFish = 0.10000000000000001,
+                            AmountPer100Fish = 2.5,
+                            ExpectedDurationDays = 60,
+                            ExpectedWeightKgPerFish = 0.14999999999999999,
                             FrequencyPerDay = 3,
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxStockingDensity = 30.0,
-                            Sequence = 2,
+                            MaxStockingDensity = 40.0,
+                            Sequence = 3,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
+                            SurvivalRate = 0.96999999999999997
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000604"),
+                            AmountPer100Fish = 4.0,
+                            ExpectedDurationDays = 90,
+                            ExpectedWeightKgPerFish = 0.5,
+                            FrequencyPerDay = 2,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxStockingDensity = 20.0,
+                            Sequence = 4,
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101"),
                             SurvivalRate = 0.97999999999999998
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000605"),
+                            AmountPer100Fish = 0.5,
+                            ExpectedDurationDays = 20,
+                            ExpectedWeightKgPerFish = 0.00050000000000000001,
+                            FrequencyPerDay = 5,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxStockingDensity = 200.0,
+                            Sequence = 1,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102"),
+                            SurvivalRate = 0.80000000000000004
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
+                            AmountPer100Fish = 2.0,
+                            ExpectedDurationDays = 40,
+                            ExpectedWeightKgPerFish = 0.050000000000000003,
+                            FrequencyPerDay = 4,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxStockingDensity = 50.0,
+                            Sequence = 2,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102"),
+                            SurvivalRate = 0.84999999999999998
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000607"),
+                            AmountPer100Fish = 5.0,
+                            ExpectedDurationDays = 90,
+                            ExpectedWeightKgPerFish = 0.34999999999999998,
+                            FrequencyPerDay = 2,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxStockingDensity = 10.0,
+                            Sequence = 3,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102"),
+                            SurvivalRate = 0.90000000000000002
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000608"),
+                            AmountPer100Fish = 0.20000000000000001,
+                            ExpectedDurationDays = 30,
+                            ExpectedWeightKgPerFish = 0.00050000000000000001,
+                            FrequencyPerDay = 7,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxStockingDensity = 500.0,
+                            Sequence = 1,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103"),
+                            SurvivalRate = 0.5
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
+                            AmountPer100Fish = 1.5,
+                            ExpectedDurationDays = 60,
+                            ExpectedWeightKgPerFish = 0.050000000000000003,
+                            FrequencyPerDay = 5,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxStockingDensity = 100.0,
+                            Sequence = 2,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103"),
+                            SurvivalRate = 0.69999999999999996
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000610"),
+                            AmountPer100Fish = 4.0,
+                            ExpectedDurationDays = 90,
+                            ExpectedWeightKgPerFish = 0.40000000000000002,
+                            FrequencyPerDay = 3,
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxStockingDensity = 30.0,
+                            Sequence = 3,
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103"),
+                            SurvivalRate = 0.84999999999999998
                         });
                 });
 
@@ -2340,8 +2585,63 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000603"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
+                        },
+                        new
+                        {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000604"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000605"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000204")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000204")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000205")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000607"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000205")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000608"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000206")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000206")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000207")
+                        },
+                        new
+                        {
+                            SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000610"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000207")
                         });
                 });
 
@@ -2405,8 +2705,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000501"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 30.0,
-                            MinValue = 26.0,
+                            MaxValue = 29.0,
+                            MinValue = 27.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
@@ -2414,28 +2714,712 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000502"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 8.0,
-                            MinValue = 6.5,
+                            MaxValue = 8.1999999999999993,
+                            MinValue = 6.7999999999999998,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000503"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 29.0,
-                            MinValue = 25.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 400.0,
+                            MinValue = 250.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000504"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 45.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000505"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000506"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000507"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 1.5,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000508"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
+                            MaxValue = 40.0,
+                            MinValue = 20.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000509"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 29.5,
+                            MinValue = 26.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000510"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 8.5,
+                            MinValue = 6.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000511"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 400.0,
+                            MinValue = 200.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000512"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 50.0,
+                            MinValue = 35.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000513"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000514"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000515"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 2.0,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000516"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
+                            MaxValue = 45.0,
+                            MinValue = 25.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000517"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 30.0,
+                            MinValue = 26.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000518"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
                             MaxValue = 8.5,
                             MinValue = 6.5,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000519"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 450.0,
+                            MinValue = 200.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000520"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 55.0,
+                            MinValue = 40.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000521"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000522"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000523"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 2.5,
+                            MinValue = 0.80000000000000004,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000524"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
+                            MaxValue = 50.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000525"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 30.0,
+                            MinValue = 26.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000526"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 8.5,
+                            MinValue = 6.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000527"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 450.0,
+                            MinValue = 200.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000528"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 55.0,
+                            MinValue = 40.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000529"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000530"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000531"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 3.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000532"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
+                            MaxValue = 60.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000533"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 30.5,
+                            MinValue = 27.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000534"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 8.5,
+                            MinValue = 7.7999999999999998,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000535"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 400.0,
+                            MinValue = 250.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000536"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 40.0,
+                            MinValue = 25.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000537"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000538"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000539"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 1.5,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000540"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
+                            MaxValue = 35.0,
+                            MinValue = 20.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000541"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 31.0,
+                            MinValue = 27.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000542"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 8.5,
+                            MinValue = 7.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000543"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 400.0,
+                            MinValue = 200.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000544"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 50.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000545"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000546"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000547"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 2.0,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000548"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
+                            MaxValue = 45.0,
+                            MinValue = 25.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000549"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 31.0,
+                            MinValue = 26.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000550"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 8.5,
+                            MinValue = 7.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000551"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 450.0,
+                            MinValue = 200.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000552"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 55.0,
+                            MinValue = 35.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000553"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000554"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000555"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 3.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000556"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
+                            MaxValue = 55.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000557"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 27.0,
+                            MinValue = 25.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000558"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 8.3000000000000007,
+                            MinValue = 8.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000559"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 500.0,
+                            MinValue = 350.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000560"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 45.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000561"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000562"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000563"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 1.5,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000564"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
+                            MaxValue = 35.0,
+                            MinValue = 20.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000565"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 28.0,
+                            MinValue = 24.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000566"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 8.3000000000000007,
+                            MinValue = 7.7999999999999998,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000567"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 500.0,
+                            MinValue = 300.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000568"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 50.0,
+                            MinValue = 35.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000569"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000570"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000571"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 2.0,
+                            MinValue = 0.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000572"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
+                            MaxValue = 45.0,
+                            MinValue = 25.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000573"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 28.0,
+                            MinValue = 24.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000574"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 8.3000000000000007,
+                            MinValue = 7.7999999999999998,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000575"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 500.0,
+                            MinValue = 300.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000576"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 55.0,
+                            MinValue = 40.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000577"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 1.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000578"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 12.5,
+                            MinValue = 11.5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000579"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 3.0,
+                            MinValue = 1.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000580"),
+                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
+                            MaxValue = 55.0,
+                            MinValue = 30.0,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
                         });
                 });
 

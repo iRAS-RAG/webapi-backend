@@ -24,6 +24,9 @@ namespace IRasRag.Application.DTOs
         // Growth estimation
         public double? ExpectedWeightKgPerFish { get; set; }
         public double? SurvivalRate { get; set; }
+
+        // Safe-range thresholds for all sensor types in this stage
+        public List<SensorThresholdSummaryDto> Thresholds { get; set; } = [];
     }
 
     public class CreateSpeciesStageConfigDto

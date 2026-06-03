@@ -41,6 +41,16 @@ namespace IRasRag.Application.DTOs
         public double? MaxValue { get; set; }
     }
 
+    // Lightweight threshold summary — only sensor-level fields (no species/stage noise)
+    public class SensorThresholdSummaryDto
+    {
+        public Guid SensorTypeId { get; set; }
+        public string SensorTypeName { get; set; }
+        public double MinValue { get; set; }
+        public double MaxValue { get; set; }
+        public string UnitOfMeasure { get; set; }
+    }
+
     // List Request DTO
     public class SpeciesThresholdListRequest : BasePaginatedListRequest
     {

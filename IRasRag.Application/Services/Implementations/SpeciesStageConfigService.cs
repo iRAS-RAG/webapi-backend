@@ -9,6 +9,7 @@ using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
+using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -438,6 +439,43 @@ namespace IRasRag.Application.Services.Implementations
                     request.Page,
                     request.PageSize
                 );
+
+            // Attach sensor thresholds for each returned config
+            if (pagedResult.Items.Count > 0)
+            {
+                var growthStageIds = pagedResult
+                    .Items.Select(c => c.GrowthStageId)
+                    .Distinct()
+                    .ToList();
+
+                var entities = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .ListAsync(
+                        new SpeciesThresholdBySpeciesAndStagesSpec(speciesId, growthStageIds)
+                    );
+
+                var summariesByStage = entities
+                    .GroupBy(t => t.GrowthStageId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g =>
+                            g.Select(t => new SensorThresholdSummaryDto
+                                {
+                                    SensorTypeId = t.SensorTypeId,
+                                    SensorTypeName = t.SensorType?.Name ?? string.Empty,
+                                    MinValue = t.MinValue,
+                                    MaxValue = t.MaxValue,
+                                    UnitOfMeasure = t.SensorType?.UnitOfMeasure ?? string.Empty,
+                                })
+                                .ToList()
+                    );
+
+                foreach (var dto in pagedResult.Items)
+                {
+                    if (summariesByStage.TryGetValue(dto.GrowthStageId, out var summaries))
+                        dto.Thresholds = summaries;
+                }
+            }
 
             return new PaginatedResult<SpeciesStageConfigDto>
             {
