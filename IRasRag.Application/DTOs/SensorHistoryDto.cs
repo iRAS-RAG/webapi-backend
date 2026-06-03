@@ -1,7 +1,8 @@
 namespace IRasRag.Application.DTOs
 {
-    public class SensorHistoryDto
+    public class SensorHistoryPointDto
     {
-        public IReadOnlyList<double?> Datasets { get; set; } = new List<double?>();
+        public DateTimeOffset RecordedAt { get; set; }
+        public double? Value { get; set; }
     }
 }

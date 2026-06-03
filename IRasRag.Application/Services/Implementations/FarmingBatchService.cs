@@ -1393,7 +1393,7 @@ namespace IRasRag.Application.Services.Implementations
                 {
                     batch.ActualHarvestWeightKg = actualHarvestWeightKg.Value;
                 }
-                if (orderedStages.Any())
+                if (orderedStages.Count != 0)
                 {
                     batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
                 }
@@ -1633,7 +1633,7 @@ namespace IRasRag.Application.Services.Implementations
                 batch.Status = FarmingBatchStatus.TERMINATED;
                 batch.ActualHarvestDate = now;
 
-                if (orderedStages.Any())
+                if (orderedStages.Count != 0)
                 {
                     batch.CurrentStageConfigId = orderedStages.Last().SpeciesStageConfigId;
                 }

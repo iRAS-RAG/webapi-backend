@@ -130,7 +130,7 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<SensorHistoryDto>> GetSensorHistoryAsync(
+        public async Task<Result<List<SensorHistoryPointDto>>> GetSensorHistoryAsync(
             Guid sensorId,
             DateTime from,
             DateTime to,
@@ -143,7 +143,7 @@ namespace IRasRag.Application.Services.Implementations
                 if (sensor == null)
                 {
                     _logger.LogWarning("Không tìm thấy cảm biến với Id: {SensorId}", sensorId);
-                    return Result<SensorHistoryDto>.Failure(
+                    return Result<List<SensorHistoryPointDto>>.Failure(
                         $"Không tìm thấy cảm biến với Id: {sensorId}",
                         ResultType.NotFound
                     );
@@ -155,12 +155,15 @@ namespace IRasRag.Application.Services.Implementations
                     interval
                 );
 
-                return Result<SensorHistoryDto>.Success(result, "Lấy lịch sử cảm biến thành công");
+                return Result<List<SensorHistoryPointDto>>.Success(
+                    result,
+                    "Lấy lịch sử cảm biến thành công"
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy lịch sử cảm biến với Id: {SensorId}", sensorId);
-                return Result<SensorHistoryDto>.Failure(
+                return Result<List<SensorHistoryPointDto>>.Failure(
                     "Đã xảy ra lỗi khi lấy lịch sử cảm biến",
                     ResultType.Unexpected
                 );

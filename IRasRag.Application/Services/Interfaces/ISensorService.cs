@@ -15,7 +15,7 @@ namespace IRasRag.Application.Services.Interfaces
             Guid sensorId,
             SensorLogListRequest request
         );
-        Task<Result<SensorHistoryDto>> GetSensorHistoryAsync(
+        Task<Result<List<SensorHistoryPointDto>>> GetSensorHistoryAsync(
             Guid sensorId,
             DateTime from,
             DateTime to,

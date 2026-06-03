@@ -1,4 +1,4 @@
-﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.CloudFileStorage;
@@ -9,6 +9,7 @@ using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Mqtt;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Simulation;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Settings;
 using IRasRag.Application.Common.Utils;
@@ -24,6 +25,7 @@ using IRasRag.Infrastructure.Services.Email;
 using IRasRag.Infrastructure.Services.FileExtractors;
 using IRasRag.Infrastructure.Services.FileValidator;
 using IRasRag.Infrastructure.Services.Mqtt;
+using IRasRag.Infrastructure.Services.Simulation;
 using IRasRag.Infrastructure.Services.Telemetry;
 using IRasRag.Infrastructure.Services.TextExtractors;
 using IRasRag.Infrastructure.Settings;
@@ -111,6 +113,9 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
             services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
             services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
+
+            // Simulation
+            services.AddSingleton<ISimulationStateService, SimulationStateService>();
 
             // Telemetry
             services.AddSingleton<TelemetryLogBatchWriter>();

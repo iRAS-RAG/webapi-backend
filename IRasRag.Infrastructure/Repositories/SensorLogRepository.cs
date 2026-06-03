@@ -78,15 +78,15 @@ namespace IRasRag.Infrastructure.Repositories
             return (items, totalCount);
         }
 
-        public async Task<SensorHistoryDto> GetLogsByTimeRangeAsync(
+        public async Task<List<SensorHistoryPointDto>> GetLogsByTimeRangeAsync(
             Guid sensorId,
             DateTime from,
             DateTime to,
             int interval
         )
         {
-            var utcFrom = DateTime.SpecifyKind(from, DateTimeKind.Utc);
-            var utcTo = DateTime.SpecifyKind(to, DateTimeKind.Utc);
+            var utcFrom = from.Kind == DateTimeKind.Utc ? from : from.ToUniversalTime();
+            var utcTo = to.Kind == DateTimeKind.Utc ? to : to.ToUniversalTime();
 
             if (utcTo <= utcFrom)
                 throw new ArgumentException("To must be greater than From");
@@ -97,6 +97,7 @@ namespace IRasRag.Infrastructure.Repositories
 
             var bucketCount = (int)Math.Ceiling((utcTo - utcFrom).TotalMinutes / interval);
             var stride = TimeSpan.FromMinutes(interval);
+            var vietnamOffset = TimeSpan.FromHours(7);
 
             // date_bin buckets the 1-min PeriodStart into the requested interval
             // Sum(Average * SampleCount) / Sum(SampleCount) is the weighted average
@@ -112,22 +113,24 @@ namespace IRasRag.Infrastructure.Repositories
                     BucketStart = g.Key,
                     Avg = g.Sum(x => x.Average * x.SampleCount) / g.Sum(x => x.SampleCount),
                 })
-                .OrderBy(x => x.BucketStart)
                 .ToListAsync();
 
-            // Create a lookup of bucket index to average value
             var lookup = buckets.ToDictionary(
                 b => (long)(b.BucketStart - utcFrom).TotalMinutes / interval,
                 b => b.Avg
             );
 
-            // Fill in missing buckets with nulls
-            var dataset = Enumerable
+            return Enumerable
                 .Range(0, bucketCount)
-                .Select(i => lookup.TryGetValue(i, out var v) ? v : (double?)null)
+                .Select(i => new SensorHistoryPointDto
+                {
+                    RecordedAt = new DateTimeOffset(
+                        utcFrom.AddMinutes((double)i * interval),
+                        TimeSpan.Zero
+                    ).ToOffset(vietnamOffset),
+                    Value = lookup.TryGetValue(i, out var v) ? v : null,
+                })
                 .ToList();
-
-            return new SensorHistoryDto { Datasets = dataset };
         }
     }
 }

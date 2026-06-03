@@ -1,6 +1,7 @@
-﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
+using IRasRag.Application.Common.Interfaces.Simulation;
 using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models.Advisory;
 using IRasRag.Application.Common.Models.Mqtt;
@@ -23,6 +24,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
         private readonly ILiveDataNotifier _liveDataNotifier;
         private readonly IIoTIngestBatchWriter _iotIngestBatchWriter;
         private readonly ITelemetryWindowService _telemetryWindow;
+        private readonly ISimulationStateService _simulationState;
 
         public TelemetryDispatchService(
             IUnitOfWork unitOfWork,
@@ -33,7 +35,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             IAlertStateEvaluator alertStateEvaluator,
             ILiveDataNotifier liveDataNotifier,
             IIoTIngestBatchWriter iotIngestBatchWriter,
-            ITelemetryWindowService telemetryWindow
+            ITelemetryWindowService telemetryWindow,
+            ISimulationStateService simulationState
         )
         {
             _unitOfWork = unitOfWork;
@@ -45,11 +48,29 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             _liveDataNotifier = liveDataNotifier;
             _iotIngestBatchWriter = iotIngestBatchWriter;
             _telemetryWindow = telemetryWindow;
+            _simulationState = simulationState;
+        }
+
+        private static bool IsTemperatureSensor(Sensor? sensor)
+        {
+            var name = sensor?.SensorType?.Name ?? "";
+            return name.Contains("nhiệt", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("temp", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("nhiệt", StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task DispatchAsync(SensorTelemetry telemetry, string macFromTopic)
         {
             var timestamp = DateTime.UtcNow;
+            var isSimulating = _simulationState.IsSimulating(macFromTopic);
+
+            if (isSimulating)
+            {
+                _logger.LogInformation(
+                    "MAC {MacAddress} is in simulation mode — temperature readings will be replaced with random 50-60°C values",
+                    macFromTopic
+                );
+            }
 
             // Step 1: Resolve masterboard
             var masterboard = await _cache.GetMasterboardByMacAsync(macFromTopic);
@@ -78,7 +99,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     batch: null,
                     species: null,
                     stage: null,
-                    tankName: masterboard.FishTank.Name
+                    tankName: masterboard.FishTank.Name,
+                    isSimulating: isSimulating
                 );
                 return;
             }
@@ -102,7 +124,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     batch: null,
                     species: null,
                     stage: null,
-                    tankName: masterboard.FishTank.Name
+                    tankName: masterboard.FishTank.Name,
+                    isSimulating: isSimulating
                 );
                 return;
             }
@@ -123,7 +146,8 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                 batch,
                 species: stageConfig.Species.Name,
                 stage: stageConfig.GrowthStage.Name,
-                tankName: masterboard.FishTank.Name
+                tankName: masterboard.FishTank.Name,
+                isSimulating: isSimulating
             );
         }
 
@@ -137,12 +161,14 @@ namespace IRasRag.Infrastructure.Services.Telemetry
             FarmingBatch? batch,
             string? species,
             string? stage,
-            string tankName
+            string tankName,
+            bool isSimulating = false
         )
         {
             var sensors = await _cache.GetSensorsByMasterboardAsync(masterboardId);
             var bufferedLogs = new List<TelemetryLogWriteModel>();
             var metrics = new List<IoTMetric>();
+            var rng = Random.Shared;
 
             foreach (var reading in telemetry.Readings)
             {
@@ -157,14 +183,21 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     continue;
                 }
 
+                // Override reading value if in simulation mode and this is a temperature sensor
+                var finalValue = reading.Val;
+                if (isSimulating && IsTemperatureSensor(sensor))
+                {
+                    finalValue = Math.Round(50.0 + rng.NextDouble() * 10.0, 2); // Random 50.00 - 60.00
+                }
+
                 // Update latest cache for this sensor
-                _latestTelemetryCache.Set(sensor.Id, reading.Val, timestamp);
+                _latestTelemetryCache.Set(sensor.Id, finalValue, timestamp);
 
                 // Enqueue live reading — decoupled from ingestion path via Channel<T>
                 var push = new TelemetryPush(
                     sensor.Id,
                     tankId,
-                    reading.Val,
+                    finalValue,
                     timestamp,
                     sensor.SensorType?.Name
                 );
@@ -179,7 +212,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     && thresholds.TryGetValue(sensor.SensorTypeId, out var threshold)
                 )
                 {
-                    isWarning = ThresholdEvaluator.IsViolation(reading.Val, threshold);
+                    isWarning = ThresholdEvaluator.IsViolation(finalValue, threshold);
 
                     if (batch != null)
                     {
@@ -189,7 +222,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                             sensor.SensorTypeId,
                             batch.Id,
                             threshold,
-                            reading.Val,
+                            finalValue,
                             tankName,
                             sensor.SensorType?.Name
                         );
@@ -207,7 +240,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     new TelemetryLogWriteModel
                     {
                         SensorId = sensor.Id,
-                        Data = reading.Val,
+                        Data = finalValue,
                         IsWarning = isWarning,
                         CreatedAt = timestamp,
                     }
@@ -218,7 +251,7 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                         new IoTMetric
                         {
                             Code = sensor.SensorType.Code,
-                            Value = reading.Val,
+                            Value = finalValue,
                             Unit = sensor.SensorType.UnitOfMeasure,
                         }
                     );
