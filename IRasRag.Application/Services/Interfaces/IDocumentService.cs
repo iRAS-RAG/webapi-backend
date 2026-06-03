@@ -8,7 +8,7 @@ namespace IRasRag.Application.Services.Interfaces
     {
         Task<PaginatedResult<DocumentDto>> GetAllDocumentsAsync(DocumentListRequest request);
         Task<Result<DocumentDetailDto>> GetDocumentByIdAsync(Guid id);
-        Task<Result> CreateDocumentAsync(CreateDocumentDto dto);
+        Task<Result> CreateDocumentAsync(CreateDocumentDto dto, CancellationToken ct = default);
         Task<Result> UpdateDocumentAsync(Guid id, UpdateDocumentDto updateDto);
         Task<Result> DeleteDocumentAsync(Guid id);
         Task<Result> ResyncDocumentAsync(Guid id);

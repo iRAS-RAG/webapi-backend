@@ -139,7 +139,7 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Create Method
-        public async Task<Result> CreateDocumentAsync(CreateDocumentDto dto)
+        public async Task<Result> CreateDocumentAsync(CreateDocumentDto dto, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(dto.FileTitle))
             {
@@ -176,7 +176,7 @@ namespace IRasRag.Application.Services.Implementations
 
             // Create a copy of the file stream to avoid issues with stream position during upload and text extraction
             using var buffer = new MemoryStream();
-            await dto.FileStream.CopyToAsync(buffer);
+            await dto.FileStream.CopyToAsync(buffer, ct);
             buffer.Position = 0;
 
             var fileExtension = _fileContentValidator.DetectExtension(buffer);
@@ -217,7 +217,8 @@ namespace IRasRag.Application.Services.Implementations
                 fileUrl = await _cloudFileStorageService.UploadAsync(
                     buffer,
                     dto.FileName,
-                    dto.FileSize
+                    dto.FileSize,
+                    ct
                 );
             }
             catch (InvalidOperationException ex)
@@ -244,7 +245,7 @@ namespace IRasRag.Application.Services.Implementations
             try
             {
                 await _unitOfWork.GetRepository<Document>().AddAsync(document);
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(ct);
                 await _notifier.NotifyRagStatusUpdatedAsync(document.Id, DocumentRagStatus.Pending);
 
                 _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
