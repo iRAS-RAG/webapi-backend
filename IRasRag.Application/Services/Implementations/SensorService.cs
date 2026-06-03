@@ -155,7 +155,10 @@ namespace IRasRag.Application.Services.Implementations
                     interval
                 );
 
-                return Result<List<SensorHistoryPointDto>>.Success(result, "Lấy lịch sử cảm biến thành công");
+                return Result<List<SensorHistoryPointDto>>.Success(
+                    result,
+                    "Lấy lịch sử cảm biến thành công"
+                );
             }
             catch (Exception ex)
             {

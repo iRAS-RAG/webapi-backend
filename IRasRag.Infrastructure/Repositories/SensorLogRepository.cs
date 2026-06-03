@@ -124,8 +124,10 @@ namespace IRasRag.Infrastructure.Repositories
                 .Range(0, bucketCount)
                 .Select(i => new SensorHistoryPointDto
                 {
-                    RecordedAt = new DateTimeOffset(utcFrom.AddMinutes((double)i * interval), TimeSpan.Zero)
-                        .ToOffset(vietnamOffset),
+                    RecordedAt = new DateTimeOffset(
+                        utcFrom.AddMinutes((double)i * interval),
+                        TimeSpan.Zero
+                    ).ToOffset(vietnamOffset),
                     Value = lookup.TryGetValue(i, out var v) ? v : null,
                 })
                 .ToList();

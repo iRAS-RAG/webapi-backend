@@ -14,9 +14,14 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
 
             var sortMap = new Dictionary<string, Expression<Func<FarmingBatch, object?>>>
             {
+                ["name"] = fb => fb.Name,
                 ["startdate"] = fb => fb.StartDate,
                 ["status"] = fb => fb.Status,
                 ["currentquantity"] = fb => fb.CurrentQuantity,
+                ["speciesname"] = fb => fb.CurrentStageConfig.Species.Name,
+                ["fishtankname"] = fb => fb.FishTank.Name,
+                ["actualharvestdate"] = fb => fb.ActualHarvestDate,
+                ["estimatedharvestdate"] = fb => fb.EstimatedHarvestDate,
             };
 
             ApplySearch(request.SearchTerm, [fb => fb.Name, fb => fb.FishTank.Name]);
