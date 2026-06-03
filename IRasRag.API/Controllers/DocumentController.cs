@@ -91,7 +91,7 @@ namespace IRasRag.API.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> CreateDocument(string? fileTitle, IFormFile file)
+        public async Task<IActionResult> CreateDocument(string? fileTitle, IFormFile file, CancellationToken ct)
         {
             if (file == null)
             {
@@ -115,7 +115,7 @@ namespace IRasRag.API.Controllers
                 UploadedByUserId = userId.Value,
             };
 
-            var result = await _documentService.CreateDocumentAsync(dto);
+            var result = await _documentService.CreateDocumentAsync(dto, ct);
 
             return result.Type switch
             {
