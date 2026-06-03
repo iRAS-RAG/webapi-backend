@@ -45,7 +45,10 @@ namespace IRasRag.Infrastructure.Services.Advisory
             {
                 document.RagStatus = DocumentRagStatus.Processing;
                 await _unitOfWork.SaveChangesAsync();
-                await _notifier.NotifyRagStatusUpdatedAsync(documentId, DocumentRagStatus.Processing);
+                await _notifier.NotifyRagStatusUpdatedAsync(
+                    documentId,
+                    DocumentRagStatus.Processing
+                );
             }
 
             var response = await _ragChatClient.IngestDocumentByUrlAsync(

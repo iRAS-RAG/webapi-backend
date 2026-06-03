@@ -27,7 +27,12 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
             _cloudinary.Api.Secure = true; //use HTTPS
         }
 
-        public async Task<string?> UploadAsync(Stream fileStream, string fileName, long fileSize, CancellationToken ct = default)
+        public async Task<string?> UploadAsync(
+            Stream fileStream,
+            string fileName,
+            long fileSize,
+            CancellationToken ct = default
+        )
         {
             try
             {
@@ -40,7 +45,10 @@ namespace IRasRag.Infrastructure.Services.CloudFileStorage
                     Overwrite = false,
                 };
 
-                var result = await _cloudinary.UploadLargeRawAsync(uploadParams, cancellationToken: ct);
+                var result = await _cloudinary.UploadLargeRawAsync(
+                    uploadParams,
+                    cancellationToken: ct
+                );
 
                 if (result.Error != null)
                 {

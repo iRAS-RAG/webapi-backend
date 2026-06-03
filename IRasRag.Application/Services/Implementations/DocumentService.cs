@@ -139,7 +139,10 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Create Method
-        public async Task<Result> CreateDocumentAsync(CreateDocumentDto dto, CancellationToken ct = default)
+        public async Task<Result> CreateDocumentAsync(
+            CreateDocumentDto dto,
+            CancellationToken ct = default
+        )
         {
             if (string.IsNullOrWhiteSpace(dto.FileTitle))
             {

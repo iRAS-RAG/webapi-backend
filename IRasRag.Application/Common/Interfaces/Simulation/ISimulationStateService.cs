@@ -23,5 +23,12 @@ namespace IRasRag.Application.Common.Interfaces.Simulation
         /// Returns all MAC addresses currently in simulation mode.
         /// </summary>
         IReadOnlySet<string> GetActiveSimulations();
+
+        /// <summary>
+        /// Returns true when at least <paramref name="minInterval"/> has passed since
+        /// the last dispatch for this MAC. Updates the last-dispatch timestamp atomically.
+        /// Used to throttle simulated data generation.
+        /// </summary>
+        bool TryAcquireDispatchSlot(string macAddress, TimeSpan minInterval);
     }
 }

@@ -53,10 +53,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
         private static bool IsTemperatureSensor(Sensor? sensor)
         {
-            var name = sensor?.SensorType?.Name ?? "";
-            return name.Contains("nhiệt", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("temp", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("nhiệt", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(
+                sensor?.SensorType?.Code,
+                "waterTemp",
+                StringComparison.OrdinalIgnoreCase
+            );
         }
 
         public async Task DispatchAsync(SensorTelemetry telemetry, string macFromTopic)
@@ -66,8 +67,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
 
             if (isSimulating)
             {
-                _logger.LogInformation(
-                    "MAC {MacAddress} is in simulation mode — temperature readings will be replaced with random 50-60°C values",
+                if (!_simulationState.TryAcquireDispatchSlot(macFromTopic, TimeSpan.FromSeconds(2)))
+                    return; // Throttled — skip this dispatch, wait for the next MQTT message.
+
+                _logger.LogDebug(
+                    "MAC {MacAddress} is in simulation mode — replacing temperature readings with random 50-60°C values",
                     macFromTopic
                 );
             }

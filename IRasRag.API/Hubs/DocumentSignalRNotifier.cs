@@ -16,11 +16,9 @@ namespace IRasRag.API.Hubs
         public Task NotifyRagStatusUpdatedAsync(Guid documentId, DocumentRagStatus status)
         {
             var group = DocumentHub.DocumentGroup(documentId.ToString());
-            return _hub.Clients.Group(group).SendAsync("RagStatusUpdated", new
-            {
-                documentId,
-                ragStatus = (int)status,
-            });
+            return _hub
+                .Clients.Group(group)
+                .SendAsync("RagStatusUpdated", new { documentId, ragStatus = (int)status });
         }
     }
 }

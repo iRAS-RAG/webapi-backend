@@ -117,16 +117,15 @@ namespace IRasRag.API.Controllers
                 return BadRequest(new { Message = $"No active simulation for MAC {macAddress}" });
             }
 
-            // Resolve masterboard by MAC
+            // Resolve masterboard by MAC for authorization — if the masterboard was
+            // deleted while simulation was active, still allow stopping (clean up the
+            // orphaned simulation rather than leaving it stuck forever).
             var masterboard = await _cache.GetMasterboardByMacAsync(macAddress);
-            if (masterboard == null)
+            if (masterboard != null)
             {
-                return NotFound(new { Message = $"No masterboard found with MAC {macAddress}" });
+                if (!await _tankAccess.CanAccessTankAsync(userId, masterboard.FishTankId))
+                    return Forbid();
             }
-
-            // Check if user can access this tank
-            if (!await _tankAccess.CanAccessTankAsync(userId, masterboard.FishTankId))
-                return Forbid();
 
             // Stop simulation
             _simulationState.StopSimulation(macAddress);
