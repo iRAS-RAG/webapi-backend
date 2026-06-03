@@ -4,6 +4,7 @@ using IRasRag.Application.Common.Interfaces.CloudFileStorage;
 using IRasRag.Application.Common.Interfaces.FileExtractor;
 using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -25,6 +26,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly ICloudFileStorageService _cloudFileStorageService;
         private readonly IFileTextExtractorResolver _fileTextExtractorResolver;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IDocumentStatusNotifier _notifier;
         private const int MIN_EXTRACTED_TEXT_LENGTH = 500; // Minimum length of extracted text to consider it valid
 
         public DocumentService(
@@ -34,7 +36,8 @@ namespace IRasRag.Application.Services.Implementations
             IFileContentValidator fileContentValidator,
             ICloudFileStorageService cloudFileStorageService,
             IFileTextExtractorResolver fileTextExtractorResolver,
-            IBackgroundJobService backgroundJobService
+            IBackgroundJobService backgroundJobService,
+            IDocumentStatusNotifier notifier
         )
         {
             _unitOfWork = unitOfWork;
@@ -44,6 +47,7 @@ namespace IRasRag.Application.Services.Implementations
             _cloudFileStorageService = cloudFileStorageService;
             _fileTextExtractorResolver = fileTextExtractorResolver;
             _backgroundJobService = backgroundJobService;
+            _notifier = notifier;
         }
 
         #region Get Methods
@@ -241,6 +245,7 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _unitOfWork.GetRepository<Document>().AddAsync(document);
                 await _unitOfWork.SaveChangesAsync();
+                await _notifier.NotifyRagStatusUpdatedAsync(document.Id, DocumentRagStatus.Pending);
 
                 _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
 
@@ -328,6 +333,7 @@ namespace IRasRag.Application.Services.Implementations
                 document.RagStatus = DocumentRagStatus.Pending;
                 documentRepository.Update(document);
                 await _unitOfWork.SaveChangesAsync();
+                await _notifier.NotifyRagStatusUpdatedAsync(document.Id, DocumentRagStatus.Pending);
 
                 _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
 
