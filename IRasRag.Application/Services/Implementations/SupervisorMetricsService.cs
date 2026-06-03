@@ -288,7 +288,7 @@ namespace IRasRag.Application.Services.Implementations
                         : "all",
                         GroupName = groupBy == "batch" ? l.BatchName
                         : groupBy == "tank" ? l.TankName
-                        : "Farm",
+                        : "Nông trại",
                     });
 
                     foreach (var g in grouped)
@@ -316,19 +316,19 @@ namespace IRasRag.Application.Services.Implementations
                                     value = values.Sum();
                                     break;
                                 case "avg":
-                                    value = values.Any() ? values.Average() : 0;
+                                    value = values.Count != 0 ? values.Average() : 0;
                                     break;
                                 case "min":
-                                    value = values.Any() ? values.Min() : 0;
+                                    value = values.Count != 0 ? values.Min() : 0;
                                     break;
                                 case "max":
-                                    value = values.Any() ? values.Max() : 0;
+                                    value = values.Count != 0 ? values.Max() : 0;
                                     break;
                                 case "median":
-                                    value = values.Any() ? Percentile(values, 0.5) : 0;
+                                    value = values.Count != 0 ? Percentile(values, 0.5) : 0;
                                     break;
                                 case "p90":
-                                    value = values.Any() ? Percentile(values, 0.9) : 0;
+                                    value = values.Count != 0 ? Percentile(values, 0.9) : 0;
                                     break;
                                 default:
                                     value = values.Sum();
@@ -383,7 +383,7 @@ namespace IRasRag.Application.Services.Implementations
                         : "all",
                         GroupName = groupBy == "batch" ? l.BatchName
                         : groupBy == "tank" ? l.TankName
-                        : "Farm",
+                        : "Nông trại",
                     });
 
                     foreach (var g in grouped)
@@ -411,19 +411,19 @@ namespace IRasRag.Application.Services.Implementations
                                     value = values.Sum();
                                     break;
                                 case "avg":
-                                    value = values.Any() ? values.Average() : 0;
+                                    value = values.Count != 0 ? values.Average() : 0;
                                     break;
                                 case "min":
-                                    value = values.Any() ? values.Min() : 0;
+                                    value = values.Count != 0 ? values.Min() : 0;
                                     break;
                                 case "max":
-                                    value = values.Any() ? values.Max() : 0;
+                                    value = values.Count != 0 ? values.Max() : 0;
                                     break;
                                 case "median":
-                                    value = values.Any() ? Percentile(values, 0.5) : 0;
+                                    value = values.Count != 0 ? Percentile(values, 0.5) : 0;
                                     break;
                                 case "p90":
-                                    value = values.Any() ? Percentile(values, 0.9) : 0;
+                                    value = values.Count != 0 ? Percentile(values, 0.9) : 0;
                                     break;
                                 default:
                                     value = values.Sum();
