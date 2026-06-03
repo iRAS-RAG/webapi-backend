@@ -4,7 +4,7 @@ namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
 {
     public interface ISensorLogRepository
     {
-        Task<SensorHistoryDto> GetLogsByTimeRangeAsync(
+        Task<List<SensorHistoryPointDto>> GetLogsByTimeRangeAsync(
             Guid sensorId,
             DateTime from,
             DateTime to,
