@@ -24,7 +24,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = MasterBoardId,
                     Name = "Board điều khiển chính 1",
-                    MacAddress = "AA:BB:CC:DD:EE:01",
+                    MacAddress = "68:FE:71:16:A5:18",
                     FishTankId = FishTankSeed.TankAId,
                     CreatedAt = SeedTimestamp,
                     ModifiedAt = SeedTimestamp,

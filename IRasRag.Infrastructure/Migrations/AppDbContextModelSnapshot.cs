@@ -320,11 +320,11 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002201"),
-                            ActualEndDate = new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ActualStartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualEndDate = new DateTime(2026, 4, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualStartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedEndDate = new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EstimatedStartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedEndDate = new DateTime(2026, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedStartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ExpectedDurationDays = 30,
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -699,7 +699,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001901"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455970/IRAS-RAG/documents/KT_nu%C3%B4i_cua_bi%E1%BB%83n_lcsego.pdf",
-                            RagStatus = "Pending",
+                            RagStatus = "Indexed",
                             Title = "Kĩ thuật nuôi cua biển",
                             UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
@@ -709,7 +709,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001902"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455830/IRAS-RAG/documents/C%E1%BA%A9m_nang_nu%C3%B4i_c%C3%A1_n%C6%B0%E1%BB%9Bc_t%C4%A9nh_M%C3%A8_Tr%C3%B4i_Tr%E1%BA%AFm_Ch%C3%A9p_lfmxrd.pdf",
-                            RagStatus = "Pending",
+                            RagStatus = "Indexed",
                             Title = "Cẩm nang nuôi cá nước tĩnh Mè Trôi Trắm Chép",
                             UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
@@ -719,7 +719,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001903"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1778650465/IRAS-RAG/documents/KT_nu%C3%B4i_c%C3%A1_r%C3%B4_siwemh.pdf",
-                            RagStatus = "Pending",
+                            RagStatus = "Indexed",
                             Title = "Kĩ thuật nuôi cá rô",
                             UploadedAt = new DateTime(2024, 1, 10, 9, 0, 0, 0, DateTimeKind.Utc),
                             UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
@@ -777,7 +777,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Address = "Đường 123, Tp.HCM",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "contact@aquabluefarm.vn",
-                            Name = "Trang trại RAS mẫu",
+                            Name = "Trang trại RAS HCM",
                             PhoneNumber = "+84-123-456-789"
                         });
                 });
@@ -890,31 +890,31 @@ namespace IRasRag.Infrastructure.Migrations
                             CurrentQuantity = 950,
                             CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000601"),
                             EstimatedHarvestCount = 900,
-                            EstimatedHarvestDate = new DateTime(2024, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedHarvestDate = new DateTime(2026, 7, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             EstimatedHarvestWeightKg = 90.0,
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             InitialQuantity = 1000,
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Lô nuôi cá rô phi 2024-01",
-                            StartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Vụ nuôi cá rô phi 2026-05",
+                            StartDate = new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "ACTIVE",
                             UnitOfMeasure = "con"
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
-                            ActualHarvestDate = new DateTime(2024, 5, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ActualHarvestDate = new DateTime(2026, 4, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrentQuantity = 0,
+                            CurrentQuantity = 790,
                             CurrentStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000602"),
                             EstimatedHarvestCount = 780,
-                            EstimatedHarvestDate = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EstimatedHarvestDate = new DateTime(2026, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             EstimatedHarvestWeightKg = 78.0,
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             InitialQuantity = 800,
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Lô nuôi cá rô phi 2023-12",
-                            StartDate = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Vụ nuôi cá rô phi 2026-01",
+                            StartDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "HARVESTED",
                             UnitOfMeasure = "con"
                         });
@@ -1498,7 +1498,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
-                            MacAddress = "AA:BB:CC:DD:EE:01",
+                            MacAddress = "68:FE:71:16:A5:18",
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Board điều khiển chính 1"
                         });
@@ -1786,7 +1786,7 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
                             Name = "Cảm biến nhiệt độ 1",
-                            PinCode = 2,
+                            PinCode = 1,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001")
                         },
                         new
@@ -1795,17 +1795,62 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
                             Name = "Cảm biến pH 1",
-                            PinCode = 3,
+                            PinCode = 2,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001303"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến TDS 1",
+                            PinCode = 3,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003")
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001304"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            Name = "Cảm biến oxy hòa tan 1",
+                            Name = "Cảm biến lưu lượng nước 1",
                             PinCode = 4,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000003")
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001305"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến mực nước 1",
+                            PinCode = 5,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001306"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến điện áp 1",
+                            PinCode = 6,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001307"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến dòng điện 1",
+                            PinCode = 7,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001308"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
+                            Name = "Cảm biến công suất PZEM 1",
+                            PinCode = 8,
+                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008")
                         });
                 });
 
@@ -2009,11 +2054,11 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001414"),
-                            Average = 6.7999999999999998,
+                            Average = 44.799999999999997,
                             CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             HasWarning = false,
-                            Max = 7.0999999999999996,
-                            Min = 6.5,
+                            Max = 47.299999999999997,
+                            Min = 42.100000000000001,
                             PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
                             SampleCount = 8,
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001304")
@@ -2070,9 +2115,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             Code = "waterTemp",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MeasureType = "Nhiệt độ",
-                            Name = "Nhiệt độ nước",
-                            UnitOfMeasure = "Độ C"
+                            MeasureType = "Nhiệt độ nước",
+                            Name = "Nhiệt độ",
+                            UnitOfMeasure = "°C"
                         },
                         new
                         {
@@ -2080,7 +2125,7 @@ namespace IRasRag.Infrastructure.Migrations
                             Code = "pH",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             MeasureType = "Tính axit",
-                            Name = "Độ pH",
+                            Name = "pH",
                             UnitOfMeasure = "pH"
                         },
                         new
@@ -2109,6 +2154,33 @@ namespace IRasRag.Infrastructure.Migrations
                             MeasureType = "Mức nước",
                             Name = "Mực nước",
                             UnitOfMeasure = "0/1"
+                        },
+                        new
+                        {
+                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
+                            Code = "voltage",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MeasureType = "Điện áp",
+                            Name = "Điện áp",
+                            UnitOfMeasure = "V"
+                        },
+                        new
+                        {
+                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
+                            Code = "current",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MeasureType = "Dòng điện",
+                            Name = "Dòng điện",
+                            UnitOfMeasure = "A"
+                        },
+                        new
+                        {
+                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
+                            Code = "power",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MeasureType = "Công suất",
+                            Name = "Công suất PZEM",
+                            UnitOfMeasure = "W"
                         });
                 });
 
@@ -2433,8 +2505,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin@example.com",
-                            FirstName = "Văn A",
+                            Email = "admin@iras-rag.com",
+                            FirstName = "Minh Tuấn",
                             IsDeleted = false,
                             LastName = "Nguyễn",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",
@@ -2444,8 +2516,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000002"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "supervisor@example.com",
-                            FirstName = "Thị B",
+                            Email = "supervisor@iras-rag.com",
+                            FirstName = "Thị Hương",
                             IsDeleted = false,
                             LastName = "Trần",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",
@@ -2455,8 +2527,8 @@ namespace IRasRag.Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "operator@example.com",
-                            FirstName = "Văn C",
+                            Email = "operator@iras-rag.com",
+                            FirstName = "Văn Hùng",
                             IsDeleted = false,
                             LastName = "Lê",
                             PasswordHash = "$2a$11$TjsTmXlpjjTVPajZiLxCV.XPuTPgCgphg7sfC9Fs/YwSA4M4IYqYu",

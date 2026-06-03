@@ -26,8 +26,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid PhLog5Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001412");
         public static readonly Guid PhLog6Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001413");
 
-        // ── Dissolved Oxygen Sensor 1 — 1 period ─────────────────────────────
-        public static readonly Guid DoLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001414");
+        // ── Water Flow Sensor 1 (pin 4) — 1 period ───────────────────────────
+        public static readonly Guid FlowLog1Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001414");
 
         public static List<SensorLog> SensorLogs =>
             [
@@ -177,15 +177,15 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
                 },
-                // ── Dissolved Oxygen Sensor 1 ─────────────────────────────────
+                // ── Water Flow Sensor 1 (pin 4) ────────────────────────────
                 new SensorLog
                 {
-                    Id = DoLog1Id,
-                    SensorId = SensorSeed.DoSensor1Id,
+                    Id = FlowLog1Id,
+                    SensorId = SensorSeed.FlowSensor1Id,
                     PeriodStart = SeedBase.AddHours(20), // 20:00–24:00
-                    Average = 6.8,
-                    Min = 6.5,
-                    Max = 7.1,
+                    Average = 44.8,
+                    Min = 42.1,
+                    Max = 47.3,
                     SampleCount = 8,
                     HasWarning = false,
                     CreatedAt = SeedBase.AddHours(24),
