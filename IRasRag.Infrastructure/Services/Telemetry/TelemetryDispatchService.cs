@@ -187,6 +187,11 @@ namespace IRasRag.Infrastructure.Services.Telemetry
                     continue;
                 }
 
+                // Simulation mode: only process the temperature sensor — skip all other sensors
+                // to simulate a real board disconnection where no sensor data is available.
+                if (isSimulating && !IsTemperatureSensor(sensor))
+                    continue;
+
                 // Override reading value if in simulation mode and this is a temperature sensor
                 var finalValue = reading.Val;
                 if (isSimulating && IsTemperatureSensor(sensor))
