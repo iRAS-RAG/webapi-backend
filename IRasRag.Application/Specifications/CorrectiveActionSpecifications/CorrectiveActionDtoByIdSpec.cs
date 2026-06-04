@@ -25,6 +25,8 @@ namespace IRasRag.Application.Specifications.CorrectiveActionSpecifications
                     ActionTaken = ca.ActionTaken,
                     Notes = ca.Notes,
                     Timestamp = ca.Timestamp,
+                    SensorTypeName = ca.Alert != null && ca.Alert.SensorType != null ? ca.Alert.SensorType.Name : string.Empty,
+                    FishTankName = ca.Alert != null && ca.Alert.FishTank != null ? ca.Alert.FishTank.Name : string.Empty,
                 });
         }
     }
