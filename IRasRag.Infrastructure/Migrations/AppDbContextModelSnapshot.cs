@@ -725,38 +725,6 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_documents_uploaded_by_user_id");
 
                     b.ToTable("documents", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001901"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455970/IRAS-RAG/documents/KT_nu%C3%B4i_cua_bi%E1%BB%83n_lcsego.pdf",
-                            RagStatus = "Indexed",
-                            Title = "Kĩ thuật nuôi cua biển",
-                            UploadedAt = new DateTime(2023, 12, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001902"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1779455830/IRAS-RAG/documents/C%E1%BA%A9m_nang_nu%C3%B4i_c%C3%A1_n%C6%B0%E1%BB%9Bc_t%C4%A9nh_M%C3%A8_Tr%C3%B4i_Tr%E1%BA%AFm_Ch%C3%A9p_lfmxrd.pdf",
-                            RagStatus = "Indexed",
-                            Title = "Cẩm nang nuôi cá nước tĩnh Mè Trôi Trắm Chép",
-                            UploadedAt = new DateTime(2023, 12, 20, 14, 30, 0, 0, DateTimeKind.Utc),
-                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001903"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FileUrl = "https://res.cloudinary.com/dhelnz7sw/raw/upload/v1778650465/IRAS-RAG/documents/KT_nu%C3%B4i_c%C3%A1_r%C3%B4_siwemh.pdf",
-                            RagStatus = "Indexed",
-                            Title = "Kĩ thuật nuôi cá rô",
-                            UploadedAt = new DateTime(2024, 1, 10, 9, 0, 0, 0, DateTimeKind.Utc),
-                            UploadedByUserId = new Guid("aaaaaaaa-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.Farm", b =>
@@ -1747,7 +1715,6 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002101"),
                             AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001801"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001901"),
                             SuggestionText = "Áp dụng quy trình xử lý nhiệt độ cao trong tài liệu: Tăng lưu lượng nước tuần hoàn và bật hệ thống làm mát. Kiểm tra mức oxy hòa tan để đảm bảo cá không bị thiếu oxy."
                         },
                         new
@@ -1755,7 +1722,6 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002102"),
                             AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001802"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001902"),
                             SuggestionText = "Theo quy trình điều chỉnh pH: Thêm vôi nông nghiệp để tăng độ pH lên mức tối ưu (7.5-8.0). Theo dõi pH hàng ngày và điều chỉnh nếu cần."
                         },
                         new
@@ -1763,7 +1729,6 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000002103"),
                             AlertId = new Guid("aaaaaaaa-0000-0000-0000-000000001803"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DocumentId = new Guid("aaaaaaaa-0000-0000-0000-000000001903"),
                             SuggestionText = "Tham khảo hướng dẫn quản lý chất lượng nước: Duy trì nhiệt độ trong khoảng 25-30°C. Kiểm tra các thông số khác như oxy hòa tan, ammonia và nitrite để đảm bảo môi trường nuôi tối ưu."
                         });
                 });
@@ -2211,11 +2176,19 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<double>("MaxPossibleValue")
+                        .HasColumnType("double precision")
+                        .HasColumnName("max_possible_value");
+
                     b.Property<string>("MeasureType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("measure_type");
+
+                    b.Property<double>("MinPossibleValue")
+                        .HasColumnType("double precision")
+                        .HasColumnName("min_possible_value");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2244,7 +2217,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             Code = "waterTemp",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 50.0,
                             MeasureType = "Nhiệt độ nước",
+                            MinPossibleValue = 0.0,
                             Name = "Nhiệt độ",
                             UnitOfMeasure = "°C"
                         },
@@ -2253,7 +2228,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000002"),
                             Code = "pH",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 14.0,
                             MeasureType = "Tính axit",
+                            MinPossibleValue = 0.0,
                             Name = "pH",
                             UnitOfMeasure = "pH"
                         },
@@ -2262,7 +2239,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000003"),
                             Code = "tds",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 10000.0,
                             MeasureType = "Tổng chất rắn hòa tan",
+                            MinPossibleValue = 0.0,
                             Name = "TDS",
                             UnitOfMeasure = "ppm"
                         },
@@ -2271,7 +2250,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000004"),
                             Code = "flowRate",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 500.0,
                             MeasureType = "Lưu lượng",
+                            MinPossibleValue = 0.0,
                             Name = "Lưu lượng nước",
                             UnitOfMeasure = "L/min"
                         },
@@ -2280,7 +2261,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
                             Code = "waterLevel",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 1.0,
                             MeasureType = "Mức nước",
+                            MinPossibleValue = 0.0,
                             Name = "Mực nước",
                             UnitOfMeasure = "0/1"
                         },
@@ -2289,7 +2272,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
                             Code = "voltage",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 500.0,
                             MeasureType = "Điện áp",
+                            MinPossibleValue = 0.0,
                             Name = "Điện áp",
                             UnitOfMeasure = "V"
                         },
@@ -2298,7 +2283,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
                             Code = "current",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 50.0,
                             MeasureType = "Dòng điện",
+                            MinPossibleValue = 0.0,
                             Name = "Dòng điện",
                             UnitOfMeasure = "A"
                         },
@@ -2307,7 +2294,9 @@ namespace IRasRag.Infrastructure.Migrations
                             Id = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             Code = "power",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            MaxPossibleValue = 50000.0,
                             MeasureType = "Công suất",
+                            MinPossibleValue = 0.0,
                             Name = "Công suất PZEM",
                             UnitOfMeasure = "W"
                         });

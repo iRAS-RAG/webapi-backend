@@ -53,9 +53,9 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                if (dto.MinValue >= dto.MaxValue)
+                if (dto.MinValue > dto.MaxValue)
                     return Result<SpeciesThresholdDto>.Failure(
-                        "Giá trị Min phải nhỏ hơn Max.",
+                        "Giá trị Min không thể lớn hơn Max.",
                         ResultType.BadRequest
                     );
 
@@ -77,13 +77,25 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.BadRequest
                     );
 
-                if (
-                    !await _unitOfWork
-                        .GetRepository<SensorType>()
-                        .AnyAsync(st => st.Id == dto.SensorTypeId)
-                )
+                var sensorType = await _unitOfWork
+                    .GetRepository<SensorType>()
+                    .FirstOrDefaultAsync(st => st.Id == dto.SensorTypeId);
+
+                if (sensorType == null)
                     return Result<SpeciesThresholdDto>.Failure(
                         "Loại cảm biến không tồn tại.",
+                        ResultType.BadRequest
+                    );
+
+                if (dto.MinValue < sensorType.MinPossibleValue)
+                    return Result<SpeciesThresholdDto>.Failure(
+                        $"Giá trị Min ({dto.MinValue}) thấp hơn ngưỡng tối thiểu cho phép của cảm biến {sensorType.Name} ({sensorType.MinPossibleValue} {sensorType.UnitOfMeasure}).",
+                        ResultType.BadRequest
+                    );
+
+                if (dto.MaxValue > sensorType.MaxPossibleValue)
+                    return Result<SpeciesThresholdDto>.Failure(
+                        $"Giá trị Max ({dto.MaxValue}) vượt quá ngưỡng tối đa cho phép của cảm biến {sensorType.Name} ({sensorType.MaxPossibleValue} {sensorType.UnitOfMeasure}).",
                         ResultType.BadRequest
                     );
 
@@ -290,14 +302,41 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                if (dto.MinValue >= dto.MaxValue)
-                    return Result.Failure("Giá trị Min phải nhỏ hơn Max.", ResultType.BadRequest);
+                if (dto.MinValue > dto.MaxValue)
+                    return Result.Failure(
+                        "Giá trị Min không thể lớn hơn Max.",
+                        ResultType.BadRequest
+                    );
 
                 var threshold = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()
                     .GetByIdAsync(id);
                 if (threshold == null)
                     return Result.Failure("Ngưỡng sinh trưởng không tồn tại.", ResultType.NotFound);
+
+                var existingSensorType = await _unitOfWork
+                    .GetRepository<SensorType>()
+                    .FirstOrDefaultAsync(st => st.Id == threshold.SensorTypeId);
+
+                if (
+                    dto.MinValue.HasValue
+                    && existingSensorType != null
+                    && dto.MinValue.Value < existingSensorType.MinPossibleValue
+                )
+                    return Result.Failure(
+                        $"Giá trị Min ({dto.MinValue}) thấp hơn ngưỡng tối thiểu cho phép của cảm biến {existingSensorType.Name} ({existingSensorType.MinPossibleValue} {existingSensorType.UnitOfMeasure}).",
+                        ResultType.BadRequest
+                    );
+
+                if (
+                    dto.MaxValue.HasValue
+                    && existingSensorType != null
+                    && dto.MaxValue.Value > existingSensorType.MaxPossibleValue
+                )
+                    return Result.Failure(
+                        $"Giá trị Max ({dto.MaxValue}) vượt quá ngưỡng tối đa cho phép của cảm biến {existingSensorType.Name} ({existingSensorType.MaxPossibleValue} {existingSensorType.UnitOfMeasure}).",
+                        ResultType.BadRequest
+                    );
 
                 var oldDto = await _unitOfWork
                     .GetRepository<SpeciesThreshold>()

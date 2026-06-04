@@ -44,6 +44,7 @@ namespace IRasRag.Application.DTOs
     // Lightweight threshold summary — only sensor-level fields (no species/stage noise)
     public class SensorThresholdSummaryDto
     {
+        public Guid Id { get; set; }
         public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; }
         public double MinValue { get; set; }

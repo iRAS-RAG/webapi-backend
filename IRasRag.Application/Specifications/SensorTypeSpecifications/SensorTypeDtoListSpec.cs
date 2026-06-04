@@ -33,6 +33,8 @@ namespace IRasRag.Application.Specifications.SensorTypeSpecifications
                 MeasureType = st.MeasureType,
                 UnitOfMeasure = st.UnitOfMeasure,
                 Code = st.Code,
+                MinPossibleValue = st.MinPossibleValue,
+                MaxPossibleValue = st.MaxPossibleValue,
             });
         }
     }

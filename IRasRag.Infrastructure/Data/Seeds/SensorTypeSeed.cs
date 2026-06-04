@@ -48,6 +48,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Nhiệt độ nước",
                     UnitOfMeasure = "°C",
                     Code = "waterTemp",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 50,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -57,6 +59,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Tính axit",
                     UnitOfMeasure = "pH",
                     Code = "pH",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 14,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -66,6 +70,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Tổng chất rắn hòa tan",
                     UnitOfMeasure = "ppm",
                     Code = "tds",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 10000,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -75,6 +81,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Lưu lượng",
                     UnitOfMeasure = "L/min",
                     Code = "flowRate",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 500,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -84,6 +92,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Mức nước",
                     UnitOfMeasure = "0/1",
                     Code = "waterLevel",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 1,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -93,6 +103,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Điện áp",
                     UnitOfMeasure = "V",
                     Code = "voltage",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 500,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -102,6 +114,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Dòng điện",
                     UnitOfMeasure = "A",
                     Code = "current",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 50,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
                 new SensorType
@@ -111,6 +125,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MeasureType = "Công suất",
                     UnitOfMeasure = "W",
                     Code = "power",
+                    MinPossibleValue = 0,
+                    MaxPossibleValue = 50000,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
             ];

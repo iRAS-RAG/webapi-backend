@@ -66,7 +66,7 @@ namespace IRasRag.Infrastructure.DI
                 {
                     var settings = sp.GetRequiredService<IOptions<AdvisorySettings>>().Value;
                     client.BaseAddress = new Uri(settings.ChatBaseUrl);
-                    client.Timeout = TimeSpan.FromSeconds(30);
+                    client.Timeout = TimeSpan.FromMinutes(5);
                 }
             );
             services.AddHttpClient<IThresholdSyncClient, ThresholdSyncClient>(

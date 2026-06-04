@@ -10,6 +10,8 @@ namespace IRasRag.Application.DTOs
         public string MeasureType { get; set; }
         public string UnitOfMeasure { get; set; }
         public string? Code { get; set; }
+        public double MinPossibleValue { get; set; }
+        public double MaxPossibleValue { get; set; }
     }
 
     // Create DTO
@@ -29,6 +31,9 @@ namespace IRasRag.Application.DTOs
 
         [MaxLength(50, ErrorMessage = "Mã định danh không được vượt quá 50 ký tự")]
         public string? Code { get; set; }
+
+        public double MinPossibleValue { get; set; }
+        public double MaxPossibleValue { get; set; }
     }
 
     // Update DTO
@@ -45,6 +50,9 @@ namespace IRasRag.Application.DTOs
 
         [MaxLength(50, ErrorMessage = "Mã định danh không được vượt quá 50 ký tự")]
         public string? Code { get; set; }
+
+        public double? MinPossibleValue { get; set; }
+        public double? MaxPossibleValue { get; set; }
     }
 
     // List Request DTO

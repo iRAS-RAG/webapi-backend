@@ -461,6 +461,7 @@ namespace IRasRag.Application.Services.Implementations
                         g =>
                             g.Select(t => new SensorThresholdSummaryDto
                                 {
+                                    Id = t.Id,
                                     SensorTypeId = t.SensorTypeId,
                                     SensorTypeName = t.SensorType?.Name ?? string.Empty,
                                     MinValue = t.MinValue,
