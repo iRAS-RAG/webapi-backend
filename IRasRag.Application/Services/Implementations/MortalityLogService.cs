@@ -122,7 +122,7 @@ namespace IRasRag.Application.Services.Implementations
                         lostWeightKg.Value >= minAllowed && lostWeightKg.Value <= maxAllowed;
                     resultDto.Message = resultDto.IsWithinRange.Value
                         ? "Giá trị trọng lượng trong phạm vi chấp nhận được"
-                        : $"Giá trị trọng lượng ({lostWeightKg.Value:F2} kg) ngoài phạm vi dự kiến ({minAllowed:F2} - {maxAllowed:F2} kg)";
+                        : $"Giá trị trọng lượng ({lostWeightKg.Value:F2} kg) ngoài phạm vi dự kiến ({minAllowed:G4} - {maxAllowed:G4} kg)";
                 }
                 else
                 {
