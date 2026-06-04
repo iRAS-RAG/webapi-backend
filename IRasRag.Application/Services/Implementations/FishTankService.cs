@@ -3,6 +3,7 @@ using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Services;
@@ -24,6 +25,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IAuditLogService _auditLogService;
         private readonly ICurrentUserAccessor _currentUserAccessor;
+        private readonly ILatestTelemetryCacheService _latestTelemetryCache;
 
         public FishTankService(
             IUnitOfWork unitOfWork,
@@ -31,6 +33,7 @@ namespace IRasRag.Application.Services.Implementations
             IMapper mapper,
             IAuditLogService auditLogService,
             ICurrentUserAccessor currentUserAccessor,
+            ILatestTelemetryCacheService latestTelemetryCache,
             IRecommendationCalculator? recommendationCalculator = null
         )
         {
@@ -39,6 +42,7 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _auditLogService = auditLogService;
             _currentUserAccessor = currentUserAccessor;
+            _latestTelemetryCache = latestTelemetryCache;
             _recommendationCalculator =
                 recommendationCalculator
                 ?? new RecommendationCalculator(
@@ -475,6 +479,34 @@ namespace IRasRag.Application.Services.Implementations
                         .GetRepository<Sensor>()
                         .ListAsync(new TankSensorLatestDataSpec(tankId))
                 ).ToList();
+
+                // Overlay in-memory cache values for instant updates.
+                // The database (SensorLog) may lag behind due to batch writing,
+                // so use the in-memory cache as the source of truth for the latest value.
+                foreach (var dto in result)
+                {
+                    var cached = _latestTelemetryCache.Get(dto.SensorId);
+                    if (cached != null && dto.LatestData != null)
+                    {
+                        // Only override the latest average from the in-memory cache.
+                        // Leave LatestMin/LatestMax to the database since they represent
+                        // windowed aggregates, not instantaneous readings.
+                        if (cached.Timestamp > dto.LatestData.RecordedAt)
+                        {
+                            dto.LatestData.LatestAvg = cached.Value;
+                        }
+                    }
+                    else if (cached != null && dto.LatestData == null)
+                    {
+                        dto.LatestData = new TankSensorLatestDataValueDto
+                        {
+                            LatestAvg = cached.Value,
+                            LatestMax = cached.Value,
+                            LatestMin = cached.Value,
+                            RecordedAt = cached.Timestamp,
+                        };
+                    }
+                }
 
                 _logger.LogInformation(
                     "Lấy dữ liệu mới nhất thành công: {Count} cảm biến cho bể {TankId}",

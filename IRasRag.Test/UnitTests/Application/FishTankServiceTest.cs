@@ -4,6 +4,7 @@ using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -29,6 +30,7 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<Sensor>> _sensorRepositoryMock;
         private readonly Mock<IAuditLogService> _auditLogServiceMock;
         private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
+        private readonly Mock<ILatestTelemetryCacheService> _latestTelemetryCacheMock;
         private readonly FishTankService _sut;
 
         public FishTankServiceTest()
@@ -43,6 +45,7 @@ namespace IRasRag.Test.UnitTests.Application
             _auditLogServiceMock = new Mock<IAuditLogService>();
             _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
             _currentUserAccessorMock.Setup(x => x.GetUserId()).Returns((Guid?)null);
+            _latestTelemetryCacheMock = new Mock<ILatestTelemetryCacheService>();
 
             _unitOfWorkMock
                 .Setup(x => x.GetRepository<FishTank>())
@@ -57,7 +60,8 @@ namespace IRasRag.Test.UnitTests.Application
                 _loggerMock.Object,
                 _mapper,
                 _auditLogServiceMock.Object,
-                _currentUserAccessorMock.Object
+                _currentUserAccessorMock.Object,
+                _latestTelemetryCacheMock.Object
             );
         }
 
