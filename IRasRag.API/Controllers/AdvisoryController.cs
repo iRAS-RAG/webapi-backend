@@ -116,6 +116,60 @@ namespace IRasRag.API.Controllers
 
             return Ok(new { Message = message });
         }
+
+        /// <summary>
+        /// Chẩn đoán nguyên nhân cá chết — thu thập dữ liệu mortality, feeding, alerts
+        /// và gửi đến AI RAG để phân tích nguyên nhân gốc rễ (F08)
+        /// </summary>
+        [HttpPost("diagnose-mortality")]
+        public async Task<IActionResult> DiagnoseMortalityAsync(
+            [FromBody] DiagnoseMortalityRequest request,
+            CancellationToken ct
+        )
+        {
+            var userId = _httpContextUtils.GetUserId();
+            if (userId == null)
+                return Unauthorized();
+
+            if (!await _tankAccessService.CanAccessTankAsync(userId.Value, request.TankId))
+                return StatusCode(403, new { Message = "Bạn không có quyền truy cập bể nuôi này" });
+
+            try
+            {
+                var result = await _advisoryService.DiagnoseMortalityAsync(
+                    request.TankId,
+                    userId.Value,
+                    request.BatchId,
+                    request.TimeRange,
+                    request.Message,
+                    ct
+                );
+
+                return Ok(
+                    new
+                    {
+                        result.Answer,
+                        result.Intent,
+                        result.Confidence,
+                        result.Citations,
+                        result.AnswerBasis,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error processing mortality diagnosis for user {UserId}, tank {TankId}",
+                    userId,
+                    request.TankId
+                );
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi chẩn đoán nguyên nhân cá chết" }
+                );
+            }
+        }
     }
 
     public record AdvisoryChatRequest(Guid TankId, string Message);
@@ -126,5 +180,12 @@ namespace IRasRag.API.Controllers
         bool Helpful,
         string? Intent,
         string? Question
+    );
+
+    public record DiagnoseMortalityRequest(
+        Guid TankId,
+        Guid? BatchId = null,
+        string? TimeRange = null,
+        string? Message = null
     );
 }

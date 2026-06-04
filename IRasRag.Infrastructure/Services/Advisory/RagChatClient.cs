@@ -47,6 +47,9 @@ namespace IRasRag.Infrastructure.Services.Advisory
                     message = request.Message,
                     timeRange = request.TimeRange,
                     allowWebSearch = request.AllowWebSearch,
+                    mortalityContext = request.MortalityContext,
+                    feedingContext = request.FeedingContext,
+                    alertContext = request.AlertContext,
                 };
 
                 var httpResponse = await _http.PostAsJsonAsync(

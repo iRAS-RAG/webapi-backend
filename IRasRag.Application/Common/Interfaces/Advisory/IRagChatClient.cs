@@ -8,7 +8,10 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
         string Stage,
         string Message,
         string TimeRange = "last_24h",
-        bool AllowWebSearch = false
+        bool AllowWebSearch = false,
+        Dictionary<string, object>? MortalityContext = null,
+        Dictionary<string, object>? FeedingContext = null,
+        Dictionary<string, object>? AlertContext = null
     );
 
     public record RagIotIngestRequest(
