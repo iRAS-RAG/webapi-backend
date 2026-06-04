@@ -86,9 +86,8 @@ namespace IRasRag.Application.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Số lượng phải lớn hơn 0")]
         public int Quantity { get; set; }
 
-        [Required(ErrorMessage = "Tổng trọng lượng hao hụt (kg) là bắt buộc")]
-        [Range(0.0001, double.MaxValue, ErrorMessage = "Tổng trọng lượng phải lớn hơn 0")]
-        public double LostWeightKg { get; set; }
+        // Nullable for validation (weight unknown yet); required when actually logging.
+        public double? LostWeightKg { get; set; }
 
         [Required(ErrorMessage = "Ngày ghi nhận là bắt buộc")]
         public DateTime Date { get; set; }

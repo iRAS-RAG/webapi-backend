@@ -315,12 +315,19 @@ namespace IRasRag.API.Controllers
                     return Unauthorized(new { Message = "Không xác thực được người dùng" });
                 }
 
+                if (body.LostWeightKg == null)
+                {
+                    return BadRequest(
+                        new { Message = "Tổng trọng lượng hao hụt (kg) là bắt buộc" }
+                    );
+                }
+
                 var dto = new CreateMortalityLogDto
                 {
                     BatchId = id,
                     UserId = userId.Value,
                     Quantity = body.Quantity,
-                    LostWeightKg = body.LostWeightKg,
+                    LostWeightKg = body.LostWeightKg.Value,
                     Date = body.Date,
                 };
 
