@@ -1,9 +1,9 @@
-using IRasRag.Application.Common.Interfaces.Advisory;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Jobs
 {
     public class CatalogSyncJob : ICatalogSyncJob
     {
@@ -53,3 +53,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+

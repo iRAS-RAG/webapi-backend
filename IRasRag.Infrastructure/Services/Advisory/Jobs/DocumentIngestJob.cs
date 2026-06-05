@@ -1,4 +1,4 @@
-using IRasRag.Application.Common.Interfaces.Advisory;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Interfaces.Realtime;
@@ -6,7 +6,7 @@ using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Jobs
 {
     public class DocumentIngestJob : IDocumentIngestJob
     {
@@ -111,3 +111,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+
