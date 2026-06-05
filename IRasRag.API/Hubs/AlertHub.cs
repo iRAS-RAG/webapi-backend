@@ -42,7 +42,11 @@ namespace IRasRag.API.Hubs
             }
 
             var userId = GetUserId();
-            if (userId == null) { Context.Abort(); return; }
+            if (userId == null)
+            {
+                Context.Abort();
+                return;
+            }
 
             if (!await _tankAccess.CanAccessTankAsync(userId.Value, tankGuid))
             {
