@@ -112,6 +112,7 @@ namespace IRasRag.Infrastructure.DI
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IDocumentIngestJob, DocumentIngestJob>();
+            services.AddScoped<IDocumentRagDeleteJob, DocumentRagDeleteJob>();
             services.AddScoped<IThresholdSyncJob, ThresholdSyncJob>();
             services.AddScoped<ICatalogSyncJob, CatalogSyncJob>();
 

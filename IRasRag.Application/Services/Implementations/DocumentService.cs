@@ -395,6 +395,10 @@ namespace IRasRag.Application.Services.Implementations
                     service.DeleteAsync(document.FileUrl)
                 );
 
+                _backgroundJobService.Enqueue<IDocumentRagDeleteJob>(j =>
+                    j.RunAsync(document.FileUrl)
+                );
+
                 _logger.LogInformation("Xóa tài liệu thành công với Id: {Id}", id);
                 return Result.Success("Xóa tài liệu thành công");
             }
