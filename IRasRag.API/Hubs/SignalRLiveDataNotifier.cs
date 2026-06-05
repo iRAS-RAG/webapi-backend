@@ -49,5 +49,11 @@ namespace IRasRag.API.Hubs
                 new AlertCreatedNotification(push.AlertId, push.TankId)
             );
         }
+
+        public async Task PushAlertStatusChangedAsync(AlertStatusChangedNotification notification)
+        {
+            var group = AlertHub.TankGroup(notification.TankId.ToString());
+            await _alertHub.Clients.Group(group).SendAsync("AlertStatusChanged", notification);
+        }
     }
 }
