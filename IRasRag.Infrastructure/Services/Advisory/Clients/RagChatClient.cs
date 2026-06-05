@@ -201,8 +201,11 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
         {
             try
             {
-                var path = $"{_settings.AdminRagDocumentsByUrlPath}?url={Uri.EscapeDataString(url)}";
-                var httpResponse = await _http.DeleteAsync(path, ct);
+                var request = new HttpRequestMessage(HttpMethod.Delete, _settings.AdminRagDocumentsByUrlPath)
+                {
+                    Content = JsonContent.Create(new { url }, options: SerializerOptions),
+                };
+                var httpResponse = await _http.SendAsync(request, ct);
 
                 if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
