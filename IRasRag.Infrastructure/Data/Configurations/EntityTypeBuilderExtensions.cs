@@ -1,5 +1,4 @@
 ﻿using IRasRag.Domain.Common;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IRasRag.Infrastructure.Data.Configurations

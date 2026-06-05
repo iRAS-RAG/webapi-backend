@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class Job : BaseEntity, ISoftDeletable
+    public class Job : BaseEntity
     {
         [Required]
         [MaxLength(255)]
@@ -16,9 +16,9 @@ namespace IRasRag.Domain.Entities
 
         public Guid? SensorId { get; set; }
 
-        public float? MinValue { get; set; }
+        public double? MinValue { get; set; }
 
-        public float? MaxValue { get; set; }
+        public double? MaxValue { get; set; }
 
         [Required]
         public bool DefaultState { get; set; } = false;
@@ -34,10 +34,6 @@ namespace IRasRag.Domain.Entities
 
         [MaxLength(20)]
         public string ExecutionDays { get; set; } // e.g., "1,2,3,4,5" for Mon-Fri, or "ALL"
-
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public JobType JobType { get; set; }

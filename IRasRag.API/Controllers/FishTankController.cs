@@ -8,7 +8,7 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/tanks")]
+    [Route("api/fish-tanks")]
     public class FishTankController : ControllerBase
     {
         private readonly IFishTankService _fishTankService;
@@ -23,8 +23,29 @@ namespace IRasRag.API.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
         [Authorize(Roles = "Supervisor")]
+        [HttpGet("{id}/recommended-initials")]
+        public async Task<IActionResult> GetRecommendedInitials(Guid id)
+        {
+            try
+            {
+                var result = await _fishTankService.GetRecommendedInitialsAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy mức đề nghị cho bể: {TankId}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy mức đề nghị" });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
         public async Task<IActionResult> CreateFishTank([FromBody] CreateFishTankDto dto)
         {
             try
@@ -74,7 +95,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetFishTankById(Guid id)
         {
             try
@@ -98,8 +118,8 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateFishTank(Guid id, [FromBody] UpdateFishTankDto dto)
         {
             try
@@ -143,7 +163,7 @@ namespace IRasRag.API.Controllers
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
- 
+
         /// <summary>
         /// Lấy dữ liệu cảm biến mới nhất của bể cá theo ID.
         /// Trả về danh sách các cảm biến cùng với giá trị đo gần nhất, loại cảm biến và trạng thái cảnh báo.
@@ -170,7 +190,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi khi lấy dữ liệu cảm biến mới nhất của bể với ID: {TankId}", id);
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến mới nhất của bể với ID: {TankId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -214,13 +238,16 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(
-                    ex,"Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}", id);
+                    ex,
+                    "Đã xảy ra lỗi khi lấy thông tin camera của bể cá với ID: {TankId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> DeleteFishTank(Guid id)
         {
             try

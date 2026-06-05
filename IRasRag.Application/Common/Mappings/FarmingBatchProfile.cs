@@ -23,14 +23,13 @@ namespace IRasRag.Application.Common.Mappings
                 .ForMember(
                     dest => dest.StageName,
                     opt => opt.MapFrom(src => src.CurrentStageConfig.GrowthStage.Name)
-                );
+                )
+                .ForMember(dest => dest.PlannedStages, opt => opt.MapFrom(src => src.BatchStages));
+            // Map persisted FCR (already part of the main mapping — ensure destination member exists)
 
             // Create DTO to Entity
-            CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.Source)
-                .ForMember(
-                    dest => dest.CurrentStageConfigId,
-                    opt => opt.MapFrom(src => src.SpeciesStageConfigId)
-                )
+            CreateMap<CreateFarmingBatchDto, FarmingBatch>(MemberList.None)
+                .ForMember(dest => dest.CurrentStageConfigId, opt => opt.Ignore())
                 .ForMember(
                     dest => dest.Status,
                     opt => opt.MapFrom(src => FarmingBatchStatus.ACTIVE)
@@ -42,11 +41,62 @@ namespace IRasRag.Application.Common.Mappings
 
             // Update DTO to Entity
             CreateMap<UpdateFarmingBatchDto, FarmingBatch>(MemberList.Source)
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Schedule (PAUSED batch) DTO to Entity
+            CreateMap<UpdatePausedBatchScheduleDto, FarmingBatch>(MemberList.Source)
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<BatchStage, PlannedStageDto>()
                 .ForMember(
-                    dest => dest.CurrentStageConfigId,
+                    dest => dest.SpeciesStageConfigId,
                     opt => opt.MapFrom(src => src.SpeciesStageConfigId)
                 )
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(
+                    dest => dest.GrowthStageId,
+                    opt =>
+                        opt.MapFrom(src =>
+                            src.SpeciesStageConfig.GrowthStage != null
+                            && src.SpeciesStageConfig.GrowthStage.Id != Guid.Empty
+                                ? src.SpeciesStageConfig.GrowthStage.Id
+                                : src.SpeciesStageConfig.GrowthStageId
+                        )
+                )
+                .ForMember(
+                    dest => dest.StageName,
+                    opt =>
+                        opt.MapFrom(src =>
+                            src.SpeciesStageConfig.GrowthStage != null
+                                ? src.SpeciesStageConfig.GrowthStage.Name
+                                : string.Empty
+                        )
+                )
+                // ExpectedDurationDays omitted from mapping to avoid duplicating species-stage-config data
+                .ForMember(
+                    dest => dest.EstimatedStartDate,
+                    opt => opt.MapFrom(src => src.EstimatedStartDate)
+                )
+                .ForMember(
+                    dest => dest.EstimatedEndDate,
+                    opt => opt.MapFrom(src => src.EstimatedEndDate)
+                );
+            CreateMap<BatchStage, PlannedStageDto>()
+                .ForMember(
+                    dest => dest.ActualStartDate,
+                    opt => opt.MapFrom(src => src.ActualStartDate)
+                )
+                .ForMember(dest => dest.ActualEndDate, opt => opt.MapFrom(src => src.ActualEndDate))
+                // AmountPer100Fish omitted from mapping to reduce duplication
+                .ForMember(
+                    dest => dest.FrequencyPerDay,
+                    opt => opt.MapFrom(src => src.SpeciesStageConfig.FrequencyPerDay)
+                )
+                // MaxStockingDensity omitted from mapping to reduce duplication
+                .ForMember(
+                    dest => dest.FeedTypeNames,
+                    opt =>
+                        opt.MapFrom(src => src.SpeciesStageConfig.FeedTypes.Select(ft => ft.Name))
+                );
         }
     }
 }

@@ -12,6 +12,11 @@ namespace IRasRag.Domain.Entities
         [MaxLength(255)]
         public string Description { get; set; }
 
+        // Foreign key to Species - Growth stages are specific to a species
+        [Required]
+        public Guid SpeciesId { get; set; }
+        public Species Species { get; set; }
+
         // Navigation properties
         public ICollection<SpeciesThreshold> SpeciesThresholds { get; set; }
         public ICollection<SpeciesStageConfig> SpeciesStageConfigs { get; set; }

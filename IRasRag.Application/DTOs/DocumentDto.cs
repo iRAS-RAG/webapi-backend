@@ -1,39 +1,56 @@
 using System.ComponentModel.DataAnnotations;
+using IRasRag.Domain.Enums;
 
 namespace IRasRag.Application.DTOs
 {
     // Response DTO
-    public class DocumentDto
+    public class DocumentDetailDto
     {
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
         public Guid UploadedByUserId { get; set; }
         public string UploadedByUserEmail { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
+        public DocumentRagStatus RagStatus { get; set; }
+    }
+
+    public class DocumentDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
+        public Guid UploadedByUserId { get; set; }
+        public string UploadedByUserEmail { get; set; } = string.Empty;
+        public DateTime UploadedAt { get; set; }
+        public DocumentRagStatus RagStatus { get; set; }
     }
 
     // Create DTO
     public class CreateDocumentDto
     {
-        [Required(ErrorMessage = "Tiêu đề là bắt buộc")]
-        [MaxLength(255, ErrorMessage = "Tiêu đề không được vượt quá 255 ký tự")]
-        public string Title { get; set; } = string.Empty;
+        [Required]
+        public Stream FileStream { get; set; }
 
-        [Required(ErrorMessage = "Nội dung là bắt buộc")]
-        public string Content { get; set; } = string.Empty;
+        [Required]
+        public string FileTitle { get; set; }
 
-        [Required(ErrorMessage = "Id người tải lên là bắt buộc")]
+        [Required]
+        public string FileName { get; set; }
+
+        [Required]
+        public long FileSize { get; set; }
+
+        [Required]
         public Guid UploadedByUserId { get; set; }
     }
 
     // Update DTO
     public class UpdateDocumentDto
     {
-        [MaxLength(255, ErrorMessage = "Tiêu đề không được vượt quá 255 ký tự")]
-        public string? Title { get; set; }
-
-        public string? Content { get; set; }
+        [Required]
+        public string Title { get; set; }
     }
 
     // List Request DTO

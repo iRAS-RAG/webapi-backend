@@ -1,3 +1,4 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -13,73 +14,20 @@ namespace IRasRag.API.Controllers
     {
         private readonly IFeedingLogService _feedingLogService;
         private readonly ILogger<FeedingLogController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
         public FeedingLogController(
             IFeedingLogService feedingLogService,
-            ILogger<FeedingLogController> logger
+            ILogger<FeedingLogController> logger,
+            HttpContextUtils httpContextUtils
         )
         {
             _feedingLogService = feedingLogService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
-        [Authorize(Roles = "Supervisor")]
-        [HttpPost]
-        public async Task<IActionResult> CreateFeedingLog([FromBody] CreateFeedingLogDto dto)
-        {
-            try
-            {
-                var result = await _feedingLogService.CreateFeedingLogAsync(dto);
-
-                return result.Type switch
-                {
-                    ResultType.Ok => Ok(new { result.Message, result.Data }),
-                    ResultType.NotFound => NotFound(new { result.Message }),
-                    ResultType.BadRequest => BadRequest(new { result.Message }),
-                    _ => StatusCode(500, new { result.Message }),
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "An error occurred while creating feeding log for FarmingBatchId: {FarmingBatchId}",
-                    dto.FarmingBatchId
-                );
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllFeedingLogs(
-            [FromQuery] FeedingLogListRequest request
-        )
-        {
-            try
-            {
-                if (request.Page <= 0 || request.PageSize <= 0)
-                {
-                    return BadRequest(
-                        new { Message = "Số trang và kích thước trang phải lớn hơn 0." }
-                    );
-                }
-
-                if (request.PageSize > 100)
-                {
-                    return BadRequest(new { Message = "Kích thước trang tối đa là 100." });
-                }
-
-                var result = await _feedingLogService.GetAllFeedingLogsAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving feeding logs.");
-                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
-            }
-        }
-
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor,Operator")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFeedingLogById(Guid id)
         {
@@ -105,7 +53,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFeedingLog(
             Guid id,
@@ -135,7 +83,7 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFeedingLog(Guid id)
         {

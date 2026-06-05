@@ -2,13 +2,16 @@
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesStageConfigSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -26,8 +29,12 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<Species>> _speciesRepoMock;
         private readonly Mock<IRepository<GrowthStage>> _growthStageRepoMock;
         private readonly Mock<IRepository<FeedType>> _feedTypeRepoMock;
+        private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
         private readonly IMapper _mapper;
         private readonly SpeciesStageConfigService _sut;
+        private readonly Mock<IFarmingBatchService> _farmingBatchServiceMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
 
         public SpeciesStageConfigServiceTest()
         {
@@ -51,10 +58,19 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(u => u.GetRepository<FeedType>())
                 .Returns(_feedTypeRepoMock.Object);
 
+            _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+            _farmingBatchServiceMock = new Mock<IFarmingBatchService>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
+
             _sut = new SpeciesStageConfigService(
                 _unitOfWorkMock.Object,
                 _loggerMock.Object,
-                _mapper
+                _mapper,
+                _telemetryCacheMock.Object,
+                _farmingBatchServiceMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
             );
         }
 
@@ -68,7 +84,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -92,9 +108,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _feedTypeRepoMock
                 .Setup(r =>
-                    r.AnyAsync(It.IsAny<Expression<Func<FeedType, bool>>>(), QueryType.ActiveOnly)
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedType, bool>>>(),
+                        QueryType.ActiveOnly
+                    )
                 )
-                .ReturnsAsync(true);
+                .ReturnsAsync([new FeedType { Id = Guid.NewGuid(), Name = "Feed A" }]);
 
             _configRepoMock
                 .Setup(r =>
@@ -130,7 +149,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -166,7 +185,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -205,7 +224,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -229,9 +248,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _feedTypeRepoMock
                 .Setup(r =>
-                    r.AnyAsync(It.IsAny<Expression<Func<FeedType, bool>>>(), QueryType.ActiveOnly)
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedType, bool>>>(),
+                        QueryType.ActiveOnly
+                    )
                 )
-                .ReturnsAsync(false);
+                .ReturnsAsync(new List<FeedType>());
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
             // Act
             var result = await _sut.CreateSpeciesStageConfig(dto);
@@ -252,7 +274,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -276,9 +298,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _feedTypeRepoMock
                 .Setup(r =>
-                    r.AnyAsync(It.IsAny<Expression<Func<FeedType, bool>>>(), QueryType.ActiveOnly)
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedType, bool>>>(),
+                        QueryType.ActiveOnly
+                    )
                 )
-                .ReturnsAsync(true);
+                .ReturnsAsync([new FeedType { Id = Guid.NewGuid(), Name = "Feed A" }]);
 
             _configRepoMock
                 .Setup(r =>
@@ -308,7 +333,7 @@ namespace IRasRag.Test.UnitTests.Application
             {
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -344,7 +369,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Id = id,
                 SpeciesName = "Tilapia",
                 GrowthStageName = "Juvenile",
-                FeedTypeName = "Pellet",
+                FeedTypeNames = ["Pellet"],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -353,7 +378,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock
                 .Setup(r =>
-                    r.FirstOrDefaultAsync<SpeciesStageConfigDto>(
+                    r.FirstOrDefaultAsync(
                         It.IsAny<SpeciesStageConfigByIdSpec>(),
                         QueryType.ActiveOnly
                     )
@@ -377,7 +402,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             _configRepoMock
                 .Setup(r =>
-                    r.FirstOrDefaultAsync<SpeciesStageConfigDto>(
+                    r.FirstOrDefaultAsync(
                         It.IsAny<SpeciesStageConfigByIdSpec>(),
                         QueryType.ActiveOnly
                     )
@@ -399,7 +424,7 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             _configRepoMock
                 .Setup(r =>
-                    r.FirstOrDefaultAsync<SpeciesStageConfigDto>(
+                    r.FirstOrDefaultAsync(
                         It.IsAny<SpeciesStageConfigByIdSpec>(),
                         QueryType.ActiveOnly
                     )
@@ -434,7 +459,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var configs = new List<SpeciesStageConfig>
             {
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -444,15 +469,18 @@ namespace IRasRag.Test.UnitTests.Application
                         Name = "Juvenile",
                         Description = "desc",
                     },
-                    FeedType = new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed A",
-                        Description = "d",
-                        ProteinPercentage = 35,
-                    },
+                    FeedTypes =
+                    [
+                        new FeedType
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed A",
+                            Description = "d",
+                            ProteinPercentage = 35,
+                        },
+                    ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -462,15 +490,18 @@ namespace IRasRag.Test.UnitTests.Application
                         Name = "Adult",
                         Description = "desc",
                     },
-                    FeedType = new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed Z",
-                        Description = "d",
-                        ProteinPercentage = 45,
-                    },
+                    FeedTypes =
+                    [
+                        new FeedType
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed Z",
+                            Description = "d",
+                            ProteinPercentage = 45,
+                        },
+                    ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
@@ -480,13 +511,16 @@ namespace IRasRag.Test.UnitTests.Application
                         Name = "Juvenile",
                         Description = "desc",
                     },
-                    FeedType = new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Feed M",
-                        Description = "d",
-                        ProteinPercentage = 40,
-                    },
+                    FeedTypes =
+                    [
+                        new FeedType
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "Feed M",
+                            Description = "d",
+                            ProteinPercentage = 40,
+                        },
+                    ],
                 },
             };
 
@@ -494,7 +528,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
                         request.Page,
                         request.PageSize,
@@ -533,7 +567,10 @@ namespace IRasRag.Test.UnitTests.Application
 
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result.Data.Select(x => x.FeedTypeName).Should().ContainInOrder("Feed Z", "Feed A");
+            result
+                .Data.Select(x => x.FeedTypeNames.First())
+                .Should()
+                .ContainInOrder("Feed Z", "Feed A");
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
@@ -546,7 +583,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
                             s is SpeciesStageConfigListSpec
                         ),
@@ -566,7 +603,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var configs = new List<SpeciesStageConfig>
             {
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
@@ -576,15 +613,18 @@ namespace IRasRag.Test.UnitTests.Application
                         Name = "G1",
                         Description = "desc",
                     },
-                    FeedType = new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "F1",
-                        Description = "d",
-                        ProteinPercentage = 35,
-                    },
+                    FeedTypes =
+                    [
+                        new FeedType
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "F1",
+                            Description = "d",
+                            ProteinPercentage = 35,
+                        },
+                    ],
                 },
-                new SpeciesStageConfig
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },
@@ -594,19 +634,22 @@ namespace IRasRag.Test.UnitTests.Application
                         Name = "G2",
                         Description = "desc",
                     },
-                    FeedType = new FeedType
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "F2",
-                        Description = "d",
-                        ProteinPercentage = 45,
-                    },
+                    FeedTypes =
+                    [
+                        new FeedType
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = "F2",
+                            Description = "d",
+                            ProteinPercentage = 45,
+                        },
+                    ],
                 },
             };
 
             _configRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
                         request.Page,
                         request.PageSize,
@@ -637,7 +680,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
                             s is SpeciesStageConfigListSpec
                         ),
@@ -657,7 +700,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
                         request.Page,
                         request.PageSize,
@@ -689,7 +732,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
                             s != null
                         ),
@@ -709,7 +752,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(),
                         request.Page,
                         request.PageSize,
@@ -735,7 +778,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _configRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesStageConfigDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesStageConfig, SpeciesStageConfigDto>>(s =>
                             s != null
                         ),
@@ -760,7 +803,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Id = Guid.NewGuid(),
                 SpeciesId = Guid.NewGuid(),
                 GrowthStageId = Guid.NewGuid(),
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypes = [new FeedType { Id = Guid.NewGuid(), Name = "Current feed" }],
                 AmountPer100Fish = 100,
                 FrequencyPerDay = 3,
                 MaxStockingDensity = 50,
@@ -769,7 +812,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var dto = new UpdateSpeciesStageConfigDto
             {
-                FeedTypeId = Guid.NewGuid(),
+                FeedTypeIds = [Guid.NewGuid()],
                 AmountPer100Fish = 120,
                 FrequencyPerDay = 4,
                 MaxStockingDensity = 60,
@@ -781,9 +824,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(config);
             _feedTypeRepoMock
                 .Setup(r =>
-                    r.AnyAsync(It.IsAny<Expression<Func<FeedType, bool>>>(), QueryType.ActiveOnly)
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedType, bool>>>(),
+                        QueryType.ActiveOnly
+                    )
                 )
-                .ReturnsAsync(true);
+                .ReturnsAsync([new FeedType { Id = Guid.NewGuid(), Name = "Feed A" }]);
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
 
             // Act
@@ -807,7 +853,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var id = Guid.NewGuid();
-            var dto = new UpdateSpeciesStageConfigDto { FeedTypeId = Guid.NewGuid() };
+            var dto = new UpdateSpeciesStageConfigDto { FeedTypeIds = [Guid.NewGuid()] };
 
             _configRepoMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
@@ -815,9 +861,12 @@ namespace IRasRag.Test.UnitTests.Application
 
             _feedTypeRepoMock
                 .Setup(r =>
-                    r.AnyAsync(It.IsAny<Expression<Func<FeedType, bool>>>(), QueryType.ActiveOnly)
+                    r.FindAllAsync(
+                        It.IsAny<Expression<Func<FeedType, bool>>>(),
+                        QueryType.ActiveOnly
+                    )
                 )
-                .ReturnsAsync(false);
+                .ReturnsAsync(new List<FeedType>());
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
             // Act
             var result = await _sut.UpdateSpeciesStageConfig(id, dto);

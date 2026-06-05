@@ -10,7 +10,14 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<GrowthStage> builder)
         {
             builder.ConfigureTimestamps();
-            builder.HasIndex(gs => gs.Name).IsUnique();
+            // Ensure stage names are unique per species
+            builder.HasIndex(gs => new { gs.SpeciesId, gs.Name }).IsUnique();
+
+            builder
+                .HasOne(gs => gs.Species)
+                .WithMany(s => s.GrowthStages)
+                .HasForeignKey(gs => gs.SpeciesId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasData(GrowthStageSeed.GrowthStages);
         }

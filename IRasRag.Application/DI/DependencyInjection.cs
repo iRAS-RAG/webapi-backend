@@ -1,4 +1,5 @@
-﻿using IRasRag.Application.Common.Mappings;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Services.Implementations;
 using IRasRag.Application.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -19,16 +20,24 @@ namespace IRasRag.Application.DI
 
         public static void AddServices(this IServiceCollection services)
         {
+            services.AddScoped<IAdvisoryService, AdvisoryService>();
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<IAlertService, AlertService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IReportService, ReportService>();
             services.AddScoped<ICameraService, CameraService>();
             services.AddScoped<IControlDeviceService, ControlDeviceService>();
             services.AddScoped<IControlDeviceTypeService, ControlDeviceTypeService>();
             services.AddScoped<ICorrectiveActionService, CorrectiveActionService>();
             services.AddScoped<IDocumentService, DocumentService>();
+            services.AddScoped<
+                Common.Interfaces.IRecommendationCalculator,
+                Common.Services.RecommendationCalculator
+            >();
             services.AddScoped<IFarmingBatchService, FarmingBatchService>();
             services.AddScoped<IFarmService, FarmService>();
             services.AddScoped<IFeedingLogService, FeedingLogService>();
+            services.AddScoped<ISupervisorMetricsService, SupervisorMetricsService>();
             services.AddScoped<IFeedTypeService, FeedTypeService>();
             services.AddScoped<IFishTankService, FishTankService>();
             services.AddScoped<IGrowthStageService, GrowthStageService>();
@@ -45,6 +54,7 @@ namespace IRasRag.Application.DI
             services.AddScoped<ISpeciesThresholdService, SpeciesThresholdService>();
             services.AddScoped<IUserFarmService, UserFarmService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserTankAccessService, UserTankAccessService>();
         }
 
         public static void AddAutoMapper(this IServiceCollection services, IConfiguration config)
@@ -53,6 +63,7 @@ namespace IRasRag.Application.DI
             {
                 cfg.LicenseKey = config["AutoMapperKey"];
                 cfg.AddProfile<AlertProfile>();
+                cfg.AddProfile<AuditLogProfile>();
                 cfg.AddProfile<CameraProfile>();
                 cfg.AddProfile<ControlDeviceProfile>();
                 cfg.AddProfile<ControlDeviceTypeProfile>();

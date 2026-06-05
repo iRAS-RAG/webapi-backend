@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class MortalityLogSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -23,24 +23,29 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<MortalityLog> MortalityLogs =>
-            new()
-            {
+            [
+                // Fingerling stage — 30 fish lost (~2 weeks into stage, ~15 g avg)
                 new MortalityLog
                 {
                     Id = MortalityLog1Id,
                     BatchId = FarmingBatchSeed.Batch1Id,
-                    Quantity = 30f,
-                    Date = new DateTime(2024, 02, 15, 0, 0, 0, DateTimeKind.Utc),
+                    UserId = UserSeed.OperatorId,
+                    Quantity = 30,
+                    LostWeightKg = 0.45,
+                    Date = new DateTime(2025, 09, 10, 0, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
+                // Juvenile stage — 20 fish lost (~5 weeks into stage, ~100 g avg)
                 new MortalityLog
                 {
                     Id = MortalityLog2Id,
                     BatchId = FarmingBatchSeed.Batch1Id,
-                    Quantity = 20f,
-                    Date = new DateTime(2024, 03, 10, 0, 0, 0, DateTimeKind.Utc),
+                    UserId = UserSeed.OperatorId,
+                    Quantity = 20,
+                    LostWeightKg = 2.0,
+                    Date = new DateTime(2025, 10, 25, 0, 0, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

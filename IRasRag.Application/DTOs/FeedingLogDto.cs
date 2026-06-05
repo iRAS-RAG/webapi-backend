@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace IRasRag.Application.DTOs
 {
@@ -7,7 +8,12 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public Guid FarmingBatchId { get; set; }
-        public float Amount { get; set; }
+        public string FarmingBatchName { get; set; } = string.Empty;
+        public Guid FeedTypeId { get; set; }
+        public string FeedTypeName { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string UserEmail { get; set; } = string.Empty;
+        public double Amount { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }
@@ -16,12 +22,18 @@ namespace IRasRag.Application.DTOs
     // Create DTO
     public class CreateFeedingLogDto
     {
-        [Required(ErrorMessage = "Mã lô nuôi là bắt buộc")]
+        [JsonIgnore]
         public Guid FarmingBatchId { get; set; }
 
+        [Required(ErrorMessage = "Loại thức ăn là bắt buộc")]
+        public Guid FeedTypeId { get; set; }
+
+        [JsonIgnore]
+        public Guid UserId { get; set; }
+
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float Amount { get; set; }
+        [Range(0.0, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double Amount { get; set; }
 
         [Required(ErrorMessage = "Ngày cho ăn là bắt buộc")]
         public DateTime CreatedDate { get; set; }
@@ -32,8 +44,10 @@ namespace IRasRag.Application.DTOs
     {
         public Guid? FarmingBatchId { get; set; }
 
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float? Amount { get; set; }
+        public Guid? FeedTypeId { get; set; }
+
+        [Range(0.0, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double? Amount { get; set; }
 
         public DateTime? CreatedDate { get; set; }
     }
@@ -42,22 +56,17 @@ namespace IRasRag.Application.DTOs
     public class FeedingLogListRequest : BasePaginatedListRequest
     {
         public DateTime? CreatedDate { get; set; }
+
+        [JsonIgnore]
         public Guid? FarmingBatchId { get; set; }
+        public Guid? FeedTypeId { get; set; }
     }
 
     // Batch sub-route requests
     public class RecordFeedingRequest
     {
         [Required(ErrorMessage = "Lượng thức ăn là bắt buộc")]
-        [Range(0.1, float.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
-        public float Amount { get; set; }
-    }
-
-    public class BatchFeedingLogQuery
-    {
-        public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
-        public string? SortBy { get; set; }
-        public string SortDir { get; set; } = "asc";
+        [Range(0.0, double.MaxValue, ErrorMessage = "Lượng thức ăn phải lớn hơn 0")]
+        public double Amount { get; set; }
     }
 }

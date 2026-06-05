@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using IRasRag.Application.Common.Mappings;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Test.UnitTests.Helpers

@@ -1,12 +1,16 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
+using IRasRag.Application.Specifications.FarmingBatchSpecifications;
 using IRasRag.Application.Specifications.FeedingLogSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +20,31 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<FeedingLogService> _logger;
         private readonly IMapper _mapper;
+        private readonly IFarmingBatchService _farmingBatchService;
+        private readonly Common.Interfaces.Realtime.ISupervisorNotifier _supervisorNotifier;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public FeedingLogService(
             IUnitOfWork unitOfWork,
             ILogger<FeedingLogService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IFarmingBatchService farmingBatchService,
+            Common.Interfaces.Realtime.ISupervisorNotifier supervisorNotifier,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _mapper = mapper;
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _farmingBatchService =
+                farmingBatchService ?? throw new ArgumentNullException(nameof(farmingBatchService));
+            _supervisorNotifier = supervisorNotifier;
+            _auditLogService =
+                auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+            _currentUserAccessor =
+                currentUserAccessor ?? throw new ArgumentNullException(nameof(currentUserAccessor));
         }
 
         #region Get Methods
@@ -105,9 +124,11 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var feedingLogRepository = _unitOfWork.GetRepository<FeedingLog>();
-                var feedingLog = await feedingLogRepository.GetByIdAsync(id);
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
 
-                if (feedingLog == null)
+                if (feedingLogDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy nhật ký cho ăn với Id: {Id}", id);
                     return Result<FeedingLogDto>.Failure(
@@ -116,7 +137,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var feedingLogDto = _mapper.Map<FeedingLogDto>(feedingLog);
                 _logger.LogInformation("Lấy nhật ký cho ăn thành công: {Id}", id);
 
                 return Result<FeedingLogDto>.Success(
@@ -157,6 +177,15 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                if (createDto.FeedTypeId == Guid.Empty)
+                {
+                    _logger.LogWarning("Loại thức ăn không hợp lệ");
+                    return Result<FeedingLogDto>.Failure(
+                        "Loại thức ăn không hợp lệ",
+                        ResultType.BadRequest
+                    );
+                }
+
                 if (createDto.Amount <= 0)
                 {
                     _logger.LogWarning("Lượng thức ăn phải lớn hơn 0");
@@ -166,21 +195,43 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Verify FarmingBatchId exists
+                // Verify valid FarmingBatch that user can access
                 var farmingBatchRepository = _unitOfWork.GetRepository<FarmingBatch>();
-                var farmingBatchExists = await farmingBatchRepository.AnyAsync(fb =>
-                    fb.Id == createDto.FarmingBatchId
+                var farmingBatch = await farmingBatchRepository.FirstOrDefaultAsync(
+                    new FarmingBatchByUserAccessSpec(createDto.FarmingBatchId, createDto.UserId)
                 );
 
-                if (!farmingBatchExists)
+                if (farmingBatch == null)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy lô nuôi với Id: {FarmingBatchId}",
-                        createDto.FarmingBatchId
+                        "Không tìm thấy lô nuôi với Id: {FarmingBatchId} hoặc người dùng {UserId} không có quyền truy cập",
+                        createDto.FarmingBatchId,
+                        createDto.UserId
                     );
                     return Result<FeedingLogDto>.Failure(
-                        "Không tìm thấy lô nuôi",
+                        "Không tìm thấy lô nuôi hoặc bạn không có quyền truy cập",
                         ResultType.NotFound
+                    );
+                }
+
+                // Verify allowed FeedType for current stage of the FarmingBatch
+                var speciesStageConfigRepository = _unitOfWork.GetRepository<SpeciesStageConfig>();
+                var isFeedTypeAllowedForCurrentStage = await speciesStageConfigRepository.AnyAsync(
+                    ssc =>
+                        ssc.Id == farmingBatch.CurrentStageConfigId
+                        && ssc.FeedTypes.Any(ft => ft.Id == createDto.FeedTypeId)
+                );
+
+                if (!isFeedTypeAllowedForCurrentStage)
+                {
+                    _logger.LogWarning(
+                        "FeedTypeId {FeedTypeId} không thuộc danh sách cho phép của CurrentStageConfigId {CurrentStageConfigId}",
+                        createDto.FeedTypeId,
+                        farmingBatch.CurrentStageConfigId
+                    );
+                    return Result<FeedingLogDto>.Failure(
+                        "Loại thức ăn không tồn tại/không hợp lệ với giai đoạn sinh trưởng hiện tại của lô nuôi",
+                        ResultType.BadRequest
                     );
                 }
 
@@ -190,13 +241,63 @@ namespace IRasRag.Application.Services.Implementations
                 await feedingLogRepository.AddAsync(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
 
-                var feedingLogDto = _mapper.Map<FeedingLogDto>(feedingLog);
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Không thể tính FCR sau khi tạo feed log cho FarmingBatchId {BatchId}",
+                        feedingLog.FarmingBatchId
+                    );
+                }
+
+                var feedingLogDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(feedingLog.Id)
+                );
+
+                if (feedingLogDto == null)
+                {
+                    _logger.LogWarning(
+                        "Không thể tải lại nhật ký cho ăn vừa tạo với Id: {Id}",
+                        feedingLog.Id
+                    );
+                    return Result<FeedingLogDto>.Failure(
+                        "Đã xảy ra lỗi khi tạo nhật ký cho ăn",
+                        ResultType.Unexpected
+                    );
+                }
+
+                await WriteCreateAuditLogAsync(feedingLogDto);
+
                 _logger.LogInformation(
-                    "Tạo nhật ký cho ăn thành công: {Id} - FarmingBatchId: {FarmingBatchId}, Amount: {Amount}",
+                    "Tạo nhật ký cho ăn thành công: {Id} - FarmingBatchId: {FarmingBatchId}, UserId: {UserId}, Amount: {Amount}",
                     feedingLog.Id,
                     feedingLog.FarmingBatchId,
+                    feedingLog.UserId,
                     feedingLog.Amount
                 );
+
+                // Broadcast to supervisors for this farm
+                try
+                {
+                    var farmId = farmingBatch.FishTank?.FarmId;
+                    var payload = new
+                    {
+                        feedingLogDto.Id,
+                        feedingLogDto.FarmingBatchId,
+                        feedingLogDto.Amount,
+                        feedingLogDto.CreatedDate,
+                    };
+                    if (farmId != null)
+                        await _supervisorNotifier.NotifyFeedingLogAsync(farmId.Value, payload);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to broadcast feeding log");
+                }
 
                 return Result<FeedingLogDto>.Success(
                     feedingLogDto,
@@ -268,10 +369,49 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                if (updateDto.FeedTypeId.HasValue && updateDto.FeedTypeId.Value != Guid.Empty)
+                {
+                    var feedTypeRepository = _unitOfWork.GetRepository<FeedType>();
+                    var feedTypeExists = await feedTypeRepository.AnyAsync(ft =>
+                        ft.Id == updateDto.FeedTypeId.Value
+                    );
+
+                    if (!feedTypeExists)
+                    {
+                        _logger.LogWarning(
+                            "Không tìm thấy loại thức ăn với Id: {FeedTypeId}",
+                            updateDto.FeedTypeId.Value
+                        );
+                        return Result.Failure("Không tìm thấy loại thức ăn", ResultType.NotFound);
+                    }
+                }
+
+                var oldSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
+
                 _mapper.Map(updateDto, feedingLog);
 
                 feedingLogRepository.Update(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                var updatedSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
+
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Không thể tính FCR sau khi cập nhật feed log {Id}", id);
+                }
+
+                if (oldSnapshotDto != null && updatedSnapshotDto != null)
+                {
+                    await WriteUpdateAuditLogAsync(oldSnapshotDto, updatedSnapshotDto);
+                }
 
                 _logger.LogInformation("Cập nhật nhật ký cho ăn thành công: {Id}", id);
                 return Result.Success("Cập nhật nhật ký cho ăn thành công");
@@ -309,8 +449,26 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy nhật ký cho ăn", ResultType.NotFound);
                 }
 
+                var oldSnapshotDto = await feedingLogRepository.FirstOrDefaultAsync(
+                    new FeedingLogDtoByIdSpec(id)
+                );
+
                 feedingLogRepository.Delete(feedingLog);
                 await _unitOfWork.SaveChangesAsync();
+
+                if (oldSnapshotDto != null)
+                {
+                    await WriteDeleteAuditLogAsync(oldSnapshotDto);
+                }
+
+                try
+                {
+                    await _farmingBatchService.ComputeAndPersistFcrAsync(feedingLog.FarmingBatchId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Không thể tính FCR sau khi xóa feed log {Id}", id);
+                }
 
                 _logger.LogInformation("Xóa nhật ký cho ăn thành công: {Id}", id);
                 return Result.Success("Xóa nhật ký cho ăn thành công");
@@ -323,6 +481,85 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.FeedingLog,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.FeedingLog,
+                    entityId
+                );
+            }
+        }
+
+        private static object ToAuditSnapshot(FeedingLogDto dto)
+        {
+            return new
+            {
+                dto.FarmingBatchName,
+                dto.FeedTypeName,
+                dto.UserEmail,
+                dto.Amount,
+                dto.CreatedDate,
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(FeedingLogDto dto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                dto.Id.ToString(),
+                oldValue: null,
+                newValue: ToAuditSnapshot(dto),
+                "create-feeding-log"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(FeedingLogDto oldDto, FeedingLogDto newDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                newDto.Id.ToString(),
+                oldValue: ToAuditSnapshot(oldDto),
+                newValue: ToAuditSnapshot(newDto),
+                "update-feeding-log"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(FeedingLogDto oldDto)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                oldDto.Id.ToString(),
+                oldValue: ToAuditSnapshot(oldDto),
+                newValue: null,
+                "delete-feeding-log"
+            );
         }
         #endregion
     }

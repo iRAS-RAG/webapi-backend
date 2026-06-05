@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -17,53 +19,76 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AlertService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public AlertService(IUnitOfWork unitOfWork, ILogger<AlertService> logger, IMapper mapper)
+        public AlertService(
+            IUnitOfWork unitOfWork,
+            ILogger<AlertService> logger,
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
-        public async Task<PaginatedResult<AlertDto>> GetAllAlertsAsync(AlertListRequest request)
+        public async Task<AlertPaginatedResult> GetAllAlertsAsync(AlertListRequest request)
         {
             try
             {
-                var spec = new AlertDtoListSpec(request);
-                var pagedResult = await _unitOfWork
-                    .GetRepository<Alert>()
-                    .GetPagedAsync(spec, request.Page, request.PageSize);
+                var alertRepo = _unitOfWork.GetRepository<Alert>();
 
-                var meta = PaginationBuilder.BuildPaginationMetadata(
+                var pagedResult = await alertRepo.GetPagedAsync(
+                    new AlertDtoListSpec(request),
                     request.Page,
-                    request.PageSize,
-                    pagedResult.TotalItems
+                    request.PageSize
                 );
 
-                var links = PaginationBuilder.BuildPaginationLinks(
-                    request.Page,
-                    request.PageSize,
-                    pagedResult.TotalItems
-                );
-
-                return new PaginatedResult<AlertDto>
+                var statuses = await alertRepo.ListAsync(new AlertStatusGlobalSummarySpec());
+                var statusCounts = new AlertStatusCounts
                 {
-                    Message = "Lấy danh sách cảnh báo thành công",
-                    Data = pagedResult.Items.ToList(),
-                    Meta = meta,
-                    Links = links,
+                    Open = statuses.Count(s => s == AlertStatus.OPEN),
+                    Acknowledged = statuses.Count(s => s == AlertStatus.ACKNOWLEDGED),
+                    Resolved = statuses.Count(s => s == AlertStatus.RESOLVED),
+                    Dismissed = statuses.Count(s => s == AlertStatus.DISMISSED),
+                };
+
+                return new AlertPaginatedResult
+                {
+                    Message =
+                        pagedResult.TotalItems > 0
+                            ? "Lấy danh sách cảnh báo thành công"
+                            : "Không có dữ liệu",
+                    Data = pagedResult.Items,
+                    Meta = PaginationBuilder.BuildPaginationMetadata(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                    Links = PaginationBuilder.BuildPaginationLinks(
+                        request.Page,
+                        request.PageSize,
+                        pagedResult.TotalItems
+                    ),
+                    StatusCounts = statusCounts,
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách cảnh báo");
-                return new PaginatedResult<AlertDto>
+                return new AlertPaginatedResult
                 {
                     Message = "Đã xảy ra lỗi khi lấy danh sách cảnh báo",
                     Data = new List<AlertDto>(),
                     Meta = new PaginationMeta(),
                     Links = new PaginationLinks(),
+                    StatusCounts = new AlertStatusCounts(),
                 };
             }
         }
@@ -72,50 +97,13 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                var alertRepo = _unitOfWork.GetRepository<Alert>();
-                var alert = await alertRepo.FirstOrDefaultAsync(
-                    a => a.Id == id,
-                    QueryType.ActiveOnly
-                );
+                var alertDto = await _unitOfWork
+                    .GetRepository<Alert>()
+                    .FirstOrDefaultAsync(new AlertDtoByIdSpec(id));
 
-                if (alert == null)
-                {
+                if (alertDto == null)
                     return Result<AlertDto>.Failure("Không tìm thấy cảnh báo", ResultType.NotFound);
-                }
 
-                // Load navigation properties
-                var alertWithIncludes = await alertRepo.FirstOrDefaultAsync(
-                    a => a.Id == id,
-                    QueryType.ActiveOnly
-                );
-
-                var fishTankRepo = _unitOfWork.GetRepository<FishTank>();
-                var fishTank = await fishTankRepo.GetByIdAsync(alert.FishTankId);
-                if (fishTank != null)
-                {
-                    alert.FishTank = fishTank;
-                }
-
-                var sensorTypeRepo = _unitOfWork.GetRepository<SensorType>();
-                var sensorType = await sensorTypeRepo.GetByIdAsync(alert.SensorTypeId);
-                if (sensorType != null)
-                {
-                    alert.SensorType = sensorType;
-                }
-
-                if (alert.FarmingBatchId.HasValue)
-                {
-                    var farmingBatchRepo = _unitOfWork.GetRepository<FarmingBatch>();
-                    var farmingBatch = await farmingBatchRepo.GetByIdAsync(
-                        alert.FarmingBatchId.Value
-                    );
-                    if (farmingBatch != null)
-                    {
-                        alert.FarmingBatch = farmingBatch;
-                    }
-                }
-
-                var alertDto = _mapper.Map<AlertDto>(alert);
                 return Result<AlertDto>.Success(alertDto, "Lấy thông tin cảnh báo thành công");
             }
             catch (Exception ex)
@@ -135,13 +123,11 @@ namespace IRasRag.Application.Services.Implementations
             try
             {
                 // Validate SensorLog exists
-                var sensorLogRepo = _unitOfWork.GetRepository<SensorLog>();
-                var sensorLogExists = await sensorLogRepo.AnyAsync(sl =>
-                    sl.Id == createDto.SensorLogId
-                );
+                var sensorRepo = _unitOfWork.GetRepository<Sensor>();
+                var sensorLogExists = await sensorRepo.AnyAsync(s => s.Id == createDto.SensorId);
                 if (!sensorLogExists)
                 {
-                    return Result<AlertDto>.Failure("SensorLog không tồn tại", ResultType.NotFound);
+                    return Result<AlertDto>.Failure("Sensor không tồn tại", ResultType.NotFound);
                 }
 
                 // Validate SpeciesThreshold exists
@@ -193,14 +179,16 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var alert = _mapper.Map<Alert>(createDto);
-                alert.FishTank = fishTank!;
-                alert.SensorType = sensorType!;
 
                 await _unitOfWork.GetRepository<Alert>().AddAsync(alert);
                 await _unitOfWork.SaveChangesAsync();
 
-                var alertDto = _mapper.Map<AlertDto>(alert);
-                return Result<AlertDto>.Success(alertDto, "Tạo cảnh báo thành công");
+                await WriteCreateAuditLogAsync(alert);
+
+                var alertDto = await _unitOfWork
+                    .GetRepository<Alert>()
+                    .FirstOrDefaultAsync(new AlertDtoByIdSpec(alert.Id));
+                return Result<AlertDto>.Success(alertDto!, "Tạo cảnh báo thành công");
             }
             catch (Exception ex)
             {
@@ -227,15 +215,15 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // Validate SensorLog if provided
-                if (updateDto.SensorLogId.HasValue)
+                if (updateDto.SensorId.HasValue)
                 {
-                    var sensorLogRepo = _unitOfWork.GetRepository<SensorLog>();
-                    var sensorLogExists = await sensorLogRepo.AnyAsync(sl =>
-                        sl.Id == updateDto.SensorLogId.Value
+                    var sensorRepo = _unitOfWork.GetRepository<Sensor>();
+                    var sensorExists = await sensorRepo.AnyAsync(s =>
+                        s.Id == updateDto.SensorId.Value
                     );
-                    if (!sensorLogExists)
+                    if (!sensorExists)
                     {
-                        return Result.Failure("SensorLog không tồn tại", ResultType.NotFound);
+                        return Result.Failure("Sensor không tồn tại", ResultType.NotFound);
                     }
                 }
 
@@ -294,9 +282,15 @@ namespace IRasRag.Application.Services.Implementations
                     }
                 }
 
+                var oldAlertSnapshot = await BuildAlertAuditSnapshotAsync(alert);
+
                 _mapper.Map(updateDto, alert);
                 alertRepo.Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                var newAlertSnapshot = await BuildAlertAuditSnapshotAsync(alert);
+
+                await WriteUpdateAuditLogAsync(alert, oldAlertSnapshot, newAlertSnapshot);
 
                 return Result.Success("Cập nhật cảnh báo thành công");
             }
@@ -307,6 +301,53 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
         #endregion
+
+        public async Task<Result> UpdateAlertStatusAsync(Guid id, AlertStatus newStatus)
+        {
+            try
+            {
+                var alert = await _unitOfWork.GetRepository<Alert>().GetByIdAsync(id);
+                if (alert == null)
+                    return Result.Failure("Không tìm thấy cảnh báo", ResultType.NotFound);
+
+                var allowed = (alert.Status, newStatus) switch
+                {
+                    (AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED) => true,
+                    (AlertStatus.OPEN, AlertStatus.DISMISSED) => true,
+                    (AlertStatus.ACKNOWLEDGED, AlertStatus.DISMISSED) => true,
+                    _ => false,
+                };
+
+                if (!allowed)
+                    return Result.Failure(
+                        $"Không thể chuyển trạng thái từ {alert.Status} sang {newStatus}",
+                        ResultType.BadRequest
+                    );
+
+                var oldStatus = alert.Status;
+                alert.Status = newStatus;
+                _unitOfWork.GetRepository<Alert>().Update(alert);
+                await _unitOfWork.SaveChangesAsync();
+
+                await WriteAuditLogAsync(
+                    AuditLogActions.Update,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = newStatus.ToVietnamese() },
+                    "update-alert-status"
+                );
+
+                return Result.Success("Cập nhật trạng thái cảnh báo thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật trạng thái cảnh báo với Id: {AlertId}", id);
+                return Result.Failure(
+                    "Đã xảy ra lỗi khi cập nhật trạng thái cảnh báo",
+                    ResultType.Unexpected
+                );
+            }
+        }
 
         #region Delete Methods
         public async Task<Result> DeleteAlertAsync(Guid id)
@@ -348,6 +389,8 @@ namespace IRasRag.Application.Services.Implementations
                 alertRepo.Delete(alert);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteDeleteAuditLogAsync(alert);
+
                 return Result.Success("Xóa cảnh báo thành công");
             }
             catch (Exception ex)
@@ -355,6 +398,116 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi xóa cảnh báo với Id: {AlertId}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa cảnh báo", ResultType.Unexpected);
             }
+        }
+        #endregion
+
+        #region Private Helper Methods for Audit Logging
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Alert,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.Alert,
+                    entityId
+                );
+            }
+        }
+
+        private async Task<object> BuildAlertAuditSnapshotAsync(Alert alert)
+        {
+            var sensor = await _unitOfWork.GetRepository<Sensor>().GetByIdAsync(alert.SensorId);
+            var speciesThreshold = await _unitOfWork
+                .GetRepository<SpeciesThreshold>()
+                .GetByIdAsync(alert.SpeciesThresholdId);
+            var fishTank = await _unitOfWork
+                .GetRepository<FishTank>()
+                .GetByIdAsync(alert.FishTankId);
+            var sensorType = await _unitOfWork
+                .GetRepository<SensorType>()
+                .GetByIdAsync(alert.SensorTypeId);
+            FarmingBatch? farmingBatch = null;
+
+            if (alert.FarmingBatchId.HasValue)
+            {
+                farmingBatch = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .GetByIdAsync(alert.FarmingBatchId.Value);
+            }
+
+            return new
+            {
+                SensorName = sensor?.Name ?? "Không xác định",
+                FishTankName = fishTank?.Name ?? "Không xác định",
+                FarmingBatchName = farmingBatch?.Name,
+                SensorTypeName = sensorType?.Name ?? "Không xác định",
+                alert.TriggerValue,
+                alert.Status,
+                alert.RaisedAt,
+                alert.ResolvedAt,
+                ThresholdRange = speciesThreshold == null
+                    ? null
+                    : $"{speciesThreshold.MinValue} - {speciesThreshold.MaxValue} {sensorType?.UnitOfMeasure}".Trim(),
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(Alert alert)
+        {
+            var snapshot = await BuildAlertAuditSnapshotAsync(alert);
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                alert.Id.ToString(),
+                oldValue: null,
+                newValue: snapshot,
+                "create-alert"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(
+            Alert alert,
+            object oldAlertSnapshot,
+            object newAlertSnapshot
+        )
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                alert.Id.ToString(),
+                oldAlertSnapshot,
+                newAlertSnapshot,
+                "update-alert"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Alert alert)
+        {
+            var snapshot = await BuildAlertAuditSnapshotAsync(alert);
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                alert.Id.ToString(),
+                oldValue: snapshot,
+                newValue: null,
+                "delete-alert"
+            );
         }
         #endregion
     }

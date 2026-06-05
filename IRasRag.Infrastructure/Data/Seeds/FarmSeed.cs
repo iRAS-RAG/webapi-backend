@@ -8,7 +8,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
             "aaaaaaaa-0000-0000-0000-000000000001"
         );
 
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -19,17 +19,16 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<Farm> Farms =>
-            new()
-            {
+            [
                 new Farm
                 {
                     Id = DefaultFarmId,
-                    Name = "Trang trại RAS mẫu",
+                    Name = "Trang trại RAS HCM",
                     Address = "Đường 123, Tp.HCM",
                     PhoneNumber = "+84-123-456-789",
                     Email = "contact@aquabluefarm.vn",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

@@ -16,8 +16,10 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
             {
                 ["raisedat"] = a => a.RaisedAt,
                 ["status"] = a => a.Status,
-                ["value"] = a => a.Value,
+                ["value"] = a => a.TriggerValue,
                 ["fishtankname"] = a => a.FishTank.Name,
+                ["sensorname"] = a => a.Sensor.Name,
+                ["farmingbatchname"] = a => a.FarmingBatch != null ? a.FarmingBatch.Name : null,
             };
 
             ApplySearch(
@@ -25,31 +27,38 @@ namespace IRasRag.Application.Specifications.AlertSpecifications
                 [
                     a => a.FishTank.Name,
                     a => a.SensorType.Name,
+                    a => a.Sensor.Name,
                     a => a.FarmingBatch != null ? a.FarmingBatch.Name : null,
+                    a => a.SensorType.Name,
                 ]
             );
 
-            ApplyFilter(request.Status, a => a.Status == request.Status);
+            if (request.Statuses is { Count: > 0 })
+                Query.Where(a => request.Statuses.Contains(a.Status));
+            ApplyFilter(request.TankId, a => a.FishTankId == request.TankId);
+            ApplyFilter(request.SensorId, a => a.SensorId == request.SensorId);
+            ApplyFilter(request.BatchId, a => a.FarmingBatchId == request.BatchId);
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "raisedat");
 
             Query.Select(a => new AlertDto
             {
                 Id = a.Id,
-                SensorLogId = a.SensorLogId,
+                SensorId = a.SensorId,
                 SpeciesThresholdId = a.SpeciesThresholdId,
                 FarmingBatchId = a.FarmingBatchId,
                 FarmingBatchName = a.FarmingBatch != null ? a.FarmingBatch.Name : null,
                 FishTankId = a.FishTankId,
                 FishTankName = a.FishTank.Name,
-                SensorTypeId = a.SensorTypeId,
                 SensorTypeName = a.SensorType.Name,
-                Value = a.Value,
+                TriggerValue = a.TriggerValue,
                 RaisedAt = a.RaisedAt,
                 ResolvedAt = a.ResolvedAt,
                 Status = a.Status,
-                CreatedAt = a.CreatedAt,
-                ModifiedAt = a.ModifiedAt,
+                UnitOfMeasure = a.SensorType.UnitOfMeasure,
+                MinThreshold = a.SpeciesThreshold.MinValue,
+                MaxThreshold = a.SpeciesThreshold.MaxValue,
+                HasCorrectiveAction = a.CorrectiveActions.Any(),
             });
         }
     }

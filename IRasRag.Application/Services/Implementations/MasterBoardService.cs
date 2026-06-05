@@ -1,5 +1,8 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -7,6 +10,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.MasterBoardSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +20,25 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<MasterBoardService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITelemetryCacheService _telemetryCache;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public MasterBoardService(
             IUnitOfWork unitOfWork,
             ILogger<MasterBoardService> logger,
-            IMapper mapper
+            IMapper mapper,
+            ITelemetryCacheService telemetryCache,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _telemetryCache = telemetryCache;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -93,9 +106,11 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy bảng mạch với Id: {Id}", id);
 
                 var masterBoardRepository = _unitOfWork.GetRepository<MasterBoard>();
-                var masterBoard = await masterBoardRepository.GetByIdAsync(id);
+                var masterBoardDto = await masterBoardRepository.FirstOrDefaultAsync(
+                    new MasterBoardDtoByIdSpec(id)
+                );
 
-                if (masterBoard == null)
+                if (masterBoardDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy bảng mạch với Id: {Id}", id);
                     return Result<MasterBoardDto>.Failure(
@@ -104,7 +119,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var masterBoardDto = _mapper.Map<MasterBoardDto>(masterBoard);
                 _logger.LogInformation("Lấy bảng mạch thành công: {Id}", id);
 
                 return Result<MasterBoardDto>.Success(masterBoardDto, "Lấy bảng mạch thành công");
@@ -168,6 +182,8 @@ namespace IRasRag.Application.Services.Implementations
                 await masterBoardRepository.AddAsync(masterBoard);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(masterBoard, fishTank.Name);
+
                 var masterBoardDto = _mapper.Map<MasterBoardDto>(masterBoard);
                 masterBoardDto.FishTankName = fishTank.Name;
                 _logger.LogInformation("Tạo bảng mạch thành công: {Id}", masterBoard.Id);
@@ -205,6 +221,18 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var originalFishTank = await _unitOfWork
+                    .GetRepository<FishTank>()
+                    .GetByIdAsync(masterBoard.FishTankId);
+                var oldSnapshot = new
+                {
+                    masterBoard.Name,
+                    masterBoard.MacAddress,
+                    FishTankName = originalFishTank?.Name ?? "Unknown",
+                };
+
+                var updatedFishTankName = originalFishTank?.Name ?? "Unknown";
+
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
                 {
@@ -231,6 +259,7 @@ namespace IRasRag.Application.Services.Implementations
                         );
                     }
 
+                    _telemetryCache.InvalidateMasterboard(masterBoard.MacAddress);
                     masterBoard.MacAddress = updateDto.MacAddress.Trim();
                 }
 
@@ -255,10 +284,13 @@ namespace IRasRag.Application.Services.Implementations
                     }
 
                     masterBoard.FishTankId = updateDto.FishTankId.Value;
+                    updatedFishTankName = fishTank.Name;
                 }
 
                 masterBoardRepository.Update(masterBoard);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(masterBoard, oldSnapshot, updatedFishTankName);
 
                 _logger.LogInformation("Cập nhật bảng mạch thành công: {Id}", id);
 
@@ -293,6 +325,16 @@ namespace IRasRag.Application.Services.Implementations
                         ResultType.NotFound
                     );
                 }
+
+                var fishTank = await _unitOfWork
+                    .GetRepository<FishTank>()
+                    .GetByIdAsync(masterBoard.FishTankId);
+                var oldSnapshot = new
+                {
+                    masterBoard.Name,
+                    masterBoard.MacAddress,
+                    FishTankName = fishTank?.Name ?? "Unknown",
+                };
 
                 // Check if MasterBoard has related Sensors
                 var hasSensors = await masterBoardRepository.AnyAsync(mb =>
@@ -330,6 +372,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 masterBoardRepository.Delete(masterBoard);
                 await _unitOfWork.SaveChangesAsync();
+                _telemetryCache.InvalidateMasterboard(masterBoard.MacAddress);
+                _telemetryCache.InvalidateSensors(masterBoard.Id);
+
+                await WriteDeleteAuditLogAsync(masterBoard.Id, oldSnapshot);
 
                 _logger.LogInformation("Xóa bảng mạch thành công: {Id}", id);
                 return Result.Success("Xóa bảng mạch thành công");
@@ -339,6 +385,122 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Lỗi khi xóa bảng mạch với Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa bảng mạch", ResultType.Unexpected);
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        AuditLogEntityType.MasterBoard,
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.MasterBoard,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(MasterBoard masterBoard, string fishTankName)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                masterBoard.Id.ToString(),
+                null,
+                new
+                {
+                    masterBoard.Name,
+                    masterBoard.MacAddress,
+                    FishTankName = fishTankName,
+                },
+                "create-master-board"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(
+            MasterBoard masterBoard,
+            object oldSnapshot,
+            string fishTankName
+        )
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                masterBoard.Id.ToString(),
+                oldSnapshot,
+                new
+                {
+                    masterBoard.Name,
+                    masterBoard.MacAddress,
+                    FishTankName = fishTankName,
+                },
+                "update-master-board"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-master-board"
+            );
         }
         #endregion
     }

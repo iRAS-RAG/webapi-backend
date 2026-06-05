@@ -1,6 +1,7 @@
 ﻿using IRasRag.Domain.Common;
 using IRasRag.Domain.Entities;
 using IRasRag.Infrastructure.Data.Configurations;
+using IRasRag.Infrastructure.Persistence.DbFunctions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -39,6 +40,7 @@ namespace IRasRag.Infrastructure.Persistence
         // ====================================
         public DbSet<FeedType> FeedTypes { get; set; }
         public DbSet<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
+        public DbSet<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
 
         // ====================================
         // Hardware
@@ -60,6 +62,7 @@ namespace IRasRag.Infrastructure.Persistence
         // ====================================
         // Advisory & Alerts
         // ====================================
+        public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Alert> Alerts { get; set; }
         public DbSet<CorrectiveAction> CorrectiveActions { get; set; }
         public DbSet<Document> Documents { get; set; }
@@ -94,6 +97,8 @@ namespace IRasRag.Infrastructure.Persistence
             // Feeding Configuration
             modelBuilder.ApplyConfiguration(new FeedTypeConfiguration());
             modelBuilder.ApplyConfiguration(new SpeciesStageConfigConfiguration());
+            modelBuilder.ApplyConfiguration(new SpeciesStageConfigFeedTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new BatchStageConfiguration());
 
             // Hardware
             modelBuilder.ApplyConfiguration(new MasterBoardConfiguration());
@@ -109,10 +114,24 @@ namespace IRasRag.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new JobControlMappingConfiguration());
 
             // Advisory & Alerts
+            modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
             modelBuilder.ApplyConfiguration(new AlertConfiguration());
             modelBuilder.ApplyConfiguration(new CorrectiveActionConfiguration());
             modelBuilder.ApplyConfiguration(new DocumentConfiguration());
             modelBuilder.ApplyConfiguration(new RecommendationConfiguration());
+
+            // ====================================
+            // Custom DbFunctions
+            // ====================================
+            modelBuilder
+                .HasDbFunction(
+                    typeof(PgFunctions).GetMethod(
+                        nameof(PgFunctions.DateBin),
+                        new[] { typeof(TimeSpan), typeof(DateTime), typeof(DateTime) }
+                    )!
+                )
+                .HasName("date_bin")
+                .IsBuiltIn();
 
             // ====================================
             // Global Value Converters
@@ -159,13 +178,11 @@ namespace IRasRag.Infrastructure.Persistence
             }
         }
 
-        private bool _hardDelete;
+        private readonly HashSet<object> _hardDeleteEntities = [];
 
-        public void HardDelete<TEntity>(TEntity entity)
-            where TEntity : class
+        public void MarkHardDelete(object entity)
         {
-            _hardDelete = true;
-            Remove(entity);
+            _hardDeleteEntities.Add(entity);
         }
 
         public override int SaveChanges()
@@ -176,7 +193,8 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedAt = now;
+                    if (entry.Entity.CreatedAt == null)
+                        entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)
@@ -186,7 +204,7 @@ namespace IRasRag.Infrastructure.Persistence
                 else if (
                     entry.State == EntityState.Deleted
                     && entry.Entity is ISoftDeletable softDeletable
-                    && !_hardDelete
+                    && !_hardDeleteEntities.Contains(entry.Entity)
                 )
                 {
                     // Soft delete
@@ -197,14 +215,9 @@ namespace IRasRag.Infrastructure.Persistence
                 }
             }
 
-            try
-            {
-                return base.SaveChanges();
-            }
-            finally
-            {
-                _hardDelete = false;
-            }
+            var result = base.SaveChanges();
+            _hardDeleteEntities.Clear();
+            return result;
         }
 
         public override async Task<int> SaveChangesAsync(
@@ -217,7 +230,8 @@ namespace IRasRag.Infrastructure.Persistence
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedAt = now;
+                    if (entry.Entity.CreatedAt == null)
+                        entry.Entity.CreatedAt = now;
                     entry.Entity.ModifiedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)
@@ -227,7 +241,7 @@ namespace IRasRag.Infrastructure.Persistence
                 else if (
                     entry.State == EntityState.Deleted
                     && entry.Entity is ISoftDeletable softDeletable
-                    && !_hardDelete
+                    && !_hardDeleteEntities.Contains(entry.Entity)
                 )
                 {
                     // Soft delete
@@ -238,14 +252,9 @@ namespace IRasRag.Infrastructure.Persistence
                 }
             }
 
-            try
-            {
-                return await base.SaveChangesAsync(cancellationToken);
-            }
-            finally
-            {
-                _hardDelete = false;
-            }
+            var result = await base.SaveChangesAsync(cancellationToken);
+            _hardDeleteEntities.Clear();
+            return result;
         }
     }
 }

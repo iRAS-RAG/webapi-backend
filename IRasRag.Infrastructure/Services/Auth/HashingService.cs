@@ -2,7 +2,6 @@
 using System.Text;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Infrastructure.Settings;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace IRasRag.Infrastructure.Services.Auth

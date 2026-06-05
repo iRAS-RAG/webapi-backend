@@ -1,3 +1,4 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -13,14 +14,17 @@ namespace IRasRag.API.Controllers
     {
         private readonly IDocumentService _documentService;
         private readonly ILogger<DocumentController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
         public DocumentController(
             IDocumentService documentService,
-            ILogger<DocumentController> logger
+            ILogger<DocumentController> logger,
+            HttpContextUtils httpContextUtils
         )
         {
             _documentService = documentService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
         /// <summary>
@@ -85,49 +89,53 @@ namespace IRasRag.API.Controllers
         /// Tạo tài liệu mới
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentDto createDto)
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateDocument(
+            string? fileTitle,
+            IFormFile file,
+            CancellationToken ct
+        )
         {
-            try
+            if (file == null)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(
-                        new { Message = "Dữ liệu không hợp lệ", Errors = ModelState }
-                    );
-                }
-
-                var result = await _documentService.CreateDocumentAsync(createDto);
-
-                if (!result.IsSuccess)
-                {
-                    return result.Type switch
-                    {
-                        ResultType.NotFound => NotFound(new { result.Message }),
-                        ResultType.Conflict => Conflict(new { result.Message }),
-                        ResultType.BadRequest => BadRequest(new { result.Message }),
-                        _ => BadRequest(new { result.Message }),
-                    };
-                }
-
-                return CreatedAtAction(
-                    nameof(GetDocumentById),
-                    new { id = result.Data!.Id },
-                    new { result.Message, result.Data }
-                );
+                return BadRequest(new { Message = "File không được để trống" });
             }
-            catch (Exception ex)
+
+            var userId = _httpContextUtils.GetUserId();
+            if (userId == null)
             {
-                _logger.LogError(ex, "Lỗi khi tạo tài liệu");
-                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
+                return Unauthorized(new { Message = "Không xác thực được người dùng" });
             }
+
+            var dto = new CreateDocumentDto
+            {
+                FileStream = file.OpenReadStream(),
+                FileTitle = string.IsNullOrWhiteSpace(fileTitle)
+                    ? Path.GetFileNameWithoutExtension(file.FileName)
+                    : fileTitle,
+                FileName = file.FileName,
+                FileSize = file.Length,
+                UploadedByUserId = userId.Value,
+            };
+
+            var result = await _documentService.CreateDocumentAsync(dto, ct);
+
+            return result.Type switch
+            {
+                ResultType.NotFound => NotFound(new { result.Message }),
+                ResultType.Conflict => Conflict(new { result.Message }),
+                ResultType.BadRequest => BadRequest(new { result.Message }),
+                ResultType.Unexpected => StatusCode(500, new { result.Message }),
+                _ => Ok(new { result.Message }),
+            };
         }
 
         /// <summary>
         /// Cập nhật tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> UpdateDocument(
             Guid id,
             [FromBody] UpdateDocumentDto updateDto
@@ -165,33 +173,44 @@ namespace IRasRag.API.Controllers
         }
 
         /// <summary>
+        /// Đồng bộ lại tài liệu thất bại theo Id
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{id}/resync")]
+        public async Task<IActionResult> ResyncDocument(Guid id)
+        {
+            var result = await _documentService.ResyncDocumentAsync(id);
+
+            return result.Type switch
+            {
+                ResultType.NotFound => NotFound(new { result.Message }),
+                ResultType.BadRequest => BadRequest(new { result.Message }),
+                ResultType.Unexpected => StatusCode(500, new { result.Message }),
+                _ => Ok(new { result.Message }),
+            };
+        }
+
+        /// <summary>
         /// Xóa tài liệu
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> DeleteDocument(Guid id)
         {
-            try
-            {
-                var result = await _documentService.DeleteDocumentAsync(id);
+            var result = await _documentService.DeleteDocumentAsync(id);
 
-                if (!result.IsSuccess)
+            if (!result.IsSuccess)
+            {
+                return result.Type switch
                 {
-                    return result.Type switch
-                    {
-                        ResultType.NotFound => NotFound(new { result.Message }),
-                        ResultType.Conflict => Conflict(new { result.Message }),
-                        _ => BadRequest(new { result.Message }),
-                    };
-                }
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
+                    ResultType.Unexpected => StatusCode(500, new { result.Message }),
+                    _ => BadRequest(new { result.Message }),
+                };
+            }
 
-                return Ok(new { result.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa tài liệu với Id: {Id}", id);
-                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
-            }
+            return Ok(new { result.Message });
         }
     }
 }

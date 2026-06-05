@@ -3,7 +3,7 @@ using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
 {
-    public class Farm : BaseEntity, ISoftDeletable
+    public class Farm : BaseEntity
     {
         [Required]
         [MaxLength(255)]
@@ -20,10 +20,6 @@ namespace IRasRag.Domain.Entities
         [Required]
         [MaxLength(255)]
         public string Email { get; set; }
-
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
         public ICollection<FishTank> FishTanks { get; set; }

@@ -2,13 +2,17 @@
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -26,6 +30,10 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<GrowthStage>> _growthStageRepoMock;
         private readonly Mock<IRepository<SensorType>> _sensorTypeRepoMock;
         private readonly Mock<ILogger<SpeciesThresholdService>> _loggerMock;
+        private readonly Mock<ITelemetryCacheService> _telemetryCacheMock;
+        private readonly Mock<IBackgroundJobService> _backgroundJobsMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
         private readonly IMapper _mapper;
         private readonly SpeciesThresholdService _sut;
 
@@ -52,7 +60,23 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(u => u.GetRepository<SensorType>())
                 .Returns(_sensorTypeRepoMock.Object);
 
-            _sut = new SpeciesThresholdService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _telemetryCacheMock = new Mock<ITelemetryCacheService>();
+            _backgroundJobsMock = new Mock<IBackgroundJobService>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
+            _backgroundJobsMock
+                .Setup(b => b.Enqueue(It.IsAny<Expression<Func<object, Task>>>()))
+                .Returns("job-id");
+
+            _sut = new SpeciesThresholdService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _telemetryCacheMock.Object,
+                _backgroundJobsMock.Object,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         #region CreateSpeciesThreshold
@@ -269,6 +293,55 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(false);
+
+            var persistedId = Guid.NewGuid();
+            SpeciesThreshold? persistedThreshold = null;
+
+            _thresholdRepoMock
+                .Setup(r => r.AddAsync(It.IsAny<SpeciesThreshold>()))
+                .Callback<SpeciesThreshold>(entity =>
+                {
+                    entity.Id = persistedId;
+                    entity.Species = new Species { Id = dto.SpeciesId, Name = "Species" };
+                    entity.GrowthStage = new GrowthStage { Id = dto.GrowthStageId, Name = "Stage" };
+                    entity.SensorType = new SensorType
+                    {
+                        Id = dto.SensorTypeId,
+                        Name = "Sensor",
+                        UnitOfMeasure = "Unit",
+                    };
+                    persistedThreshold = entity;
+                });
+
+            _thresholdRepoMock
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
+                        It.IsAny<QueryType>()
+                    )
+                )
+                .ReturnsAsync(
+                    (ISpecification<SpeciesThreshold, SpeciesThresholdDto> spec, QueryType _) =>
+                    {
+                        if (persistedThreshold == null || spec.Selector == null)
+                        {
+                            return null;
+                        }
+
+                        IQueryable<SpeciesThreshold> query = new List<SpeciesThreshold>
+                        {
+                            persistedThreshold,
+                        }.AsQueryable();
+
+                        foreach (var whereExpression in spec.WhereExpressions)
+                        {
+                            query = query.Where(whereExpression.Filter);
+                        }
+
+                        return query.Select(spec.Selector).FirstOrDefault();
+                    }
+                );
+
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
             var result = await _sut.CreateSpeciesThreshold(dto);
 
@@ -276,8 +349,25 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.Ok);
             result.Message.Should().Be("Tạo ngưỡng sinh trưởng thành công.");
             result.Data.Should().NotBeNull();
+            result.Data!.Id.Should().Be(persistedId);
+            result.Data.SpeciesId.Should().Be(dto.SpeciesId);
+            result.Data.GrowthStageId.Should().Be(dto.GrowthStageId);
+            result.Data.SensorTypeId.Should().Be(dto.SensorTypeId);
+            result.Data.MinValue.Should().Be(dto.MinValue);
+            result.Data.MaxValue.Should().Be(dto.MaxValue);
+            result.Data.UnitOfMeasure.Should().Be("Unit");
 
             _thresholdRepoMock.Verify(r => r.AddAsync(It.IsAny<SpeciesThreshold>()), Times.Once);
+            _thresholdRepoMock.Verify(
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
+                            s is SpeciesThresholdDtoByIdSpec
+                        ),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Once
+            );
 
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
@@ -350,7 +440,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -370,7 +460,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -389,7 +479,7 @@ namespace IRasRag.Test.UnitTests.Application
             _thresholdRepoMock
                 .Setup(r =>
                     r.FirstOrDefaultAsync(
-                        It.IsAny<SpeciesThresholdByIdSpec>(),
+                        It.IsAny<SpeciesThresholdDtoByIdSpec>(),
                         QueryType.ActiveOnly
                     )
                 )
@@ -421,7 +511,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var list = new List<SpeciesThreshold>
             {
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -435,7 +525,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Tilapia" },
@@ -449,7 +539,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Catfish" },
@@ -469,7 +559,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -520,7 +610,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s is SpeciesThresholdListSpec
                         ),
@@ -540,7 +630,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var list = new List<SpeciesThreshold>
             {
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Zulu" },
@@ -554,7 +644,7 @@ namespace IRasRag.Test.UnitTests.Application
                     MinValue = 1,
                     MaxValue = 2,
                 },
-                new SpeciesThreshold
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Species = new Species { Id = Guid.NewGuid(), Name = "Alpha" },
@@ -572,7 +662,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -603,7 +693,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s is SpeciesThresholdListSpec
                         ),
@@ -623,7 +713,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -647,7 +737,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s != null
                         ),
@@ -667,7 +757,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock
                 .Setup(r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.IsAny<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(),
                         request.Page,
                         request.PageSize,
@@ -699,7 +789,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             _thresholdRepoMock.Verify(
                 r =>
-                    r.GetPagedAsync<SpeciesThresholdDto>(
+                    r.GetPagedAsync(
                         It.Is<ISpecification<SpeciesThreshold, SpeciesThresholdDto>>(s =>
                             s != null
                         ),

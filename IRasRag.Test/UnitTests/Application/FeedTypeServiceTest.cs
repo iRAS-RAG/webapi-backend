@@ -3,6 +3,7 @@ using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -388,7 +389,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var entities = new List<FeedType>
             {
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn viên",
@@ -396,7 +397,7 @@ namespace IRasRag.Test.UnitTests.Application
                     ProteinPercentage = 35.0f,
                     Manufacturer = "A",
                 },
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Thức ăn bột",
@@ -404,7 +405,7 @@ namespace IRasRag.Test.UnitTests.Application
                     ProteinPercentage = 40.0f,
                     Manufacturer = "B",
                 },
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Vitamin tổng hợp",
@@ -482,19 +483,19 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new FeedTypeListRequest { Page = 1, PageSize = 10 };
             var entities = new List<FeedType>
             {
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
                     ProteinPercentage = 30.0f,
                 },
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
                     ProteinPercentage = 40.0f,
                 },
-                new FeedType
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",

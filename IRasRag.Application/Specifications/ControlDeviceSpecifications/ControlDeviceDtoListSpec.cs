@@ -26,6 +26,7 @@ namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
             ApplySort(request.SortBy, request.SortDir, sortKeyMap, defaultSortKey: "name");
 
             ApplyFilter(request.State, cd => cd.State == request.State);
+            ApplyFilter(request.TankId, cd => cd.MasterBoard.FishTankId == request.TankId!.Value);
 
             Query.Select(cd => new ControlDeviceDto
             {
@@ -37,6 +38,7 @@ namespace IRasRag.Application.Specifications.ControlDeviceSpecifications
                 CommandOff = cd.CommandOff,
                 MasterBoardId = cd.MasterBoardId,
                 MasterBoardName = cd.MasterBoard.Name,
+                ControlDeviceTypeId = cd.ControlDeviceTypeId,
                 ControlDeviceTypeName = cd.ControlDeviceType.Name,
             });
         }

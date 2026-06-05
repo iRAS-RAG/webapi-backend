@@ -10,9 +10,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Sensor> builder)
         {
             builder.ConfigureTimestamps();
-            builder.ConfigureSoftDelete();
-
-            builder.HasQueryFilter(s => !s.IsDeleted);
 
             builder
                 .HasOne(s => s.SensorType)
@@ -27,7 +24,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // List sensors by board
-            builder.HasIndex(s => new { s.MasterBoardId, s.IsDeleted });
+            builder.HasIndex(s => s.MasterBoardId);
             // Unique hardware constraint
             builder.HasIndex(s => new { s.MasterBoardId, s.PinCode }).IsUnique();
 

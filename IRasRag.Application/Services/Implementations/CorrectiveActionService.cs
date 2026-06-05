@@ -1,5 +1,7 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -7,6 +9,8 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.CorrectiveActionSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +20,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CorrectiveActionService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAlertStateCacheService _alertStateCache;
+        private readonly IAuditLogService _auditLogService;
 
         public CorrectiveActionService(
             IUnitOfWork unitOfWork,
             ILogger<CorrectiveActionService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IAlertStateCacheService alertStateCache,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _alertStateCache = alertStateCache;
+            _auditLogService = auditLogService;
         }
 
         #region Get Methods
@@ -94,9 +104,11 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogInformation("Bắt đầu lấy hành động khắc phục với Id: {Id}", id);
 
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
-                var correctiveAction = await correctiveActionRepository.GetByIdAsync(id);
+                var correctiveActionDto = await correctiveActionRepository.FirstOrDefaultAsync(
+                    new CorrectiveActionDtoByIdSpec(id)
+                );
 
-                if (correctiveAction == null)
+                if (correctiveActionDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy hành động khắc phục với Id: {Id}", id);
                     return Result<CorrectiveActionDto>.Failure(
@@ -105,7 +117,6 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                var correctiveActionDto = _mapper.Map<CorrectiveActionDto>(correctiveAction);
                 _logger.LogInformation("Lấy hành động khắc phục thành công với Id: {Id}", id);
 
                 return Result<CorrectiveActionDto>.Success(
@@ -183,9 +194,35 @@ namespace IRasRag.Application.Services.Implementations
                     correctiveAction.Notes = correctiveAction.Notes.Trim();
                 }
 
+                await _unitOfWork.BeginTransactionAsync();
+
                 var correctiveActionRepository = _unitOfWork.GetRepository<CorrectiveAction>();
                 await correctiveActionRepository.AddAsync(correctiveAction);
+
+                var oldAlertStatus = alert.Status;
+                if (alert.Status == AlertStatus.OPEN || alert.Status == AlertStatus.ACKNOWLEDGED)
+                {
+                    alert.Status = AlertStatus.RESOLVED;
+                    alert.ResolvedAt = DateTime.UtcNow;
+                    alertRepository.Update(alert);
+                }
+
                 await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                if (alert.Status == AlertStatus.RESOLVED)
+                {
+                    _alertStateCache.Invalidate(
+                        alert.FishTankId,
+                        alert.SensorTypeId,
+                        alert.FarmingBatchId
+                    );
+                    _logger.LogInformation(
+                        "Cảnh báo {AlertId} được đánh dấu đã giải quyết do hành động khắc phục",
+                        alert.Id
+                    );
+                    await WriteAlertResolvedAuditLogAsync(alert, oldAlertStatus);
+                }
 
                 var correctiveActionDto = _mapper.Map<CorrectiveActionDto>(correctiveAction);
                 _logger.LogInformation(
@@ -200,6 +237,7 @@ namespace IRasRag.Application.Services.Implementations
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Lỗi khi tạo hành động khắc phục");
                 return Result<CorrectiveActionDto>.Failure(
                     "Đã xảy ra lỗi khi tạo hành động khắc phục",
@@ -293,6 +331,31 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure(
                     "Đã xảy ra lỗi khi cập nhật hành động khắc phục",
                     ResultType.Unexpected
+                );
+            }
+        }
+        #endregion
+
+        #region Private Helpers
+        private async Task WriteAlertResolvedAuditLogAsync(Alert alert, AlertStatus oldStatus)
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    AuditLogActions.Update,
+                    AuditLogEntityType.Alert,
+                    alert.Id.ToString(),
+                    oldValue: new { Status = oldStatus.ToVietnamese() },
+                    newValue: new { Status = AlertStatus.RESOLVED.ToVietnamese() }
+                );
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write audit log for alert {AlertId} auto-resolved by corrective action",
+                    alert.Id
                 );
             }
         }

@@ -97,15 +97,16 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 var cameraRepository = _unitOfWork.GetRepository<Camera>();
-                var camera = await cameraRepository.GetByIdAsync(id);
+                var cameraDto = await cameraRepository.FirstOrDefaultAsync(
+                    new CameraDtoByIdSpec(id)
+                );
 
-                if (camera == null)
+                if (cameraDto == null)
                 {
                     _logger.LogWarning("Không tìm thấy camera với Id: {Id}", id);
                     return Result<CameraDto>.Failure("Không tìm thấy camera", ResultType.NotFound);
                 }
 
-                var cameraDto = _mapper.Map<CameraDto>(camera);
                 _logger.LogInformation("Lấy camera thành công: {Id}", id);
 
                 return Result<CameraDto>.Success(cameraDto, "Lấy camera thành công");

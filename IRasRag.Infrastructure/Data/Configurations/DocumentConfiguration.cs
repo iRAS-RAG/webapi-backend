@@ -1,5 +1,5 @@
 ﻿using IRasRag.Domain.Entities;
-using IRasRag.Infrastructure.Data.Seeds;
+using IRasRag.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,12 +12,16 @@ namespace IRasRag.Infrastructure.Data.Configurations
             builder.ConfigureTimestamps();
 
             builder
+                .Property(d => d.RagStatus)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(DocumentRagStatus.Pending);
+
+            builder
                 .HasOne(d => d.UploadedByUser)
                 .WithMany()
                 .HasForeignKey(d => d.UploadedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasData(DocumentSeed.Documents);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
-using IRasRag.Domain.Entities;
 
 namespace IRasRag.Application.Services.Interfaces
 {
@@ -11,7 +10,11 @@ namespace IRasRag.Application.Services.Interfaces
             SpeciesThresholdListRequest request
         );
         Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdById(Guid id);
-        Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(CreateSpeciesThresholdDto dto);
+        Task<Result<SpeciesThresholdDto>> GetSpeciesThresholdBySpecies(Guid speciesId);
+        Task<Result<SpeciesThresholdDto>> CreateSpeciesThreshold(
+            CreateSpeciesThresholdDto dto,
+            Guid? userId = null
+        );
         Task<Result> UpdateSpeciesThreshold(Guid id, UpdateSpeciesThresholdDto dto);
         Task<Result> DeleteSpeciesThreshold(Guid id);
     }

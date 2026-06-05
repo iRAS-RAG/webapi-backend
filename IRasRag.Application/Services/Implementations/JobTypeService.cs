@@ -1,4 +1,6 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +9,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.JobTypeSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<JobTypeService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public JobTypeService(
             IUnitOfWork unitOfWork,
             ILogger<JobTypeService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -163,6 +172,8 @@ namespace IRasRag.Application.Services.Implementations
                 await jobTypeRepository.AddAsync(jobType);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteCreateAuditLogAsync(jobType);
+
                 var jobTypeDto = _mapper.Map<JobTypeDto>(jobType);
                 _logger.LogInformation("Tạo loại công việc thành công: {Id}", jobType.Id);
 
@@ -199,6 +210,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = new { jobType.Name, jobType.Description };
+
                 // Validate and update Name if provided
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
                 {
@@ -230,6 +243,8 @@ namespace IRasRag.Application.Services.Implementations
 
                 jobTypeRepository.Update(jobType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(jobType, oldSnapshot);
 
                 _logger.LogInformation("Cập nhật loại công việc thành công: {Id}", id);
 
@@ -265,6 +280,8 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = new { jobType.Name, jobType.Description };
+
                 // Check if JobType is being used by any Jobs
                 var hasJobs = await jobTypeRepository.AnyAsync(jt => jt.Id == id && jt.Jobs.Any());
 
@@ -283,6 +300,8 @@ namespace IRasRag.Application.Services.Implementations
                 jobTypeRepository.Delete(jobType);
                 await _unitOfWork.SaveChangesAsync();
 
+                await WriteDeleteAuditLogAsync(jobType.Id, oldSnapshot);
+
                 _logger.LogInformation("Xóa loại công việc thành công: {Id}", id);
                 return Result.Success("Xóa loại công việc thành công");
             }
@@ -294,6 +313,73 @@ namespace IRasRag.Application.Services.Implementations
                     ResultType.Unexpected
                 );
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.JobType,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.JobType,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(JobType jobType)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                jobType.Id.ToString(),
+                null,
+                new { jobType.Name, jobType.Description },
+                "create-job-type"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(JobType jobType, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                jobType.Id.ToString(),
+                oldSnapshot,
+                new { jobType.Name, jobType.Description },
+                "update-job-type"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-job-type"
+            );
         }
         #endregion
     }

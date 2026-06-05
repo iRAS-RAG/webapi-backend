@@ -1,7 +1,7 @@
+using IRasRag.API.Utils;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,18 +16,21 @@ namespace IRasRag.API.Controllers
         private readonly IMortalityLogService _mortalityLogService;
         private readonly IFeedingLogService _feedingLogService;
         private readonly ILogger<FarmingBatchController> _logger;
+        private readonly HttpContextUtils _httpContextUtils;
 
         public FarmingBatchController(
             IFarmingBatchService farmingBatchService,
             IMortalityLogService mortalityLogService,
             IFeedingLogService feedingLogService,
-            ILogger<FarmingBatchController> logger
+            ILogger<FarmingBatchController> logger,
+            HttpContextUtils httpContextUtils
         )
         {
             _farmingBatchService = farmingBatchService;
             _mortalityLogService = mortalityLogService;
             _feedingLogService = feedingLogService;
             _logger = logger;
+            _httpContextUtils = httpContextUtils;
         }
 
         [HttpGet]
@@ -53,6 +56,31 @@ namespace IRasRag.API.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi lấy danh sách lô nuôi");
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi lấy danh sách lô nuôi" });
+            }
+        }
+
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveFarmingBatches([FromQuery] Guid fishTankId)
+        {
+            try
+            {
+                var result = await _farmingBatchService.GetActiveFarmingBatchByFishTankIdAsync(
+                    fishTankId
+                );
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách lô nuôi đang hoạt động");
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi lấy danh sách lô nuôi đang hoạt động" }
+                );
             }
         }
 
@@ -164,8 +192,116 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpPost("{id}/mortality")]
+        [HttpPost("{id}/harvest")]
         [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> HarvestBatch(Guid id, [FromBody] HarvestBatchRequest body)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _farmingBatchService.HarvestBatchAsync(
+                    id,
+                    body.HarvestDate,
+                    body.Force,
+                    body.ActualHarvestWeightKg
+                );
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi thu hoạch lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi thu hoạch lô nuôi" });
+            }
+        }
+
+        [HttpPost("{id}/start")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> StartPausedBatch(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.StartPausedBatchAsync(id);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bắt đầu lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi bắt đầu lô nuôi" });
+            }
+        }
+
+        [HttpPut("{id}/schedule")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> UpdatePausedBatchSchedule(
+            Guid id,
+            [FromBody] UpdatePausedBatchScheduleDto dto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _farmingBatchService.UpdatePausedBatchScheduleAsync(id, dto);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật lịch lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi cập nhật lịch lô nuôi" });
+            }
+        }
+
+        [HttpPost("{id}/terminate")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> TerminateBatch(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.TerminateBatchAsync(id);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi kết thúc lô nuôi với ID {Id}", id);
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi kết thúc lô nuôi" });
+            }
+        }
+
+        [HttpPost("{id}/mortality")]
+        [Authorize(Roles = "Operator")]
         public async Task<IActionResult> LogMortality(Guid id, [FromBody] LogMortalityRequest body)
         {
             try
@@ -173,10 +309,25 @@ namespace IRasRag.API.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                var userId = _httpContextUtils.GetUserId();
+                if (userId == null)
+                {
+                    return Unauthorized(new { Message = "Không xác thực được người dùng" });
+                }
+
+                if (body.LostWeightKg == null)
+                {
+                    return BadRequest(
+                        new { Message = "Tổng trọng lượng hao hụt (kg) là bắt buộc" }
+                    );
+                }
+
                 var dto = new CreateMortalityLogDto
                 {
                     BatchId = id,
+                    UserId = userId.Value,
                     Quantity = body.Quantity,
+                    LostWeightKg = body.LostWeightKg.Value,
                     Date = body.Date,
                 };
 
@@ -196,28 +347,80 @@ namespace IRasRag.API.Controllers
             }
         }
 
-        [HttpGet("{id}/feeding-logs")]
-        public async Task<IActionResult> GetFeedingLogs(
+        [HttpPost("{id}/mortality/validate")]
+        [Authorize(Roles = "Operator")]
+        public async Task<IActionResult> ValidateMortality(
             Guid id,
-            [FromQuery] BatchFeedingLogQuery query
+            [FromBody] LogMortalityRequest body
         )
         {
             try
             {
-                if (query.Page <= 0 || query.PageSize <= 0)
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _mortalityLogService.ValidateMortalityAsync(
+                    id,
+                    body.Quantity,
+                    body.LostWeightKg
+                );
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi kiểm tra hợp lệ tỷ lệ chết cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi kiểm tra hợp lệ tỷ lệ chết." }
+                );
+            }
+        }
+
+        [HttpGet("{id}/stages")]
+        public async Task<IActionResult> GetPlannedStages(Guid id)
+        {
+            try
+            {
+                var result = await _farmingBatchService.GetPlannedStagesByBatchIdAsync(id);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách giai đoạn cho lô nuôi {Id}", id);
+                return StatusCode(
+                    500,
+                    new { Message = "Đã xảy ra lỗi khi lấy danh sách giai đoạn." }
+                );
+            }
+        }
+
+        [HttpGet("{id}/feeding-logs")]
+        public async Task<IActionResult> GetFeedingLogs(
+            Guid id,
+            [FromQuery] FeedingLogListRequest request
+        )
+        {
+            try
+            {
+                if (request.Page <= 0 || request.PageSize <= 0)
                     return BadRequest(new { Message = "Page và PageSize phải lớn hơn 0." });
 
-                if (query.PageSize > 100)
+                if (request.PageSize > 100)
                     return BadRequest(new { Message = "PageSize không được vượt quá 100." });
 
-                var request = new FeedingLogListRequest
-                {
-                    FarmingBatchId = id,
-                    Page = query.Page,
-                    PageSize = query.PageSize,
-                    SortBy = query.SortBy,
-                    SortDir = query.SortDir,
-                };
+                request.FarmingBatchId = id;
 
                 var result = await _feedingLogService.GetAllFeedingLogsAsync(request);
                 return Ok(result);
@@ -230,23 +433,26 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("{id}/feeding")]
-        [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> RecordFeeding(
-            Guid id,
-            [FromBody] RecordFeedingRequest body
-        )
+        [Authorize(Roles = "Supervisor, Operator")]
+        public async Task<IActionResult> RecordFeeding(Guid id, [FromBody] CreateFeedingLogDto dto)
         {
             try
             {
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var dto = new CreateFeedingLogDto
+                var userId = _httpContextUtils.GetUserId();
+                if (userId == null)
                 {
-                    FarmingBatchId = id,
-                    Amount = body.Amount,
-                    CreatedDate = DateTime.UtcNow,
-                };
+                    return Unauthorized(new { Message = "Không xác thực được người dùng" });
+                }
+                dto.FarmingBatchId = id;
+                dto.UserId = userId.Value;
+                // Set current UTC timestamp if not explicitly provided
+                if (dto.CreatedDate == default)
+                {
+                    dto.CreatedDate = DateTime.UtcNow;
+                }
 
                 var result = await _feedingLogService.CreateFeedingLogAsync(dto);
                 return result.Type switch
@@ -259,7 +465,11 @@ namespace IRasRag.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}", id);
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi ghi nhận sự kiện cho ăn cho lô nuôi {Id}",
+                    dto.FarmingBatchId
+                );
                 return StatusCode(
                     500,
                     new { Message = "Đã xảy ra lỗi khi ghi nhận sự kiện cho ăn." }

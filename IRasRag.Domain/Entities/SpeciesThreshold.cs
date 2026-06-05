@@ -15,10 +15,12 @@ namespace IRasRag.Domain.Entities
         public Guid SensorTypeId { get; set; }
 
         [Required]
-        public float MinValue { get; set; }
+        public double MinValue { get; set; }
 
         [Required]
-        public float MaxValue { get; set; }
+        public double MaxValue { get; set; }
+
+        public string? AdvisoryThresholdId { get; set; }
 
         // Navigation properties
         public Species Species { get; set; }

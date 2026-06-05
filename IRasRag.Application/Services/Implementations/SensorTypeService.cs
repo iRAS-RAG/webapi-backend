@@ -1,4 +1,8 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Advisory;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
@@ -7,6 +11,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.SensorTypeSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +21,25 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SensorTypeService> _logger;
         private readonly IMapper _mapper;
+        private readonly IBackgroundJobService _backgroundJobs;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public SensorTypeService(
             IUnitOfWork unitOfWork,
             ILogger<SensorTypeService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IBackgroundJobService backgroundJobs,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _backgroundJobs = backgroundJobs;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -189,9 +203,24 @@ namespace IRasRag.Application.Services.Implementations
                 sensorType.Name = createDto.Name.Trim();
                 sensorType.MeasureType = createDto.MeasureType.Trim();
                 sensorType.UnitOfMeasure = createDto.UnitOfMeasure.Trim();
+                sensorType.Code = string.IsNullOrWhiteSpace(createDto.Code)
+                    ? null
+                    : createDto.Code.Trim();
 
                 await sensorTypeRepository.AddAsync(sensorType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteCreateAuditLogAsync(sensorType);
+
+                if (sensorType.Code != null)
+                {
+                    var code = sensorType.Code;
+                    var name = sensorType.Name;
+                    var unit = sensorType.UnitOfMeasure;
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
+                }
 
                 var sensorTypeDto = _mapper.Map<SensorTypeDto>(sensorType);
                 _logger.LogInformation(
@@ -235,6 +264,14 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy loại cảm biến", ResultType.NotFound);
                 }
 
+                var oldSnapshot = new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                };
+
                 // Check duplicate name if name is being updated
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
                 {
@@ -267,8 +304,25 @@ namespace IRasRag.Application.Services.Implementations
                 if (!string.IsNullOrWhiteSpace(updateDto.UnitOfMeasure))
                     sensorType.UnitOfMeasure = updateDto.UnitOfMeasure.Trim();
 
+                if (updateDto.Code != null)
+                    sensorType.Code = string.IsNullOrWhiteSpace(updateDto.Code)
+                        ? null
+                        : updateDto.Code.Trim();
+
                 sensorTypeRepository.Update(sensorType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteUpdateAuditLogAsync(sensorType, oldSnapshot);
+
+                if (sensorType.Code != null)
+                {
+                    var code = sensorType.Code;
+                    var name = sensorType.Name;
+                    var unit = sensorType.UnitOfMeasure;
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j =>
+                        j.SyncUpsertAsync(code, name, unit)
+                    );
+                }
 
                 _logger.LogInformation("Cập nhật loại cảm biến thành công: {Id}", id);
                 return Result.Success("Cập nhật loại cảm biến thành công");
@@ -306,8 +360,22 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Không tìm thấy loại cảm biến", ResultType.NotFound);
                 }
 
+                var oldSnapshot = new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                };
+
+                var code = sensorType.Code;
                 sensorTypeRepository.Delete(sensorType);
                 await _unitOfWork.SaveChangesAsync();
+
+                await WriteDeleteAuditLogAsync(sensorType.Id, oldSnapshot);
+
+                if (code != null)
+                    _backgroundJobs.Enqueue<ICatalogSyncJob>(j => j.SyncDeleteAsync(code));
 
                 _logger.LogInformation("Xóa loại cảm biến thành công: {Id}", id);
                 return Result.Success("Xóa loại cảm biến thành công");
@@ -318,6 +386,120 @@ namespace IRasRag.Application.Services.Implementations
                 return Result.Failure("Đã xảy ra lỗi khi xóa loại cảm biến", ResultType.Unexpected);
             }
         }
-    }
         #endregion
+
+        #region Audit Log Helpers
+        private async Task<User?> GetAuditActorAsync(string operation)
+        {
+            var currentUserId = _currentUserAccessor.GetUserId();
+            if (currentUserId is null)
+            {
+                _logger.LogDebug(
+                    "Skipping {Operation} audit entry because no authenticated user was found.",
+                    operation
+                );
+                return null;
+            }
+
+            var actor = await _unitOfWork
+                .GetRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId.Value, QueryType.IncludeDeleted);
+
+            if (actor == null)
+            {
+                _logger.LogWarning(
+                    "Skipping {Operation} audit entry because the current user {UserId} could not be resolved.",
+                    operation,
+                    currentUserId.Value
+                );
+            }
+
+            return actor;
+        }
+
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                var actor = await GetAuditActorAsync(operation);
+                if (actor == null)
+                    return;
+
+                await _auditLogService.AddAsync(
+                    AuditLogHelper.Create(
+                        actor,
+                        action,
+                        AuditLogEntityType.SensorType,
+                        entityId,
+                        oldValue,
+                        newValue
+                    )
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.SensorType,
+                    entityId
+                );
+            }
+        }
+
+        private async Task WriteCreateAuditLogAsync(SensorType sensorType)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                sensorType.Id.ToString(),
+                null,
+                new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                },
+                "create-sensor-type"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(SensorType sensorType, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                sensorType.Id.ToString(),
+                oldSnapshot,
+                new
+                {
+                    sensorType.Name,
+                    sensorType.MeasureType,
+                    sensorType.UnitOfMeasure,
+                    sensorType.Code,
+                },
+                "update-sensor-type"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-sensor-type"
+            );
+        }
+        #endregion
+    }
 }

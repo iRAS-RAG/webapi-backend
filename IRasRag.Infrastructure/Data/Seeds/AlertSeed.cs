@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class AlertSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -22,50 +22,52 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Alert3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000001803");
 
         public static List<Alert> Alerts =>
-            new()
-            {
+            [
+                // Temperature spike during Fry stage — resolved same day
                 new Alert
                 {
                     Id = Alert1Id,
-                    SensorLogId = SensorLogSeed.TempLog2Id,
+                    SensorId = SensorSeed.TemperatureSensor1Id,
                     SpeciesThresholdId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000501"),
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
                     FishTankId = FishTankSeed.TankAId,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    Value = 31.2f,
-                    RaisedAt = new DateTime(2024, 01, 15, 14, 30, 0, DateTimeKind.Utc),
-                    ResolvedAt = null,
-                    Status = AlertStatus.OPEN,
+                    TriggerValue = 31.2,
+                    RaisedAt = new DateTime(2025, 08, 10, 14, 30, 0, DateTimeKind.Utc),
+                    ResolvedAt = new DateTime(2025, 08, 10, 18, 0, 0, DateTimeKind.Utc),
+                    Status = AlertStatus.RESOLVED,
                     CreatedAt = SeedTimestamp,
                 },
+                // Mild pH drift during Fry — resolved after 2.5 hours
                 new Alert
                 {
                     Id = Alert2Id,
-                    SensorLogId = SensorLogSeed.PhLog1Id,
+                    SensorId = SensorSeed.PhSensor1Id,
                     SpeciesThresholdId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000502"),
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
                     FishTankId = FishTankSeed.TankAId,
                     SensorTypeId = SensorTypeSeed.PhSensorTypeId,
-                    Value = 7.2f,
-                    RaisedAt = new DateTime(2024, 01, 16, 8, 0, 0, DateTimeKind.Utc),
-                    ResolvedAt = new DateTime(2024, 01, 16, 10, 30, 0, DateTimeKind.Utc),
+                    TriggerValue = 8.4,
+                    RaisedAt = new DateTime(2025, 08, 14, 8, 0, 0, DateTimeKind.Utc),
+                    ResolvedAt = new DateTime(2025, 08, 14, 10, 30, 0, DateTimeKind.Utc),
                     Status = AlertStatus.RESOLVED,
                     CreatedAt = SeedTimestamp,
                 },
+                // Temperature alert during Fingerling — acknowledged, not yet resolved
                 new Alert
                 {
                     Id = Alert3Id,
-                    SensorLogId = SensorLogSeed.TempLog1Id,
-                    SpeciesThresholdId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000501"),
+                    SensorId = SensorSeed.TemperatureSensor1Id,
+                    SpeciesThresholdId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000509"),
                     FarmingBatchId = FarmingBatchSeed.Batch1Id,
                     FishTankId = FishTankSeed.TankAId,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    Value = 28.5f,
-                    RaisedAt = new DateTime(2024, 01, 17, 12, 0, 0, DateTimeKind.Utc),
+                    TriggerValue = 30.2,
+                    RaisedAt = new DateTime(2025, 09, 05, 12, 0, 0, DateTimeKind.Utc),
                     ResolvedAt = null,
                     Status = AlertStatus.ACKNOWLEDGED,
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

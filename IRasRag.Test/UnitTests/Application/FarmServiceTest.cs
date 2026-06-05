@@ -2,13 +2,15 @@ using System.Linq.Expressions;
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
-using IRasRag.Application.Specifications;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FarmSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -24,6 +26,8 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<ILogger<FarmService>> _loggerMock;
         private readonly IMapper _mapper;
         private readonly Mock<IRepository<Farm>> _repositoryMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
         private readonly FarmService _sut;
 
         public FarmServiceTest()
@@ -32,9 +36,18 @@ namespace IRasRag.Test.UnitTests.Application
             _loggerMock = new Mock<ILogger<FarmService>>();
             _mapper = AutoMapperTestHelper.GetMapper(new FarmProfile());
             _repositoryMock = new Mock<IRepository<Farm>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
+            _currentUserAccessorMock.Setup(x => x.GetUserId()).Returns((Guid?)null);
             _unitOfWorkMock.Setup(x => x.GetRepository<Farm>()).Returns(_repositoryMock.Object);
 
-            _sut = new FarmService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _sut = new FarmService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object
+            );
         }
 
         #region CreateFarmAsync Tests
@@ -234,7 +247,7 @@ namespace IRasRag.Test.UnitTests.Application
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
             };
-            var existingFarm = new Farm { Email = "abc@farm.com", IsDeleted = false };
+            var existingFarm = new Farm { Email = "abc@farm.com" };
 
             _repositoryMock
                 .Setup(r =>
@@ -299,7 +312,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Address = "123 Đường ABC",
                 PhoneNumber = "0123456789",
                 Email = "abc@farm.com",
-                IsDeleted = false,
             };
 
             _repositoryMock
@@ -333,15 +345,13 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task GetFarmByIdAsync_ShouldReturnNotFound_WhenFarmIsDeleted()
+        public async Task GetFarmByIdAsync_ShouldReturnNotFound_WhenFarmFilteredByActiveQuery()
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm { Id = farmId, IsDeleted = true };
-
             _repositoryMock
                 .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm?)null);
 
             // Act
             var result = await _sut.GetFarmByIdAsync(farmId);
@@ -386,7 +396,7 @@ namespace IRasRag.Test.UnitTests.Application
             };
             var farms = new List<Farm>
             {
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 1",
@@ -394,7 +404,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "0123",
                     Email = "farm1@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Farm 2",
@@ -402,7 +412,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "0456",
                     Email = "farm2@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Aquaculture",
@@ -471,7 +481,7 @@ namespace IRasRag.Test.UnitTests.Application
             var request = new FarmListRequest { Page = 1, PageSize = 10 };
             var farms = new List<Farm>
             {
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
@@ -479,7 +489,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "1",
                     Email = "z@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
@@ -487,7 +497,7 @@ namespace IRasRag.Test.UnitTests.Application
                     PhoneNumber = "2",
                     Email = "a@test.com",
                 },
-                new Farm
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",
@@ -618,12 +628,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Farm ABC",
-                IsDeleted = false,
-            };
+            var farm = new Farm { Id = farmId, Name = "Farm ABC" };
 
             _repositoryMock
                 .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
@@ -634,9 +639,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            farm.IsDeleted.Should().BeTrue();
-            farm.DeletedAt.Should().NotBeNull();
-            _repositoryMock.Verify(r => r.Update(farm), Times.Once);
+            _repositoryMock.Verify(r => r.Delete(farm), Times.Once);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
@@ -666,11 +669,10 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var deletedFarm = new Farm { Id = farmId, IsDeleted = true };
 
             _repositoryMock
                 .Setup(r => r.GetByIdAsync(farmId, QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm)null);
 
             // Act
             var result = await _sut.DeleteFarmAsync(farmId);
@@ -714,7 +716,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Address = "Old Address",
                 PhoneNumber = "0123456789",
                 Email = "old@farm.com",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFarmDto
             {
@@ -756,7 +757,7 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var existingFarm = new Farm { Id = farmId, IsDeleted = false };
+            var existingFarm = new Farm { Id = farmId };
             var updateDto = new UpdateFarmDto
             {
                 Name = "  New Name  ",
@@ -796,7 +797,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Id = farmId,
                 Name = "Original Name",
                 Address = "Original Address",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFarmDto { Name = null, Address = "" };
 
@@ -838,18 +838,8 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var farmId = Guid.NewGuid();
-            var existingFarm = new Farm
-            {
-                Id = farmId,
-                Email = "old@farm.com",
-                IsDeleted = false,
-            };
-            var anotherFarm = new Farm
-            {
-                Id = Guid.NewGuid(),
-                Email = "taken@farm.com",
-                IsDeleted = false,
-            };
+            var existingFarm = new Farm { Id = farmId, Email = "old@farm.com" };
+            var anotherFarm = new Farm { Id = Guid.NewGuid(), Email = "taken@farm.com" };
             var updateDto = new UpdateFarmDto { Email = "taken@farm.com" };
 
             _repositoryMock

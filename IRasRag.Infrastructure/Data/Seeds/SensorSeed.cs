@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class SensorSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -14,61 +14,123 @@ namespace IRasRag.Infrastructure.Data.Seeds
             DateTimeKind.Utc
         );
 
+        // Pin 1 – Temperature
         public static readonly Guid TemperatureSensor1Id = Guid.Parse(
             "aaaaaaaa-0000-0000-0000-000000001301"
         );
 
+        // Pin 2 – pH
         public static readonly Guid PhSensor1Id = Guid.Parse(
             "aaaaaaaa-0000-0000-0000-000000001302"
         );
 
-        public static readonly Guid TemperatureSensor2Id = Guid.Parse(
+        // Pin 3 – TDS
+        public static readonly Guid TdsSensor1Id = Guid.Parse(
             "aaaaaaaa-0000-0000-0000-000000001303"
         );
 
-        public static readonly Guid DoSensor1Id = Guid.Parse(
+        // Pin 4 – Water Flow
+        public static readonly Guid FlowSensor1Id = Guid.Parse(
             "aaaaaaaa-0000-0000-0000-000000001304"
         );
 
+        // Pin 5 – Water Level
+        public static readonly Guid WaterLevelSensor1Id = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000001305"
+        );
+
+        // Pin 6 – Voltage
+        public static readonly Guid VoltageSensor1Id = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000001306"
+        );
+
+        // Pin 7 – Current
+        public static readonly Guid CurrentSensor1Id = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000001307"
+        );
+
+        // Pin 8 – PZEM Power
+        public static readonly Guid PowerSensor1Id = Guid.Parse(
+            "aaaaaaaa-0000-0000-0000-000000001308"
+        );
+
+        // Backward-compatible alias for the old DO sensor ID (now pin 4 – Water Flow).
+        public static readonly Guid DoSensor1Id = FlowSensor1Id;
+
         public static List<Sensor> Sensors =>
-            new()
-            {
+            [
                 new Sensor
                 {
                     Id = TemperatureSensor1Id,
                     Name = "Cảm biến nhiệt độ 1",
-                    PinCode = 2,
+                    PinCode = 1,
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     CreatedAt = SeedTimestamp,
                 },
                 new Sensor
                 {
                     Id = PhSensor1Id,
                     Name = "Cảm biến pH 1",
-                    PinCode = 3,
-                    SensorTypeId = SensorTypeSeed.PhSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
-                    CreatedAt = SeedTimestamp,
-                },
-                new Sensor
-                {
-                    Id = TemperatureSensor2Id,
-                    Name = "Cảm biến nhiệt độ 2",
                     PinCode = 2,
-                    SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoard2Id,
+                    SensorTypeId = SensorTypeSeed.PhSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     CreatedAt = SeedTimestamp,
                 },
                 new Sensor
                 {
-                    Id = DoSensor1Id,
-                    Name = "Cảm biến oxy hòa tan 1",
-                    PinCode = 4,
-                    SensorTypeId = SensorTypeSeed.DoSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoard1Id,
+                    Id = TdsSensor1Id,
+                    Name = "Cảm biến TDS 1",
+                    PinCode = 3,
+                    SensorTypeId = SensorTypeSeed.TdsSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
                     CreatedAt = SeedTimestamp,
                 },
-            };
+                new Sensor
+                {
+                    Id = FlowSensor1Id,
+                    Name = "Cảm biến lưu lượng nước 1",
+                    PinCode = 4,
+                    SensorTypeId = SensorTypeSeed.FlowSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
+                    CreatedAt = SeedTimestamp,
+                },
+                new Sensor
+                {
+                    Id = WaterLevelSensor1Id,
+                    Name = "Cảm biến mực nước 1",
+                    PinCode = 5,
+                    SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
+                    CreatedAt = SeedTimestamp,
+                },
+                new Sensor
+                {
+                    Id = VoltageSensor1Id,
+                    Name = "Cảm biến điện áp 1",
+                    PinCode = 6,
+                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
+                    CreatedAt = SeedTimestamp,
+                },
+                new Sensor
+                {
+                    Id = CurrentSensor1Id,
+                    Name = "Cảm biến dòng điện 1",
+                    PinCode = 7,
+                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
+                    CreatedAt = SeedTimestamp,
+                },
+                new Sensor
+                {
+                    Id = PowerSensor1Id,
+                    Name = "Cảm biến công suất PZEM 1",
+                    PinCode = 8,
+                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
+                    MasterBoardId = MasterBoardSeed.MasterBoardId,
+                    CreatedAt = SeedTimestamp,
+                },
+            ];
     }
 }

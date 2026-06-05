@@ -1,9 +1,11 @@
 ﻿using System.Security.Cryptography;
+using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.BackgroundJobs;
 using IRasRag.Application.Common.Interfaces.Email;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
+using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Domain.Entities;
@@ -20,6 +22,7 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IJwtService _jwtService;
         private readonly IEmailService _emailService;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IAuditLogService _auditLogService;
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -27,7 +30,8 @@ namespace IRasRag.Application.Services.Implementations
             IHashingService hasher,
             IJwtService jwtService,
             IEmailService emailService,
-            IBackgroundJobService backgroundJobService
+            IBackgroundJobService backgroundJobService,
+            IAuditLogService auditLogService
         )
         {
             _unitOfWork = unitOfWork;
@@ -36,6 +40,7 @@ namespace IRasRag.Application.Services.Implementations
             _jwtService = jwtService;
             _emailService = emailService;
             _backgroundJobService = backgroundJobService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<Result<TokenResponse>> Login(LoginRequest request)
@@ -94,6 +99,14 @@ namespace IRasRag.Application.Services.Implementations
                 };
 
                 await _unitOfWork.GetRepository<RefreshToken>().AddAsync(refreshToken);
+                await WriteAuditLogAsync(
+                    user,
+                    action: AuditLogActions.Login,
+                    entityType: AuditLogEntityType.Auth,
+                    entityId: user.Id.ToString(),
+                    oldValue: null,
+                    newValue: null
+                );
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result<TokenResponse>.Success(
@@ -146,6 +159,17 @@ namespace IRasRag.Application.Services.Implementations
                     var emailBody = await _emailService.GenerateResetPasswordEmailBodyAsync(
                         resetTokenKey,
                         ResetCodeExpirationMinutes
+                    );
+
+                    // Semantic audit: record that a password reset was requested for the user.
+                    // Do NOT log the actual reset code.
+                    await WriteAuditLogAsync(
+                        user,
+                        action: AuditLogActions.RequestPasswordReset,
+                        entityType: AuditLogEntityType.Auth,
+                        entityId: user.Id.ToString(),
+                        oldValue: null,
+                        newValue: null
                     );
 
                     await _unitOfWork.SaveChangesAsync();
@@ -222,6 +246,17 @@ namespace IRasRag.Application.Services.Implementations
 
                 user.PasswordHash = _hasher.HashPassword(request.NewPassword);
                 existingCode.IsConsumed = true;
+
+                // Semantic audit: record that the user reset their password. Never include the password or hashes.
+                await WriteAuditLogAsync(
+                    user,
+                    action: AuditLogActions.ResetPassword,
+                    entityType: AuditLogEntityType.Auth,
+                    entityId: user.Id.ToString(),
+                    oldValue: null,
+                    newValue: new { PasswordChanged = "Thay đổi mật khẩu" }
+                );
+
                 await _unitOfWork.SaveChangesAsync();
                 return Result.Success("Mật khẩu đã được đặt lại thành công.");
             }
@@ -302,6 +337,17 @@ namespace IRasRag.Application.Services.Implementations
                     ExpireDate = newRefreshTokenResult.ExpireDate,
                 };
                 await _unitOfWork.GetRepository<RefreshToken>().AddAsync(newRefreshToken);
+                // Semantic audit: record that a refresh occurred and tokens were rotated.
+                // DO NOT log token values.
+                await WriteAuditLogAsync(
+                    user,
+                    action: AuditLogActions.RefreshToken,
+                    entityType: AuditLogEntityType.Auth,
+                    entityId: user.Id.ToString(),
+                    oldValue: null,
+                    newValue: null
+                );
+
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result<TokenResponse>.Success(
@@ -331,15 +377,48 @@ namespace IRasRag.Application.Services.Implementations
                 .FirstOrDefaultAsync(rt =>
                     rt.TokenHash == hashedToken && !rt.IsRevoked && rt.ExpireDate > DateTime.UtcNow
                 );
-            _logger.LogInformation("Client's hashed token: {HashedToken}", hashedToken);
-            _logger.LogInformation("Server's existing token: {ExistingToken}", existingToken);
+            _logger.LogInformation(
+                "Logout attempt: refresh token lookup completed. Token exists: {Exists}",
+                existingToken != null
+            );
             if (existingToken != null)
             {
+                var user = await _unitOfWork
+                    .GetRepository<User>()
+                    .FirstOrDefaultAsync(u => u.Id == existingToken.UserId);
+
                 existingToken.IsRevoked = true;
                 _unitOfWork.GetRepository<RefreshToken>().Update(existingToken);
+
+                if (user != null)
+                {
+                    await WriteAuditLogAsync(
+                        user,
+                        action: AuditLogActions.Logout,
+                        entityType: AuditLogEntityType.Auth,
+                        entityId: user.Id.ToString(),
+                        oldValue: null,
+                        newValue: null
+                    );
+                }
+
                 await _unitOfWork.SaveChangesAsync();
             }
             return Result.Success("Đăng xuất thành công.");
+        }
+
+        private async Task WriteAuditLogAsync(
+            User user,
+            string action,
+            string entityType,
+            string entityId,
+            object? oldValue,
+            object? newValue
+        )
+        {
+            await _auditLogService.AddAsync(
+                AuditLogHelper.Create(user, action, entityType, entityId, oldValue, newValue)
+            );
         }
 
         private async Task ConsumeUserVerificationCodesAsync(Guid userId, VerificationType type)

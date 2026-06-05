@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class UserSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -27,8 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid OperatorId = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000003");
 
         public static List<User> Users =>
-            new()
-            {
+            [
                 // ------------------------------
                 // Admin user
                 // ------------------------------
@@ -36,9 +35,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = AdminId,
                     RoleId = RoleSeed.AdminRoleId,
-                    Email = "admin@example.com",
+                    Email = "admin@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
-                    FirstName = "Văn A",
+                    FirstName = "Minh Tuấn",
                     LastName = "Nguyễn",
                     CreatedAt = SeedTimestamp,
                 },
@@ -49,9 +48,9 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = SupervisorId,
                     RoleId = RoleSeed.SupervisorRoleId,
-                    Email = "supervisor@example.com",
+                    Email = "supervisor@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
-                    FirstName = "Thị B",
+                    FirstName = "Thị Hương",
                     LastName = "Trần",
                     CreatedAt = SeedTimestamp,
                 },
@@ -62,12 +61,12 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = OperatorId,
                     RoleId = RoleSeed.OperatorRoleId,
-                    Email = "operator@example.com",
+                    Email = "operator@iras-rag.com",
                     PasswordHash = DefaultPasswordHash,
-                    FirstName = "Văn C",
+                    FirstName = "Văn Hùng",
                     LastName = "Lê",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

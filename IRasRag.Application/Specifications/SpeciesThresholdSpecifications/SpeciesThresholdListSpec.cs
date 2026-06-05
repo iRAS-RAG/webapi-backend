@@ -12,6 +12,9 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
         {
             Query.AsNoTracking();
 
+            if (request.SpeciesId.HasValue)
+                Query.Where(st => st.SpeciesId == request.SpeciesId.Value);
+
             var sortMap = new Dictionary<string, Expression<Func<SpeciesThreshold, object?>>>
             {
                 ["speciesname"] = st => st.Species.Name,
@@ -29,11 +32,15 @@ namespace IRasRag.Application.Specifications.SpeciesThresholdSpecifications
             Query.Select(st => new SpeciesThresholdDto
             {
                 Id = st.Id,
+                SpeciesId = st.SpeciesId,
                 SpeciesName = st.Species.Name,
+                GrowthStageId = st.GrowthStageId,
                 GrowthStageName = st.GrowthStage.Name,
+                SensorTypeId = st.SensorTypeId,
                 SensorTypeName = st.SensorType.Name,
                 MinValue = st.MinValue,
                 MaxValue = st.MaxValue,
+                UnitOfMeasure = st.SensorType.UnitOfMeasure,
             });
         }
     }

@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class MasterBoardSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -14,33 +14,21 @@ namespace IRasRag.Infrastructure.Data.Seeds
             DateTimeKind.Utc
         );
 
-        public static readonly Guid MasterBoard1Id = Guid.Parse(
+        public static readonly Guid MasterBoardId = Guid.Parse(
             "aaaaaaaa-0000-0000-0000-000000001201"
         );
 
-        public static readonly Guid MasterBoard2Id = Guid.Parse(
-            "aaaaaaaa-0000-0000-0000-000000001202"
-        );
-
         public static List<MasterBoard> MasterBoards =>
-            new()
-            {
+            [
                 new MasterBoard
                 {
-                    Id = MasterBoard1Id,
+                    Id = MasterBoardId,
                     Name = "Board điều khiển chính 1",
-                    MacAddress = "AA:BB:CC:DD:EE:01",
+                    MacAddress = "68:FE:71:16:A5:18",
                     FishTankId = FishTankSeed.TankAId,
                     CreatedAt = SeedTimestamp,
+                    ModifiedAt = SeedTimestamp,
                 },
-                new MasterBoard
-                {
-                    Id = MasterBoard2Id,
-                    Name = "Board điều khiển chính 2",
-                    MacAddress = "AA:BB:CC:DD:EE:02",
-                    FishTankId = FishTankSeed.TankAId,
-                    CreatedAt = SeedTimestamp,
-                },
-            };
+            ];
     }
 }

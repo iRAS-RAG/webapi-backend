@@ -1,13 +1,16 @@
-using System.Linq.Expressions;
 using Ardalis.Specification;
 using AutoMapper;
 using FluentAssertions;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Persistence.Repositories;
+using IRasRag.Application.Common.Interfaces.Telemetry;
 using IRasRag.Application.Common.Mappings;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Implementations;
+using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.FishTankSpecifications;
 using IRasRag.Domain.Entities;
 using IRasRag.Domain.Enums;
@@ -25,6 +28,9 @@ namespace IRasRag.Test.UnitTests.Application
         private readonly Mock<IRepository<FishTank>> _fishTankRepositoryMock;
         private readonly Mock<IRepository<Farm>> _farmRepositoryMock;
         private readonly Mock<IRepository<Sensor>> _sensorRepositoryMock;
+        private readonly Mock<IAuditLogService> _auditLogServiceMock;
+        private readonly Mock<ICurrentUserAccessor> _currentUserAccessorMock;
+        private readonly Mock<ILatestTelemetryCacheService> _latestTelemetryCacheMock;
         private readonly FishTankService _sut;
 
         public FishTankServiceTest()
@@ -36,14 +42,27 @@ namespace IRasRag.Test.UnitTests.Application
             _farmRepositoryMock = new Mock<IRepository<Farm>>();
 
             _sensorRepositoryMock = new Mock<IRepository<Sensor>>();
+            _auditLogServiceMock = new Mock<IAuditLogService>();
+            _currentUserAccessorMock = new Mock<ICurrentUserAccessor>();
+            _currentUserAccessorMock.Setup(x => x.GetUserId()).Returns((Guid?)null);
+            _latestTelemetryCacheMock = new Mock<ILatestTelemetryCacheService>();
 
             _unitOfWorkMock
                 .Setup(x => x.GetRepository<FishTank>())
                 .Returns(_fishTankRepositoryMock.Object);
             _unitOfWorkMock.Setup(x => x.GetRepository<Farm>()).Returns(_farmRepositoryMock.Object);
-            _unitOfWorkMock.Setup(x => x.GetRepository<Sensor>()).Returns(_sensorRepositoryMock.Object);
+            _unitOfWorkMock
+                .Setup(x => x.GetRepository<Sensor>())
+                .Returns(_sensorRepositoryMock.Object);
 
-            _sut = new FishTankService(_unitOfWorkMock.Object, _loggerMock.Object, _mapper);
+            _sut = new FishTankService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object,
+                _mapper,
+                _auditLogServiceMock.Object,
+                _currentUserAccessorMock.Object,
+                _latestTelemetryCacheMock.Object
+            );
         }
 
         #region CreateFishTankAsync Tests
@@ -70,7 +89,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Email = "abc@farm.com",
                 Address = "123 ABC",
                 PhoneNumber = "0123456789",
-                IsDeleted = false,
             };
 
             _farmRepositoryMock
@@ -106,7 +124,6 @@ namespace IRasRag.Test.UnitTests.Application
                             && ft.FarmId == createDto.FarmId
                             && ft.TopicCode == createDto.TopicCode
                             && ft.CameraUrl == createDto.CameraUrl
-                            && ft.IsDeleted == false
                         )
                     ),
                 Times.Once
@@ -133,12 +150,7 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "  http://camera.com/stream1  ",
             };
 
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = false,
-            };
+            var farm = new Farm { Id = farmId, Name = "Trang trại ABC" };
 
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
@@ -357,7 +369,7 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task CreateFishTankAsync_ShouldReturnBadRequest_WhenFarmIsDeleted()
+        public async Task CreateFishTankAsync_ShouldReturnBadRequest_WhenFarmFilteredByActiveQuery()
         {
             // Arrange
             var farmId = Guid.NewGuid();
@@ -370,17 +382,9 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "http://camera.com/stream1",
             };
 
-            var deletedFarm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
-            };
-
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm?)null);
             _unitOfWorkMock
                 .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
@@ -392,6 +396,11 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.BadRequest);
             result.Message.Should().Be("Trang trại không tồn tại.");
+
+            _farmRepositoryMock.Verify(
+                r => r.GetByIdAsync(It.Is<Guid>(id => id == farmId), QueryType.ActiveOnly),
+                Times.Once
+            );
 
             _fishTankRepositoryMock.Verify(r => r.AddAsync(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
@@ -439,31 +448,26 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             var farmId = Guid.NewGuid();
-            var fishTank = new FishTank
+            var fishTank = new FishTankDto
             {
                 Id = fishTankId,
                 Name = "Bể cá số 1",
                 Height = 2.5f,
                 Radius = 3.0f,
                 FarmId = farmId,
+                FarmName = "Trang trại ABC",
                 TopicCode = "TOPIC001",
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
-            };
-
-            var farm = new Farm
-            {
-                Id = farmId,
-                Name = "Trang trại ABC",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(fishTank);
-            _farmRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(farm);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -478,12 +482,16 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Height.Should().Be(fishTank.Height);
             result.Data.Radius.Should().Be(fishTank.Radius);
             result.Data.FarmId.Should().Be(fishTank.FarmId);
-            result.Data.FarmName.Should().Be(farm.Name);
+            result.Data.FarmName.Should().Be(fishTank.FarmName);
             result.Data.TopicCode.Should().Be(fishTank.TopicCode);
             result.Data.CameraUrl.Should().Be(fishTank.CameraUrl);
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -494,8 +502,13 @@ namespace IRasRag.Test.UnitTests.Application
             // Arrange
             var fishTankId = Guid.NewGuid();
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync((FishTank?)null);
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ReturnsAsync((FishTankDto?)null);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -507,31 +520,28 @@ namespace IRasRag.Test.UnitTests.Application
             result.Data.Should().BeNull();
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetFishTankByIdAsync_ShouldReturnNotFound_WhenFishTankIsDeleted()
+        public async Task GetFishTankByIdAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                Height = 2.5f,
-                Radius = 3.0f,
-                FarmId = Guid.NewGuid(),
-                CameraUrl = "http://camera.com/stream1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
-            };
-
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ReturnsAsync((FishTankDto?)null);
 
             // Act
             var result = await _sut.GetFishTankByIdAsync(fishTankId);
@@ -542,30 +552,41 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Bể cá không tồn tại.");
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task GetFishTankByIdAsync_ShouldReturnUnexpected_WhenThrownException()
+        public async Task GetFishTankByIdAsync_ShouldThrow_WhenRepositoryThrowsException()
         {
             // Arrange
-            var fishTankId = Guid.NewGuid();
+            var exception = new Exception("Test exception");
             _fishTankRepositoryMock
-                .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ThrowsAsync(new Exception());
+                .Setup(r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
+                .ThrowsAsync(exception);
 
             // Act
-            var result = await _sut.GetFishTankByIdAsync(fishTankId);
+            var act = () => _sut.GetFishTankByIdAsync(Guid.NewGuid());
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Type.Should().Be(ResultType.Unexpected);
-            result.Message.Should().Be("Lỗi khi truy xuất thông tin bể cá.");
+            await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
 
             _fishTankRepositoryMock.Verify(
-                r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
+                r =>
+                    r.FirstOrDefaultAsync(
+                        It.IsAny<ISpecification<FishTank, FishTankDto>>(),
+                        QueryType.ActiveOnly
+                    ),
                 Times.Once
             );
         }
@@ -583,7 +604,7 @@ namespace IRasRag.Test.UnitTests.Application
                 Page = 1,
                 PageSize = 10,
                 SearchTerm = "trại beta",
-                SortBy = "height",
+                SortBy = "volume",
                 SortDir = "desc",
             };
 
@@ -593,7 +614,7 @@ namespace IRasRag.Test.UnitTests.Application
 
             var entities = new List<FishTank>
             {
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 1",
@@ -609,8 +630,10 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "alpha@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream1",
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 2",
@@ -626,8 +649,10 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream2",
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Bể cá số 3",
@@ -643,6 +668,8 @@ namespace IRasRag.Test.UnitTests.Application
                         Email = "beta2@farm.com",
                     },
                     CameraUrl = "http://camera.com/stream3",
+                    FarmingBatches = [],
+                    Alerts = [],
                 },
             };
 
@@ -684,7 +711,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.Message.Should().Be("Lấy danh sách bể cá thành công.");
             result.Data.Should().NotBeNull();
             result.Data!.Count.Should().Be(2);
-            result.Data.Select(x => x.Height).Should().ContainInOrder(5.0f, 3.0f);
+            result
+                .Data.Select(x => Math.Round(Math.PI * x.Radius * x.Radius * x.Height, 2))
+                .Should()
+                .ContainInOrder(
+                    Math.Round(Math.PI * 4.5f * 4.5f * 5.0f, 2),
+                    Math.Round(Math.PI * 4.0f * 4.0f * 3.0f, 2)
+                );
 
             result.Meta.Should().NotBeNull();
             result.Meta!.Page.Should().Be(request.Page);
@@ -715,7 +748,7 @@ namespace IRasRag.Test.UnitTests.Application
             var farmId = Guid.NewGuid();
             var entities = new List<FishTank>
             {
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Zulu",
@@ -732,7 +765,7 @@ namespace IRasRag.Test.UnitTests.Application
                     },
                     CameraUrl = "http://camera.com/1",
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Alpha",
@@ -749,7 +782,7 @@ namespace IRasRag.Test.UnitTests.Application
                     },
                     CameraUrl = "http://camera.com/2",
                 },
-                new FishTank
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Beta",
@@ -778,18 +811,56 @@ namespace IRasRag.Test.UnitTests.Application
                     )
                 )
                 .ReturnsAsync(
-                    (
-                        ISpecification<FishTank, FishTankDto> spec,
-                        int page,
-                        int pageSize,
-                        QueryType _
-                    ) =>
-                        SpecificationTestHelper.ApplySpecificationWithPaging(
-                            entities,
-                            spec,
-                            page,
-                            pageSize
-                        )
+                    (ISpecification<FishTank, FishTankDto> _, int _, int _, QueryType _) =>
+                        new PagedResult<FishTankDto>
+                        {
+                            Items = new List<FishTankDto>
+                            {
+                                new()
+                                {
+                                    Id = entities[1].Id,
+                                    Name = entities[1].Name,
+                                    Height = entities[1].Height,
+                                    Radius = entities[1].Radius,
+                                    FarmId = entities[1].FarmId,
+                                    FarmName = entities[1].Farm.Name,
+                                    TopicCode = entities[1].TopicCode,
+                                    CameraUrl = entities[1].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                                new()
+                                {
+                                    Id = entities[2].Id,
+                                    Name = entities[2].Name,
+                                    Height = entities[2].Height,
+                                    Radius = entities[2].Radius,
+                                    FarmId = entities[2].FarmId,
+                                    FarmName = entities[2].Farm.Name,
+                                    TopicCode = entities[2].TopicCode,
+                                    CameraUrl = entities[2].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                                new()
+                                {
+                                    Id = entities[0].Id,
+                                    Name = entities[0].Name,
+                                    Height = entities[0].Height,
+                                    Radius = entities[0].Radius,
+                                    FarmId = entities[0].FarmId,
+                                    FarmName = entities[0].Farm.Name,
+                                    TopicCode = entities[0].TopicCode,
+                                    CameraUrl = entities[0].CameraUrl,
+                                    CurrentSpecies = "N/A",
+                                    CurrentCount = null,
+                                    HasOpenAlert = false,
+                                },
+                            },
+                            TotalItems = 3,
+                        }
                 );
 
             // Act
@@ -919,7 +990,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
 
             _fishTankRepositoryMock
@@ -937,18 +1007,16 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Type.Should().Be(ResultType.Ok);
             result.Message.Should().Be("Xóa bể cá thành công.");
-            fishTank.IsDeleted.Should().BeTrue();
-            fishTank.DeletedAt.Should().NotBeNull();
-            fishTank.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
             _fishTankRepositoryMock.Verify(
                 r => r.GetByIdAsync(It.Is<Guid>(id => id == fishTankId), QueryType.ActiveOnly),
                 Times.Once
             );
             _fishTankRepositoryMock.Verify(
-                r => r.Update(It.Is<FishTank>(ft => ft.Id == fishTankId && ft.IsDeleted == true)),
+                r => r.Delete(It.Is<FishTank>(ft => ft.Id == fishTankId)),
                 Times.Once
             );
+            _fishTankRepositoryMock.Verify(r => r.Update(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
                 Times.Once
@@ -984,21 +1052,13 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task DeleteFishTankAsync_ShouldReturnNotFound_WhenFishTankAlreadyDeleted()
+        public async Task DeleteFishTankAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
-
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .ReturnsAsync((FishTank?)null);
 
             // Act
             var result = await _sut.DeleteFishTankAsync(fishTankId);
@@ -1008,6 +1068,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.Type.Should().Be(ResultType.NotFound);
             result.Message.Should().Be("Bể cá không tồn tại.");
 
+            _fishTankRepositoryMock.Verify(r => r.Delete(It.IsAny<FishTank>()), Times.Never);
             _fishTankRepositoryMock.Verify(r => r.Update(It.IsAny<FishTank>()), Times.Never);
             _unitOfWorkMock.Verify(
                 u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
@@ -1057,7 +1118,6 @@ namespace IRasRag.Test.UnitTests.Application
                 FarmId = Guid.NewGuid(),
                 TopicCode = "TOPIC001",
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto
             {
@@ -1069,12 +1129,7 @@ namespace IRasRag.Test.UnitTests.Application
                 CameraUrl = "http://camera.com/stream2",
             };
 
-            var newFarm = new Farm
-            {
-                Id = newFarmId,
-                Name = "Trang trại mới",
-                IsDeleted = false,
-            };
+            var newFarm = new Farm { Id = newFarmId, Name = "Trang trại mới" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
@@ -1132,7 +1187,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Name = nameInput };
 
@@ -1165,7 +1219,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto
             {
@@ -1223,22 +1276,15 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task UpdateFishTankAsync_ShouldReturnNotFound_WhenFishTankIsDeleted()
+        public async Task UpdateFishTankAsync_ShouldReturnNotFound_WhenFishTankFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
-            var deletedFishTank = new FishTank
-            {
-                Id = fishTankId,
-                Name = "Bể cá số 1",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow.AddDays(-1),
-            };
             var updateDto = new UpdateFishTankDto { Name = "Bể cá số 1 - Cập nhật" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFishTank);
+                .ReturnsAsync((FishTank?)null);
 
             // Act
             var result = await _sut.UpdateFishTankAsync(fishTankId, updateDto);
@@ -1274,7 +1320,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Height = height };
 
@@ -1316,7 +1361,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { Radius = radius };
 
@@ -1353,7 +1397,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
             };
             var updateDto = new UpdateFishTankDto { FarmId = newFarmId };
 
@@ -1380,7 +1423,7 @@ namespace IRasRag.Test.UnitTests.Application
         }
 
         [Fact]
-        public async Task UpdateFishTankAsync_ShouldReturnBadRequest_WhenNewFarmIsDeleted()
+        public async Task UpdateFishTankAsync_ShouldReturnBadRequest_WhenNewFarmFilteredByActiveQuery()
         {
             // Arrange
             var fishTankId = Guid.NewGuid();
@@ -1393,14 +1436,6 @@ namespace IRasRag.Test.UnitTests.Application
                 Radius = 3.0f,
                 FarmId = Guid.NewGuid(),
                 CameraUrl = "http://camera.com/stream1",
-                IsDeleted = false,
-            };
-            var deletedFarm = new Farm
-            {
-                Id = newFarmId,
-                Name = "Trang trại XYZ",
-                IsDeleted = true,
-                DeletedAt = DateTime.UtcNow,
             };
             var updateDto = new UpdateFishTankDto { FarmId = newFarmId };
 
@@ -1409,7 +1444,7 @@ namespace IRasRag.Test.UnitTests.Application
                 .ReturnsAsync(existingFishTank);
             _farmRepositoryMock
                 .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), QueryType.ActiveOnly))
-                .ReturnsAsync(deletedFarm);
+                .ReturnsAsync((Farm?)null);
 
             // Act
             var result = await _sut.UpdateFishTankAsync(fishTankId, updateDto);
@@ -1460,20 +1495,32 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể A", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể A" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto
+                new()
                 {
-                    SensorId = Guid.NewGuid(), SensorName = "Nhiệt độ 1",
-                    SensorTypeName = "Nhiệt độ", LatestValue = 28.5, IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    SensorId = Guid.NewGuid(),
+                    SensorName = "Nhiệt độ 1",
+                    SensorTypeName = "Nhiệt độ",
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestAvg = 28.5,
+                        HasWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
-                new TankSensorLatestDataDto
+                new()
                 {
-                    SensorId = Guid.NewGuid(), SensorName = "pH 1",
-                    SensorTypeName = "pH", LatestValue = 7.2, IsWarning = false,
-                    RecordedAt = DateTime.UtcNow,
+                    SensorId = Guid.NewGuid(),
+                    SensorName = "pH 1",
+                    SensorTypeName = "pH",
+                    LatestData = new TankSensorLatestDataValueDto
+                    {
+                        LatestAvg = 7.2,
+                        HasWarning = false,
+                        RecordedAt = DateTime.UtcNow,
+                    },
                 },
             };
 
@@ -1481,7 +1528,12 @@ namespace IRasRag.Test.UnitTests.Application
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1491,7 +1543,7 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeTrue();
             result.Data.Should().HaveCount(2);
             result.Data![0].SensorName.Should().Be("Nhiệt độ 1");
-            result.Data[1].LatestValue.Should().Be(7.2);
+            result.Data[1].LatestData?.LatestAvg.Should().Be(7.2);
         }
 
         [Fact]
@@ -1499,13 +1551,18 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(new List<TankSensorLatestDataDto>());
 
             // Act
@@ -1533,8 +1590,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
             _sensorRepositoryMock.Verify(
-                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
-                Times.Never);
+                r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -1563,19 +1625,36 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể Bình Thường" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
+                },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
+                },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1595,19 +1674,36 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể Cảnh Báo" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = false },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
+                },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
+                },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = false },
+                },
             };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1625,18 +1721,31 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể Nguy Hiểm" };
             var sensorData = new List<TankSensorLatestDataDto>
             {
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
-                new TankSensorLatestDataDto { SensorId = Guid.NewGuid(), IsWarning = true },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
+                },
+                new()
+                {
+                    SensorId = Guid.NewGuid(),
+                    LatestData = new TankSensorLatestDataValueDto { HasWarning = true },
+                },
             };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(sensorData);
 
             // Act
@@ -1654,13 +1763,18 @@ namespace IRasRag.Test.UnitTests.Application
         {
             // Arrange
             var tankId = Guid.NewGuid();
-            var tank = new FishTank { Id = tankId, Name = "Bể Trống", IsDeleted = false };
+            var tank = new FishTank { Id = tankId, Name = "Bể Trống" };
 
             _fishTankRepositoryMock
                 .Setup(r => r.GetByIdAsync(tankId, QueryType.ActiveOnly))
                 .ReturnsAsync(tank);
             _sensorRepositoryMock
-                .Setup(r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), QueryType.ActiveOnly))
+                .Setup(r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        QueryType.ActiveOnly
+                    )
+                )
                 .ReturnsAsync(new List<TankSensorLatestDataDto>());
 
             // Act
@@ -1689,8 +1803,13 @@ namespace IRasRag.Test.UnitTests.Application
             result.IsSuccess.Should().BeFalse();
             result.Type.Should().Be(ResultType.NotFound);
             _sensorRepositoryMock.Verify(
-                r => r.ListAsync(It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(), It.IsAny<QueryType>()),
-                Times.Never);
+                r =>
+                    r.ListAsync(
+                        It.IsAny<ISpecification<Sensor, TankSensorLatestDataDto>>(),
+                        It.IsAny<QueryType>()
+                    ),
+                Times.Never
+            );
         }
 
         [Fact]

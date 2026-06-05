@@ -9,12 +9,20 @@ namespace IRasRag.Domain.Entities
         public Guid FarmingBatchId { get; set; }
 
         [Required]
-        public float Amount { get; set; }
+        public Guid FeedTypeId { get; set; }
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
+        public double Amount { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; }
 
         // Navigation properties
         public FarmingBatch FarmingBatch { get; set; }
+        public FeedType FeedType { get; set; }
+        public User User { get; set; }
     }
 }

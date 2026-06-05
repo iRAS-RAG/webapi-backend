@@ -9,10 +9,17 @@ namespace IRasRag.Application.Services.Interfaces
         Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesAsync(
             ControlDeviceListRequest request
         );
+        Task<PaginatedResult<ControlDeviceDto>> GetAllControlDevicesByTankAsync(
+            Guid fishTankId,
+            ControlDeviceListRequest request
+        );
         Task<Result<ControlDeviceDto>> GetControlDeviceByIdAsync(Guid id);
         Task<Result<ControlDeviceDto>> CreateControlDeviceAsync(CreateControlDeviceDto createDto);
         Task<Result> UpdateControlDeviceAsync(Guid id, UpdateControlDeviceDto updateDto);
         Task<Result> DeleteControlDeviceAsync(Guid id);
-        Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(Guid id, ToggleControlDeviceDto toggleDto);
+        Task<Result<ControlDeviceDto>> ToggleControlDeviceAsync(
+            Guid id,
+            ToggleControlDeviceDto toggleDto
+        );
     }
 }

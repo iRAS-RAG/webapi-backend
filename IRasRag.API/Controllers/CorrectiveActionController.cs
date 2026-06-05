@@ -88,7 +88,7 @@ namespace IRasRag.API.Controllers
         /// Tạo hành động khắc phục mới
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Supervisor,Worker")]
+        [Authorize(Roles = "Supervisor, Operator")]
         public async Task<IActionResult> CreateCorrectiveAction(
             [FromBody] CreateCorrectiveActionDto createDto
         )
@@ -132,7 +132,7 @@ namespace IRasRag.API.Controllers
         /// Cập nhật hành động khắc phục
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         public async Task<IActionResult> UpdateCorrectiveAction(
             Guid id,
             [FromBody] UpdateCorrectiveActionDto updateDto
@@ -176,7 +176,7 @@ namespace IRasRag.API.Controllers
         /// Xóa hành động khắc phục
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Supervisor, Operator")]
         public async Task<IActionResult> DeleteCorrectiveAction(Guid id)
         {
             try

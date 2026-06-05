@@ -13,12 +13,14 @@ namespace IRasRag.Domain.Entities
         public string Description { get; set; }
 
         [Required]
-        public float ProteinPercentage { get; set; } // % of protein
+        public double ProteinPercentage { get; set; } // % of protein
 
         [MaxLength(255)]
         public string Manufacturer { get; set; }
 
         // Navigation properties
+        public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
+        public ICollection<SpeciesStageConfigFeedType> SpeciesStageConfigFeedTypes { get; set; }
     }
 }

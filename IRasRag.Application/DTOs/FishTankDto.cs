@@ -7,12 +7,30 @@ namespace IRasRag.Application.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public float Height { get; set; }
-        public float Radius { get; set; }
+        public double Height { get; set; }
+        public double Radius { get; set; }
         public Guid FarmId { get; set; }
         public string FarmName { get; set; }
         public string TopicCode { get; set; }
         public string CameraUrl { get; set; }
+        public string CurrentSpecies { get; set; }
+        public int? CurrentCount { get; set; }
+        public bool HasOpenAlert { get; set; }
+    }
+
+    public class FishTankDashboardDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public double Height { get; set; }
+        public double Radius { get; set; }
+        public Guid FarmId { get; set; }
+        public string FarmName { get; set; }
+        public string TopicCode { get; set; }
+        public string CameraUrl { get; set; }
+        public string CurrentSpecies { get; set; }
+        public int? CurrentCount { get; set; }
+        public string LatestStatus { get; set; }
     }
 
     public class CreateFishTankDto
@@ -22,12 +40,12 @@ namespace IRasRag.Application.DTOs
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Chiều cao không được để trống.")]
-        [Range(0.01, float.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
-        public float Height { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
+        public double Height { get; set; }
 
         [Required(ErrorMessage = "Bán kính không được để trống.")]
-        [Range(0.01, float.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
-        public float Radius { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
+        public double Radius { get; set; }
 
         [Required(ErrorMessage = "ID trang trại không được để trống.")]
         public Guid FarmId { get; set; }
@@ -46,11 +64,11 @@ namespace IRasRag.Application.DTOs
         [MaxLength(255, ErrorMessage = "Tên bể cá không được vượt quá 255 ký tự.")]
         public string? Name { get; set; }
 
-        [Range(0.01, float.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
-        public float? Height { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Chiều cao phải lớn hơn 0.")]
+        public double? Height { get; set; }
 
-        [Range(0.01, float.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
-        public float? Radius { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Bán kính phải lớn hơn 0.")]
+        public double? Radius { get; set; }
 
         public Guid? FarmId { get; set; }
 
@@ -81,14 +99,25 @@ namespace IRasRag.Application.DTOs
     // Latest sensor reading per sensor in a tank
     public class TankSensorLatestDataDto
     {
+        public Guid FishTankId { get; set; }
+        public string FishTankName { get; set; } = string.Empty;
         public Guid SensorId { get; set; }
         public string SensorName { get; set; } = string.Empty;
+        public Guid SensorTypeId { get; set; }
         public string SensorTypeName { get; set; } = string.Empty;
         public string MeasureType { get; set; } = string.Empty;
         public string UnitOfMeasure { get; set; } = string.Empty;
+        public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
-        public double? LatestValue { get; set; }
-        public bool? IsWarning { get; set; }
+        public TankSensorLatestDataValueDto? LatestData { get; set; }
+    }
+
+    public class TankSensorLatestDataValueDto
+    {
+        public double LatestAvg { get; set; }
+        public double LatestMin { get; set; }
+        public double LatestMax { get; set; }
+        public bool? HasWarning { get; set; }
         public DateTime? RecordedAt { get; set; }
     }
 }

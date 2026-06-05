@@ -1,7 +1,6 @@
 ﻿using IRasRag.Application.Common.Models;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +8,7 @@ namespace IRasRag.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/hardware")]
+    [Route("api/hardwares")]
     public class HardwareController : ControllerBase
     {
         private ILogger<HardwareController> _logger;
@@ -67,7 +66,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetSensorTypeById(Guid id)
         {
             try
@@ -93,7 +91,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("sensor-types")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> CreateSensorType([FromBody] CreateSensorTypeDto dto)
         {
             try
@@ -119,7 +117,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> UpdateSensorType(
             Guid id,
             [FromBody] UpdateSensorTypeDto dto
@@ -149,7 +147,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("sensor-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin, Supervisor")]
         public async Task<IActionResult> DeleteSensorType(Guid id)
         {
             try
@@ -204,7 +202,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetSensorById(Guid id)
         {
             try
@@ -226,6 +223,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("sensors")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateSensor([FromBody] CreateSensorDto dto)
         {
             try
@@ -234,6 +232,7 @@ namespace IRasRag.API.Controllers
                 return result.Type switch
                 {
                     ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
                     ResultType.Conflict => Conflict(new { result.Message }),
                     ResultType.BadRequest => BadRequest(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
@@ -250,8 +249,42 @@ namespace IRasRag.API.Controllers
             }
         }
 
+        [HttpGet("sensors/{id}/history")]
+        public async Task<IActionResult> GetSensorHistory(
+            Guid id,
+            [FromQuery] DateTime? from,
+            [FromQuery] DateTime? to,
+            [FromQuery] int interval = 60
+        )
+        {
+            try
+            {
+                var fromDt = from ?? DateTime.Today;
+                var toDt = to ?? DateTime.Today.AddDays(1);
+
+                var result = await _sensorService.GetSensorHistoryAsync(id, fromDt, toDt, interval);
+
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving sensor history: {SensorId}",
+                    id
+                );
+
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
         [HttpPut("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSensor(Guid id, [FromBody] UpdateSensorDto dto)
         {
             try
@@ -274,7 +307,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("sensors/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSensor(Guid id)
         {
             try
@@ -292,6 +325,60 @@ namespace IRasRag.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while deleting sensor: {SensorId}", id);
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpGet("sensors/{id}/logs")]
+        public async Task<IActionResult> GetSensorLogs(
+            Guid id,
+            [FromQuery] SensorLogListRequest request
+        )
+        {
+            try
+            {
+                var result = await _sensorService.GetSensorLogsAsync(id, request);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(result.Data),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi lấy dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
+                return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
+            }
+        }
+
+        [HttpPost("sensors/{id}/logs")]
+        [Authorize(Roles = "Supervisor")]
+        public async Task<IActionResult> CreateSensorLog(Guid id, [FromBody] CreateSensorLogDto dto)
+        {
+            try
+            {
+                var result = await _sensorService.CreateSensorLogAsync(id, dto);
+                return result.Type switch
+                {
+                    ResultType.Ok => Ok(new { result.Message, result.Data }),
+                    ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.BadRequest => BadRequest(new { result.Message }),
+                    _ => StatusCode(500, new { result.Message }),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Đã xảy ra lỗi khi tạo dữ liệu cảm biến cho sensor: {SensorId}",
+                    id
+                );
                 return StatusCode(500, new { Message = "Có lỗi xảy ra, vui lòng thử lại sau." });
             }
         }
@@ -328,7 +415,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetMasterBoardById(Guid id)
         {
             try
@@ -354,6 +440,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("masterboards")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateMasterBoard([FromBody] CreateMasterBoardDto dto)
         {
             try
@@ -379,7 +466,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateMasterBoard(
             Guid id,
             [FromBody] UpdateMasterBoardDto dto
@@ -409,7 +496,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("masterboards/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteMasterBoard(Guid id)
         {
             try
@@ -492,6 +579,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("control-devices")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateControlDevice([FromBody] CreateControlDeviceDto dto)
         {
             try
@@ -517,7 +605,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("control-devices/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateControlDevice(
             Guid id,
             [FromBody] UpdateControlDeviceDto dto
@@ -547,7 +635,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("control-devices/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteControlDevice(Guid id)
         {
             try
@@ -577,8 +665,11 @@ namespace IRasRag.API.Controllers
         /// Manual Override: Bật/tắt thiết bị điều khiển theo yêu cầu thủ công.
         /// </summary>
         [HttpPost("control-devices/{id}/toggle")]
-        [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> ToggleControlDevice(Guid id,[FromBody] ToggleControlDeviceDto dto)
+        [Authorize(Roles = "Admin, Operator")]
+        public async Task<IActionResult> ToggleControlDevice(
+            Guid id,
+            [FromBody] ToggleControlDeviceDto dto
+        )
         {
             try
             {
@@ -630,7 +721,6 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpGet("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
         public async Task<IActionResult> GetControlDeviceTypeById(Guid id)
         {
             try
@@ -656,7 +746,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPost("control-device-types")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateControlDeviceType(
             [FromBody] CreateControlDeviceTypeDto dto
         )
@@ -684,7 +774,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpPut("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateControlDeviceType(
             Guid id,
             [FromBody] UpdateControlDeviceTypeDto dto
@@ -714,7 +804,7 @@ namespace IRasRag.API.Controllers
         }
 
         [HttpDelete("control-device-types/{id}")]
-        [Authorize(Roles = "Supervisor")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteControlDeviceType(Guid id)
         {
             try

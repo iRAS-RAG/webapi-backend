@@ -12,18 +12,21 @@ namespace IRasRag.Application.Specifications.SensorSpecifications
             Query.AsNoTracking();
 
             ApplyFilter(sensorId, log => log.SensorId == sensorId);
-            ApplyFilter(request.From, log => log.CreatedAt >= request.From);
-            ApplyFilter(request.To, log => log.CreatedAt <= request.To);
+            ApplyFilter(request.From, log => log.PeriodStart >= request.From);
+            ApplyFilter(request.To, log => log.PeriodStart <= request.To);
 
-            Query.OrderBy(log => log.CreatedAt);
+            Query.OrderByDescending(log => log.PeriodStart);
 
             Query.Select(log => new SensorLogDto
             {
                 Id = log.Id,
                 SensorId = log.SensorId,
-                Data = log.Data,
-                IsWarning = log.IsWarning,
-                DataJson = log.DataJson,
+                Average = log.Average,
+                Min = log.Min,
+                Max = log.Max,
+                SampleCount = log.SampleCount,
+                HasWarning = log.HasWarning,
+                PeriodStart = log.PeriodStart,
                 CreatedAt = log.CreatedAt,
             });
         }

@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using IRasRag.Domain.Common;
 
 namespace IRasRag.Domain.Entities
@@ -10,16 +9,24 @@ namespace IRasRag.Domain.Entities
         public Guid SensorId { get; set; }
 
         [Required]
-        public double Data { get; set; }
+        public DateTime PeriodStart { get; set; }
 
         [Required]
-        public bool IsWarning { get; set; }
+        public double Average { get; set; }
 
         [Required]
-        public string DataJson { get; set; } = "{}";
+        public double Min { get; set; }
+
+        [Required]
+        public double Max { get; set; }
+
+        [Required]
+        public int SampleCount { get; set; }
+
+        [Required]
+        public bool HasWarning { get; set; }
 
         // Navigation properties
         public Sensor Sensor { get; set; }
-        public ICollection<Alert> Alerts { get; set; }
     }
 }

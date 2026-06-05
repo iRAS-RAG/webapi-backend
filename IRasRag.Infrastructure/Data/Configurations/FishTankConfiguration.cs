@@ -10,9 +10,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<FishTank> builder)
         {
             builder.ConfigureTimestamps();
-            builder.ConfigureSoftDelete();
-
-            builder.HasQueryFilter(ft => !ft.IsDeleted);
 
             builder
                 .HasOne(ft => ft.Farm)
@@ -21,7 +18,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Most common query: list tanks by farm
-            builder.HasIndex(ft => new { ft.FarmId, ft.IsDeleted });
+            builder.HasIndex(ft => ft.FarmId);
 
             builder.HasData(FishTankSeed.FishTanks);
         }

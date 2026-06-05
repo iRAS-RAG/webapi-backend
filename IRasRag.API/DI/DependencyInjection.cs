@@ -2,7 +2,10 @@
 using System.Threading.RateLimiting;
 using Hangfire;
 using Hangfire.PostgreSql;
+using IRasRag.API.Hubs;
 using IRasRag.API.Utils;
+using IRasRag.Application.Common.Interfaces.Auth;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Infrastructure.DI;
 using IRasRag.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +30,14 @@ namespace IRasRag.API.DI
             services.AddHangfireSetup(config, env);
             services.AddHttpContextAccessor();
             services.AddScoped<HttpContextUtils>();
+            services.AddScoped<ICurrentUserAccessor>(sp =>
+                sp.GetRequiredService<HttpContextUtils>()
+            );
+            services.AddSignalR();
+            services.AddSingleton<ILiveDataNotifier, SignalRLiveDataNotifier>();
+            services.AddSingleton<ISupervisorNotifier, SupervisorSignalRNotifier>();
+            services.AddSingleton<IDocumentStatusNotifier, DocumentSignalRNotifier>();
+            services.AddHostedService<TelemetryPushWorker>();
         }
 
         public static void AddJwtAuthencation(
@@ -57,6 +68,25 @@ namespace IRasRag.API.DI
                         ),
                         ClockSkew = TimeSpan.Zero,
                     };
+
+                    // SignalR sends the JWT via query string because WebSockets don't support headers
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (
+                                !string.IsNullOrEmpty(accessToken)
+                                && path.StartsWithSegments("/hubs")
+                            )
+                            {
+                                // Accept access_token for any SignalR hub endpoint under /hubs
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        },
+                    };
                 });
         }
 
@@ -80,17 +110,6 @@ namespace IRasRag.API.DI
                     }
                 );
 
-                c.AddSecurityDefinition(
-                    "ApiKey",
-                    new OpenApiSecurityScheme
-                    {
-                        Description = "API Key via x-api-key header",
-                        Name = "x-api-key",
-                        In = ParameterLocation.Header,
-                        Type = SecuritySchemeType.ApiKey,
-                    }
-                );
-
                 c.AddSecurityRequirement(
                     new OpenApiSecurityRequirement
                     {
@@ -101,17 +120,6 @@ namespace IRasRag.API.DI
                                 {
                                     Type = ReferenceType.SecurityScheme,
                                     Id = "Bearer",
-                                },
-                            },
-                            Array.Empty<string>()
-                        },
-                        {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "ApiKey",
                                 },
                             },
                             Array.Empty<string>()
@@ -189,6 +197,13 @@ namespace IRasRag.API.DI
             services.AddHangfire(configuration =>
                 configuration
                     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                    .UseFilter(
+                        new AutomaticRetryAttribute
+                        {
+                            Attempts = 5,
+                            OnAttemptsExceeded = AttemptsExceededAction.Fail,
+                        }
+                    )
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
                     .UsePostgreSqlStorage(

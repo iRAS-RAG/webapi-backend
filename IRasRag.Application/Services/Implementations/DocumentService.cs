@@ -1,5 +1,10 @@
 using AutoMapper;
+using IRasRag.Application.Common.Interfaces.BackgroundJobs;
+using IRasRag.Application.Common.Interfaces.CloudFileStorage;
+using IRasRag.Application.Common.Interfaces.FileExtractor;
+using IRasRag.Application.Common.Interfaces.FileValidator;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
@@ -7,6 +12,7 @@ using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
 using IRasRag.Application.Specifications.DocumentSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -16,16 +22,32 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DocumentService> _logger;
         private readonly IMapper _mapper;
+        private readonly IFileContentValidator _fileContentValidator;
+        private readonly ICloudFileStorageService _cloudFileStorageService;
+        private readonly IFileTextExtractorResolver _fileTextExtractorResolver;
+        private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IDocumentStatusNotifier _notifier;
+        private const int MIN_EXTRACTED_TEXT_LENGTH = 500; // Minimum length of extracted text to consider it valid
 
         public DocumentService(
             IUnitOfWork unitOfWork,
             ILogger<DocumentService> logger,
-            IMapper mapper
+            IMapper mapper,
+            IFileContentValidator fileContentValidator,
+            ICloudFileStorageService cloudFileStorageService,
+            IFileTextExtractorResolver fileTextExtractorResolver,
+            IBackgroundJobService backgroundJobService,
+            IDocumentStatusNotifier notifier
         )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _fileContentValidator = fileContentValidator;
+            _cloudFileStorageService = cloudFileStorageService;
+            _fileTextExtractorResolver = fileTextExtractorResolver;
+            _backgroundJobService = backgroundJobService;
+            _notifier = notifier;
         }
 
         #region Get Methods
@@ -35,12 +57,6 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                _logger.LogInformation(
-                    "Bắt đầu lấy danh sách tài liệu (Page: {Page}, PageSize: {PageSize})",
-                    request.Page,
-                    request.PageSize
-                );
-
                 var documentRepository = _unitOfWork.GetRepository<Document>();
                 var spec = new DocumentDtoListSpec(request);
                 var pagedResult = await documentRepository.GetPagedAsync(
@@ -87,36 +103,34 @@ namespace IRasRag.Application.Services.Implementations
             }
         }
 
-        public async Task<Result<DocumentDto>> GetDocumentByIdAsync(Guid id)
+        public async Task<Result<DocumentDetailDto>> GetDocumentByIdAsync(Guid id)
         {
             try
             {
                 _logger.LogInformation("Bắt đầu lấy tài liệu với Id: {Id}", id);
 
-                var documentRepository = _unitOfWork.GetRepository<Document>();
-                var document = await documentRepository.GetByIdAsync(id);
+                var document = await _unitOfWork
+                    .GetRepository<Document>()
+                    .FirstOrDefaultAsync(new DocumentDtoByIdSpec(id));
 
                 if (document == null)
                 {
                     _logger.LogWarning("Không tìm thấy tài liệu với Id: {Id}", id);
-                    return Result<DocumentDto>.Failure(
+                    return Result<DocumentDetailDto>.Failure(
                         "Không tìm thấy tài liệu",
                         ResultType.NotFound
                     );
                 }
 
-                var documentDto = _mapper.Map<DocumentDto>(document);
-                _logger.LogInformation("Lấy tài liệu thành công với Id: {Id}", id);
-
-                return Result<DocumentDto>.Success(
-                    documentDto,
+                return Result<DocumentDetailDto>.Success(
+                    document,
                     "Lấy thông tin tài liệu thành công"
                 );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy tài liệu với Id: {Id}", id);
-                return Result<DocumentDto>.Failure(
+                return Result<DocumentDetailDto>.Failure(
                     "Đã xảy ra lỗi khi lấy thông tin tài liệu",
                     ResultType.Unexpected
                 );
@@ -125,71 +139,133 @@ namespace IRasRag.Application.Services.Implementations
         #endregion
 
         #region Create Method
-        public async Task<Result<DocumentDto>> CreateDocumentAsync(CreateDocumentDto createDto)
+        public async Task<Result> CreateDocumentAsync(
+            CreateDocumentDto dto,
+            CancellationToken ct = default
+        )
         {
-            try
+            if (string.IsNullOrWhiteSpace(dto.FileTitle))
             {
-                _logger.LogInformation("Bắt đầu tạo tài liệu mới: {Title}", createDto.Title);
+                _logger.LogWarning("Tiêu đề không được để trống");
+                return Result.Failure("Tiêu đề không được để trống", ResultType.BadRequest);
+            }
 
-                // Validate Title
-                if (string.IsNullOrWhiteSpace(createDto.Title))
-                {
-                    _logger.LogWarning("Tiêu đề không được để trống");
-                    return Result<DocumentDto>.Failure(
-                        "Tiêu đề không được để trống",
-                        ResultType.BadRequest
-                    );
-                }
+            var exists = await _unitOfWork
+                .GetRepository<Document>()
+                .AnyAsync(d => d.Title == dto.FileTitle);
+            if (exists)
+                return Result.Failure("Tài liệu đã tồn tại", ResultType.Conflict);
 
-                // Validate Content
-                if (string.IsNullOrWhiteSpace(createDto.Content))
-                {
-                    _logger.LogWarning("Nội dung không được để trống");
-                    return Result<DocumentDto>.Failure(
-                        "Nội dung không được để trống",
-                        ResultType.BadRequest
-                    );
-                }
+            if (_fileContentValidator.HasValidSize(dto.FileSize) == false)
+            {
+                _logger.LogWarning(
+                    "Kích thước tệp vượt quá giới hạn: {FileSize} bytes",
+                    dto.FileSize
+                );
+                return Result.Failure("Kích thước tệp vượt quá giới hạn", ResultType.BadRequest);
+            }
 
-                // Validate User exists
-                var userRepository = _unitOfWork.GetRepository<User>();
-                var user = await userRepository.GetByIdAsync(createDto.UploadedByUserId);
+            var isUserExists = await _unitOfWork
+                .GetRepository<User>()
+                .AnyAsync(u => u.Id == dto.UploadedByUserId);
+            if (!isUserExists)
+            {
+                _logger.LogWarning(
+                    "Không tìm thấy người dùng với Id: {UserId}",
+                    dto.UploadedByUserId
+                );
+                return Result.Failure("Không tìm thấy người dùng", ResultType.NotFound);
+            }
 
-                if (user == null)
+            // Create a copy of the file stream to avoid issues with stream position during upload and text extraction
+            using var buffer = new MemoryStream();
+            await dto.FileStream.CopyToAsync(buffer, ct);
+            buffer.Position = 0;
+
+            var fileExtension = _fileContentValidator.DetectExtension(buffer);
+            if (fileExtension == null)
+            {
+                _logger.LogWarning("Định dạng tệp không hợp lệ: {FileName}", dto.FileName);
+                return Result.Failure(
+                    "Định dạng tệp không hợp lệ, hiện tại chỉ hỗ trợ PDF và Docx",
+                    ResultType.BadRequest
+                );
+            }
+
+            if (fileExtension == ".pdf")
+            {
+                buffer.Position = 0;
+                var extractedText = _fileTextExtractorResolver.ExtractText(buffer, fileExtension);
+                var trimmedLength =
+                    extractedText?.Replace(" ", "").Replace("\n", "").Replace("\r", "").Length ?? 0;
+                if (trimmedLength < MIN_EXTRACTED_TEXT_LENGTH)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy người dùng với Id: {UserId}",
-                        createDto.UploadedByUserId
+                        "PDF không có văn bản hoặc văn bản quá ít (ảnh scan): {FileName}, ký tự trích xuất: {Length}",
+                        dto.FileName,
+                        trimmedLength
                     );
-                    return Result<DocumentDto>.Failure(
-                        "Không tìm thấy người dùng",
-                        ResultType.NotFound
+                    return Result.Failure(
+                        "PDF không thể đọc văn bản. Tệp có thể là bản scan dạng ảnh, hiện tại không được hỗ trợ.",
+                        ResultType.BadRequest
                     );
                 }
-
-                // Create Document
-                var document = _mapper.Map<Document>(createDto);
-                document.Title = document.Title.Trim();
-                document.Content = document.Content.Trim();
-
-                var documentRepository = _unitOfWork.GetRepository<Document>();
-                await documentRepository.AddAsync(document);
-                await _unitOfWork.SaveChangesAsync();
-
-                var documentDto = _mapper.Map<DocumentDto>(document);
-                _logger.LogInformation("Tạo tài liệu thành công với Id: {Id}", document.Id);
-
-                return Result<DocumentDto>.Success(documentDto, "Tạo tài liệu thành công");
             }
-            catch (Exception ex)
+
+            // Upload file to cloud storage and get the URL
+            var fileUrl = string.Empty;
+            try
             {
-                _logger.LogError(ex, "Lỗi khi tạo tài liệu");
-                return Result<DocumentDto>.Failure(
-                    "Đã xảy ra lỗi khi tạo tài liệu",
+                buffer.Position = 0;
+                fileUrl = await _cloudFileStorageService.UploadAsync(
+                    buffer,
+                    dto.FileName,
+                    dto.FileSize,
+                    ct
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi tải tệp lên dịch vụ lưu trữ đám mây: {Message}",
+                    ex.Message
+                );
+                return Result.Failure(
+                    "Đã xảy ra lỗi khi tải tệp lên dịch vụ lưu trữ đám mây",
                     ResultType.Unexpected
                 );
             }
+
+            var document = new Document
+            {
+                Title = dto.FileTitle,
+                UploadedByUserId = dto.UploadedByUserId,
+                UploadedAt = DateTime.UtcNow,
+                FileUrl = fileUrl,
+            };
+
+            try
+            {
+                await _unitOfWork.GetRepository<Document>().AddAsync(document);
+                await _unitOfWork.SaveChangesAsync(ct);
+                await _notifier.NotifyRagStatusUpdatedAsync(document.Id, DocumentRagStatus.Pending);
+
+                _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
+
+                return Result.Success("Tạo tài liệu thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi bắt đầu giao dịch tạo tài liệu");
+                // delete file from cloud storage if database operation fails
+                _backgroundJobService.Enqueue<ICloudFileStorageService>(service =>
+                    service.DeleteAsync(fileUrl)
+                );
+                return Result.Failure("Đã xảy ra lỗi khi tạo tài liệu", ResultType.Unexpected);
+            }
         }
+
         #endregion
 
         #region Update Method
@@ -209,16 +285,23 @@ namespace IRasRag.Application.Services.Implementations
                 }
 
                 // Update Title if provided
-                if (!string.IsNullOrWhiteSpace(updateDto.Title))
+                if (string.IsNullOrWhiteSpace(updateDto.Title))
                 {
-                    document.Title = updateDto.Title.Trim();
+                    return Result.Failure("Tiêu đề không được để trống", ResultType.BadRequest);
                 }
 
-                // Update Content if provided
-                if (!string.IsNullOrWhiteSpace(updateDto.Content))
+                var titleExists = await documentRepository.AnyAsync(d =>
+                    d.Title == updateDto.Title.Trim() && d.Id != id
+                );
+                if (titleExists)
                 {
-                    document.Content = updateDto.Content.Trim();
+                    return Result.Failure(
+                        "Tài liệu với tiêu đề này đã tồn tại",
+                        ResultType.Conflict
+                    );
                 }
+
+                document.Title = updateDto.Title.Trim();
 
                 documentRepository.Update(document);
                 await _unitOfWork.SaveChangesAsync();
@@ -230,6 +313,44 @@ namespace IRasRag.Application.Services.Implementations
             {
                 _logger.LogError(ex, "Lỗi khi cập nhật tài liệu với Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi cập nhật tài liệu", ResultType.Unexpected);
+            }
+        }
+        #endregion
+
+        #region Resync Method
+        public async Task<Result> ResyncDocumentAsync(Guid id)
+        {
+            try
+            {
+                var documentRepository = _unitOfWork.GetRepository<Document>();
+                var document = await documentRepository.GetByIdAsync(id);
+
+                if (document == null)
+                    return Result.Failure("Không tìm thấy tài liệu", ResultType.NotFound);
+
+                if (document.RagStatus != DocumentRagStatus.Failed)
+                    return Result.Failure(
+                        "Chỉ có thể đồng bộ lại tài liệu có trạng thái thất bại",
+                        ResultType.BadRequest
+                    );
+
+                document.RagStatus = DocumentRagStatus.Pending;
+                documentRepository.Update(document);
+                await _unitOfWork.SaveChangesAsync();
+                await _notifier.NotifyRagStatusUpdatedAsync(document.Id, DocumentRagStatus.Pending);
+
+                _backgroundJobService.Enqueue<IDocumentIngestJob>(s => s.RunAsync(document.Id));
+
+                _logger.LogInformation("Bắt đầu đồng bộ lại tài liệu với Id: {Id}", id);
+                return Result.Success("Bắt đầu đồng bộ lại tài liệu thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi đồng bộ lại tài liệu với Id: {Id}", id);
+                return Result.Failure(
+                    "Đã xảy ra lỗi khi đồng bộ lại tài liệu",
+                    ResultType.Unexpected
+                );
             }
         }
         #endregion
@@ -270,6 +391,9 @@ namespace IRasRag.Application.Services.Implementations
 
                 documentRepository.Delete(document);
                 await _unitOfWork.SaveChangesAsync();
+                _backgroundJobService.Enqueue<ICloudFileStorageService>(service =>
+                    service.DeleteAsync(document.FileUrl)
+                );
 
                 _logger.LogInformation("Xóa tài liệu thành công với Id: {Id}", id);
                 return Result.Success("Xóa tài liệu thành công");

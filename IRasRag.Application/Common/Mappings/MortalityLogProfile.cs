@@ -9,7 +9,7 @@ namespace IRasRag.Application.Common.Mappings
         public MortalityLogProfile()
         {
             // Entity to DTO (for reading)
-            CreateMap<MortalityLog, MortalityLogDto>();
+            CreateMap<MortalityLog, MortalityLogDto>().ReverseMap();
 
             // Create DTO to Entity (for creation)
             CreateMap<CreateMortalityLogDto, MortalityLog>(MemberList.Source);

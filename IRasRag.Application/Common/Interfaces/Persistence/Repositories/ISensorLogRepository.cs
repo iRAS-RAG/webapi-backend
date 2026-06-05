@@ -1,0 +1,23 @@
+﻿using IRasRag.Application.DTOs;
+
+namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
+{
+    public interface ISensorLogRepository
+    {
+        Task<List<SensorHistoryPointDto>> GetLogsByTimeRangeAsync(
+            Guid sensorId,
+            DateTime from,
+            DateTime to,
+            int interval
+        );
+        Task<(IReadOnlyList<SensorLogDto> Items, int TotalCount)> GetAggregatedLogsAsync(
+            Guid sensorId,
+            string sensorName,
+            DateTime from,
+            DateTime to,
+            int interval,
+            int page,
+            int pageSize
+        );
+    }
+}

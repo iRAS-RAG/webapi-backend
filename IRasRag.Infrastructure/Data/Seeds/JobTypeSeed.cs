@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class JobTypeSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -27,8 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<JobType> JobTypes =>
-            new()
-            {
+            [
                 new JobType
                 {
                     Id = ScheduledJobTypeId,
@@ -50,6 +49,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Description = "Thực hiện bằng tay khi cần thiết",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

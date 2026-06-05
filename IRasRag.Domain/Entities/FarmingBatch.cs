@@ -31,18 +31,29 @@ namespace IRasRag.Domain.Entities
         public DateTime? ActualHarvestDate { get; set; }
 
         [Required]
-        public float InitialQuantity { get; set; }
+        public int InitialQuantity { get; set; }
 
         [Required]
-        public float CurrentQuantity { get; set; }
+        public int CurrentQuantity { get; set; }
 
         [Required]
         [MaxLength(20)]
         public string UnitOfMeasure { get; set; }
 
+        // Cached estimates
+        public int? EstimatedHarvestCount { get; set; }
+        public double? EstimatedHarvestWeightKg { get; set; }
+
+        // Actual harvested total weight (kg) if recorded at harvest
+        public double? ActualHarvestWeightKg { get; set; }
+
+        // Persisted Feed Conversion Ratio for this batch (kg feed / kg weight gain)
+        public double? Fcr { get; set; }
+
         // Navigation properties
         public FishTank FishTank { get; set; }
         public SpeciesStageConfig CurrentStageConfig { get; set; }
+        public ICollection<BatchStage> BatchStages { get; set; }
         public ICollection<FeedingLog> FeedingLogs { get; set; }
         public ICollection<MortalityLog> MortalityLogs { get; set; }
         public ICollection<Alert> Alerts { get; set; }

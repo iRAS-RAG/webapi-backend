@@ -1,0 +1,103 @@
+﻿using System.Linq.Expressions;
+using Ardalis.Specification;
+using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Domain.Enums;
+
+namespace IRasRag.Application.Common.Interfaces.Persistence.Repositories
+{
+    public interface IRepository<T>
+        where T : class
+    {
+        #region Base Query Methods (Expression-based)
+
+        Task<T?> FirstOrDefaultAsync(
+            Expression<Func<T, bool>> predicate,
+            QueryType type = QueryType.ActiveOnly
+        );
+        Task<IReadOnlyList<T>> FindAllAsync(
+            Expression<Func<T, bool>> predicate,
+            QueryType type = QueryType.ActiveOnly
+        );
+        Task<IReadOnlyList<T>> GetAllAsync(QueryType type = QueryType.ActiveOnly);
+        Task<bool> AnyAsync(
+            Expression<Func<T, bool>> predicate,
+            QueryType type = QueryType.ActiveOnly
+        );
+        Task<int> CountAsync(
+            Expression<Func<T, bool>>? predicate = null,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Sum aggregate for a numeric selector. Returns 0 when no matching rows.
+        Task<double> SumAsync(
+            Expression<Func<T, double>> selector,
+            Expression<Func<T, bool>>? predicate = null,
+            QueryType type = QueryType.ActiveOnly
+        );
+        Task<PagedResult<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        #endregion
+
+        #region Specification Methods
+
+        // Non-projected specification (returns T)
+        Task<T?> FirstOrDefaultAsync(ISpecification<T> spec, QueryType type = QueryType.ActiveOnly);
+
+        // Projected specification (returns TResult)
+        Task<TResult?> FirstOrDefaultAsync<TResult>(
+            ISpecification<T, TResult> spec,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Non-projected specification (returns IEnumerable<T>)
+        Task<IReadOnlyList<T>> ListAsync(
+            ISpecification<T> spec,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Projected specification (returns IEnumerable<TResult>)
+        Task<IReadOnlyList<TResult>> ListAsync<TResult>(
+            ISpecification<T, TResult> spec,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Non-projected specification with pagination
+        Task<PagedResult<T>> GetPagedAsync(
+            ISpecification<T> spec,
+            int pageNumber,
+            int pageSize,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Projected specification with pagination
+        Task<PagedResult<TResult>> GetPagedAsync<TResult>(
+            ISpecification<T, TResult> spec,
+            int pageNumber,
+            int pageSize,
+            QueryType type = QueryType.ActiveOnly
+        );
+
+        // Count with specification
+        Task<int> CountAsync(ISpecification<T> spec, QueryType type = QueryType.ActiveOnly);
+
+        // Any with specification
+        Task<bool> AnyAsync(ISpecification<T> spec, QueryType type = QueryType.ActiveOnly);
+
+        #endregion
+
+        #region Basic CRUD Operations
+
+        Task<T?> GetByIdAsync(Guid id, QueryType type = QueryType.ActiveOnly);
+        Task AddAsync(T entity);
+        Task AddRangeAsync(IEnumerable<T> entities);
+        void Update(T entity);
+        void Delete(T entity);
+        void HardDelete(T entity);
+
+        #endregion
+    }
+}

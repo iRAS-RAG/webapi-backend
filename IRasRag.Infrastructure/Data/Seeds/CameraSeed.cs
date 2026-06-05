@@ -5,7 +5,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
     public static class CameraSeed
     {
         // Timestamp nhất quán cho tất cả dữ liệu seed (UTC)
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -32,15 +32,13 @@ namespace IRasRag.Infrastructure.Data.Seeds
 
         // Danh sách camera seed
         public static List<Camera> Cameras =>
-            new()
-            {
+            [
                 new Camera
                 {
                     Id = MainEntranceCameraId,
                     FarmId = FarmSeed.DefaultFarmId, // Tham chiếu đến Farm seed
                     Name = "Camera cổng chính",
                     Url = "rtsp://192.168.1.100:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
                 new Camera
@@ -49,7 +47,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     FarmId = FarmSeed.DefaultFarmId,
                     Name = "Camera giám sát bể số 1",
                     Url = "rtsp://192.168.1.101:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
                 new Camera
@@ -58,9 +55,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     FarmId = FarmSeed.DefaultFarmId,
                     Name = "Camera khu vực cho ăn",
                     Url = "rtsp://192.168.1.102:554/stream1",
-                    IsDeleted = false,
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

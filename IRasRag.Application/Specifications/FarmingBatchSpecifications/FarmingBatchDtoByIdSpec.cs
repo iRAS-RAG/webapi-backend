@@ -16,6 +16,10 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     Id = fb.Id,
                     FishTankId = fb.FishTankId,
                     FishTankName = fb.FishTank.Name,
+                    TankVolume = Math.Round(
+                        Math.PI * fb.FishTank.Radius * fb.FishTank.Radius * fb.FishTank.Height,
+                        2
+                    ),
                     Name = fb.Name,
                     SpeciesStageConfigId = fb.CurrentStageConfigId,
                     SpeciesName = fb.CurrentStageConfig.Species.Name,
@@ -28,8 +32,32 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                     InitialQuantity = fb.InitialQuantity,
                     CurrentQuantity = fb.CurrentQuantity,
                     UnitOfMeasure = fb.UnitOfMeasure,
+                    ActualHarvestWeightKg = fb.ActualHarvestWeightKg,
                     CreatedAt = fb.CreatedAt,
                     ModifiedAt = fb.ModifiedAt,
+                    SpeciesId = fb.CurrentStageConfig.SpeciesId,
+                    EstimatedHarvestCount = fb.EstimatedHarvestCount,
+                    EstimatedHarvestWeightKg = fb.EstimatedHarvestWeightKg,
+                    Fcr = fb.Fcr,
+
+                    PlannedStages = fb
+                        .BatchStages.Select(bs => new PlannedStageDto
+                        {
+                            Id = bs.Id,
+                            Sequence = bs.Sequence,
+                            SpeciesStageConfigId = bs.SpeciesStageConfigId,
+                            GrowthStageId = bs.SpeciesStageConfig.GrowthStageId,
+                            StageName = bs.SpeciesStageConfig.GrowthStage.Name,
+                            EstimatedStartDate = bs.EstimatedStartDate,
+                            EstimatedEndDate = bs.EstimatedEndDate,
+                            ActualStartDate = bs.ActualStartDate,
+                            ActualEndDate = bs.ActualEndDate,
+                            FrequencyPerDay = bs.SpeciesStageConfig.FrequencyPerDay,
+                            FeedTypeNames = bs
+                                .SpeciesStageConfig.FeedTypes.Select(ft => ft.Name)
+                                .ToList(),
+                        })
+                        .ToList(),
                 });
         }
     }

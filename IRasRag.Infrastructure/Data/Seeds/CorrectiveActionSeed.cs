@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class CorrectiveActionSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -21,8 +21,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         public static readonly Guid Action3Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000002003");
 
         public static List<CorrectiveAction> CorrectiveActions =>
-            new()
-            {
+            [
                 new CorrectiveAction
                 {
                     Id = Action1Id,
@@ -55,6 +54,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     Timestamp = new DateTime(2024, 01, 17, 13, 30, 0, DateTimeKind.Utc),
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

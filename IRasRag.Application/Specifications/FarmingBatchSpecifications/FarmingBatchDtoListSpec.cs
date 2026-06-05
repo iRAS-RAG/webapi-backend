@@ -14,9 +14,14 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
 
             var sortMap = new Dictionary<string, Expression<Func<FarmingBatch, object?>>>
             {
+                ["name"] = fb => fb.Name,
                 ["startdate"] = fb => fb.StartDate,
                 ["status"] = fb => fb.Status,
                 ["currentquantity"] = fb => fb.CurrentQuantity,
+                ["speciesname"] = fb => fb.CurrentStageConfig.Species.Name,
+                ["fishtankname"] = fb => fb.FishTank.Name,
+                ["actualharvestdate"] = fb => fb.ActualHarvestDate,
+                ["estimatedharvestdate"] = fb => fb.EstimatedHarvestDate,
             };
 
             ApplySearch(request.SearchTerm, [fb => fb.Name, fb => fb.FishTank.Name]);
@@ -31,6 +36,10 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 Id = fb.Id,
                 FishTankId = fb.FishTankId,
                 FishTankName = fb.FishTank.Name,
+                TankVolume = Math.Round(
+                    Math.PI * fb.FishTank.Radius * fb.FishTank.Radius * fb.FishTank.Height,
+                    2
+                ),
                 Name = fb.Name,
                 SpeciesStageConfigId = fb.CurrentStageConfigId,
                 SpeciesName = fb.CurrentStageConfig.Species.Name,
@@ -43,8 +52,13 @@ namespace IRasRag.Application.Specifications.FarmingBatchSpecifications
                 InitialQuantity = fb.InitialQuantity,
                 CurrentQuantity = fb.CurrentQuantity,
                 UnitOfMeasure = fb.UnitOfMeasure,
+                EstimatedHarvestCount = fb.EstimatedHarvestCount,
+                EstimatedHarvestWeightKg = fb.EstimatedHarvestWeightKg,
+                ActualHarvestWeightKg = fb.ActualHarvestWeightKg,
                 CreatedAt = fb.CreatedAt,
                 ModifiedAt = fb.ModifiedAt,
+                PlannedStages = new List<PlannedStageDto>(),
+                Fcr = fb.Fcr,
             });
         }
     }

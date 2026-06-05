@@ -17,7 +17,10 @@ namespace IRasRag.Application.Specifications.GrowthStageSpecifications
                 ["name"] = gs => gs.Name,
             };
 
-            ApplySearch(request.SearchTerm, [gs => gs.Name, gs => gs.Description]);
+            ApplySearch(
+                request.SearchTerm,
+                new Expression<Func<GrowthStage, string?>>[] { gs => gs.Name, gs => gs.Description }
+            );
 
             ApplySort(request.SortBy, request.SortDir, sortMap, defaultSortKey: "name");
 
@@ -26,6 +29,8 @@ namespace IRasRag.Application.Specifications.GrowthStageSpecifications
                 Id = gs.Id,
                 Name = gs.Name,
                 Description = gs.Description,
+                SpeciesId = gs.SpeciesId,
+                SpeciesName = gs.Species.Name,
             });
         }
     }

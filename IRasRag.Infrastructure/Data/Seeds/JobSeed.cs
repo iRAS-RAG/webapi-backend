@@ -4,7 +4,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
 {
     public static class JobSeed
     {
-        private static readonly DateTime SeedTimestamp = new DateTime(
+        private static readonly DateTime SeedTimestamp = new(
             2024,
             01,
             01,
@@ -27,8 +27,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
         );
 
         public static List<Job> Jobs =>
-            new()
-            {
+            [
                 new Job
                 {
                     Id = MorningFeedingJobId,
@@ -54,7 +53,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     JobTypeId = JobTypeSeed.SensorBasedJobTypeId,
                     SensorId = SensorSeed.TemperatureSensor1Id,
                     MinValue = null,
-                    MaxValue = 30.0f,
+                    MaxValue = 30.0,
                     DefaultState = false,
                     IsActive = true,
                     StartTime = null,
@@ -80,6 +79,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     ExecutionDays = "ALL",
                     CreatedAt = SeedTimestamp,
                 },
-            };
+            ];
     }
 }

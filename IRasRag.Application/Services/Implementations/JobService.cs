@@ -1,13 +1,15 @@
 using AutoMapper;
+using IRasRag.Application.Common.Constants;
+using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
-using IRasRag.Application.Specifications;
 using IRasRag.Application.Specifications.JobSpecifications;
 using IRasRag.Domain.Entities;
+using IRasRag.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace IRasRag.Application.Services.Implementations
@@ -17,12 +19,22 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<JobService> _logger;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
-        public JobService(IUnitOfWork unitOfWork, ILogger<JobService> logger, IMapper mapper)
+        public JobService(
+            IUnitOfWork unitOfWork,
+            ILogger<JobService> logger,
+            IMapper mapper,
+            IAuditLogService auditLogService,
+            ICurrentUserAccessor currentUserAccessor
+        )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _auditLogService = auditLogService;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         #region Get Methods
@@ -30,7 +42,8 @@ namespace IRasRag.Application.Services.Implementations
         {
             try
             {
-                _logger.LogInformation("Starting to retrieve job list (Page: {Page}, PageSize: {PageSize})",
+                _logger.LogInformation(
+                    "Starting to retrieve job list (Page: {Page}, PageSize: {PageSize})",
                     request.Page,
                     request.PageSize
                 );
@@ -45,7 +58,10 @@ namespace IRasRag.Application.Services.Implementations
 
                 var jobDtos = pagedResult.Items;
 
-                _logger.LogInformation("Successfully retrieved job list: {Count} job(s)",pagedResult.Items.Count);
+                _logger.LogInformation(
+                    "Successfully retrieved job list: {Count} job(s)",
+                    pagedResult.Items.Count
+                );
 
                 return new PaginatedResult<JobDto>
                 {
@@ -94,7 +110,10 @@ namespace IRasRag.Application.Services.Implementations
                 if (jobDto == null)
                 {
                     _logger.LogWarning("Job not found with Id: {Id}", id);
-                    return Result<JobDto>.Failure($"Không tìm thấy công việc với Id: {id}", ResultType.NotFound);
+                    return Result<JobDto>.Failure(
+                        $"Không tìm thấy công việc với Id: {id}",
+                        ResultType.NotFound
+                    );
                 }
 
                 _logger.LogInformation("Successfully retrieved job: {Id}", id);
@@ -122,7 +141,10 @@ namespace IRasRag.Application.Services.Implementations
                 if (string.IsNullOrWhiteSpace(createDto.Name))
                 {
                     _logger.LogWarning("Job name cannot be empty");
-                    return Result<JobDto>.Failure("Tên công việc là bắt buộc", ResultType.BadRequest);
+                    return Result<JobDto>.Failure(
+                        "Tên công việc là bắt buộc",
+                        ResultType.BadRequest
+                    );
                 }
 
                 // 2. Kiểm tra loại công việc tồn tại
@@ -131,8 +153,14 @@ namespace IRasRag.Application.Services.Implementations
 
                 if (jobType == null)
                 {
-                    _logger.LogWarning("JobType not found with Id: {JobTypeId}", createDto.JobTypeId);
-                    return Result<JobDto>.Failure($"Không tìm thấy loại công việc với Id: {createDto.JobTypeId}", ResultType.NotFound);
+                    _logger.LogWarning(
+                        "JobType not found with Id: {JobTypeId}",
+                        createDto.JobTypeId
+                    );
+                    return Result<JobDto>.Failure(
+                        $"Không tìm thấy loại công việc với Id: {createDto.JobTypeId}",
+                        ResultType.NotFound
+                    );
                 }
 
                 // 3. Kiểm tra cảm biến tồn tại (nếu có SensorId)
@@ -143,8 +171,14 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (sensor == null)
                     {
-                        _logger.LogWarning("Sensor not found with Id: {SensorId}", createDto.SensorId.Value);
-                        return Result<JobDto>.Failure($"Không tìm thấy cảm biến với Id: {createDto.SensorId.Value}", ResultType.NotFound);
+                        _logger.LogWarning(
+                            "Sensor not found with Id: {SensorId}",
+                            createDto.SensorId.Value
+                        );
+                        return Result<JobDto>.Failure(
+                            $"Không tìm thấy cảm biến với Id: {createDto.SensorId.Value}",
+                            ResultType.NotFound
+                        );
                     }
                 }
 
@@ -154,7 +188,10 @@ namespace IRasRag.Application.Services.Implementations
                     if (createDto.StartTime.Value >= createDto.EndTime.Value)
                     {
                         _logger.LogWarning("StartTime must be less than EndTime");
-                        return Result<JobDto>.Failure("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc", ResultType.BadRequest);
+                        return Result<JobDto>.Failure(
+                            "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
+                            ResultType.BadRequest
+                        );
                     }
                 }
 
@@ -164,38 +201,53 @@ namespace IRasRag.Application.Services.Implementations
                     if (createDto.MinValue.Value > createDto.MaxValue.Value)
                     {
                         _logger.LogWarning("MinValue cannot be greater than MaxValue");
-                        return Result<JobDto>.Failure("Giá trị min không được lớn hơn giá trị max", ResultType.BadRequest);
+                        return Result<JobDto>.Failure(
+                            "Giá trị min không được lớn hơn giá trị max",
+                            ResultType.BadRequest
+                        );
                     }
                 }
 
-                // 6. Validate danh sách mappings 
+                // 6. Validate danh sách mappings
                 if (createDto.Mappings != null && createDto.Mappings.Count > 0)
                 {
                     // Kiểm tra trùng ControlDeviceId trong danh sách đầu vào
-                    var duplicateDeviceIds = createDto.Mappings
-                        .GroupBy(m => m.ControlDeviceId)
+                    var duplicateDeviceIds = createDto
+                        .Mappings.GroupBy(m => m.ControlDeviceId)
                         .Where(g => g.Count() > 1)
                         .Select(g => g.Key)
                         .ToList();
 
                     if (duplicateDeviceIds.Count > 0)
                     {
-                        _logger.LogWarning("Duplicate ControlDeviceId in mappings: {Ids}", string.Join(", ", duplicateDeviceIds));
-                        return Result<JobDto>.Failure("Danh sách mappings không được có thiết bị điều khiển trùng nhau", ResultType.BadRequest);
+                        _logger.LogWarning(
+                            "Duplicate ControlDeviceId in mappings: {Ids}",
+                            string.Join(", ", duplicateDeviceIds)
+                        );
+                        return Result<JobDto>.Failure(
+                            "Danh sách mappings không được có thiết bị điều khiển trùng nhau",
+                            ResultType.BadRequest
+                        );
                     }
 
                     // Kiểm tra từng ControlDevice có tồn tại không
                     var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
                     foreach (var mappingItem in createDto.Mappings)
                     {
-                        var deviceExists = await controlDeviceRepository.AnyAsync(
-                            cd => cd.Id == mappingItem.ControlDeviceId
+                        var deviceExists = await controlDeviceRepository.AnyAsync(cd =>
+                            cd.Id == mappingItem.ControlDeviceId
                         );
 
                         if (!deviceExists)
                         {
-                            _logger.LogWarning("ControlDevice not found with Id: {ControlDeviceId}", mappingItem.ControlDeviceId);
-                            return Result<JobDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}", ResultType.NotFound);
+                            _logger.LogWarning(
+                                "ControlDevice not found with Id: {ControlDeviceId}",
+                                mappingItem.ControlDeviceId
+                            );
+                            return Result<JobDto>.Failure(
+                                $"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}",
+                                ResultType.NotFound
+                            );
                         }
                     }
                 }
@@ -215,18 +267,27 @@ namespace IRasRag.Application.Services.Implementations
                     var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
                     foreach (var mappingItem in createDto.Mappings)
                     {
-                        await mappingRepository.AddAsync(new JobControlMapping {
-                            JobId = job.Id,
-                            ControlDeviceId = mappingItem.ControlDeviceId,
-                            TargetState = mappingItem.TargetState,
-                            TriggerCondition = mappingItem.TriggerCondition,
-                        });
+                        await mappingRepository.AddAsync(
+                            new JobControlMapping
+                            {
+                                JobId = job.Id,
+                                ControlDeviceId = mappingItem.ControlDeviceId,
+                                TargetState = mappingItem.TargetState,
+                                TriggerCondition = mappingItem.TriggerCondition,
+                            }
+                        );
                     }
-                    _logger.LogInformation("Preparing to create {Count} mapping(s) for job: {JobId}", createDto.Mappings.Count, job.Id);
+                    _logger.LogInformation(
+                        "Preparing to create {Count} mapping(s) for job: {JobId}",
+                        createDto.Mappings.Count,
+                        job.Id
+                    );
                 }
 
                 // 10. Commit transaction - lưu Job + Mappings trong một lần duy nhất
                 await _unitOfWork.CommitTransactionAsync();
+
+                await WriteCreateAuditLogAsync(job);
 
                 // 11. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
                 var jobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(job.Id));
@@ -238,7 +299,10 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Error creating job");
-                return Result<JobDto>.Failure("Đã xảy ra lỗi khi tạo công việc", ResultType.Unexpected);
+                return Result<JobDto>.Failure(
+                    "Đã xảy ra lỗi khi tạo công việc",
+                    ResultType.Unexpected
+                );
             }
         }
         #endregion
@@ -257,8 +321,13 @@ namespace IRasRag.Application.Services.Implementations
                 if (job == null)
                 {
                     _logger.LogWarning("Job not found with Id: {Id}", id);
-                    return Result<JobDto>.Failure($"Không tìm thấy công việc với Id: {id}", ResultType.NotFound);
+                    return Result<JobDto>.Failure(
+                        $"Không tìm thấy công việc với Id: {id}",
+                        ResultType.NotFound
+                    );
                 }
+
+                var oldSnapshot = await BuildJobAuditSnapshotAsync(job);
 
                 // 2. Áp dụng các giá trị cập nhật vào đối tượng in-memory để validate
                 if (!string.IsNullOrWhiteSpace(updateDto.Name))
@@ -279,8 +348,14 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (jobType == null)
                     {
-                        _logger.LogWarning("JobType not found with Id: {JobTypeId}", updateDto.JobTypeId.Value);
-                        return Result<JobDto>.Failure($"Không tìm thấy loại công việc với Id: {updateDto.JobTypeId.Value}", ResultType.NotFound);
+                        _logger.LogWarning(
+                            "JobType not found with Id: {JobTypeId}",
+                            updateDto.JobTypeId.Value
+                        );
+                        return Result<JobDto>.Failure(
+                            $"Không tìm thấy loại công việc với Id: {updateDto.JobTypeId.Value}",
+                            ResultType.NotFound
+                        );
                     }
 
                     job.JobTypeId = updateDto.JobTypeId.Value;
@@ -294,22 +369,36 @@ namespace IRasRag.Application.Services.Implementations
 
                     if (sensor == null)
                     {
-                        _logger.LogWarning("Sensor not found with Id: {SensorId}", updateDto.SensorId.Value);
-                        return Result<JobDto>.Failure($"Không tìm thấy cảm biến với Id: {updateDto.SensorId.Value}", ResultType.NotFound);
+                        _logger.LogWarning(
+                            "Sensor not found with Id: {SensorId}",
+                            updateDto.SensorId.Value
+                        );
+                        return Result<JobDto>.Failure(
+                            $"Không tìm thấy cảm biến với Id: {updateDto.SensorId.Value}",
+                            ResultType.NotFound
+                        );
                     }
 
                     job.SensorId = updateDto.SensorId.Value;
                 }
 
                 // 5. Áp dụng các trường số và trạng thái
-                if (updateDto.MinValue.HasValue) job.MinValue = updateDto.MinValue.Value;
-                if (updateDto.MaxValue.HasValue) job.MaxValue = updateDto.MaxValue.Value;
-                if (updateDto.DefaultState.HasValue) job.DefaultState = updateDto.DefaultState.Value;
-                if (updateDto.IsActive.HasValue) job.IsActive = updateDto.IsActive.Value;
-                if (updateDto.StartTime.HasValue) job.StartTime = updateDto.StartTime.Value;
-                if (updateDto.EndTime.HasValue) job.EndTime = updateDto.EndTime.Value;
-                if (updateDto.RepeatIntervalMinutes.HasValue) job.RepeatIntervalMinutes = updateDto.RepeatIntervalMinutes.Value;
-                if (updateDto.ExecutionDays != null) job.ExecutionDays = updateDto.ExecutionDays.Trim();
+                if (updateDto.MinValue.HasValue)
+                    job.MinValue = updateDto.MinValue.Value;
+                if (updateDto.MaxValue.HasValue)
+                    job.MaxValue = updateDto.MaxValue.Value;
+                if (updateDto.DefaultState.HasValue)
+                    job.DefaultState = updateDto.DefaultState.Value;
+                if (updateDto.IsActive.HasValue)
+                    job.IsActive = updateDto.IsActive.Value;
+                if (updateDto.StartTime.HasValue)
+                    job.StartTime = updateDto.StartTime.Value;
+                if (updateDto.EndTime.HasValue)
+                    job.EndTime = updateDto.EndTime.Value;
+                if (updateDto.RepeatIntervalMinutes.HasValue)
+                    job.RepeatIntervalMinutes = updateDto.RepeatIntervalMinutes.Value;
+                if (updateDto.ExecutionDays != null)
+                    job.ExecutionDays = updateDto.ExecutionDays.Trim();
 
                 // 6. Validate khoảng thời gian sau khi áp dụng giá trị mới
                 if (job.StartTime.HasValue && job.EndTime.HasValue)
@@ -317,7 +406,10 @@ namespace IRasRag.Application.Services.Implementations
                     if (job.StartTime.Value >= job.EndTime.Value)
                     {
                         _logger.LogWarning("StartTime must be less than EndTime");
-                        return Result<JobDto>.Failure("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",ResultType.BadRequest);
+                        return Result<JobDto>.Failure(
+                            "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
+                            ResultType.BadRequest
+                        );
                     }
                 }
 
@@ -327,7 +419,10 @@ namespace IRasRag.Application.Services.Implementations
                     if (job.MinValue.Value > job.MaxValue.Value)
                     {
                         _logger.LogWarning("MinValue cannot be greater than MaxValue");
-                        return Result<JobDto>.Failure("Giá trị min không được lớn hơn giá trị max", ResultType.BadRequest);
+                        return Result<JobDto>.Failure(
+                            "Giá trị min không được lớn hơn giá trị max",
+                            ResultType.BadRequest
+                        );
                     }
                 }
 
@@ -335,28 +430,42 @@ namespace IRasRag.Application.Services.Implementations
                 if (updateDto.Mappings != null)
                 {
                     // Kiểm tra trùng ControlDeviceId trong danh sách mới
-                    var duplicateDeviceIds = updateDto.Mappings
-                        .GroupBy(m => m.ControlDeviceId)
+                    var duplicateDeviceIds = updateDto
+                        .Mappings.GroupBy(m => m.ControlDeviceId)
                         .Where(g => g.Count() > 1)
                         .Select(g => g.Key)
                         .ToList();
 
                     if (duplicateDeviceIds.Count > 0)
                     {
-                        _logger.LogWarning("Duplicate ControlDeviceId in mappings: {Ids}", string.Join(", ", duplicateDeviceIds));
-                        return Result<JobDto>.Failure("Danh sách mappings không được có thiết bị điều khiển trùng nhau", ResultType.BadRequest);
+                        _logger.LogWarning(
+                            "Duplicate ControlDeviceId in mappings: {Ids}",
+                            string.Join(", ", duplicateDeviceIds)
+                        );
+                        return Result<JobDto>.Failure(
+                            "Danh sách mappings không được có thiết bị điều khiển trùng nhau",
+                            ResultType.BadRequest
+                        );
                     }
 
                     // Kiểm tra từng ControlDevice có tồn tại không
                     var controlDeviceRepository = _unitOfWork.GetRepository<ControlDevice>();
                     foreach (var mappingItem in updateDto.Mappings)
                     {
-                        var deviceExists = await controlDeviceRepository.AnyAsync(cd => cd.Id == mappingItem.ControlDeviceId);
+                        var deviceExists = await controlDeviceRepository.AnyAsync(cd =>
+                            cd.Id == mappingItem.ControlDeviceId
+                        );
 
                         if (!deviceExists)
                         {
-                            _logger.LogWarning("ControlDevice not found with Id: {ControlDeviceId}", mappingItem.ControlDeviceId);
-                            return Result<JobDto>.Failure($"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}", ResultType.NotFound);
+                            _logger.LogWarning(
+                                "ControlDevice not found with Id: {ControlDeviceId}",
+                                mappingItem.ControlDeviceId
+                            );
+                            return Result<JobDto>.Failure(
+                                $"Không tìm thấy thiết bị điều khiển với Id: {mappingItem.ControlDeviceId}",
+                                ResultType.NotFound
+                            );
                         }
                     }
                 }
@@ -382,12 +491,15 @@ namespace IRasRag.Application.Services.Implementations
                     // Thêm danh sách mappings mới
                     foreach (var mappingItem in updateDto.Mappings)
                     {
-                        await mappingRepository.AddAsync(new JobControlMapping {
-                            JobId = id,
-                            ControlDeviceId = mappingItem.ControlDeviceId,
-                            TargetState = mappingItem.TargetState,
-                            TriggerCondition = mappingItem.TriggerCondition,
-                        });
+                        await mappingRepository.AddAsync(
+                            new JobControlMapping
+                            {
+                                JobId = id,
+                                ControlDeviceId = mappingItem.ControlDeviceId,
+                                TargetState = mappingItem.TargetState,
+                                TriggerCondition = mappingItem.TriggerCondition,
+                            }
+                        );
                     }
 
                     _logger.LogInformation(
@@ -400,6 +512,8 @@ namespace IRasRag.Application.Services.Implementations
                 // 12. Commit transaction - lưu Job + Mappings trong một lần duy nhất
                 await _unitOfWork.CommitTransactionAsync();
 
+                await WriteUpdateAuditLogAsync(job, oldSnapshot);
+
                 // 13. Lấy lại job với projection đầy đủ (kèm JobTypeName, SensorName, Mappings)
                 var updatedJobDto = await jobRepository.FirstOrDefaultAsync(new JobDtoByIdSpec(id));
 
@@ -410,7 +524,10 @@ namespace IRasRag.Application.Services.Implementations
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Error updating job with Id: {Id}", id);
-                return Result<JobDto>.Failure("Đã xảy ra lỗi khi cập nhật công việc", ResultType.Unexpected);
+                return Result<JobDto>.Failure(
+                    "Đã xảy ra lỗi khi cập nhật công việc",
+                    ResultType.Unexpected
+                );
             }
         }
         #endregion
@@ -434,9 +551,13 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
+                var oldSnapshot = await BuildJobAuditSnapshotAsync(job);
+
                 // Xóa tất cả JobControlMappings liên quan trước khi xóa job.
                 var mappingRepository = _unitOfWork.GetRepository<JobControlMapping>();
-                var relatedMappings = (await mappingRepository.FindAllAsync(m => m.JobId == id)).ToList();
+                var relatedMappings = (
+                    await mappingRepository.FindAllAsync(m => m.JobId == id)
+                ).ToList();
                 foreach (var mapping in relatedMappings)
                 {
                     mappingRepository.Delete(mapping);
@@ -446,7 +567,13 @@ namespace IRasRag.Application.Services.Implementations
                 jobRepository.Delete(job);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully deleted job: {Id} (with {Count} mapping(s))", id, relatedMappings.Count);
+                await WriteDeleteAuditLogAsync(id, oldSnapshot);
+
+                _logger.LogInformation(
+                    "Successfully deleted job: {Id} (with {Count} mapping(s))",
+                    id,
+                    relatedMappings.Count
+                );
                 return Result.Success("Xóa công việc thành công");
             }
             catch (Exception ex)
@@ -454,6 +581,129 @@ namespace IRasRag.Application.Services.Implementations
                 _logger.LogError(ex, "Error deleting job with Id: {Id}", id);
                 return Result.Failure("Đã xảy ra lỗi khi xóa công việc", ResultType.Unexpected);
             }
+        }
+        #endregion
+
+        #region Audit Log Helpers
+        private async Task WriteAuditLogAsync(
+            string action,
+            string entityId,
+            object? oldValue,
+            object? newValue,
+            string operation
+        )
+        {
+            try
+            {
+                await _auditLogService.WriteSemanticAsync(
+                    action,
+                    AuditLogEntityType.Job,
+                    entityId,
+                    oldValue,
+                    newValue
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to write {Operation} audit entry for {EntityType} {EntityId}",
+                    operation,
+                    AuditLogEntityType.Job,
+                    entityId
+                );
+            }
+        }
+
+        private async Task<object> BuildJobAuditSnapshotAsync(Job job)
+        {
+            var jobType = await _unitOfWork.GetRepository<JobType>().GetByIdAsync(job.JobTypeId);
+
+            string? sensorName = null;
+            if (job.SensorId.HasValue)
+            {
+                var sensor = await _unitOfWork
+                    .GetRepository<Sensor>()
+                    .GetByIdAsync(job.SensorId.Value);
+                sensorName = sensor?.Name;
+            }
+
+            var mappings = (
+                await _unitOfWork
+                    .GetRepository<JobControlMapping>()
+                    .FindAllAsync(m => m.JobId == job.Id)
+            ).ToList();
+
+            var mappingSnapshots = new List<object>();
+            foreach (var mapping in mappings)
+            {
+                var controlDevice = await _unitOfWork
+                    .GetRepository<ControlDevice>()
+                    .GetByIdAsync(mapping.ControlDeviceId);
+
+                mappingSnapshots.Add(
+                    new
+                    {
+                        ControlDeviceName = controlDevice?.Name ?? "Unknown",
+                        mapping.TargetState,
+                        mapping.TriggerCondition,
+                    }
+                );
+            }
+
+            return new
+            {
+                job.Name,
+                job.Description,
+                JobTypeName = jobType?.Name ?? "Unknown",
+                SensorName = sensorName,
+                job.MinValue,
+                job.MaxValue,
+                job.DefaultState,
+                job.IsActive,
+                job.StartTime,
+                job.EndTime,
+                job.RepeatIntervalMinutes,
+                job.ExecutionDays,
+                Mappings = mappingSnapshots,
+            };
+        }
+
+        private async Task WriteCreateAuditLogAsync(Job job)
+        {
+            var newSnapshot = await BuildJobAuditSnapshotAsync(job);
+            await WriteAuditLogAsync(
+                AuditLogActions.Create,
+                job.Id.ToString(),
+                null,
+                newSnapshot,
+                "create-job"
+            );
+        }
+
+        private async Task WriteUpdateAuditLogAsync(Job job, object oldSnapshot)
+        {
+            var newSnapshot = await BuildJobAuditSnapshotAsync(job);
+            await WriteAuditLogAsync(
+                AuditLogActions.Update,
+                job.Id.ToString(),
+                oldSnapshot,
+                newSnapshot,
+                "update-job"
+            );
+        }
+
+        private async Task WriteDeleteAuditLogAsync(Guid id, object oldSnapshot)
+        {
+            await WriteAuditLogAsync(
+                AuditLogActions.Delete,
+                id.ToString(),
+                oldSnapshot,
+                null,
+                "delete-job"
+            );
         }
         #endregion
     }

@@ -10,9 +10,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<MasterBoard> builder)
         {
             builder.ConfigureTimestamps();
-            builder.ConfigureSoftDelete();
-
-            builder.HasQueryFilter(mb => !mb.IsDeleted);
 
             builder
                 .HasOne(mb => mb.FishTank)
@@ -22,7 +19,7 @@ namespace IRasRag.Infrastructure.Data.Configurations
 
             // MacAddress for IoT device registration
             builder.HasIndex(mb => mb.MacAddress).IsUnique();
-            builder.HasIndex(mb => new { mb.FishTankId, mb.IsDeleted });
+            builder.HasIndex(mb => mb.FishTankId);
 
             builder.HasData(MasterBoardSeed.MasterBoards);
         }

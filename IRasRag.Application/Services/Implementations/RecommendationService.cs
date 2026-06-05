@@ -159,20 +159,25 @@ namespace IRasRag.Application.Services.Implementations
                     );
                 }
 
-                // Validate Document exists
-                var documentRepository = _unitOfWork.GetRepository<Document>();
-                var document = await documentRepository.GetByIdAsync(createDto.DocumentId);
-
-                if (document == null)
+                // Validate Document exists (optional field)
+                if (createDto.DocumentId.HasValue)
                 {
-                    _logger.LogWarning(
-                        "Không tìm thấy tài liệu với Id: {DocumentId}",
-                        createDto.DocumentId
+                    var documentRepository = _unitOfWork.GetRepository<Document>();
+                    var document = await documentRepository.GetByIdAsync(
+                        createDto.DocumentId.Value
                     );
-                    return Result<RecommendationDto>.Failure(
-                        "Không tìm thấy tài liệu",
-                        ResultType.NotFound
-                    );
+
+                    if (document == null)
+                    {
+                        _logger.LogWarning(
+                            "Không tìm thấy tài liệu với Id: {DocumentId}",
+                            createDto.DocumentId.Value
+                        );
+                        return Result<RecommendationDto>.Failure(
+                            "Không tìm thấy tài liệu",
+                            ResultType.NotFound
+                        );
+                    }
                 }
 
                 // Create Recommendation
@@ -183,14 +188,16 @@ namespace IRasRag.Application.Services.Implementations
                 await recommendationRepository.AddAsync(recommendation);
                 await _unitOfWork.SaveChangesAsync();
 
-                var recommendationDto = _mapper.Map<RecommendationDto>(recommendation);
+                var recommendationDto = await recommendationRepository.FirstOrDefaultAsync(
+                    new RecommendationDtoByIdSpec(recommendation.Id)
+                );
                 _logger.LogInformation(
                     "Tạo khuyến nghị thành công với Id: {Id}",
                     recommendation.Id
                 );
 
                 return Result<RecommendationDto>.Success(
-                    recommendationDto,
+                    recommendationDto!,
                     "Tạo khuyến nghị thành công"
                 );
             }

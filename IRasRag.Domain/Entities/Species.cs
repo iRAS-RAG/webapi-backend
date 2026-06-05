@@ -12,5 +12,6 @@ namespace IRasRag.Domain.Entities
         public ICollection<FarmingBatch> FarmingBatches { get; set; }
         public ICollection<SpeciesThreshold> SpeciesThresholds { get; set; }
         public ICollection<SpeciesStageConfig> SpeciesStageConfigs { get; set; }
+        public ICollection<GrowthStage> GrowthStages { get; set; }
     }
 }
