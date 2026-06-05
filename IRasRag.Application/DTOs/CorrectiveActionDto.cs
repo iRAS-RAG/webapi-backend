@@ -13,6 +13,8 @@ namespace IRasRag.Application.DTOs
         public string ActionTaken { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
+        public string SensorTypeName { get; set; } = string.Empty;
+        public string FishTankName { get; set; } = string.Empty;
     }
 
     // Create DTO
