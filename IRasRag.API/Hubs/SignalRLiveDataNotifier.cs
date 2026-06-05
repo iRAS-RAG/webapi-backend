@@ -7,12 +7,17 @@ namespace IRasRag.API.Hubs
 {
     public class SignalRLiveDataNotifier : ILiveDataNotifier
     {
-        private readonly IHubContext<TelemetryHub> _hub;
+        private readonly IHubContext<TelemetryHub> _telemetryHub;
+        private readonly IHubContext<AlertHub> _alertHub;
         private readonly Channel<TelemetryPush> _channel;
 
-        public SignalRLiveDataNotifier(IHubContext<TelemetryHub> hub)
+        public SignalRLiveDataNotifier(
+            IHubContext<TelemetryHub> telemetryHub,
+            IHubContext<AlertHub> alertHub
+        )
         {
-            _hub = hub;
+            _telemetryHub = telemetryHub;
+            _alertHub = alertHub;
             _channel = Channel.CreateBounded<TelemetryPush>(
                 new BoundedChannelOptions(2000)
                 {
@@ -30,13 +35,13 @@ namespace IRasRag.API.Hubs
         public Task PushTelemetryAsync(TelemetryPush push)
         {
             var group = TelemetryHub.TankGroup(push.TankId.ToString());
-            return _hub.Clients.Group(group).SendAsync("ReceiveTelemetry", push);
+            return _telemetryHub.Clients.Group(group).SendAsync("ReceiveTelemetry", push);
         }
 
         public async Task PushAlertAsync(AlertPush push)
         {
-            var group = TelemetryHub.TankGroup(push.TankId.ToString());
-            var clients = _hub.Clients.Group(group);
+            var group = AlertHub.TankGroup(push.TankId.ToString());
+            var clients = _alertHub.Clients.Group(group);
 
             await clients.SendAsync("ReceiveAlert", push);
             await clients.SendAsync(
