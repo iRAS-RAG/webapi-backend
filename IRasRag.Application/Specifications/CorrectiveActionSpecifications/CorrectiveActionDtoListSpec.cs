@@ -27,7 +27,7 @@ namespace IRasRag.Application.Specifications.CorrectiveActionSpecifications
                 AlertId = ca.AlertId,
                 UserId = ca.UserId,
                 UserEmail = ca.User.Email,
-                PerformedBy = ca.User.FirstName + " " + ca.User.LastName,
+                PerformedBy = ca.User.LastName + " " + ca.User.FirstName,
                 ActionTaken = ca.ActionTaken,
                 Notes = ca.Notes,
                 Timestamp = ca.Timestamp,
