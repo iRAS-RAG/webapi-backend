@@ -123,6 +123,7 @@ namespace IRasRag.API.Controllers
                 {
                     ResultType.Ok => Ok(new { result.Message }),
                     ResultType.NotFound => NotFound(new { result.Message }),
+                    ResultType.Conflict => Conflict(new { result.Message }),
                     _ => StatusCode(500, new { result.Message }),
                 };
             }

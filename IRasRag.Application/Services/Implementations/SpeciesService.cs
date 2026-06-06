@@ -88,6 +88,56 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Loài không tồn tại.", ResultType.NotFound);
                 }
 
+                // Kiểm tra xem có vụ nuôi nào đang sử dụng loài này không
+                // (thông qua SpeciesStageConfig → FarmingBatch)
+                var stageConfigIds = await _unitOfWork
+                    .GetRepository<SpeciesStageConfig>()
+                    .FindAllAsync(sc => sc.SpeciesId == id, QueryType.IncludeDeleted);
+
+                var stageConfigIdList = stageConfigIds.Select(sc => sc.Id).ToList();
+
+                if (stageConfigIdList.Count > 0)
+                {
+                    var batchCount = await _unitOfWork
+                        .GetRepository<FarmingBatch>()
+                        .CountAsync(
+                            fb => stageConfigIdList.Contains(fb.CurrentStageConfigId),
+                            QueryType.IncludeDeleted
+                        );
+
+                    if (batchCount > 0)
+                    {
+                        return Result.Failure(
+                            $"Không thể xóa loài \"{species.Name}\" vì đang có {batchCount} vụ nuôi (đang hoạt động hoặc đã kết thúc) sử dụng loài này. Vui lòng xóa hoặc đổi loài cho các vụ nuôi trước.",
+                            ResultType.Conflict
+                        );
+                    }
+                }
+
+                // Xóa các SpeciesThreshold liên quan trước
+                var thresholds = await _unitOfWork
+                    .GetRepository<SpeciesThreshold>()
+                    .FindAllAsync(t => t.SpeciesId == id, QueryType.IncludeDeleted);
+                foreach (var threshold in thresholds)
+                {
+                    _unitOfWork.GetRepository<SpeciesThreshold>().Delete(threshold);
+                }
+
+                // Xóa các SpeciesStageConfig liên quan
+                foreach (var config in stageConfigIds)
+                {
+                    _unitOfWork.GetRepository<SpeciesStageConfig>().Delete(config);
+                }
+
+                // Xóa các GrowthStage liên quan
+                var growthStages = await _unitOfWork
+                    .GetRepository<GrowthStage>()
+                    .FindAllAsync(gs => gs.SpeciesId == id, QueryType.IncludeDeleted);
+                foreach (var gs in growthStages)
+                {
+                    _unitOfWork.GetRepository<GrowthStage>().Delete(gs);
+                }
+
                 var oldSnapshot = new { species.Name };
 
                 _unitOfWork.GetRepository<Species>().Delete(species);
@@ -100,7 +150,10 @@ namespace IRasRag.Application.Services.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi xóa loài");
-                return Result.Failure("Lỗi khi xóa loài.", ResultType.Unexpected);
+                return Result.Failure(
+                    "Không thể xóa loài này vì đang có dữ liệu liên quan (vụ nuôi, giai đoạn sinh trưởng, hoặc cấu hình ngưỡng). Vui lòng xóa các dữ liệu liên quan trước.",
+                    ResultType.Unexpected
+                );
             }
         }
 

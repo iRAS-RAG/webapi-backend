@@ -52,7 +52,7 @@ PIN_RANGES = {
     5: (1, 1),            # water level (boolean) – always 1 (normal)
     6: (12.0, 12.2),      # voltage (V)
     7: (1.0, 2.0),        # current (A)
-    8: (0.0, 0.0),      # PZEM power (W)
+    8: (30.0, 50.0),      # PZEM power (W)
 }
 
 
