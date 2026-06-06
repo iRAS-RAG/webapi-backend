@@ -34,9 +34,6 @@ SENSOR_UUIDS: Dict[int, str] = {
     3: "aaaaaaaa-0000-0000-0000-000000001303",  # TDS
     4: "aaaaaaaa-0000-0000-0000-000000001304",  # Water Flow
     5: "aaaaaaaa-0000-0000-0000-000000001305",  # Water Level
-    6: "aaaaaaaa-0000-0000-0000-000000001306",  # Voltage
-    7: "aaaaaaaa-0000-0000-0000-000000001307",  # Current
-    8: "aaaaaaaa-0000-0000-0000-000000001308",  # PZEM Power
 }
 
 # Default MAC addresses (the one from seed data, plus you can add more).
@@ -210,8 +207,10 @@ def generate_sql(
             print(f"  Progress: {pct:.0f}%  ({period.isoformat()})", file=sys.stderr)
 
         for mac_idx, mac in enumerate(mac_addresses):
-            for pin in range(1, 9):
-                sensor_id = SENSOR_UUIDS[pin]
+            for pin in sorted(pin_ranges):
+                sensor_id = SENSOR_UUIDS.get(pin)
+                if sensor_id is None:
+                    continue
                 row = make_sql_inserts(sensor_id, pin, period, pin_ranges, mac_idx)
                 rows.append(row)
 
@@ -312,14 +311,13 @@ def main() -> None:
     print(f"Reading ranges from: {simulator_path}", file=sys.stderr)
     pin_ranges = load_pin_ranges(simulator_path)
 
-    # Validate we have pins 1-8
-    for pin in range(1, 9):
-        if pin not in pin_ranges:
+    # Validate that all loaded pins have a sensor UUID mapping
+    for pin in pin_ranges:
+        if pin not in SENSOR_UUIDS:
             print(
-                f"Error: pin {pin} is missing from PIN_RANGES in the simulator file",
+                f"Warning: pin {pin} has no sensor UUID mapping, skipping",
                 file=sys.stderr,
             )
-            sys.exit(1)
 
     # ---- Determine time range ----
     now = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)

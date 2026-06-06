@@ -84,7 +84,9 @@ namespace IRasRag.Application.Services.Implementations
                     finalWeightKg = batch.EstimatedHarvestWeightKg.Value;
                 }
 
-                // If estimated harvest weight is missing for an active batch, try to compute it now
+                // If estimated harvest weight is missing for an active batch, try to compute it now.
+                // Use the NoTracking batch (loaded with Includes) for the computation, then
+                // persist via a separate tracked load to avoid EF tracking conflicts.
                 if (
                     batch.Status != FarmingBatchStatus.HARVESTED
                     && (
@@ -97,16 +99,21 @@ namespace IRasRag.Application.Services.Implementations
                     {
                         var (estCount, estWeight) = await ComputeEstimatedYieldAsync(
                             batch,
-                            persist: true
+                            persist: false
                         );
-                        // reload batch to ensure we have persisted values
-                        batch = await batchRepo.GetByIdAsync(batchId);
-                        if (batch != null && batch.EstimatedHarvestWeightKg.HasValue)
+                        if (estWeight.HasValue)
                         {
-                            finalWeightKg = batch.EstimatedHarvestWeightKg.Value;
-                        }
-                        else if (estWeight.HasValue)
-                        {
+                            // Persist via a tracked instance to avoid EF tracking conflicts
+                            // when a tracked FarmingBatch already exists in the context
+                            // (e.g., from MortalityLogService.CreateMortalityLogAsync).
+                            var trackedBatch = await batchRepo.GetByIdAsync(batchId);
+                            if (trackedBatch != null)
+                            {
+                                trackedBatch.EstimatedHarvestCount = estCount;
+                                trackedBatch.EstimatedHarvestWeightKg = estWeight;
+                                await _unitOfWork.SaveChangesAsync();
+                            }
+
                             finalWeightKg = estWeight.Value;
                         }
                     }
@@ -149,15 +156,27 @@ namespace IRasRag.Application.Services.Implementations
                 }
                 else
                 {
-                    // Fallback: try to query species stage configs for the species if available
+                    // Fallback: try to query species stage configs for the species if available.
+                    // We cannot rely on batch.CurrentStageConfig navigation because it may not
+                    // be loaded, so we resolve species ID from CurrentStageConfigId directly.
                     try
                     {
                         var sscRepo = _unitOfWork.GetRepository<SpeciesStageConfig>();
                         Guid speciesId = Guid.Empty;
                         if (firstStageEntry?.SpeciesStageConfig != null)
+                        {
                             speciesId = firstStageEntry.SpeciesStageConfig.SpeciesId;
-                        else if (batch.CurrentStageConfig != null)
-                            speciesId = batch.CurrentStageConfig.SpeciesId;
+                        }
+                        else
+                        {
+                            // Resolve species ID directly from DB to avoid depending on
+                            // navigation properties that may not be loaded.
+                            var stageConfig = await sscRepo.GetByIdAsync(
+                                batch.CurrentStageConfigId
+                            );
+                            if (stageConfig != null)
+                                speciesId = stageConfig.SpeciesId;
+                        }
 
                         if (speciesId != Guid.Empty)
                         {

@@ -2,15 +2,16 @@
 """
 MQTT Sensor Data Simulator – Fish Farm Edition
 
-Publishes realistic sensor readings every second for pins 1–8:
+Publishes realistic sensor readings every second for pins 1–5:
     pin1: temperature (°C)       – normal range 26.5–27.5
     pin2: pH                     – normal range 7.0–7.5
     pin3: TDS (ppm)              – normal range 300–400
     pin4: water flow (L/min)     – normal range 40–50
     pin5: water level (boolean)  – normal = 1 (always 1 for normal operation)
-    pin6: voltage (V)            – normal range 12.0–12.2
-    pin7: current (A)            – normal range 1.0–2.0
-    pin8: PZEM power (W)         – normal range 30–50
+
+Values are randomly generated within these narrow bands each second to simulate
+steady, healthy farm conditions. The script publishes to:
+    topic = "iras-rag/telemetry/{mac}"
 
 Values are randomly generated within these narrow bands each second to simulate
 steady, healthy farm conditions. The script publishes to:
@@ -50,9 +51,6 @@ PIN_RANGES = {
     3: (1681.0, 1749.0),    # TDS (ppm)
     4: (2.5, 2.7),      # water flow (L/min)
     5: (1, 1),            # water level (boolean) – always 1 (normal)
-    6: (12.0, 12.2),      # voltage (V)
-    7: (1.0, 2.0),        # current (A)
-    8: (30.0, 50.0),      # PZEM power (W)
 }
 
 
@@ -75,9 +73,9 @@ def load_macs_from_file(filepath: str) -> List[str]:
 
 
 def generate_readings() -> List[Dict[str, Any]]:
-    """Generate realistic normal sensor readings for pins 1-8."""
+    """Generate realistic normal sensor readings for pins 1-5."""
     readings = []
-    for pin in range(1, 9):
+    for pin in range(1, 6):
         low, high = PIN_RANGES[pin]
         if pin == 5:                     # boolean (water level)
             # Always 1 for normal operation
