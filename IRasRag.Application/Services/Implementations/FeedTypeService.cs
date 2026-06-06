@@ -92,6 +92,18 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Loại thức ăn không tồn tại.", ResultType.NotFound);
                 }
 
+                // Check if used in feeding logs
+                var hasFeedingLogs = await _unitOfWork
+                    .GetRepository<FeedingLog>()
+                    .AnyAsync(fl => fl.FeedTypeId == id);
+                if (hasFeedingLogs)
+                {
+                    return Result.Failure(
+                        "Loại thức ăn này đã được sử dụng trong lịch sử cho ăn. Vui lòng xóa các bản ghi cho ăn trước khi xóa.",
+                        ResultType.BadRequest
+                    );
+                }
+
                 _unitOfWork.GetRepository<FeedType>().Delete(feedType);
                 await _unitOfWork.SaveChangesAsync();
 
