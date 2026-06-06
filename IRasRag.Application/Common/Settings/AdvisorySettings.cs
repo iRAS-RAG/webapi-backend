@@ -36,6 +36,7 @@ namespace IRasRag.Application.Common.Settings
         public string AdminRedisKeysUserPath { get; set; } = "/admin/redis/keys/user";
         public string AdminRedisFlushPath { get; set; } = "/admin/redis/flush";
         public string AdminRagDocumentsPath { get; set; } = "/admin/rag/documents";
+        public string AdminRagDocumentsByUrlPath { get; set; } = "/admin/rag/documents/by-url";
         public string AdminRagChunksPath { get; set; } = "/admin/rag/chunks";
         public string AdminDataSensorPath { get; set; } = "/admin/data/sensor";
     }

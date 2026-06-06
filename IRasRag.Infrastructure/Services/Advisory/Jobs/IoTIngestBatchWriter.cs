@@ -1,11 +1,11 @@
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Models.Advisory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Jobs
 {
     public class IoTIngestBatchWriter : BackgroundService, IIoTIngestBatchWriter
     {
@@ -74,7 +74,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
                 var client = scope.ServiceProvider.GetRequiredService<IIoTIngestClient>();
                 await client.IngestBatchAsync(new IoTBatchIngestPayload { Events = events }, ct);
 
-                // Success — reset backoff
+                // Success â€” reset backoff
                 _backoff = TimeSpan.Zero;
             }
             catch (Exception ex)
@@ -91,7 +91,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
                 _logger.LogWarning(
                     ex,
-                    "Advisory IoT batch ingest failed for {Count} events — discarding. Backing off for {Backoff}",
+                    "Advisory IoT batch ingest failed for {Count} events â€” discarding. Backing off for {Backoff}",
                     events.Count,
                     _backoff
                 );
@@ -99,3 +99,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -7,7 +7,7 @@ using IRasRag.Application.Common.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Clients
 {
     public class ThresholdSyncClient : IThresholdSyncClient
     {
@@ -93,7 +93,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 _logger.LogWarning(
-                    "Advisory PUT {Path}/{AdvisoryId} returned 404 — record absent in advisory app, skipping update",
+                    "Advisory PUT {Path}/{AdvisoryId} returned 404 â€” record absent in advisory app, skipping update",
                     _settings.ThresholdsPath,
                     advisoryId
                 );
@@ -113,7 +113,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 _logger.LogWarning(
-                    "Advisory DELETE {Path}/{AdvisoryId} returned 404 — already absent, treating as success",
+                    "Advisory DELETE {Path}/{AdvisoryId} returned 404 â€” already absent, treating as success",
                     _settings.ThresholdsPath,
                     advisoryId
                 );
@@ -133,3 +133,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+

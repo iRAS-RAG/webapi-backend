@@ -1,10 +1,10 @@
-using IRasRag.Application.Common.Interfaces.Advisory;
+﻿using IRasRag.Application.Common.Interfaces.Advisory;
 using IRasRag.Application.Common.Interfaces.Persistence;
 using IRasRag.Application.Specifications.SpeciesThresholdSpecifications;
 using IRasRag.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Jobs
 {
     public class ThresholdSyncJob : IThresholdSyncJob
     {
@@ -60,7 +60,7 @@ namespace IRasRag.Infrastructure.Services.Advisory
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Advisory sync create succeeded: threshold {ThresholdId} → advisory {AdvisoryId}",
+                "Advisory sync create succeeded: threshold {ThresholdId} â†’ advisory {AdvisoryId}",
                 thresholdId,
                 advisoryId
             );
@@ -87,3 +87,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+

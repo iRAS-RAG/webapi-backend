@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using IRasRag.Application.Common.Interfaces.Advisory;
@@ -6,7 +6,7 @@ using IRasRag.Application.Common.Models.Advisory;
 using IRasRag.Application.Common.Settings;
 using Microsoft.Extensions.Options;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Clients
 {
     public class IoTIngestClient : IIoTIngestClient
     {
@@ -56,3 +56,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+

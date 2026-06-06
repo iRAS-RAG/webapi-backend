@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using IRasRag.Application.Common.Interfaces.Advisory;
@@ -6,7 +6,7 @@ using IRasRag.Application.Common.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace IRasRag.Infrastructure.Services.Advisory
+namespace IRasRag.Infrastructure.Services.Advisory.Clients
 {
     public class RagChatClient : IRagChatClient
     {
@@ -194,6 +194,55 @@ namespace IRasRag.Infrastructure.Services.Advisory
             }
         }
 
+        public async Task<RagDeleteDocumentResponse?> DeleteDocumentByUrlAsync(
+            string url,
+            CancellationToken ct = default
+        )
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Delete, _settings.AdminRagDocumentsByUrlPath)
+                {
+                    Content = JsonContent.Create(new { url }, options: SerializerOptions),
+                };
+                var httpResponse = await _http.SendAsync(request, ct);
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(
+                        "RAG delete-by-url: no document found for url={Url}",
+                        url
+                    );
+                    return null;
+                }
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "RAG delete-by-url returned {Status} for url={Url}",
+                        (int)httpResponse.StatusCode,
+                        url
+                    );
+                    return null;
+                }
+
+                var dto = await httpResponse.Content.ReadFromJsonAsync<RagDeleteDocumentResponseDto>(ct);
+                if (dto == null)
+                    return null;
+
+                return new RagDeleteDocumentResponse(
+                    Status: dto.Status ?? string.Empty,
+                    Deleted: dto.Deleted,
+                    SourceUrl: dto.SourceUrl ?? string.Empty
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RAG delete-by-url failed for url={Url}", url);
+                return null;
+            }
+        }
+
         private sealed class RagChatFeedbackResponseDto
         {
             [JsonPropertyName("status")]
@@ -219,6 +268,18 @@ namespace IRasRag.Infrastructure.Services.Advisory
 
             [JsonPropertyName("title")]
             public string? Title { get; set; }
+
+            [JsonPropertyName("source_url")]
+            public string? SourceUrl { get; set; }
+        }
+
+        private sealed class RagDeleteDocumentResponseDto
+        {
+            [JsonPropertyName("status")]
+            public string? Status { get; set; }
+
+            [JsonPropertyName("deleted")]
+            public int Deleted { get; set; }
 
             [JsonPropertyName("source_url")]
             public string? SourceUrl { get; set; }
@@ -258,3 +319,4 @@ namespace IRasRag.Infrastructure.Services.Advisory
         }
     }
 }
+
