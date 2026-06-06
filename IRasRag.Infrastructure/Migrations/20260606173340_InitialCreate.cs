@@ -1503,42 +1503,6 @@ namespace IRasRag.Infrastructure.Migrations
                         "Thương phẩm",
                         30.0,
                     },
-                    {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000204"),
-                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                        "Thức ăn dạng bột/cám mịn cho cua con, hàm lượng protein rất cao (≥48%), bổ sung khoáng chất cho quá trình lột xác của cua bột và cua giống.",
-                        "CP Vietnam",
-                        null,
-                        "Cua giàu đạm",
-                        48.0,
-                    },
-                    {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000205"),
-                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                        "Thức ăn viên vừa cho cua thịt, hàm lượng protein cao (38–42%), phù hợp cho giai đoạn nuôi thương phẩm đến khi thu hoạch.",
-                        "Tomboy Aquafeed",
-                        null,
-                        "Cua thương phẩm",
-                        40.0,
-                    },
-                    {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000206"),
-                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                        "Thức ăn dạng bột siêu mịn, hàm lượng protein rất cao (≥50%), giàu DHA và astaxanthin, mô phỏng dinh dưỡng từ Artemia/mysid. Dành cho giai đoạn mực ấu trùng và mực non mới chuyển đổi thức ăn.",
-                        "Skretting Vietnam",
-                        null,
-                        "Mực ấu trùng",
-                        50.0,
-                    },
-                    {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000207"),
-                        new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                        "Thức ăn viên vừa, hàm lượng protein cao (42–46%), phù hợp cho giai đoạn mực non đến mực thương phẩm.",
-                        "Cargill Vietnam",
-                        null,
-                        "Mực thương phẩm",
-                        44.0,
-                    },
                 }
             );
 
@@ -2932,35 +2896,35 @@ namespace IRasRag.Infrastructure.Migrations
                         new Guid("aaaaaaaa-0000-0000-0000-000000000604"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000204"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000605"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000204"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000205"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000205"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000607"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000206"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000608"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000206"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000207"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
                     },
                     {
-                        new Guid("aaaaaaaa-0000-0000-0000-000000000207"),
+                        new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                         new Guid("aaaaaaaa-0000-0000-0000-000000000610"),
                     },
                 }

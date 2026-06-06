@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260606143554_InitialCreate")]
+    [Migration("20260606173340_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -985,42 +985,6 @@ namespace IRasRag.Infrastructure.Migrations
                             Manufacturer = "Uni-President Vietnam",
                             Name = "Thương phẩm",
                             ProteinPercentage = 30.0
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000204"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn dạng bột/cám mịn cho cua con, hàm lượng protein rất cao (≥48%), bổ sung khoáng chất cho quá trình lột xác của cua bột và cua giống.",
-                            Manufacturer = "CP Vietnam",
-                            Name = "Cua giàu đạm",
-                            ProteinPercentage = 48.0
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000205"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn viên vừa cho cua thịt, hàm lượng protein cao (38–42%), phù hợp cho giai đoạn nuôi thương phẩm đến khi thu hoạch.",
-                            Manufacturer = "Tomboy Aquafeed",
-                            Name = "Cua thương phẩm",
-                            ProteinPercentage = 40.0
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000206"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn dạng bột siêu mịn, hàm lượng protein rất cao (≥50%), giàu DHA và astaxanthin, mô phỏng dinh dưỡng từ Artemia/mysid. Dành cho giai đoạn mực ấu trùng và mực non mới chuyển đổi thức ăn.",
-                            Manufacturer = "Skretting Vietnam",
-                            Name = "Mực ấu trùng",
-                            ProteinPercentage = 50.0
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000207"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thức ăn viên vừa, hàm lượng protein cao (42–46%), phù hợp cho giai đoạn mực non đến mực thương phẩm.",
-                            Manufacturer = "Cargill Vietnam",
-                            Name = "Mực thương phẩm",
-                            ProteinPercentage = 44.0
                         });
                 });
 
@@ -2797,42 +2761,42 @@ namespace IRasRag.Infrastructure.Migrations
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000605"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000204")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000204")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000606"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000205")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000607"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000205")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000608"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000206")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000206")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000609"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000207")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
                         },
                         new
                         {
                             SpeciesStageConfigId = new Guid("aaaaaaaa-0000-0000-0000-000000000610"),
-                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000207")
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202")
                         });
                 });
 

@@ -223,6 +223,30 @@ namespace IRasRag.Application.Services.Implementations
                     return Result.Failure("Bể cá không tồn tại.", ResultType.NotFound);
                 }
 
+                // Check for active batches
+                var hasActiveBatches = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .AnyAsync(b => b.FishTankId == id && b.Status == FarmingBatchStatus.ACTIVE);
+                if (hasActiveBatches)
+                {
+                    return Result.Failure(
+                        "Bể cá đang có vụ nuôi đang hoạt động. Vui lòng kết thúc hoặc thu hoạch trước khi xóa.",
+                        ResultType.BadRequest
+                    );
+                }
+
+                // Check for historical batches
+                var hasHistoricalBatches = await _unitOfWork
+                    .GetRepository<FarmingBatch>()
+                    .AnyAsync(b => b.FishTankId == id && b.Status != FarmingBatchStatus.ACTIVE);
+                if (hasHistoricalBatches)
+                {
+                    return Result.Failure(
+                        "Bể cá có lịch sử vụ nuôi. Vui lòng xóa các vụ nuôi trước khi xóa bể.",
+                        ResultType.BadRequest
+                    );
+                }
+
                 _unitOfWork.GetRepository<FishTank>().Delete(fishTank);
                 await _unitOfWork.SaveChangesAsync();
 

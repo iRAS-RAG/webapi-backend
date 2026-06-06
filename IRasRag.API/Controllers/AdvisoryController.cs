@@ -1,6 +1,5 @@
 using IRasRag.API.Utils;
 using IRasRag.Application.Common.Interfaces.Advisory;
-using IRasRag.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,19 +11,16 @@ namespace IRasRag.API.Controllers
     public class AdvisoryController : ControllerBase
     {
         private readonly IAdvisoryService _advisoryService;
-        private readonly IUserTankAccessService _tankAccessService;
         private readonly HttpContextUtils _httpContextUtils;
         private readonly ILogger<AdvisoryController> _logger;
 
         public AdvisoryController(
             IAdvisoryService advisoryService,
-            IUserTankAccessService tankAccessService,
             HttpContextUtils httpContextUtils,
             ILogger<AdvisoryController> logger
         )
         {
             _advisoryService = advisoryService;
-            _tankAccessService = tankAccessService;
             _httpContextUtils = httpContextUtils;
             _logger = logger;
         }
@@ -41,9 +37,6 @@ namespace IRasRag.API.Controllers
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
                 return Unauthorized();
-
-            if (!await _tankAccessService.CanAccessTankAsync(userId.Value, request.TankId))
-                return StatusCode(403, new { Message = "Bạn không có quyền truy cập bể nuôi này" });
 
             try
             {
@@ -88,9 +81,6 @@ namespace IRasRag.API.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            if (!await _tankAccessService.CanAccessTankAsync(userId.Value, request.TankId))
-                return StatusCode(403, new { Message = "Bạn không có quyền truy cập bể nuôi này" });
-
             var result = await _advisoryService.SubmitFeedbackAsync(
                 userId.Value,
                 request.Response,
@@ -130,9 +120,6 @@ namespace IRasRag.API.Controllers
             var userId = _httpContextUtils.GetUserId();
             if (userId == null)
                 return Unauthorized();
-
-            if (!await _tankAccessService.CanAccessTankAsync(userId.Value, request.TankId))
-                return StatusCode(403, new { Message = "Bạn không có quyền truy cập bể nuôi này" });
 
             try
             {

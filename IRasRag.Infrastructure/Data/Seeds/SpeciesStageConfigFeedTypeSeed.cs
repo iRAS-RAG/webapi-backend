@@ -43,24 +43,24 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.CrabFryStageConfigId,
-                    FeedTypeId = FeedTypeSeed.CrabStarterFeedId,
+                    FeedTypeId = FeedTypeSeed.StarterFeedId,
                 },
                 // Crab juvenile — starter + grower
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.CrabJuvenileStageConfigId,
-                    FeedTypeId = FeedTypeSeed.CrabStarterFeedId,
+                    FeedTypeId = FeedTypeSeed.StarterFeedId,
                 },
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.CrabJuvenileStageConfigId,
-                    FeedTypeId = FeedTypeSeed.CrabGrowerFeedId,
+                    FeedTypeId = FeedTypeSeed.GrowerFeedId,
                 },
                 // Crab grow-out — crab grower feed
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.CrabGrowOutStageConfigId,
-                    FeedTypeId = FeedTypeSeed.CrabGrowerFeedId,
+                    FeedTypeId = FeedTypeSeed.GrowerFeedId,
                 },
                 // ═══════════════════════════════════════════════════════
                 // Reef Squid
@@ -70,24 +70,24 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.SquidParalarvaStageConfigId,
-                    FeedTypeId = FeedTypeSeed.SquidStarterFeedId,
+                    FeedTypeId = FeedTypeSeed.StarterFeedId,
                 },
                 // Squid juvenile — starter + grower (transition from live to dead feed)
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.SquidJuvenileStageConfigId,
-                    FeedTypeId = FeedTypeSeed.SquidStarterFeedId,
+                    FeedTypeId = FeedTypeSeed.StarterFeedId,
                 },
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.SquidJuvenileStageConfigId,
-                    FeedTypeId = FeedTypeSeed.SquidGrowerFeedId,
+                    FeedTypeId = FeedTypeSeed.GrowerFeedId,
                 },
                 // Squid grow-out — squid grower
                 new SpeciesStageConfigFeedType
                 {
                     SpeciesStageConfigId = SpeciesStageConfigSeed.SquidGrowOutStageConfigId,
-                    FeedTypeId = FeedTypeSeed.SquidGrowerFeedId,
+                    FeedTypeId = FeedTypeSeed.GrowerFeedId,
                 },
             ];
     }
