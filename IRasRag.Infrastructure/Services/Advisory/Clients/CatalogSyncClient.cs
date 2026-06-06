@@ -87,4 +87,3 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
         private sealed record ErrorBody([property: JsonPropertyName("detail")] string? Detail);
     }
 }
-

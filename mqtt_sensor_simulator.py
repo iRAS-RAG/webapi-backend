@@ -45,14 +45,14 @@ except AttributeError:
 # Normal ranges for each pin (min, max)
 # For boolean pins, normal value is 1.
 PIN_RANGES = {
-    1: (26.5, 27.5),      # temperature (°C)
-    2: (7.0, 7.5),        # pH
-    3: (300.0, 400.0),    # TDS (ppm)
-    4: (40.0, 50.0),      # water flow (L/min)
+    1: (28.5, 29.0),      # temperature (°C)
+    2: (6.27, 6.44),        # pH
+    3: (1681.0, 1749.0),    # TDS (ppm)
+    4: (2.5, 2.7),      # water flow (L/min)
     5: (1, 1),            # water level (boolean) – always 1 (normal)
     6: (12.0, 12.2),      # voltage (V)
     7: (1.0, 2.0),        # current (A)
-    8: (30.0, 50.0),      # PZEM power (W)
+    8: (0.0, 0.0),      # PZEM power (W)
 }
 
 

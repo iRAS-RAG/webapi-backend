@@ -201,7 +201,10 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Delete, _settings.AdminRagDocumentsByUrlPath)
+                var request = new HttpRequestMessage(
+                    HttpMethod.Delete,
+                    _settings.AdminRagDocumentsByUrlPath
+                )
                 {
                     Content = JsonContent.Create(new { url }, options: SerializerOptions),
                 };
@@ -209,10 +212,7 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
 
                 if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    _logger.LogWarning(
-                        "RAG delete-by-url: no document found for url={Url}",
-                        url
-                    );
+                    _logger.LogWarning("RAG delete-by-url: no document found for url={Url}", url);
                     return null;
                 }
 
@@ -226,7 +226,8 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
                     return null;
                 }
 
-                var dto = await httpResponse.Content.ReadFromJsonAsync<RagDeleteDocumentResponseDto>(ct);
+                var dto =
+                    await httpResponse.Content.ReadFromJsonAsync<RagDeleteDocumentResponseDto>(ct);
                 if (dto == null)
                     return null;
 
@@ -319,4 +320,3 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
         }
     }
 }
-

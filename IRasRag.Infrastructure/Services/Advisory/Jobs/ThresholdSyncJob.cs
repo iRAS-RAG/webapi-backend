@@ -87,4 +87,3 @@ namespace IRasRag.Infrastructure.Services.Advisory.Jobs
         }
     }
 }
-

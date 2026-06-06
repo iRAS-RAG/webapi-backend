@@ -24,10 +24,7 @@ namespace IRasRag.Infrastructure.Services.Advisory.Jobs
 
             if (result == null)
             {
-                _logger.LogWarning(
-                    "RAG delete: no result for url={Url}, will retry",
-                    fileUrl
-                );
+                _logger.LogWarning("RAG delete: no result for url={Url}, will retry", fileUrl);
                 throw new InvalidOperationException(
                     $"RAG delete returned no result for url={fileUrl}."
                 );
@@ -41,4 +38,3 @@ namespace IRasRag.Infrastructure.Services.Advisory.Jobs
         }
     }
 }
-

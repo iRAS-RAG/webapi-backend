@@ -133,4 +133,3 @@ namespace IRasRag.Infrastructure.Services.Advisory.Clients
         }
     }
 }
-
