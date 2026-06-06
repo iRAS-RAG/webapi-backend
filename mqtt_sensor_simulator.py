@@ -33,7 +33,7 @@ import paho.mqtt.client as mqtt
 DEFAULT_BROKER = "129.212.228.41"
 DEFAULT_PORT = 1883
 DEFAULT_QOS = 0
-DEFAULT_INTERVAL = 1  # seconds
+DEFAULT_INTERVAL = 2  # seconds
 DEFAULT_MAC_FILE = "mac.txt"
 
 # Use modern Callback API if available (paho-mqtt >=2.0)

@@ -104,33 +104,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MasterBoardId = MasterBoardSeed.MasterBoardId,
                     CreatedAt = SeedTimestamp,
                 },
-                new Sensor
-                {
-                    Id = VoltageSensor1Id,
-                    Name = "Cảm biến điện áp 1",
-                    PinCode = 6,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoardId,
-                    CreatedAt = SeedTimestamp,
-                },
-                new Sensor
-                {
-                    Id = CurrentSensor1Id,
-                    Name = "Cảm biến dòng điện 1",
-                    PinCode = 7,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoardId,
-                    CreatedAt = SeedTimestamp,
-                },
-                new Sensor
-                {
-                    Id = PowerSensor1Id,
-                    Name = "Cảm biến công suất PZEM 1",
-                    PinCode = 8,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MasterBoardId = MasterBoardSeed.MasterBoardId,
-                    CreatedAt = SeedTimestamp,
-                },
             ];
     }
 }

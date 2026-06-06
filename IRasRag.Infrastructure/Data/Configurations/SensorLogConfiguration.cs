@@ -26,8 +26,6 @@ namespace IRasRag.Infrastructure.Data.Configurations
 
             // One aggregate row per sensor per window — also the primary query index
             builder.HasIndex(sl => new { sl.SensorId, sl.PeriodStart }).IsUnique();
-
-            builder.HasData(SensorLogSeed.SensorLogs);
         }
     }
 }

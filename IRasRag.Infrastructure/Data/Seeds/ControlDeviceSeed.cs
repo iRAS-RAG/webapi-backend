@@ -22,7 +22,7 @@ namespace IRasRag.Infrastructure.Data.Seeds
                 {
                     Id = Pump1Id,
                     Name = "Máy bơm nước",
-                    PinCode = 9,
+                    PinCode = 6,
                     State = false,
                     CommandOn = "PUMP1_ON",
                     CommandOff = "PUMP1_OFF",

@@ -96,39 +96,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MaxPossibleValue = 1,
                     CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
                 },
-                new SensorType
-                {
-                    Id = VoltageSensorTypeId,
-                    Name = "Điện áp",
-                    MeasureType = "Điện áp",
-                    UnitOfMeasure = "V",
-                    Code = "voltage",
-                    MinPossibleValue = 0,
-                    MaxPossibleValue = 500,
-                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
-                },
-                new SensorType
-                {
-                    Id = CurrentSensorTypeId,
-                    Name = "Dòng điện",
-                    MeasureType = "Dòng điện",
-                    UnitOfMeasure = "A",
-                    Code = "current",
-                    MinPossibleValue = 0,
-                    MaxPossibleValue = 50,
-                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
-                },
-                new SensorType
-                {
-                    Id = PowerSensorTypeId,
-                    Name = "Công suất PZEM",
-                    MeasureType = "Công suất",
-                    UnitOfMeasure = "W",
-                    Code = "power",
-                    MinPossibleValue = 0,
-                    MaxPossibleValue = 50000,
-                    CreatedAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc),
-                },
             ];
     }
 }

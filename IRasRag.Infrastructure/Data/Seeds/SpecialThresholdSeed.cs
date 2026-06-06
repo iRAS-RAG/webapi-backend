@@ -55,33 +55,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 1,
                     MaxValue = 1,
                 },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000506"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FryStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000507"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FryStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 1.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000508"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FryStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 20,
-                    MaxValue = 40,
-                },
                 // ═══════════════════════════════════════════════════════
                 // Cá rô phi – Giai đoạn Cá hương (Fingerling)
                 // ═══════════════════════════════════════════════════════
@@ -130,33 +103,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
                     MinValue = 1,
                     MaxValue = 1,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000514"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FingerlingStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000515"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FingerlingStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 2.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000516"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.FingerlingStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 25,
-                    MaxValue = 45,
                 },
                 // ═══════════════════════════════════════════════════════
                 // Cá rô phi – Giai đoạn Cá giống (Juvenile)
@@ -207,33 +153,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 1,
                     MaxValue = 1,
                 },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000522"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.JuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000523"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.JuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.8,
-                    MaxValue = 2.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000524"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.JuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 30,
-                    MaxValue = 50,
-                },
                 // ═══════════════════════════════════════════════════════
                 // Cá rô phi – Giai đoạn Cá thương phẩm (Grow-out)
                 // ═══════════════════════════════════════════════════════
@@ -282,33 +201,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
                     MinValue = 1,
                     MaxValue = 1,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000530"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.GrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000531"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.GrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 1.0,
-                    MaxValue = 3.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000532"),
-                    SpeciesId = SpeciesSeed.TilapiaId,
-                    GrowthStageId = GrowthStageSeed.GrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 30,
-                    MaxValue = 60,
                 },
                 // ═══════════════════════════════════════════════════════
                 // Cua biển – Giai đoạn Cua bột (Fry)
@@ -359,33 +251,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 1,
                     MaxValue = 1,
                 },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000538"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabFryStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000539"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabFryStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 1.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000540"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabFryStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 20,
-                    MaxValue = 35,
-                },
                 // ═══════════════════════════════════════════════════════
                 // Cua biển – Giai đoạn Cua giống (Juvenile)
                 // ═══════════════════════════════════════════════════════
@@ -434,33 +299,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
                     MinValue = 1,
                     MaxValue = 1,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000546"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000547"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 2.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000548"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 25,
-                    MaxValue = 45,
                 },
                 // ═══════════════════════════════════════════════════════
                 // Cua biển – Giai đoạn Cua thịt (Grow-out)
@@ -511,33 +349,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 1,
                     MaxValue = 1,
                 },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000554"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000555"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 1.0,
-                    MaxValue = 3.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000556"),
-                    SpeciesId = SpeciesSeed.MudCrabId,
-                    GrowthStageId = GrowthStageSeed.CrabGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 30,
-                    MaxValue = 55,
-                },
                 // ═══════════════════════════════════════════════════════
                 // Mực lá – Giai đoạn Mực ấu trùng (Paralarva)
                 // ═══════════════════════════════════════════════════════
@@ -586,33 +397,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
                     MinValue = 1,
                     MaxValue = 1,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000562"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidParalarvaStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000563"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidParalarvaStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 1.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000564"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidParalarvaStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 20,
-                    MaxValue = 35,
                 },
                 // ═══════════════════════════════════════════════════════
                 // Mực lá – Giai đoạn Mực non (Juvenile)
@@ -663,33 +447,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     MinValue = 1,
                     MaxValue = 1,
                 },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000570"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000571"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 0.5,
-                    MaxValue = 2.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000572"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidJuvenileStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 25,
-                    MaxValue = 45,
-                },
                 // ═══════════════════════════════════════════════════════
                 // Mực lá – Giai đoạn Mực thương phẩm (Grow-out)
                 // ═══════════════════════════════════════════════════════
@@ -738,33 +495,6 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.WaterLevelSensorTypeId,
                     MinValue = 1,
                     MaxValue = 1,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000578"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.VoltageSensorTypeId,
-                    MinValue = 11.5,
-                    MaxValue = 12.5,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000579"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.CurrentSensorTypeId,
-                    MinValue = 1.0,
-                    MaxValue = 3.0,
-                },
-                new SpeciesThreshold
-                {
-                    Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000580"),
-                    SpeciesId = SpeciesSeed.ReefSquidId,
-                    GrowthStageId = GrowthStageSeed.SquidGrowOutStageId,
-                    SensorTypeId = SensorTypeSeed.PowerSensorTypeId,
-                    MinValue = 30,
-                    MaxValue = 55,
                 },
             ];
     }

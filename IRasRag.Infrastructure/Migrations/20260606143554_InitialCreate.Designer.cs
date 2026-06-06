@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IRasRag.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260605070355_InitialCreate")]
+    [Migration("20260606143554_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -537,7 +537,7 @@ namespace IRasRag.Infrastructure.Migrations
                             MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
                             ModifiedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Máy bơm nước",
-                            PinCode = 9,
+                            PinCode = 6,
                             State = false
                         });
                 });
@@ -580,20 +580,6 @@ namespace IRasRag.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Thiết bị bơm nước tuần hoàn trong hệ thống RAS",
                             Name = "Máy bơm nước"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000702"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thiết bị cung cấp oxy hòa tan cho nước nuôi",
-                            Name = "Máy sục khí"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000703"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Thiết bị cấp thức ăn tự động theo lịch định sẵn",
-                            Name = "Máy cho ăn tự động"
                         });
                 });
 
@@ -1110,11 +1096,281 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001604"),
+                            Amount = 3.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 3, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001605"),
+                            Amount = 3.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 7, 16, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001606"),
+                            Amount = 2.7999999999999998,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 18, 10, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001603"),
                             Amount = 9.0,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedDate = new DateTime(2025, 9, 5, 18, 0, 0, 0, DateTimeKind.Utc),
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001607"),
+                            Amount = 9.1999999999999993,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 24, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001608"),
+                            Amount = 9.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 8, 30, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001609"),
+                            Amount = 9.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 9, 10, 14, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001610"),
+                            Amount = 8.6999999999999993,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 9, 18, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001611"),
+                            Amount = 21.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 9, 28, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001612"),
+                            Amount = 21.5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 10, 12, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001613"),
+                            Amount = 21.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 10, 28, 17, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001614"),
+                            Amount = 21.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 11, 10, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001615"),
+                            Amount = 33.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 11, 30, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001616"),
+                            Amount = 33.5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2025, 12, 20, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001617"),
+                            Amount = 33.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 1, 8, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001618"),
+                            Amount = 33.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 1, 25, 16, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001619"),
+                            Amount = 32.5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 2, 10, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000203"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001620"),
+                            Amount = 2.3999999999999999,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 3, 4, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001621"),
+                            Amount = 2.3999999999999999,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 3, 10, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001622"),
+                            Amount = 2.2999999999999998,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 3, 18, 16, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000201"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001623"),
+                            Amount = 7.4000000000000004,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 3, 26, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001624"),
+                            Amount = 7.2999999999999998,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 4, 3, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001625"),
+                            Amount = 7.2999999999999998,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 4, 10, 17, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001626"),
+                            Amount = 7.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 4, 19, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001627"),
+                            Amount = 17.5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 4, 28, 7, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001628"),
+                            Amount = 17.5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 5, 6, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001629"),
+                            Amount = 17.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 5, 15, 17, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001630"),
+                            Amount = 17.0,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedDate = new DateTime(2026, 5, 22, 8, 0, 0, 0, DateTimeKind.Utc),
+                            FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
                             FeedTypeId = new Guid("aaaaaaaa-0000-0000-0000-000000000202"),
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
                         });
@@ -1654,6 +1910,36 @@ namespace IRasRag.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001703"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 8, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.050000000000000003,
+                            Quantity = 25,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001704"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 8, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.056000000000000001,
+                            Quantity = 28,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001705"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 8, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.053999999999999999,
+                            Quantity = 27,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001701"),
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -1664,12 +1950,142 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001706"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 8, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.23999999999999999,
+                            Quantity = 16,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000001702"),
                             BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Date = new DateTime(2025, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             LostWeightKg = 2.0,
                             Quantity = 20,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001707"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.59999999999999998,
+                            Quantity = 6,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001708"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2025, 12, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 2.3999999999999999,
+                            Quantity = 8,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001709"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 2.3999999999999999,
+                            Quantity = 6,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001710"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 1.5,
+                            Quantity = 3,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001711"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.040000000000000001,
+                            Quantity = 20,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001712"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 3, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.040000000000000001,
+                            Quantity = 20,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001713"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 3, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.040000000000000001,
+                            Quantity = 20,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001714"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 3, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.14999999999999999,
+                            Quantity = 10,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001715"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 4, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.14999999999999999,
+                            Quantity = 10,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001716"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 4, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.14999999999999999,
+                            Quantity = 10,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001717"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 5, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.59999999999999998,
+                            Quantity = 6,
+                            UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001718"),
+                            BatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001502"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Date = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LostWeightKg = 0.40000000000000002,
+                            Quantity = 4,
                             UserId = new Guid("aaaaaaaa-0000-0000-0000-000000000003")
                         });
                 });
@@ -1922,33 +2338,6 @@ namespace IRasRag.Infrastructure.Migrations
                             Name = "Cảm biến mực nước 1",
                             PinCode = 5,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001306"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            Name = "Cảm biến điện áp 1",
-                            PinCode = 6,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001307"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            Name = "Cảm biến dòng điện 1",
-                            PinCode = 7,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001308"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MasterBoardId = new Guid("aaaaaaaa-0000-0000-0000-000000001201"),
-                            Name = "Cảm biến công suất PZEM 1",
-                            PinCode = 8,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008")
                         });
                 });
 
@@ -2003,164 +2392,6 @@ namespace IRasRag.Infrastructure.Migrations
                         .HasDatabaseName("ix_sensor_logs_sensor_id_period_start");
 
                     b.ToTable("sensor_logs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001401"),
-                            Average = 27.899999999999999,
-                            CreatedAt = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 28.399999999999999,
-                            Min = 27.5,
-                            PeriodStart = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001402"),
-                            Average = 28.600000000000001,
-                            CreatedAt = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 29.100000000000001,
-                            Min = 28.100000000000001,
-                            PeriodStart = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001404"),
-                            Average = 29.800000000000001,
-                            CreatedAt = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 30.399999999999999,
-                            Min = 29.100000000000001,
-                            PeriodStart = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001405"),
-                            Average = 31.100000000000001,
-                            CreatedAt = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = true,
-                            Max = 31.800000000000001,
-                            Min = 30.5,
-                            PeriodStart = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001406"),
-                            Average = 30.300000000000001,
-                            CreatedAt = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 30.899999999999999,
-                            Min = 29.800000000000001,
-                            PeriodStart = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001407"),
-                            Average = 29.0,
-                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 29.5,
-                            Min = 28.600000000000001,
-                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001403"),
-                            Average = 7.0999999999999996,
-                            CreatedAt = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.2000000000000002,
-                            Min = 7.0,
-                            PeriodStart = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001409"),
-                            Average = 7.2999999999999998,
-                            CreatedAt = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.4000000000000004,
-                            Min = 7.2000000000000002,
-                            PeriodStart = new DateTime(2026, 1, 1, 4, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001410"),
-                            Average = 7.5,
-                            CreatedAt = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.5999999999999996,
-                            Min = 7.4000000000000004,
-                            PeriodStart = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001411"),
-                            Average = 7.4000000000000004,
-                            CreatedAt = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.5,
-                            Min = 7.2999999999999998,
-                            PeriodStart = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001412"),
-                            Average = 7.5999999999999996,
-                            CreatedAt = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.7000000000000002,
-                            Min = 7.5,
-                            PeriodStart = new DateTime(2026, 1, 1, 16, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001413"),
-                            Average = 7.2000000000000002,
-                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 7.2999999999999998,
-                            Min = 7.0999999999999996,
-                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001302")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000001414"),
-                            Average = 44.799999999999997,
-                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            HasWarning = false,
-                            Max = 47.299999999999997,
-                            Min = 42.100000000000001,
-                            PeriodStart = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Utc),
-                            SampleCount = 8,
-                            SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001304")
-                        });
                 });
 
             modelBuilder.Entity("IRasRag.Domain.Entities.SensorType", b =>
@@ -2270,39 +2501,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MinPossibleValue = 0.0,
                             Name = "Mực nước",
                             UnitOfMeasure = "0/1"
-                        },
-                        new
-                        {
-                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            Code = "voltage",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MaxPossibleValue = 500.0,
-                            MeasureType = "Điện áp",
-                            MinPossibleValue = 0.0,
-                            Name = "Điện áp",
-                            UnitOfMeasure = "V"
-                        },
-                        new
-                        {
-                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            Code = "current",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MaxPossibleValue = 50.0,
-                            MeasureType = "Dòng điện",
-                            MinPossibleValue = 0.0,
-                            Name = "Dòng điện",
-                            UnitOfMeasure = "A"
-                        },
-                        new
-                        {
-                            Id = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            Code = "power",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            MaxPossibleValue = 50000.0,
-                            MeasureType = "Công suất",
-                            MinPossibleValue = 0.0,
-                            Name = "Công suất PZEM",
-                            UnitOfMeasure = "W"
                         });
                 });
 
@@ -2741,33 +2939,6 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000506"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000507"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 1.5,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000508"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000401"),
-                            MaxValue = 40.0,
-                            MinValue = 20.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000509"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
                             MaxValue = 29.5,
@@ -2809,33 +2980,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MaxValue = 1.0,
                             MinValue = 1.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000514"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000515"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
-                            MaxValue = 2.0,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000516"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000403"),
-                            MaxValue = 45.0,
-                            MinValue = 25.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
@@ -2885,33 +3029,6 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000522"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000523"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 2.5,
-                            MinValue = 0.80000000000000004,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000524"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000402"),
-                            MaxValue = 50.0,
-                            MinValue = 30.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000525"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
                             MaxValue = 30.0,
@@ -2953,33 +3070,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MaxValue = 1.0,
                             MinValue = 1.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000530"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000531"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
-                            MaxValue = 3.0,
-                            MinValue = 1.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000532"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000404"),
-                            MaxValue = 60.0,
-                            MinValue = 30.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000101")
                         },
                         new
@@ -3029,33 +3119,6 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000538"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000539"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
-                            MaxValue = 1.5,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000540"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000405"),
-                            MaxValue = 35.0,
-                            MinValue = 20.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000541"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
                             MaxValue = 31.0,
@@ -3097,33 +3160,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MaxValue = 1.0,
                             MinValue = 1.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000546"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000547"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
-                            MaxValue = 2.0,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000548"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000406"),
-                            MaxValue = 45.0,
-                            MinValue = 25.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
                         },
                         new
@@ -3173,33 +3209,6 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000554"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000555"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
-                            MaxValue = 3.0,
-                            MinValue = 1.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000556"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000407"),
-                            MaxValue = 55.0,
-                            MinValue = 30.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000102")
-                        },
-                        new
-                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000557"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
                             MaxValue = 27.0,
@@ -3241,33 +3250,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MaxValue = 1.0,
                             MinValue = 1.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000562"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000563"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
-                            MaxValue = 1.5,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000564"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000408"),
-                            MaxValue = 35.0,
-                            MinValue = 20.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
                         },
                         new
@@ -3317,33 +3299,6 @@ namespace IRasRag.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000570"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000571"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
-                            MaxValue = 2.0,
-                            MinValue = 0.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000572"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000409"),
-                            MaxValue = 45.0,
-                            MinValue = 25.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
                             Id = new Guid("aaaaaaaa-0000-0000-0000-000000000573"),
                             GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
                             MaxValue = 28.0,
@@ -3385,33 +3340,6 @@ namespace IRasRag.Infrastructure.Migrations
                             MaxValue = 1.0,
                             MinValue = 1.0,
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000005"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000578"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
-                            MaxValue = 12.5,
-                            MinValue = 11.5,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000006"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000579"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
-                            MaxValue = 3.0,
-                            MinValue = 1.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000007"),
-                            SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-0000-0000-0000-000000000580"),
-                            GrowthStageId = new Guid("aaaaaaaa-0000-0000-0000-000000000410"),
-                            MaxValue = 55.0,
-                            MinValue = 30.0,
-                            SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000008"),
                             SpeciesId = new Guid("aaaaaaaa-0000-0000-0000-000000000103")
                         });
                 });
