@@ -25,7 +25,7 @@ namespace IRasRag.API.DI
             services.AddAuthorization();
             services.AddJwtAuthencation(config);
             services.AddSwagger();
-            services.AddCors();
+            services.AddCors(config);
             services.AddCustomRateLimiter();
             services.AddHangfireSetup(config, env);
             services.AddHttpContextAccessor();
@@ -129,8 +129,20 @@ namespace IRasRag.API.DI
             });
         }
 
-        public static void AddCors(this IServiceCollection services)
+        public static void AddCors(this IServiceCollection services, IConfiguration config)
         {
+            var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+            if (allowedOrigins.Length == 0)
+            {
+                allowedOrigins =
+                [
+                    "http://localhost:5173",
+                    "https://iras-rag.vercel.app",
+                    "https://iras-rag-dev.vercel.app",
+                ];
+            }
+
             services.AddCors(options =>
             {
                 options.AddPolicy(
@@ -138,11 +150,7 @@ namespace IRasRag.API.DI
                     builder =>
                     {
                         builder
-                            .WithOrigins(
-                                "http://localhost:5173",
-                                "https://iras-rag.vercel.app",
-                                "https://iras-rag-dev.vercel.app"
-                            )
+                            .WithOrigins(allowedOrigins)
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials()

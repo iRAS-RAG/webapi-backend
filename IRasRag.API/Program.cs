@@ -56,10 +56,11 @@ namespace IRasRag.API
             app.UseCors("CorsPolicy");
             app.UseMiddleware<ExceptionMiddleware>();
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseHttpsRedirection();
-            }
+            // HTTPS redirection is handled by Nginx reverse proxy in production.
+            // if (!app.Environment.IsDevelopment())
+            // {
+            //     app.UseHttpsRedirection();
+            // }
 
             //app.UseRateLimiter();
             app.UseAuthentication();
