@@ -36,6 +36,8 @@ namespace IRasRag.Application.Specifications.FishTankSpecifications
                 UnitOfMeasure = s.SensorType.UnitOfMeasure,
                 MasterBoardId = s.MasterBoardId,
                 MasterBoardName = s.MasterBoard.Name,
+                MinPossibleValue = s.SensorType.MinPossibleValue,
+                MaxPossibleValue = s.SensorType.MaxPossibleValue,
                 LatestData = s
                     .SensorLogs.OrderByDescending(l => l.CreatedAt)
                     .Select(l => new TankSensorLatestDataValueDto

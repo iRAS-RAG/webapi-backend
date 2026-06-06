@@ -12,6 +12,7 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
         private static readonly int[] ThresholdSyncCreateDelays = [5, 10, 20, 40, 80];
         private static readonly int[] CloudDeleteDelays = [30, 60, 120, 300, 600];
         private static readonly int[] CatalogSyncDelays = [5, 10, 20, 40, 80];
+        private static readonly int[] RagDeleteDelays = [30, 60, 120];
 
         public IEnumerable<JobFilter> GetFilters(Job job)
         {
@@ -47,6 +48,15 @@ namespace IRasRag.Infrastructure.HangFireJobFilters
                 yield return BuildRetryFilter(
                     attempts: 5,
                     delays: CatalogSyncDelays,
+                    exceeded: AttemptsExceededAction.Fail
+                );
+            }
+
+            if (job.Method.DeclaringType == typeof(IDocumentRagDeleteJob))
+            {
+                yield return BuildRetryFilter(
+                    attempts: 3,
+                    delays: RagDeleteDelays,
                     exceeded: AttemptsExceededAction.Fail
                 );
             }

@@ -64,8 +64,8 @@ namespace IRasRag.Infrastructure.Data.Seeds
                     SensorTypeId = SensorTypeSeed.TemperatureSensorTypeId,
                     TriggerValue = 30.2,
                     RaisedAt = new DateTime(2025, 09, 05, 12, 0, 0, DateTimeKind.Utc),
-                    ResolvedAt = null,
-                    Status = AlertStatus.ACKNOWLEDGED,
+                    ResolvedAt = new DateTime(2025, 09, 05, 13, 0, 0, DateTimeKind.Utc),
+                    Status = AlertStatus.RESOLVED,
                     CreatedAt = SeedTimestamp,
                 },
             ];

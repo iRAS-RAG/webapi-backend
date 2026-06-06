@@ -109,6 +109,8 @@ namespace IRasRag.Application.DTOs
         public string UnitOfMeasure { get; set; } = string.Empty;
         public Guid MasterBoardId { get; set; }
         public string MasterBoardName { get; set; } = string.Empty;
+        public double MinPossibleValue { get; set; }
+        public double MaxPossibleValue { get; set; }
         public TankSensorLatestDataValueDto? LatestData { get; set; }
     }
 

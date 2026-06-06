@@ -141,10 +141,11 @@ namespace IRasRag.Infrastructure.Migrations
                             FarmingBatchId = new Guid("aaaaaaaa-0000-0000-0000-000000001501"),
                             FishTankId = new Guid("aaaaaaaa-0000-0000-0000-000000000301"),
                             RaisedAt = new DateTime(2025, 9, 5, 12, 0, 0, 0, DateTimeKind.Utc),
+                            ResolvedAt = new DateTime(2025, 9, 5, 13, 0, 0, 0, DateTimeKind.Utc),
                             SensorId = new Guid("aaaaaaaa-0000-0000-0000-000000001301"),
                             SensorTypeId = new Guid("eeeeeeee-0000-0000-0000-000000000001"),
                             SpeciesThresholdId = new Guid("aaaaaaaa-0000-0000-0000-000000000509"),
-                            Status = "ACKNOWLEDGED",
+                            Status = "RESOLVED",
                             TriggerValue = 30.199999999999999
                         });
                 });

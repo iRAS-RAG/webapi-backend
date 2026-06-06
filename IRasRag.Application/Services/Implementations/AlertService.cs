@@ -2,8 +2,10 @@ using AutoMapper;
 using IRasRag.Application.Common.Constants;
 using IRasRag.Application.Common.Interfaces.Auth;
 using IRasRag.Application.Common.Interfaces.Persistence;
+using IRasRag.Application.Common.Interfaces.Realtime;
 using IRasRag.Application.Common.Models;
 using IRasRag.Application.Common.Models.Pagination;
+using IRasRag.Application.Common.Models.Realtime;
 using IRasRag.Application.Common.Utils;
 using IRasRag.Application.DTOs;
 using IRasRag.Application.Services.Interfaces;
@@ -21,13 +23,15 @@ namespace IRasRag.Application.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IAuditLogService _auditLogService;
         private readonly ICurrentUserAccessor _currentUserAccessor;
+        private readonly ILiveDataNotifier _liveDataNotifier;
 
         public AlertService(
             IUnitOfWork unitOfWork,
             ILogger<AlertService> logger,
             IMapper mapper,
             IAuditLogService auditLogService,
-            ICurrentUserAccessor currentUserAccessor
+            ICurrentUserAccessor currentUserAccessor,
+            ILiveDataNotifier liveDataNotifier
         )
         {
             _unitOfWork = unitOfWork;
@@ -35,6 +39,7 @@ namespace IRasRag.Application.Services.Implementations
             _mapper = mapper;
             _auditLogService = auditLogService;
             _currentUserAccessor = currentUserAccessor;
+            _liveDataNotifier = liveDataNotifier;
         }
 
         #region Get Methods
@@ -328,6 +333,22 @@ namespace IRasRag.Application.Services.Implementations
                 alert.Status = newStatus;
                 _unitOfWork.GetRepository<Alert>().Update(alert);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Broadcast the status change via SignalR so the UI updates immediately
+                try
+                {
+                    await _liveDataNotifier.PushAlertStatusChangedAsync(
+                        new AlertStatusChangedNotification(
+                            alert.Id,
+                            alert.FishTankId,
+                            newStatus.ToString()
+                        )
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to push alert status change for {AlertId}", id);
+                }
 
                 await WriteAuditLogAsync(
                     AuditLogActions.Update,

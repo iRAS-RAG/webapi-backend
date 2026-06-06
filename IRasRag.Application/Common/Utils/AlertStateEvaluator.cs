@@ -195,6 +195,26 @@ namespace IRasRag.Application.Common.Utils
                     oldValue: new { Status = oldStatus.ToVietnamese() },
                     newValue: new { Status = AlertStatus.RESOLVED.ToVietnamese() }
                 );
+
+                // Broadcast the auto-resolve via SignalR so the UI updates immediately
+                try
+                {
+                    await _liveDataNotifier.PushAlertStatusChangedAsync(
+                        new AlertStatusChangedNotification(
+                            alert.Id,
+                            tankId,
+                            AlertStatus.RESOLVED.ToString()
+                        )
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to push auto-resolve for alert {AlertId}",
+                        alert.Id
+                    );
+                }
             }
 
             _alertStateCache.Invalidate(tankId, sensorTypeId, batchId);

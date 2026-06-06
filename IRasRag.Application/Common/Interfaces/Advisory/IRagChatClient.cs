@@ -59,6 +59,8 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
         string SourceUrl
     );
 
+    public record RagDeleteDocumentResponse(string Status, int Deleted, string SourceUrl);
+
     public interface IRagChatClient
     {
         Task<RagChatResponse?> ChatAsync(RagChatRequest request, CancellationToken ct = default);
@@ -69,6 +71,10 @@ namespace IRasRag.Application.Common.Interfaces.Advisory
         Task<RagIngestUrlResponse?> IngestDocumentByUrlAsync(
             string url,
             string title,
+            CancellationToken ct = default
+        );
+        Task<RagDeleteDocumentResponse?> DeleteDocumentByUrlAsync(
+            string url,
             CancellationToken ct = default
         );
     }

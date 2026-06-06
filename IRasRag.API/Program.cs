@@ -66,6 +66,7 @@ namespace IRasRag.API
             app.UseAuthorization();
             app.MapControllers();
             app.MapHub<TelemetryHub>("/hubs/telemetry");
+            app.MapHub<AlertHub>("/hubs/alerts");
             app.MapHub<SupervisorMetricsHubType>("/hubs/supervisor-metrics");
             app.MapHub<DocumentHub>("/hubs/documents");
 

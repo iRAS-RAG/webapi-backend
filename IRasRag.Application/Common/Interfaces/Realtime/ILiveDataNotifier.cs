@@ -7,5 +7,6 @@ namespace IRasRag.Application.Common.Interfaces.Realtime
         void EnqueueTelemetry(TelemetryPush push);
         Task PushTelemetryAsync(TelemetryPush push);
         Task PushAlertAsync(AlertPush push);
+        Task PushAlertStatusChangedAsync(AlertStatusChangedNotification notification);
     }
 }
